@@ -1,0 +1,24 @@
+# FILE: monitoring/alertmanager.yml
+global:
+  smtp_smarthost: 'smtp.gmail.com:587'
+  smtp_from: 'alerts@nephrpro.com'
+  smtp_auth_username: 'alerts@nephrpro.com'
+  smtp_auth_password: 'your-gmail-app-password'
+
+route:
+  receiver: 'team-email'
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+
+receivers:
+  - name: 'team-email'
+    email_configs:
+      - to: 'admin@nephrpro.com'
+        subject: '[NepHR Pro] ALERT: {{ .GroupLabels.alertname }}'
+        body: |
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Severity: {{ .Labels.severity }}
+          {{ end }}

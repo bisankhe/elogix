@@ -1,0 +1,20 @@
+[Unit]
+Description=eLogix HRMS — Celery Beat Scheduler
+After=redis.service
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/elogix-hrms/backend
+EnvironmentFile=/var/www/elogix-hrms/backend/.env
+Environment="PATH=/var/www/elogix-hrms/backend/venv/bin"
+ExecStart=/var/www/elogix-hrms/backend/venv/bin/celery \
+  -A app.celery_app beat \
+  --loglevel=info \
+  --logfile=/var/log/elogix/celery-beat.log \
+  --schedule=/var/run/elogix-celerybeat-schedule
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

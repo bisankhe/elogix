@@ -1,0 +1,14 @@
+NepHR Pro — Alembic Database Migrations
+
+Commands:
+  alembic upgrade head          # Apply all migrations
+  alembic downgrade -1          # Roll back one migration
+  alembic revision --autogenerate -m "description"   # Create new migration
+  alembic history               # Show migration history
+  alembic current               # Show current revision
+
+First time setup:
+  1. Set DATABASE_URL in .env
+  2. psql $DATABASE_URL < database/schemas/complete_schema.sql
+  3. alembic stamp head          # Mark as current
+  4. alembic upgrade head        # For future migrations

@@ -1,0 +1,22 @@
+[Unit]
+Description=eLogix HRMS — Celery Workers
+After=redis.service elogix-backend.service
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/elogix-hrms/backend
+EnvironmentFile=/var/www/elogix-hrms/backend/.env
+Environment="PATH=/var/www/elogix-hrms/backend/venv/bin"
+ExecStart=/var/www/elogix-hrms/backend/venv/bin/celery \
+  -A app.celery_app worker \
+  --loglevel=info \
+  --concurrency=4 \
+  --queues=elogix-email,elogix-payroll,elogix-ai,elogix-notifications \
+  --logfile=/var/log/elogix/celery-worker.log \
+  --pidfile=/var/run/elogix-celery.pid
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

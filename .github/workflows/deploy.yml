@@ -1,0 +1,83 @@
+# NepHR Pro — CI/CD Pipeline
+# Runs on: push to main → test → build → deploy to staging → manual approve → production
+
+name: Deploy NepHR Pro
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # 1. Test Backend
+  test-backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: nephr_test
+          POSTGRES_USER: nephr
+          POSTGRES_PASSWORD: testpass
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install -r backend/requirements.txt
+      - run: python -m pytest backend/tests/ -v
+        env:
+          DATABASE_URL: postgresql://nephr:testpass@localhost:5432/nephr_test
+          FLASK_ENV: testing
+
+  # 2. Build Frontend
+  build-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: npm ci
+      - run: npm run build
+        env:
+          VITE_ANTHROPIC_API_KEY: ${{ secrets.VITE_ANTHROPIC_API_KEY }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: dist/
+
+  # 3. Deploy to Staging (auto on main push)
+  deploy-staging:
+    needs: [test-backend, build-frontend]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: frontend-dist, path: dist }
+      - name: Deploy to staging server
+        run: |
+          echo "Deploy to staging here"
+          # ssh user@staging.nephrpro.com 'cd /app && git pull && docker-compose up -d'
+
+  # 4. Deploy to Production (manual approval required)
+  deploy-production:
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://app.nephrpro.com
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: frontend-dist, path: dist }
+      - name: Deploy to production
+        run: |
+          echo "Deploy to production here"
+          # ssh user@production.nephrpro.com 'cd /app && git pull && docker-compose up -d'

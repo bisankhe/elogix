@@ -1,0 +1,35 @@
+[Unit]
+Description=eLogix HRMS — Flask Backend Engine
+Documentation=https://www.elogix.com
+After=network.target postgresql.service redis.service
+Wants=redis.service
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/elogix-hrms/backend
+EnvironmentFile=/var/www/elogix-hrms/backend/.env
+Environment="PATH=/var/www/elogix-hrms/backend/venv/bin"
+Environment="FLASK_ENV=production"
+ExecStart=/var/www/elogix-hrms/backend/venv/bin/gunicorn \
+  wsgi:app \
+  --workers 4 \
+  --worker-class gthread \
+  --threads 2 \
+  --bind 127.0.0.1:8000 \
+  --timeout 120 \
+  --keep-alive 5 \
+  --max-requests 1000 \
+  --max-requests-jitter 50 \
+  --access-logfile /var/log/elogix/backend-access.log \
+  --error-logfile  /var/log/elogix/backend-error.log \
+  --log-level info
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+RestartSec=3
+KillMode=mixed
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,91 @@
+# FILE: monitoring/docker-compose.monitoring.yml
+# Prometheus + Grafana + AlertManager monitoring stack
+# Run: docker-compose -f monitoring/docker-compose.monitoring.yml up -d
+
+version: '3.9'
+
+services:
+  # Prometheus — collects metrics
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+
+  # Grafana — dashboards and alerts
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-nephr_grafana_2026}
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+      GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s/monitoring"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
+  # Node Exporter — server hardware metrics (CPU, RAM, disk)
+  node_exporter:
+    image: prom/node-exporter:latest
+    restart: unless-stopped
+    network_mode: host
+    pid: host
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+
+  # PostgreSQL Exporter — DB metrics
+  postgres_exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_NAME: ${DATABASE_URL:-postgresql://nephr:nephr_pass@db:5432/nephr_pro?sslmode=disable}
+    ports:
+      - "9187:9187"
+
+  # Redis Exporter
+  redis_exporter:
+    image: oliver006/redis_exporter:latest
+    restart: unless-stopped
+    environment:
+      REDIS_ADDR: ${REDIS_URL:-redis://redis:6379}
+    ports:
+      - "9121:9121"
+
+  # AlertManager — sends alerts via email/Slack
+  alertmanager:
+    image: prom/alertmanager:latest
+    restart: unless-stopped
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+
+  # Uptime monitoring
+  uptime_kuma:
+    image: louislam/uptime-kuma:latest
+    restart: unless-stopped
+    ports:
+      - "3002:3001"
+    volumes:
+      - uptime_data:/app/data
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  uptime_data:
