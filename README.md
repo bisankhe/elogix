@@ -1,4 +1,4 @@
-# NepHR Pro — AI-Powered HRIS · HRMS · HRIM · HCM
+# eLogix — AI-Powered HRIS · HRMS · HRIM · HCM
 
 Nepal's most comprehensive Human Resource Management SaaS platform with built-in AI business intelligence, predictive analytics, and multilingual support.
 
@@ -42,7 +42,7 @@ docker-compose up --build
 ## Project Structure
 
 ```
-nephr-pro-files/
+eLogix-files/
 ├── src/                    # React frontend
 │   ├── components/
 │   │   ├── dashboard/      # Role dashboards + 473 page components
@@ -84,4 +84,4 @@ See `backend/.env.example` for all required variables.
 Critical: `ANTHROPIC_API_KEY`, `DATABASE_URL`, `SECRET_KEY`
 
 ## License
-Proprietary — NepHR Pro © 2026
+Proprietary — eLogix Technologies © 2026
