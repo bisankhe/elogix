@@ -15,7 +15,24 @@ from sqlalchemy import (
     Text, ForeignKey, Enum, Float, CheckConstraint, UniqueConstraint, Index
 )
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import UUID, JSONB, ARRAY, LTREE
+from sqlalchemy.dialects.postgresql import UUID, JSONB, ARRAY
+from sqlalchemy.types import UserDefinedType
+
+try:
+    from sqlalchemy.dialects.postgresql import LTREE
+except ImportError:
+    class LTREE(UserDefinedType):
+        cache_ok = True
+
+        def get_col_spec(self, **kw):
+            return "LTREE"
+
+        def bind_processor(self, dialect):
+            return None
+
+        def result_processor(self, dialect, coltype):
+            return None
+
 from .org_setup_models import Base, EntityStatus
 import uuid
 import enum

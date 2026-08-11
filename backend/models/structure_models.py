@@ -13,7 +13,24 @@ from sqlalchemy     import (Column, String, Boolean, Integer, Float, Text,
                             Date, DateTime, ForeignKey, Enum, DECIMAL, JSON,
                             Index, CheckConstraint, UniqueConstraint, event)
 from sqlalchemy.orm import relationship, DeclarativeBase
-from sqlalchemy.dialects.postgresql import UUID, JSONB, ARRAY, LTREE
+from sqlalchemy.dialects.postgresql import UUID, JSONB, ARRAY
+from sqlalchemy.types import UserDefinedType
+
+try:
+    from sqlalchemy.dialects.postgresql import LTREE
+except ImportError:
+    class LTREE(UserDefinedType):
+        cache_ok = True
+
+        def get_col_spec(self, **kw):
+            return "LTREE"
+
+        def bind_processor(self, dialect):
+            return None
+
+        def result_processor(self, dialect, coltype):
+            return None
+
 import uuid, enum
 
 try:
