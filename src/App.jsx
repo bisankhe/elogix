@@ -1496,6 +1496,20 @@ export default function App({ initialPage, onLogout }) {
   }, [])
 
   const navTo          = useCallback((id) => setSub(id), [])
+
+  // Profile & Settings panel state
+  const [showProfile,  setShowProfile]  = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
+
+  // Logout: clears ALL auth data so next open shows login page
+  const handleLogout = useCallback(() => {
+    ;['elogix_token','elogix_refresh_token','elogix_user','elogix_company',
+      'elogix_permissions','elogix_tenant','elogix_admin_token',
+      'elogix_admin_user','elogix_admin_key','elogix_remember',
+    ].forEach(k => localStorage.removeItem(k))
+    sessionStorage.clear()
+    onLogout?.()
+  }, [onLogout])
   const toggleExpanded = useCallback((id) => setExpanded(prev => ({ ...prev, [id]: !prev[id] })), [])
 
   // Apply initialPage from router when provided
@@ -1541,6 +1555,9 @@ export default function App({ initialPage, onLogout }) {
             onLangClick={() => setShowLangModal(true)}
             onNotifClick={() => setShowNotif(v => !v)}
             onAIClick={() => setShowAI(true)}
+            onLogout={handleLogout}
+            onProfile={() => setShowProfile(true)}
+            onSettings={() => setShowSettings(true)}
           />
 
           {/* Breadcrumb */}
@@ -1565,6 +1582,110 @@ export default function App({ initialPage, onLogout }) {
           <QuickDock />
           <main style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
             <ContentRouter sub={sub} />
+
+          {/* ── My Profile Modal ── */}
+          {showProfile && (() => {
+            const user = (() => { try { return JSON.parse(sessionStorage.getItem('elogix_user') || localStorage.getItem('elogix_user')||'{}') } catch{ return {} } })()
+            const co   = (() => { try { return JSON.parse(sessionStorage.getItem('elogix_company') || localStorage.getItem('elogix_company')||'{}') } catch{ return {} } })()
+            return (
+              <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.55)',zIndex:9999,
+                display:'flex',alignItems:'center',justifyContent:'center',padding:16}}
+                onClick={()=>setShowProfile(false)}>
+                <div style={{background:'#fff',borderRadius:18,width:460,maxWidth:'96vw',
+                  boxShadow:'0 24px 80px rgba(0,0,0,.2)'}} onClick={e=>e.stopPropagation()}>
+                  <div style={{background:'linear-gradient(135deg,#0c4a6e,#0369a1,#38bdf8)',
+                    padding:'22px 24px',borderRadius:'18px 18px 0 0',color:'#fff',textAlign:'center'}}>
+                    <div style={{width:64,height:64,borderRadius:'50%',
+                      background:'rgba(255,255,255,.15)',border:'3px solid rgba(255,255,255,.3)',
+                      display:'flex',alignItems:'center',justifyContent:'center',
+                      fontSize:28,margin:'0 auto 12px',fontWeight:900}}>
+                      {(user.full_name||'U').charAt(0).toUpperCase()}
+                    </div>
+                    <div style={{fontSize:18,fontWeight:900}}>{user.full_name||'User'}</div>
+                    <div style={{fontSize:11,opacity:.75,marginTop:3}}>
+                      {(user.role||'').replace(/_/g,' ').replace(/\w/g,c=>c.toUpperCase())} · {co.name||''}
+                    </div>
+                  </div>
+                  <div style={{padding:'20px 24px'}}>
+                    {[
+                      ['📧','Email',       user.email||'—'],
+                      ['🆔','Employee ID', user.emp_id||'—'],
+                      ['🏢','Company',     co.name||'—'],
+                      ['📋','Plan',        (co.plan||'').toUpperCase()||'—'],
+                      ['🔐','Role',        (user.role||'').replace(/_/g,' ')],
+                      ['🌐','Portal',      co.slug ? `${co.slug}.elogix.com.np` : '—'],
+                    ].map(([ic,lb,v])=>(
+                      <div key={lb} style={{display:'flex',alignItems:'center',gap:12,
+                        padding:'10px 0',borderBottom:'1px solid #f1f5f9',fontSize:13}}>
+                        <span style={{fontSize:18,width:26,textAlign:'center'}}>{ic}</span>
+                        <span style={{color:'#64748b',minWidth:100,fontSize:12}}>{lb}</span>
+                        <span style={{fontWeight:600,color:'#0f172a'}}>{v}</span>
+                      </div>
+                    ))}
+                    <button onClick={()=>setShowProfile(false)}
+                      style={{width:'100%',marginTop:16,padding:'11px',borderRadius:10,
+                        border:'none',background:'linear-gradient(135deg,#0c4a6e,#0369a1)',
+                        color:'#fff',fontSize:13,fontWeight:700,cursor:'pointer'}}>
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )
+          })()}
+
+          {/* ── Settings Modal ── */}
+          {showSettings && (
+            <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.55)',zIndex:9999,
+              display:'flex',alignItems:'center',justifyContent:'center',padding:16}}
+              onClick={()=>setShowSettings(false)}>
+              <div style={{background:'#fff',borderRadius:18,width:460,maxWidth:'96vw',
+                boxShadow:'0 24px 80px rgba(0,0,0,.2)'}} onClick={e=>e.stopPropagation()}>
+                <div style={{background:'linear-gradient(135deg,#312e81,#4338ca)',
+                  padding:'18px 24px',borderRadius:'18px 18px 0 0',color:'#fff'}}>
+                  <div style={{fontSize:17,fontWeight:900}}>⚙️ Settings</div>
+                  <div style={{fontSize:11,opacity:.7,marginTop:2}}>eLogix HRMS preferences</div>
+                </div>
+                <div style={{padding:'20px 24px'}}>
+                  {[
+                    {label:'Email Notifications', desc:'Receive alerts via email',         key:'notif_email',  def:true  },
+                    {label:'SMS Notifications',   desc:'Receive alerts via SMS/Viber',     key:'notif_sms',    def:false },
+                    {label:'Dark Mode',           desc:'Use dark theme across dashboards', key:'dark_mode',    def:false },
+                    {label:'Auto-logout on close',desc:'Clear session when browser closes',key:'auto_logout',  def:true  },
+                    {label:'Compact Sidebar',     desc:'Smaller sidebar for more space',   key:'compact',      def:false },
+                  ].map(s=>{
+                    const stored = localStorage.getItem(`elogix_setting_${s.key}`)
+                    const checked = stored !== null ? stored==='true' : s.def
+                    return (
+                      <div key={s.key} style={{display:'flex',justifyContent:'space-between',
+                        alignItems:'center',padding:'12px 0',borderBottom:'1px solid #f1f5f9'}}>
+                        <div>
+                          <div style={{fontSize:13,fontWeight:600,color:'#0f172a'}}>{s.label}</div>
+                          <div style={{fontSize:11,color:'#64748b',marginTop:1}}>{s.desc}</div>
+                        </div>
+                        <input type="checkbox" defaultChecked={checked}
+                          onChange={e=>localStorage.setItem(`elogix_setting_${s.key}`,e.target.checked)}
+                          style={{width:18,height:18,cursor:'pointer',accentColor:'#0369a1'}}/>
+                      </div>
+                    )
+                  })}
+                  <div style={{display:'flex',gap:10,marginTop:16}}>
+                    <button onClick={()=>setShowSettings(false)}
+                      style={{flex:1,padding:'11px',borderRadius:10,border:'none',
+                        background:'linear-gradient(135deg,#312e81,#4338ca)',
+                        color:'#fff',fontSize:13,fontWeight:700,cursor:'pointer'}}>
+                      Save Settings
+                    </button>
+                    <button onClick={()=>setShowSettings(false)}
+                      style={{padding:'11px 18px',borderRadius:10,border:'1px solid #e2e8f0',
+                        background:'#fff',color:'#64748b',fontSize:13,cursor:'pointer'}}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           </main>
         </div>
 

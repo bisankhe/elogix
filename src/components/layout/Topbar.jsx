@@ -11,7 +11,7 @@ import { useApp } from '../../context/AppContext.jsx'
 import { LANGUAGES } from '../../i18n/index.js'
 
 // ── User Menu Dropdown ────────────────────────────────────────
-function UserMenu({ currentPersona, t, onClose }) {
+function UserMenu({ currentPersona, t, onClose, onLogout, onProfile, onSettings, onLanguage }) {
   const { darkMode, setDarkMode, setLanguage, language } = useApp()
 
   return (
@@ -43,9 +43,9 @@ function UserMenu({ currentPersona, t, onClose }) {
 
       {/* Menu Items */}
       {[
-        { icon: '👤', label: t('myProfile')   || 'My Profile',   action: () => {} },
-        { icon: '⚙️', label: t('settings')    || 'Settings',     action: () => {} },
-        { icon: '🌐', label: t('language')    || 'Language',     action: () => {} },
+        { icon: '👤', label: t('myProfile')   || 'My Profile',   action: () => { onClose(); onProfile?.() } },
+        { icon: '⚙️', label: t('settings')    || 'Settings',     action: () => { onClose(); onSettings?.() } },
+        { icon: '🌐', label: t('language')    || 'Language',     action: () => { onClose(); onLanguage?.() } },
         { icon: darkMode ? '☀️' : '🌙',
           label: t('darkMode')    || 'Dark Mode',
           action: () => setDarkMode(d => !d),
@@ -70,6 +70,10 @@ function UserMenu({ currentPersona, t, onClose }) {
 
       {/* Logout */}
       <button
+        onClick={() => {
+          onClose()
+          if (onLogout) onLogout()
+        }}
         style={{
           width: '100%', display: 'flex', alignItems: 'center', gap: 10,
           padding: '10px 16px', border: 'none', background: 'transparent',
@@ -191,7 +195,7 @@ function TBtn({ onClick, children, badge, title, active }) {
 }
 
 // ── Main Topbar ───────────────────────────────────────────────
-export default function Topbar({ sidebarOpen, setSidebarOpen, onLangClick, onNotifClick, onAIClick }) {
+export default function Topbar({ sidebarOpen, setSidebarOpen, onLangClick, onNotifClick, onAIClick, onLogout, onProfile, onSettings }) {
   const {
     persona, currentPersona,
     language, currency, cc,
@@ -349,6 +353,10 @@ export default function Topbar({ sidebarOpen, setSidebarOpen, onLangClick, onNot
             currentPersona={currentPersona}
             t={t}
             onClose={() => setShowUserMenu(false)}
+            onLogout={onLogout}
+            onProfile={onProfile}
+            onSettings={onSettings}
+            onLanguage={onLangClick}
           />
         )}
       </div>

@@ -1,24 +1,18 @@
 // FILE: src/main.jsx
 // eLogix HRMS — App entry point
-// 1. Mounts React
-// 2. Dismisses the #app-splash HTML overlay immediately
+// Splash dismissed IMMEDIATELY after React renders — no artificial delay
 // eLogix Technologies · www.elogix.com.np
-import { StrictMode } from 'react'
-import { createRoot }  from 'react-dom/client'
+import { StrictMode }    from 'react'
+import { createRoot }    from 'react-dom/client'
 import './index.css'
-import AppRouter        from './AppRouter.jsx'
-import { AuthProvider } from './context/AuthContext.jsx'
+import AppRouter         from './AppRouter.jsx'
+import { AuthProvider }  from './context/AuthContext.jsx'
 
-// ── Dismiss the HTML splash screen immediately after React mounts ──
 function dismissSplash() {
   const splash = document.getElementById('app-splash')
-  if (splash) {
-    splash.classList.add('splash-hide')
-    // Remove from DOM after CSS transition (0.5s)
-    setTimeout(() => {
-      if (splash.parentNode) splash.parentNode.removeChild(splash)
-    }, 600)
-  }
+  if (!splash) return
+  splash.classList.add('splash-hide')       // CSS opacity:0 in 0.3s
+  setTimeout(() => splash.remove(), 350)    // Remove from DOM after fade
 }
 
 const root = createRoot(document.getElementById('root'))
@@ -31,5 +25,5 @@ root.render(
   </StrictMode>
 )
 
-// Dismiss splash right after React renders
+// Dismiss immediately — no setTimeout delay at all
 dismissSplash()

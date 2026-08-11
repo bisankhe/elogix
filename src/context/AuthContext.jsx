@@ -37,8 +37,11 @@ export const ROLE_DASHBOARD = {
 }
 
 const load = (key, fallback = null) => {
-  try { return JSON.parse(localStorage.getItem(key) || 'null') ?? fallback }
-  catch { return fallback }
+  try {
+    // Check sessionStorage first (current session), then localStorage (remembered)
+    const val = sessionStorage.getItem(key) || localStorage.getItem(key)
+    return JSON.parse(val || 'null') ?? fallback
+  } catch { return fallback }
 }
 
 export function AuthProvider({ children }) {
@@ -52,7 +55,7 @@ export function AuthProvider({ children }) {
   const [adminUser,   setAdminUser]   = useState(() => load('elogix_admin_user'))
   const [isAdmin,     setIsAdmin]     = useState(() => !!localStorage.getItem('elogix_admin_token'))
 
-  const isAuthenticated  = !!user && !!localStorage.getItem('elogix_token')
+  const isAuthenticated  = !!user && !!(sessionStorage.getItem('elogix_token') || localStorage.getItem('elogix_token'))
   const role             = user?.role  || 'employee'
   const level            = user?.level || 10
   const deptId           = user?.department_id || null
@@ -79,13 +82,25 @@ export function AuthProvider({ children }) {
   const canAccess = useCallback((module) => can(module, 'view'), [can])
 
   // ── Tenant user login (company staff) ─────────────────────
-  const loginTenant = useCallback((data) => {
-    localStorage.setItem('elogix_token',         data.access_token)
-    if (data.refresh_token) localStorage.setItem('elogix_refresh_token', data.refresh_token)
-    localStorage.setItem('elogix_user',        JSON.stringify(data.user))
-    localStorage.setItem('elogix_company',     JSON.stringify(data.company))
-    localStorage.setItem('elogix_permissions', JSON.stringify(data.permissions || {}))
-    localStorage.setItem('elogix_tenant',      data.company.slug)
+  const loginTenant = useCallback((data, rememberMe = false) => {
+    // If "Keep me signed in" → localStorage (persists across browser close)
+    // Otherwise              → sessionStorage (clears when browser/tab closes)
+    const store = rememberMe ? localStorage : sessionStorage
+    store.setItem('elogix_token',         data.access_token)
+    if (data.refresh_token) store.setItem('elogix_refresh_token', data.refresh_token)
+    // User & company info always in sessionStorage (privacy)
+    sessionStorage.setItem('elogix_user',        JSON.stringify(data.user))
+    sessionStorage.setItem('elogix_company',     JSON.stringify(data.company))
+    sessionStorage.setItem('elogix_permissions', JSON.stringify(data.permissions || {}))
+    sessionStorage.setItem('elogix_tenant',      data.company.slug)
+    // Remember preference in localStorage
+    if (rememberMe) {
+      localStorage.setItem('elogix_user',        JSON.stringify(data.user))
+      localStorage.setItem('elogix_company',     JSON.stringify(data.company))
+      localStorage.setItem('elogix_permissions', JSON.stringify(data.permissions || {}))
+      localStorage.setItem('elogix_tenant',      data.company.slug)
+      localStorage.setItem('elogix_remember',    'true')
+    }
     setUser(data.user)
     setCompany(data.company)
     setPermissions(data.permissions || {})
@@ -103,17 +118,27 @@ export function AuthProvider({ children }) {
 
   // ── Logout ─────────────────────────────────────────────────
   const logout = useCallback(() => {
-    ['elogix_token','elogix_refresh_token','elogix_user','elogix_company',
-     'elogix_permissions','elogix_tenant','elogix_remember'].forEach(k => localStorage.removeItem(k))
+    const keys = ['elogix_token','elogix_refresh_token','elogix_user','elogix_company',
+                  'elogix_permissions','elogix_tenant','elogix_remember']
+    keys.forEach(k => { localStorage.removeItem(k); sessionStorage.removeItem(k) })
+    sessionStorage.clear()
     setUser(null); setCompany(null); setPermissions({}); setTenant('')
   }, [])
 
   const logoutAdmin = useCallback(() => {
-    ['elogix_admin_token','elogix_admin_user','elogix_admin_key'].forEach(k => localStorage.removeItem(k))
-    setAdminUser(null); setIsAdmin(false)
+    // Clear from BOTH storages + reset React state
+    ;['elogix_admin_token','elogix_admin_user','elogix_admin_key'].forEach(k => {
+      localStorage.removeItem(k)
+      sessionStorage.removeItem(k)
+    })
+    setAdminUser(null)
+    setIsAdmin(false)    // ← this triggers useEffect in AppRouter → shows login
   }, [])
 
-  const logoutAll = useCallback(() => { logout(); logoutAdmin() }, [logout, logoutAdmin])
+  const logoutAll = useCallback(() => {
+    logout()
+    logoutAdmin()
+  }, [logout, logoutAdmin])
 
   // ── Dashboard route for current role ──────────────────────
   const getDashboardPage = useCallback(() => ROLE_DASHBOARD[role] || 'employee-dashboard', [role])

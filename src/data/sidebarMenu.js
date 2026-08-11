@@ -16,27 +16,6 @@ export const SIDEBAR_MENU = [
     labelKey: 'dashboard',
     label: 'Dashboard & Workspace',
     children: [
-      // Persona Dashboards
-      { id: 'super-admin-dashboard',    label: 'Super Admin Dashboard',               persona: ['super-admin'],                          group: 'Persona Dashboards' },
-      { id: 'executive-dashboard',      label: 'Executive Dashboard',                 persona: ['executive'],                            group: 'Persona Dashboards' },
-      { id: 'hr-dashboard',             label: 'HR Manager Dashboard',                persona: ['hr'],                                   group: 'Persona Dashboards' },
-      { id: 'department-dashboard',     label: 'Department Head Dashboard',           persona: ['department'],                           group: 'Persona Dashboards' },
-      { id: 'branch-dashboard',         label: 'Branch / Section / Unit Dashboard',  persona: ['branch'],                               group: 'Persona Dashboards' },
-      { id: 'employee-dashboard',       label: 'Employee Dashboard',                  persona: ['employee'],                             group: 'Persona Dashboards' },
-      { id: 'recruitment-dashboard',    label: 'Recruitment Agency Portal',           persona: ['recruitment'],                          group: 'Persona Dashboards' },
-      { id: 'finance-dashboard',         label: 'Finance Workspace',                   persona: ['finance'],                              group: 'Persona Dashboards' },
-      { id: 'it-admin-dashboard',        label: 'IT Administrator Workspace',          persona: ['it-admin'],                             group: 'Persona Dashboards' },
-      { id: 'recruitment-officer-dashboard', label: 'Recruitment Officer Workspace',   persona: ['recruitment-officer'],                  group: 'Persona Dashboards' },
-      { id: 'procurement-dashboard',     label: 'Procurement Workspace',               persona: ['procurement'],                          group: 'Persona Dashboards' },
-      { id: 'admin-workspace-dashboard', label: 'Admin Workspace',                     persona: ['admin-officer'],                        group: 'Persona Dashboards' },
-      { id: 'sales-dashboard',           label: 'Sales Workspace',                     persona: ['sales'],                                group: 'Persona Dashboards' },
-      { id: 'customer-service-dashboard',label: 'Customer Service Workspace',          persona: ['customer-service'],                     group: 'Persona Dashboards' },
-      { id: 'legal-dashboard',           label: 'Legal Workspace',                     persona: ['legal'],                                group: 'Persona Dashboards' },
-      { id: 'operations-dashboard',      label: 'Operations Workspace',                persona: ['operations'],                           group: 'Persona Dashboards' },
-      { id: 'learning-development-dashboard', label: 'Learning & Development Workspace', persona: ['learning-development'],               group: 'Persona Dashboards' },
-      { id: 'hr-officer-dashboard',      label: 'HR Officer Workspace',                persona: ['hr-officer'],                           group: 'Persona Dashboards' },
-      { id: 'marketing-dashboard',       label: 'Marketing Workspace',                 persona: ['marketing'],                            group: 'Persona Dashboards' },
-
       // Snapshot Dashboards
       { id: 'attendance-snapshot',      label: 'Attendance Snapshot',                 badge: 'Live',  group: 'Snapshots' },
       { id: 'headcount-analysis',       label: 'Headcount Analysis (Total, M/F)',                     group: 'Snapshots' },

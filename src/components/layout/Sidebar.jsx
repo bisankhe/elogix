@@ -10,6 +10,136 @@ import { useApp }  from '../../context/AppContext.jsx'
 import { SIDEBAR_MENU } from '../../data/sidebarMenu.js'
 import { PERSONAS }     from '../../data/personas.js'
 
+
+// ── Persona → Dashboard mapping (shown ONLY to the logged-in user) ──
+const PERSONA_DASHBOARD = {
+  'super-admin':          { id: 'super-admin-dashboard',            label: 'Super Admin Dashboard',           icon: '👑', level: 1  },
+  'executive':            { id: 'executive-dashboard',              label: 'Executive Dashboard',             icon: '🏛', level: 2  },
+  'hr':                   { id: 'hr-dashboard',                     label: 'HR Manager Dashboard',            icon: '👥', level: 3  },
+  'finance':              { id: 'finance-dashboard',                label: 'Finance Workspace',               icon: '💰', level: 3  },
+  'department':           { id: 'department-dashboard',             label: 'Department Head Dashboard',       icon: '🏢', level: 4  },
+  'branch':               { id: 'branch-dashboard',                 label: 'Branch / Section Dashboard',      icon: '🌿', level: 4  },
+  'hr-officer':           { id: 'hr-officer-dashboard',             label: 'HR Officer Workspace',            icon: '📋', level: 4  },
+  'recruitment-officer':  { id: 'recruitment-officer-dashboard',    label: 'Recruitment Officer Workspace',   icon: '🎯', level: 4  },
+  'it-admin':             { id: 'it-admin-dashboard',               label: 'IT Administrator Workspace',      icon: '💻', level: 4  },
+  'procurement':          { id: 'procurement-dashboard',            label: 'Procurement Workspace',           icon: '📦', level: 4  },
+  'admin-officer':        { id: 'admin-workspace-dashboard',        label: 'Admin Workspace',                 icon: '⚙️', level: 4  },
+  'sales':                { id: 'sales-dashboard',                  label: 'Sales Workspace',                 icon: '📈', level: 4  },
+  'customer-service':     { id: 'customer-service-dashboard',       label: 'Customer Service Workspace',      icon: '🎧', level: 4  },
+  'legal':                { id: 'legal-dashboard',                  label: 'Legal Workspace',                 icon: '⚖️', level: 4  },
+  'operations':           { id: 'operations-dashboard',             label: 'Operations Workspace',            icon: '⚡', level: 4  },
+  'learning-development': { id: 'learning-development-dashboard',   label: 'Learning & Dev Workspace',        icon: '📚', level: 4  },
+  'marketing':            { id: 'marketing-dashboard',              label: 'Marketing Workspace',             icon: '📣', level: 4  },
+  'recruitment':          { id: 'recruitment-dashboard',            label: 'Recruitment Agency Portal',       icon: '🎯', level: 4  },
+  'employee':             { id: 'employee-dashboard',               label: 'My Dashboard',                    icon: '👤', level: 10 },
+}
+
+
+// ══════════════════════════════════════════════════════════════
+// RBAC MODULE ACCESS — which personas see which top-level modules
+// ══════════════════════════════════════════════════════════════
+const MODULE_ACCESS = {
+  // Level 1–2: Super Admin + Executive → see EVERYTHING
+  'super-admin': 'all',
+  'executive':   'all',
+
+  // Level 3: HR Manager → all HR modules, no finance internals
+  'hr': ['dashboard','ai-assistant','org-mgmt','emp-lifecycle','workforce-ops',
+         'perf-talent','emp-experience','hr-services','compliance','reports'],
+
+  // Level 3: Finance → finance + payroll + reports
+  'finance': ['dashboard','ai-assistant','org-mgmt','workforce-ops',
+              'finance-assets','compliance','reports'],
+
+  // Level 4: Department Head → own dept HR + attendance + leave + performance
+  'department': ['dashboard','ai-assistant','emp-lifecycle','workforce-ops',
+                 'perf-talent','emp-experience','hr-services','reports'],
+
+  // Level 4: Branch Manager → same as dept head
+  'branch': ['dashboard','ai-assistant','emp-lifecycle','workforce-ops',
+             'perf-talent','emp-experience','hr-services','reports'],
+
+  // Level 4: HR Officer → HR operations, no admin/finance
+  'hr-officer': ['dashboard','ai-assistant','emp-lifecycle','workforce-ops',
+                 'perf-talent','emp-experience','hr-services','reports'],
+
+  // Level 4: Recruitment Officer → recruitment only
+  'recruitment-officer': ['dashboard','ai-assistant','emp-lifecycle','workforce-ops',
+                          'perf-talent','hr-services','reports'],
+  'recruitment': ['dashboard','ai-assistant','emp-lifecycle','workforce-ops','reports'],
+
+  // Level 4: IT Admin → system + org + reports
+  'it-admin': ['dashboard','ai-assistant','org-mgmt','sys-admin','compliance','reports'],
+
+  // Level 4: Procurement → finance + admin
+  'procurement': ['dashboard','ai-assistant','finance-assets','compliance','reports'],
+
+  // Level 4: Admin Officer → admin + HR services
+  'admin-officer': ['dashboard','ai-assistant','org-mgmt','hr-services',
+                    'finance-assets','compliance','reports'],
+
+  // Level 4: Sales → own performance + reports
+  'sales': ['dashboard','ai-assistant','workforce-ops','perf-talent',
+            'emp-experience','hr-services','reports'],
+
+  // Level 4: Customer Service
+  'customer-service': ['dashboard','ai-assistant','workforce-ops','perf-talent',
+                       'emp-experience','hr-services','reports'],
+
+  // Level 4: Legal + Compliance
+  'legal': ['dashboard','ai-assistant','org-mgmt','compliance','finance-assets','reports'],
+
+  // Level 4: Operations
+  'operations': ['dashboard','ai-assistant','org-mgmt','workforce-ops',
+                 'perf-talent','compliance','reports'],
+
+  // Level 4: Learning & Development
+  'learning-development': ['dashboard','ai-assistant','perf-talent',
+                           'emp-experience','hr-services','reports'],
+
+  // Level 4: Marketing
+  'marketing': ['dashboard','ai-assistant','workforce-ops','perf-talent',
+                'emp-experience','hr-services','reports'],
+
+  // Level 10: Employee → SELF-SERVICE ONLY
+  'employee': ['dashboard','hr-services'],
+}
+
+// ══════════════════════════════════════════════════════════════
+// CHILD ITEM ACCESS — which sub-items employees/officers can see
+// Employees only see self-service items tagged with selfService:true
+// or items in modules they have access to
+// ══════════════════════════════════════════════════════════════
+
+// Items employees can NEVER see (sensitive — payroll internals, admin, etc.)
+const EMPLOYEE_BLOCKED_IDS = new Set([
+  // Payroll internals
+  'payroll-processing','payroll-setup','salary-structure','tax-config',
+  'bank-details-mgmt','payroll-batch','payroll-approval',
+  // Org admin
+  'company-settings','branch-setup','dept-setup','position-setup',
+  'grade-level','job-band','job-family','shift-setup','leave-policy',
+  'org-chart-admin','workflow-config','approval-matrix',
+  // Finance admin
+  'budget-planning','cost-center','chart-of-accounts','journal-entry',
+  'bank-reconciliation','vendor-payment','asset-register',
+  // Compliance admin
+  'audit-log','system-audit','data-privacy-config','risk-register',
+  // Reports (bulk)
+  'payroll-report','hr-analytics','bi-dashboard','advanced-analytics',
+  // System admin
+  'user-management','role-config','permission-matrix','system-config',
+  'email-templates','integration-setup',
+])
+
+// Items ONLY employees see (self-service)
+const EMPLOYEE_ONLY_IDS = new Set([
+  'employee-dashboard','apply-leave','my-attendance','leave-balance',
+  'my-payslip','my-documents','my-profile','my-goals','my-tasks',
+  'my-training','my-feedback','my-grievance','expense-claim',
+  'timesheet','loan-application','advance-salary',
+])
+
 // ── Badge Styles ─────────────────────────────────────────────
 const badgeStyle = (badge) => {
   if (!badge) return null
@@ -163,16 +293,84 @@ export default function Sidebar({ open }) {
 
   if (!open) return null
 
-  // Filter menu by search
+  // ── RBAC: Determine which modules this persona can access ──
+  const allowedModules = MODULE_ACCESS[persona]   // 'all' or array of module ids
+  const isAllAccess    = allowedModules === 'all'
+  const isEmployee     = persona === 'employee'
+  const myDashboard    = PERSONA_DASHBOARD[persona] || PERSONA_DASHBOARD['employee']
+
+  // ── Build RBAC-filtered menu ──────────────────────────────
+  const rbacMenu = SIDEBAR_MENU
+    // 1. Filter top-level modules
+    .filter(menu => isAllAccess || (allowedModules || []).includes(menu.id))
+    // 2. For each allowed module, filter its children
+    .map(menu => {
+      // Inject persona dashboard into dashboard section
+      if (menu.id === 'dashboard') {
+        const myDashItem = {
+          id:    myDashboard.id,
+          label: myDashboard.label,
+          icon:  myDashboard.icon,
+          group: 'My Dashboard',
+          badge: '●',
+        }
+        let children = (menu.children || [])
+          .filter(c => c.group !== 'Persona Dashboards')
+
+        // Employees: only show self-service dashboard items
+        if (isEmployee) {
+          children = children.filter(c =>
+            ['Widgets','Snapshots'].includes(c.group) === false ||
+            ['calendar-events','notifications','birthday-anniversary','upcoming-events'].includes(c.id)
+          )
+        }
+        return { ...menu, children: [myDashItem, ...children] }
+      }
+
+      // hr-services module: employees see only self-service children
+      if (menu.id === 'hr-services' && isEmployee) {
+        const selfServiceIds = new Set([
+          'apply-leave','leave-balance','my-attendance','my-payslip',
+          'my-documents','my-profile','expense-claim','loan-application',
+          'advance-salary','timesheet','my-feedback','my-grievance',
+          'my-tasks','my-training','employee-self-service',
+        ])
+        return {
+          ...menu,
+          children: (menu.children || []).filter(c => selfServiceIds.has(c.id)),
+        }
+      }
+
+      // All other modules for non-employee: filter blocked IDs
+      if (!isEmployee && !isAllAccess) {
+        const lvl4Blocked = new Set([
+          'payroll-processing','payroll-setup','salary-structure',
+          'tax-config','payroll-batch','payroll-approval',
+          'company-settings','workflow-config','permission-matrix',
+          'system-config','user-management','role-config',
+          'integration-setup','audit-log','system-audit',
+        ])
+        return {
+          ...menu,
+          children: (menu.children || []).filter(c => !lvl4Blocked.has(c.id)),
+        }
+      }
+
+      return menu
+    })
+    // 3. Remove empty sections
+    .filter(menu => menu.children?.length > 0)
+
+  // ── Search filter on top of RBAC ────────────────────────────
   const isSearching = !!search.trim()
   const filteredMenu = isSearching
-    ? SIDEBAR_MENU.map(menu => ({
+    ? rbacMenu.map(menu => ({
         ...menu,
-        children: menu.children?.filter(child =>
-          child.label.toLowerCase().includes(search.toLowerCase())
-        )
+        children: menu.children?.filter(c =>
+          c.label.toLowerCase().includes(search.toLowerCase())
+        ),
       })).filter(menu => menu.children?.length > 0)
-    : SIDEBAR_MENU
+    : rbacMenu
 
   return (
     <aside
@@ -243,15 +441,13 @@ export default function Sidebar({ open }) {
         )}
       </div>
 
-      {/* ── Persona Switcher (compact by default -- shows only the
-           active persona; expands to a height-capped, independently
-           scrollable list on demand, so it never crowds out the real
-           page navigation below it) ── */}
-      <div style={{
-        padding: '10px 10px 8px',
-        borderBottom: '1px solid rgba(255,255,255,.06)',
-        flexShrink: 0,
-      }}>
+        {/* Persona Switcher — SuperAdmin + Executive only */}
+        {['super-admin','executive'].includes(persona) && (
+        <div style={{
+          padding: '10px 10px 8px',
+          borderBottom: '1px solid rgba(255,255,255,.06)',
+          flexShrink: 0,
+        }}>
         <button
           onClick={() => setPersonaListOpen(o => !o)}
           style={{
@@ -295,7 +491,12 @@ export default function Sidebar({ open }) {
               {t('switchPersona')}
             </div>
 
-            {PERSONAS.map(p => {
+            {PERSONAS.filter(p =>
+              // Only show relevant personas to admins; others see only their own
+              ['super-admin','executive'].includes(persona)
+                ? true
+                : p.id === persona
+            ).map(p => {
               const isActive = persona === p.id
               return (
                 <button
@@ -351,7 +552,9 @@ export default function Sidebar({ open }) {
             })}
           </div>
         )}
-      </div>
+        </div>
+        )}
+
 
       {/* ── Navigation (now genuinely gets the bulk of the sidebar's
            vertical space -- flex: 1 on a flex-column parent that no

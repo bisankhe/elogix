@@ -66,6 +66,25 @@ const MOCK_TICKETS = [
   { id:'t3', ticket_no:'SUPP-003', company:'Solid Future HR', subject:'SSF report format', priority:'normal', status:'resolved', category:'billing', created:'3 days ago' },
 ]
 
+// ── Export helper ─────────────────────────────────────────────
+function downloadCSV(data, filename) {
+  if (!data?.length) return
+  const headers = Object.keys(data[0])
+  const rows = data.map(row =>
+    headers.map(h => JSON.stringify(String(row[h] ?? ''))).join(',')
+  )
+  const csv  = [headers.join(','), ...rows].join('\n')
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url  = URL.createObjectURL(blob)
+  const a    = document.createElement('a')
+  a.href     = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
 export default function ELogixAdminPage({ onLogout }) {
   const [tab, setTab] = useState('dashboard')
   const [companies, setCompanies] = useState(MOCK_COMPANIES)
@@ -154,12 +173,27 @@ export default function ELogixAdminPage({ onLogout }) {
                 color:A,fontSize:11,fontWeight:800,cursor:'pointer'}}>
               + Onboard Client
             </button>
-            <button onClick={()=>notify('📤 Exporting company list...')}
+            <button onClick={()=>{
+                const exportData = companies.map(c=>({
+                  'Company Name': c.name,
+                  'Slug':         c.slug,
+                  'Plan':         c.plan,
+                  'Status':       c.status,
+                  'Employees':    c.employees,
+                  'MRR (NPR)':    c.mrr,
+                  'Joined':       c.joined,
+                  'Admin Email':  c.admin_email||'',
+                  'Industry':     c.industry||'',
+                  'Phone':        c.phone||'',
+                }))
+                downloadCSV(exportData, `eLogix_Companies_${new Date().toISOString().slice(0,10)}.csv`)
+                notify('✅ Company list exported as CSV')
+              }}
               style={{padding:'8px 14px',borderRadius:9,border:'1.5px solid rgba(255,255,255,.4)',
                 background:'rgba(255,255,255,.15)',color:'#fff',fontSize:11,cursor:'pointer'}}>
-              📤 Export
+              📤 Export CSV
             </button>
-            <button onClick={()=>{ if(confirm('Logout from eLogix Admin Panel?')){ ['elogix_admin_token','elogix_admin_user','elogix_admin_key'].forEach(k=>localStorage.removeItem(k)); onLogout?.() } }}
+            <button onClick={()=>{ onLogout?.() }}
               style={{padding:'8px 14px',borderRadius:9,border:'1.5px solid rgba(255,255,255,.4)',
                 background:'rgba(255,255,255,.15)',color:'#fff',fontSize:11,cursor:'pointer'}}>
               🔒 Logout
