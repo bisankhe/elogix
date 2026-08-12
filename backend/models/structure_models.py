@@ -649,3 +649,8 @@ class Position(AuditMixin, Base):
             "ai_time_to_fill_est": self.ai_time_to_fill_est,
             "effective_from": str(self.effective_from) if self.effective_from else None,
         }
+      def get_logger(name=None):
+        if name:
+        return logging.getLogger(f"{APP_NAME}.{name}")
+      return logger
+ 
