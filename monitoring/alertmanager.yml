@@ -1,8 +1,8 @@
 # FILE: monitoring/alertmanager.yml
 global:
   smtp_smarthost: 'smtp.gmail.com:587'
-  smtp_from: 'alerts@nephrpro.com'
-  smtp_auth_username: 'alerts@nephrpro.com'
+  smtp_from: 'alerts@elogix.com'
+  smtp_auth_username: 'alerts@elogix.com'
   smtp_auth_password: 'your-gmail-app-password'
 
 route:
@@ -14,8 +14,8 @@ route:
 receivers:
   - name: 'team-email'
     email_configs:
-      - to: 'admin@nephrpro.com'
-        subject: '[NepHR Pro] ALERT: {{ .GroupLabels.alertname }}'
+      - to: 'admin@elogix.com'
+        subject: '[eLogix HRMS] ALERT: {{ .GroupLabels.alertname }}'
         body: |
           {{ range .Alerts }}
           Alert: {{ .Annotations.summary }}

@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/exit_management_schema.sql
--- NepHR Pro — Offboarding > Exit Management Module (5 pages)
+-- eLogix HRMS — Offboarding > Exit Management Module (5 pages)
 --   1. employee_resignations        (Resignation Management)
 --   2. exit_clearances + exit_clearance_departments (Exit Clearance)
 --   3. exit_asset_returns + exit_asset_return_items   (Asset Return)

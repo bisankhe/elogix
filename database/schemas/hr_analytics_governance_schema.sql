@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/hr_analytics_governance_schema.sql
--- NepHR Pro -- Reports, Analytics & BI > HR Analytics
+-- eLogix HRMS -- Reports, Analytics & BI > HR Analytics
 -- (3 pages: Compliance Reports, Workforce Analytics, Annual HR Audit)
 --
 -- Design note: Annual HR Audit is the SAME Section 80 mandatory audit

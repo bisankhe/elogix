@@ -1,6 +1,6 @@
 """
 FILE: backend/models/employee_models.py
-NepHR Pro — Employee & HR Policy Application Models
+eLogix HRMS — Employee & HR Policy Application Models
 Covers: Employee Profile, Policy Acknowledgement, Policy Audit
 Used by: hr_policy_routes.py
 """

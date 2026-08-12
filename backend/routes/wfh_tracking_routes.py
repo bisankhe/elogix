@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/wfh_tracking_routes.py
-NepHR Pro — Workforce Operations > Attendance Management > Daily Attendance
+eLogix HRMS — Workforce Operations > Attendance Management > Daily Attendance
 > Work From Home Tracking (1 page)
 URL prefix: /api/v1/wfh-tracking
 

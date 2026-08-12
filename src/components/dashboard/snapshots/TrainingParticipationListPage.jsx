@@ -137,7 +137,7 @@ export default function TrainingParticipationListPage() {
         {icon:'👁',label:'View Profile',key:'view'},{icon:'🔄',label:'Reassign Course',key:'reassign'},
         {icon:'📧',label:'Send Reminder',key:'remind'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Training Participation" columns={['Employee','Role','Department','Course','Tag','Start Date','Status','Progress %']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Training Participation" columns={['Employee','Role','Department','Course','Tag','Start Date','Status','Progress %']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

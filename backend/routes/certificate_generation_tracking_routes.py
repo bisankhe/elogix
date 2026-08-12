@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/certificate_generation_tracking_routes.py
-NepHR Pro — Performance & Talent Management > Talent Development >
+eLogix HRMS — Performance & Talent Management > Talent Development >
 Learning & Development > Generate Certificate + Certification Tracking
 (2 pages)
 URL prefix: /api/v1/certificates

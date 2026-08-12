@@ -1,7 +1,7 @@
-# NepHR Pro — CI/CD Pipeline
+# eLogix HRMS — CI/CD Pipeline
 # Runs on: push to main → test → build → deploy to staging → manual approve → production
 
-name: Deploy NepHR Pro
+name: Deploy eLogix HRMS
 
 on:
   push:
@@ -17,8 +17,8 @@ jobs:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_DB: nephr_test
-          POSTGRES_USER: nephr
+          POSTGRES_DB: elogix_test
+          POSTGRES_USER: elogix
           POSTGRES_PASSWORD: testpass
         options: >-
           --health-cmd pg_isready
@@ -32,7 +32,7 @@ jobs:
       - run: pip install -r backend/requirements.txt
       - run: python -m pytest backend/tests/ -v
         env:
-          DATABASE_URL: postgresql://nephr:testpass@localhost:5432/nephr_test
+          DATABASE_URL: postgresql://elogix:testpass@localhost:5432/elogix_test
           FLASK_ENV: testing
 
   # 2. Build Frontend
@@ -64,7 +64,7 @@ jobs:
       - name: Deploy to staging server
         run: |
           echo "Deploy to staging here"
-          # ssh user@staging.nephrpro.com 'cd /app && git pull && docker-compose up -d'
+          # ssh user@staging.elogix.com 'cd /app && git pull && docker-compose up -d'
 
   # 4. Deploy to Production (manual approval required)
   deploy-production:
@@ -72,7 +72,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: production
-      url: https://app.nephrpro.com
+      url: https://app.elogix.com
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
@@ -80,4 +80,4 @@ jobs:
       - name: Deploy to production
         run: |
           echo "Deploy to production here"
-          # ssh user@production.nephrpro.com 'cd /app && git pull && docker-compose up -d'
+          # ssh user@production.elogix.com 'cd /app && git pull && docker-compose up -d'

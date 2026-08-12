@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/ess_self_service_schema.sql
--- NepHR Pro -- HR Services & Support > Employee Self Service (ESS)
+-- eLogix HRMS -- HR Services & Support > Employee Self Service (ESS)
 -- (5 pages: My Profile, Profile Update, My Documents, My Digital
 -- Signature, My Internal Training Certificates)
 --

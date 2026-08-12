@@ -259,7 +259,7 @@ export default function VendorLeaveRequestsPage() {
       )}
 
       {ctx && <ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={CTX_ACTIONS} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel && <ExcelModal title="Leave Requests" columns={['Request No','Employee ID','Employee Name','Vendor','Leave Type','From Date','To Date','Days','Reason','Status','Applied On']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel && <ExcelModal title="Leave Requests" columns={['Request No','Employee ID','Employee Name','Vendor','Leave Type','From Date','To Date','Days','Reason','Status','Applied On']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

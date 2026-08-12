@@ -1,6 +1,6 @@
 """
 FILE: backend/utils/notifications.py
-Email & in-app alert notifications for NepHR Pro.
+Email & in-app alert notifications for eLogix HRMS.
 Handles: document expiry, contract renewal, probation alerts,
          CBA compliance, SSF/insurance violations, invoice disputes.
 """
@@ -16,7 +16,7 @@ SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
 SMTP_USER = os.getenv("SMTP_USER", "")
 SMTP_PASS = os.getenv("SMTP_PASS", "")
-FROM_EMAIL= os.getenv("FROM_EMAIL", "NepHR Pro <noreply@nephrpro.com>")
+FROM_EMAIL= os.getenv("FROM_EMAIL", "eLogix HRMS <noreply@elogix.com>")
 
 # ── Core email sender ─────────────────────────────────────────
 def send_email(to: str | list, subject: str, html_body: str,
@@ -50,11 +50,11 @@ def _html(title: str, body_html: str, severity: str = "info") -> str:
 <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;
      box-shadow:0 2px 8px rgba(0,0,0,.1)">
   <div style="background:{color};padding:20px 24px">
-    <h2 style="color:#fff;margin:0;font-size:18px">NepHR Pro — {title}</h2>
+    <h2 style="color:#fff;margin:0;font-size:18px">eLogix HRMS — {title}</h2>
   </div>
   <div style="padding:24px">{body_html}</div>
   <div style="padding:12px 24px;background:#f1f5f9;font-size:11px;color:#64748b">
-    NepHR Pro | Nepal Labour Act 2074 Compliant | {datetime.now().strftime('%Y-%m-%d %H:%M')} NPT
+    eLogix HRMS | Nepal Labour Act 2074 Compliant | {datetime.now().strftime('%Y-%m-%d %H:%M')} NPT
   </div>
 </div></body></html>"""
 

@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/overtime_monitoring_routes.py
-NepHR Pro — Workforce Operations > Attendance Management >
+eLogix HRMS — Workforce Operations > Attendance Management >
 Overtime & Monitoring Module (5 pages)
 URL prefix: /api/v1/overtime-monitoring
 

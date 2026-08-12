@@ -9,7 +9,7 @@ const A = '#15803d'
 
 const HISTORY = [
   { id:'h1', date:'2025-06-16', event_type:'hire', title:'Cloud Architect', dept:'Information Technology',
-    manager:'Rajesh Sharma', salary_npr:180000, classification:'Regular', note:'Joined NepHR Pro as Cloud Architect.',
+    manager:'Rajesh Sharma', salary_npr:180000, classification:'Regular', note:'Joined eLogix HRMS as Cloud Architect.',
     expanded_detail:'Hired through standard recruitment pipeline (JRF-2025-005). AI screening score: 97%. Offer accepted within 2 days.' },
 ]
 
@@ -111,7 +111,7 @@ export default function EmploymentHistoryPage() {
         {icon:'👁',label:'View Full Record',key:'view'},{icon:'📤',label:'Export',key:'export'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Employment History" columns={['Date','Event Type','Title','Department','Manager','Salary NPR','Note']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Employment History" columns={['Date','Event Type','Title','Department','Manager','Salary NPR','Note']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

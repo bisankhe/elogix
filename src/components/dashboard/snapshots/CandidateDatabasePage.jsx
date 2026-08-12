@@ -332,7 +332,7 @@ export default function CandidateDatabasePage() {
       )}
 
       {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={['ATS Dashboard','Job Posting','Vacancy Management']} actions={CTX} onAction={(k,item)=>{if(k==='view')setSelected(item)}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Candidate Database" columns={['Code','Name','Email','Phone','City','Current Role','Experience (yrs)','Education','Skills','AI Score','Stage','Source','Tags','GDPR Consent','GDPR Expiry']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Candidate Database" columns={['Code','Name','Email','Phone','City','Current Role','Experience (yrs)','Education','Skills','AI Score','Stage','Source','Tags','GDPR Consent','GDPR Expiry']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
       <Drawer item={selected} gradient={G} onClose={()=>setSelected(null)} rows={[
         ['Code',selected?.code],['Name',selected?.name],['Email',selected?.email],
         ['Phone',selected?.phone],['City',selected?.city],

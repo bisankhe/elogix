@@ -1,5 +1,5 @@
 // FILE: src/components/shared/HRCopilot.jsx
-// NepHR Pro - HR Co-Pilot (Persistent Right-Side Chat Panel)
+// eLogix HRMS - HR Co-Pilot (Persistent Right-Side Chat Panel)
 //
 // SPEC COMPLIANCE:
 //   - 380px right-side sliding panel, non-blocking, always accessible
@@ -372,7 +372,7 @@ function buildPrompt(lang, roleLevel, personaLabel, currentPage) {
     super_admin: 'You are briefing a Super Administrator. Provide complete access: all data, all modules, technical details included.',
     staff: 'You are briefing a Staff member. Provide helpful, clear answers about HR policies, leave, attendance, and company information.',
   }
-  return `You are NepHR Pro HR Co-Pilot - a persistent AI assistant embedded in the NepHR Pro HRIS/HRMS platform.
+  return `You are eLogix HRMS HR Co-Pilot - a persistent AI assistant embedded in the eLogix HRMS HRIS/HRMS platform.
 
 CRITICAL LANGUAGE RULE: Respond ENTIRELY in ${langName}. Every word. No mixing. If user wrote in ${langName}, respond 100% in ${langName}.
 

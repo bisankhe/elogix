@@ -287,7 +287,7 @@ export default function VendorSLAPage() {
       )}
 
       {ctx && <ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={CTX_ACTIONS} onAction={(k,item)=>{if(k==='view')setSelected(item)}} onClose={()=>setCtx(null)}/>}
-      {showExcel && <ExcelModal title="SLA Performance" columns={['Contract Code','Vendor','Period','Overall Score','KPI 1','KPI 2','KPI 3','Breaches','Penalties','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel && <ExcelModal title="SLA Performance" columns={['Contract Code','Vendor','Period','Overall Score','KPI 1','KPI 2','KPI 3','Breaches','Penalties','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
       <Drawer item={selected} gradient={G} onClose={()=>setSelected(null)} rows={[
         ['Contract',selected?.contract_code],['Type',selected?.contract_type],['Period',selected?.period],
         ['Overall Score',selected?.overall_score+'/100'],['Status',selected?.overall_status],

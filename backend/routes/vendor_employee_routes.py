@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/vendor_employee_routes.py
-NepHR Pro — Vendor / Outsource Employee Management
+eLogix HRMS — Vendor / Outsource Employee Management
 URL prefix: /api/v1/ve
 Covers all 5 modules:
   1. /ve/employees       — Vendor Employee Roster (CRUD + onboard + offboard)
@@ -1298,4 +1298,4 @@ def excel_template(module):
     if not b: return error("openpyxl required", 500)
     return send_file(io.BytesIO(b),
                      mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                     as_attachment=True, download_name=f"nephr_{module}_template.xlsx")
+                     as_attachment=True, download_name=f"elogix_{module}_template.xlsx")

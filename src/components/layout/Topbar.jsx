@@ -1,3 +1,4 @@
+import React from 'react'
 // ============================================================
 // FILE: src/components/layout/Topbar.jsx
 // PURPOSE: Application topbar — persona display, global search,
@@ -5,9 +6,9 @@
 //          notification bell, AI assistant, user avatar
 // ============================================================
 
-import { getTenantContext } from '../../data/rolePersonaMap.js'
 import { useState, useRef, useEffect } from 'react'
 import { useApp } from '../../context/AppContext.jsx'
+import { getTenantContext } from '../../data/rolePersonaMap.js'
 import { LANGUAGES } from '../../i18n/index.js'
 
 // ── User Menu Dropdown ────────────────────────────────────────
@@ -36,7 +37,7 @@ function UserMenu({ currentPersona, t, onClose, onLogout, onProfile, onSettings,
             <div style={{ fontSize: 12, fontWeight: 700, color: '#0f172a' }}>
               {currentPersona?.icon} {currentPersona?.label}
             </div>
-            <div style={{ fontSize: 10, color: '#94a3b8' }}>NepHR Pro · Session Active</div>
+            <div style={{ fontSize: 10, color: '#94a3b8' }}>eLogix HRMS · Session Active</div>
           </div>
         </div>
       </div>
@@ -195,6 +196,140 @@ function TBtn({ onClick, children, badge, title, active }) {
 }
 
 // ── Main Topbar ───────────────────────────────────────────────
+
+// ── Dock config (compact version for topbar) ──────────────────
+const TOPBAR_DOCK = {
+  'super-admin': [
+    { emoji:'👨‍💼', label:'Employees',   page:'employee-directory',    color:'#0284c7' },
+    { emoji:'⏰',  label:'Attendance',  page:'live-attendance',       color:'#0d9488' },
+    { emoji:'📅',  label:'Leave',       page:'leave-setup',           color:'#f59e0b' },
+    { emoji:'💰',  label:'Payroll',     page:'automated-payroll',     color:'#16a34a' },
+    { emoji:'📊',  label:'Analytics',   page:'bi-dashboard',          color:'#8b5cf6' },
+    { emoji:'🤖',  label:'AI Pilot',    action:'ai',                  color:'#7c3aed', center:true },
+    { emoji:'📋',  label:'Recruitment', page:'ats-dashboard',         color:'#e11d48' },
+    { emoji:'🎯',  label:'Performance', page:'performance-dashboard', color:'#0ea5e9' },
+  ],
+  executive: [
+    { emoji:'📊',  label:'BI Reports',  page:'ai-business-intelligence',color:'#0284c7' },
+    { emoji:'🔮',  label:'AI Insights', page:'predictive-analytics',  color:'#8b5cf6' },
+    { emoji:'👨‍💼', label:'Headcount',  page:'headcount-analysis',    color:'#0d9488' },
+    { emoji:'🤖',  label:'AI Pilot',    action:'ai',                  color:'#7c3aed', center:true },
+    { emoji:'📈',  label:'Performance', page:'performance-dashboard', color:'#16a34a' },
+    { emoji:'💰',  label:'Payroll',     page:'payroll-snapshot',      color:'#f59e0b' },
+  ],
+  hr: [
+    { emoji:'👨‍💼', label:'Employees',   page:'employee-directory',    color:'#0284c7' },
+    { emoji:'⏰',  label:'Attendance',  page:'live-attendance',       color:'#0d9488' },
+    { emoji:'📅',  label:'Leave',       page:'leave-approval',        color:'#f59e0b' },
+    { emoji:'💰',  label:'Payroll',     page:'automated-payroll',     color:'#16a34a' },
+    { emoji:'🤖',  label:'AI Pilot',    action:'ai',                  color:'#7c3aed', center:true },
+    { emoji:'📋',  label:'Recruitment', page:'ats-dashboard',         color:'#e11d48' },
+    { emoji:'🎯',  label:'Performance', page:'performance-dashboard', color:'#0ea5e9' },
+    { emoji:'📣',  label:'Announcements',page:'announcement-board',   color:'#8b5cf6' },
+  ],
+  department: [
+    { emoji:'👥',  label:'My Team',    page:'employee-directory',    color:'#0284c7' },
+    { emoji:'⏰',  label:'Attendance', page:'live-attendance',       color:'#0d9488' },
+    { emoji:'✅',  label:'Approvals',  page:'leave-approval',        color:'#16a34a' },
+    { emoji:'🤖',  label:'AI Pilot',   action:'ai',                  color:'#7c3aed', center:true },
+    { emoji:'🎯',  label:'Goals',      page:'okr-management',        color:'#8b5cf6' },
+    { emoji:'📊',  label:'Reports',    page:'bi-dashboard',          color:'#0ea5e9' },
+  ],
+  finance: [
+    { emoji:'💰',  label:'Payroll',    page:'automated-payroll',     color:'#16a34a' },
+    { emoji:'🏦',  label:'SSF/Tax',    page:'ssf-information',       color:'#0284c7' },
+    { emoji:'💵',  label:'Payslips',   page:'payslip-generation',    color:'#0d9488' },
+    { emoji:'🤖',  label:'AI Pilot',   action:'ai',                  color:'#7c3aed', center:true },
+    { emoji:'🧾',  label:'Bank',       page:'bank-transfer-file',    color:'#f59e0b' },
+    { emoji:'📊',  label:'Reports',    page:'payroll-reports',       color:'#8b5cf6' },
+  ],
+  employee: [
+    { emoji:'⏰',  label:'Attendance', page:'live-attendance',       color:'#0d9488' },
+    { emoji:'📅',  label:'Apply Leave',page:'leave-request',         color:'#f59e0b' },
+    { emoji:'🌴',  label:'Balance',    page:'leave-balance',         color:'#16a34a' },
+    { emoji:'💰',  label:'Payslip',    page:'payslip-generation',    color:'#0284c7' },
+    { emoji:'🤖',  label:'AI Pilot',   action:'ai',                  color:'#7c3aed', center:true },
+    { emoji:'📄',  label:'Documents',  page:'document-management',   color:'#8b5cf6' },
+    { emoji:'🎯',  label:'My Goals',   page:'goal-assignment',       color:'#0ea5e9' },
+    { emoji:'📣',  label:'News',       page:'announcement-board',    color:'#e11d48' },
+  ],
+}
+const DEFAULT_TOPBAR_DOCK = [
+  { emoji:'⏰',  label:'Attendance', page:'live-attendance',    color:'#0d9488' },
+  { emoji:'📅',  label:'Leave',      page:'leave-request',      color:'#f59e0b' },
+  { emoji:'💰',  label:'Payroll',    page:'automated-payroll',  color:'#16a34a' },
+  { emoji:'🤖',  label:'AI Pilot',   action:'ai',               color:'#7c3aed', center:true },
+  { emoji:'📄',  label:'Documents',  page:'document-management',color:'#8b5cf6' },
+]
+
+function InlineQuickDock() {
+  const { navTo, currentPersona, sub, darkMode, setShowNotif, setShowAI } = useApp()
+  const [hoveredIdx, setHoveredIdx] = React.useState(null)
+  const personaId = currentPersona?.id || ''
+  const items = TOPBAR_DOCK[personaId] || DEFAULT_TOPBAR_DOCK
+
+  const handleClick = (item) => {
+    if (item.action === 'ai')    { setShowAI(v => !v); return }
+    if (item.action === 'notif') { setShowNotif(v => !v); return }
+    if (item.page && navTo)        navTo(item.page)
+  }
+
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap:2 }}>
+      {items.map((item, i) => {
+        const isActive  = item.page && sub === item.page
+        const isHovered = hoveredIdx === i
+        const isCenter  = !!item.center
+        return (
+          <div key={i} style={{ position:'relative', display:'flex', flexDirection:'column', alignItems:'center' }}
+            onMouseEnter={() => setHoveredIdx(i)}
+            onMouseLeave={() => setHoveredIdx(null)}>
+            {/* Tooltip */}
+            {isHovered && (
+              <div style={{ position:'absolute', bottom:'calc(100% + 6px)', left:'50%',
+                transform:'translateX(-50%)', background:'#0f172a', color:'#fff',
+                fontSize:9, fontWeight:700, whiteSpace:'nowrap', padding:'3px 8px',
+                borderRadius:6, zIndex:300, pointerEvents:'none',
+                boxShadow:'0 4px 12px rgba(0,0,0,.25)' }}>
+                {item.label}
+                <div style={{ position:'absolute', top:'100%', left:'50%', transform:'translateX(-50%)',
+                  width:0, height:0, borderLeft:'4px solid transparent', borderRight:'4px solid transparent',
+                  borderTop:'4px solid #0f172a' }}/>
+              </div>
+            )}
+            <button
+              onClick={() => handleClick(item)}
+              style={{
+                width:  isCenter ? 34 : 30,
+                height: isCenter ? 34 : 30,
+                borderRadius: isCenter ? '50%' : 8,
+                border: isActive ? `1.5px solid ${item.color}60` : '1.5px solid transparent',
+                background: isCenter
+                  ? `linear-gradient(135deg,#1e1b4b,${item.color})`
+                  : isActive
+                    ? `${item.color}18`
+                    : isHovered
+                      ? `${item.color}12`
+                      : 'transparent',
+                cursor:'pointer', fontSize: isCenter ? 15 : 14,
+                display:'flex', alignItems:'center', justifyContent:'center',
+                transition:'all .15s', flexShrink:0,
+                boxShadow: isActive ? `0 0 0 2px ${item.color}30` : 'none',
+              }}>
+              {item.emoji}
+            </button>
+            {/* Active dot */}
+            {isActive && (
+              <div style={{ width:3, height:3, borderRadius:'50%',
+                background:item.color, marginTop:1, flexShrink:0 }}/>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 export default function Topbar({ sidebarOpen, setSidebarOpen, onLangClick, onNotifClick, onAIClick, onLogout, onProfile, onSettings }) {
   const {
     persona, currentPersona,
@@ -259,7 +394,7 @@ export default function Topbar({ sidebarOpen, setSidebarOpen, onLangClick, onNot
           <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a', lineHeight: 1.2 }}>
             {t(currentPersona?.labelKey) || currentPersona?.label}
           </div>
-          <div style={{ fontSize: 10, color: '#94a3b8' }}>NepHR Pro</div>
+          <div style={{ fontSize: 10, color: '#94a3b8' }}>eLogix HRMS</div>
         </div>
       </div>
 
@@ -287,8 +422,16 @@ export default function Topbar({ sidebarOpen, setSidebarOpen, onLangClick, onNot
         {showSearch && <SearchBar t={t} onClose={() => setShowSearch(false)} />}
       </div>
 
-      {/* ── Spacer ── */}
-      <div style={{ flex: 1 }} />
+      {/* ── Inline Quick Dock — fills center of topbar ── */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 1,
+        flex: 1, justifyContent: 'center',
+        overflowX: 'auto', padding: '0 8px',
+        scrollbarWidth: 'none', msOverflowStyle: 'none',
+        minWidth: 0,
+      }}>
+        <InlineQuickDock />
+      </div>
 
       {/* ── Nepal Date ── */}
       <div style={{ fontSize: 11, color: '#94a3b8', flexShrink: 0, display: 'none' }}

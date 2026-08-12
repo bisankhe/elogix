@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 def make_engine(database_url: str = None):
     url = database_url or os.getenv(
         "DATABASE_URL",
-        "postgresql://nephr:nephr_pass@localhost:5432/nephr_pro"
+        "postgresql://elogix_user:elogix_pass@localhost:5432/elogix_hrms"
     )
     # Heroku / Render compat: replace postgres:// with postgresql://
     if url.startswith("postgres://"):
@@ -32,9 +32,9 @@ def make_engine(database_url: str = None):
         pool_pre_ping  = True,       # reconnect on stale connections
         echo           = os.getenv("SQLALCHEMY_ECHO", "false").lower() == "true",
         connect_args   = {
-            "options":           "-csearch_path=nephr,public",
+            "options":           "-csearch_path=elogix,public",
             "connect_timeout":   10,
-            "application_name":  "nephr_pro_backend",
+            "application_name":  "elogix_hrms_backend",
         },
     )
     # Set timezone to Nepal (UTC+5:45)
@@ -93,7 +93,7 @@ def check_db_health(engine) -> dict:
 # ── Alembic config helper ─────────────────────────────────────
 def get_alembic_url() -> str:
     """Used by alembic/env.py"""
-    url = os.getenv("DATABASE_URL", "postgresql://nephr:nephr_pass@localhost:5432/nephr_pro")
+    url = os.getenv("DATABASE_URL", "postgresql://elogix_user:elogix_pass@localhost:5432/elogix_hrms")
     return url.replace("postgres://", "postgresql://", 1) if url.startswith("postgres://") else url
 
 

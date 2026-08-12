@@ -1,6 +1,6 @@
 """
 FILE: backend/utils/voice_input.py
-Audio transcription for NepHR Pro voice input fields.
+Audio transcription for eLogix HRMS voice input fields.
 Supports: Nepali (nep) + English (en) using Whisper API or browser Web Speech API fallback.
 Every form field has 🎤 voice input — this is the backend handler.
 """

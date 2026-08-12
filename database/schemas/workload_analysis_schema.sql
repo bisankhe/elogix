@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/workload_analysis_schema.sql
--- NepHR Pro — Performance & Talent Management > Work & Performance >
+-- eLogix HRMS — Performance & Talent Management > Work & Performance >
 -- Workload Analysis Module (2 pages)
 --
 -- Design note: this is the FIRST module of the Performance & Talent

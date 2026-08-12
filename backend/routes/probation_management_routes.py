@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/probation_management_routes.py
-NepHR Pro — Onboarding > Probation Management Module (5 pages)
+eLogix HRMS — Onboarding > Probation Management Module (5 pages)
 URL prefix: /api/v1/probation
 
   1. /7-days        — 7 Days Review (foundation checklist)

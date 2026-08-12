@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/integration_api_schema.sql
--- NepHR Pro -- System Administration > Integration & API
+-- eLogix HRMS -- System Administration > Integration & API
 -- (3 pages: API & Third Party Integration, Email & SMS Integration,
 -- Biometric Integration)
 --

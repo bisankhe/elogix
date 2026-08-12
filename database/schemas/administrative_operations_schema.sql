@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/administrative_operations_schema.sql
--- NepHR Pro -- Finance, Assets & Administration > Administrative
+-- eLogix HRMS -- Finance, Assets & Administration > Administrative
 -- Operations (11 pages: Visitor Management, Meeting Room Booking,
 -- Minutes of Meeting, Travel Management, Transport Management,
 -- Cafeteria Management, Helpdesk, Facility Management, Gate Pass

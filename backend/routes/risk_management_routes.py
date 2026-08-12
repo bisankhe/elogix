@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/risk_management_routes.py
-NepHR Pro -- Compliance & Risk Management > Risk Management (6 pages:
+eLogix HRMS -- Compliance & Risk Management > Risk Management (6 pages:
 KRI Dashboard, Compliance Risk, Payroll Risk, Attrition Risk, Security
 Risk, Risk Alerts)
 URL prefix: /api/v1/risk-management

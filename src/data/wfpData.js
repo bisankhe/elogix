@@ -5,7 +5,7 @@
  */
 
 export const FISCAL_YEAR = '2081/82 BS (2024/25 AD)'
-export const COMPANY     = 'NepHR Pro Demo Company'
+export const COMPANY     = 'eLogix HRMS Demo Company'
 
 // ── Gradients per planning module ───────────────────────────
 export const WFP_THEME = {

@@ -144,7 +144,7 @@ export default function TaxDepartmentLettersPage() {
         {icon:'👁',label:'View Letter',key:'view'},{icon:'📤',label:'Mark Submitted',key:'submit'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📥',label:'Download PDF',key:'download'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Tax Department Letters" columns={['Subject','Type','Fiscal Year','Submitted Date','Reference No','Amount NPR','Deadline','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Tax Department Letters" columns={['Subject','Type','Fiscal Year','Submitted Date','Reference No','Amount NPR','Deadline','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

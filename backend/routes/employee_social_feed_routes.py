@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/employee_social_feed_routes.py
-NepHR Pro -- Employee Social Feed / Employee Hub
+eLogix HRMS -- Employee Social Feed / Employee Hub
 (Employee Experience & Culture > Employee Engagement > Employee Social Feed)
 
 URL prefix: /api/v1/social-feed

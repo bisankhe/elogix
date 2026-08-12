@@ -1,4 +1,4 @@
-# NepHR Pro — Legal Documents Index
+# eLogix HRMS — Legal Documents Index
 **Created:** June 11, 2026 | **Classification:** CONFIDENTIAL
 
 ---
@@ -26,7 +26,7 @@ All 12 required legal documents are organized here:
 
 ## ⚠️ IMPORTANT NOTICE
 
-> These are **template drafts** prepared for NepHR Pro's reference.
+> These are **template drafts** prepared for eLogix HRMS's reference.
 > **All documents MUST be reviewed and approved by qualified legal counsel**
 > in each target jurisdiction before publication or use.
 >
@@ -47,4 +47,4 @@ All 12 required legal documents are organized here:
 
 ---
 
-*© 2026 NepHR Pro Pvt. Ltd.*
+*© 2026 eLogix HRMS Pvt. Ltd.*

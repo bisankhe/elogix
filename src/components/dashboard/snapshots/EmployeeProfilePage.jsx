@@ -9,7 +9,7 @@ const A = '#4338ca'
 
 const PROFILE = {
   code:'EMP-0041', name:'Gita Maharjan', position:'Cloud Architect', dept:'Information Technology',
-  branch:'KTM HQ', manager:'Rajesh Sharma (CTO)', email:'gita.m@nephr.com.np', phone:'980-1111111',
+  branch:'KTM HQ', manager:'Rajesh Sharma (CTO)', email:'gita.m@elogix.com.np', phone:'980-1111111',
   status:'active', join_date:'2025-06-16', tenure:'2 weeks', employment_type:'Regular',
   avatar_color:'#3b82f6',
   quick_stats:[

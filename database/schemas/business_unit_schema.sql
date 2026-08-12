@@ -1,6 +1,6 @@
 -- ============================================================
 -- FILE: database/schemas/business_unit_schema.sql
--- NepHR Pro — Business Unit / Division Setup Schema
+-- eLogix HRMS — Business Unit / Division Setup Schema
 -- Standalone dedicated schema for BU module
 -- ============================================================
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

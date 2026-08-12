@@ -155,7 +155,7 @@ export default function KRAManagementPage() {
         {icon:'👁',label:'View JD Match Detail',key:'view'},{icon:'✏',label:'Edit KRA',key:'edit'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📤',label:'Export',key:'export'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="KRA Management" columns={['KRA Title','Designation','Weightage %','JD Match %','Cascade Level','Quarter Target %','Progress %','Review Cadence']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="KRA Management" columns={['KRA Title','Designation','Weightage %','JD Match %','Cascade Level','Quarter Target %','Progress %','Review Cadence']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

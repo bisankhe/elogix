@@ -1,6 +1,6 @@
 -- ============================================================
 -- FILE: database/schemas/master_schema.sql
--- NepHR Pro — Master PostgreSQL Schema
+-- eLogix HRMS — Master PostgreSQL Schema
 -- Covers ALL modules from Excel file:
 --   Org Setup, Dept & Team, Employment Category,
 --   Structure & Hierarchy, Employment Type / Outsource

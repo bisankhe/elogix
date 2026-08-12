@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/training_needs_schema.sql
--- NepHR Pro — Performance & Talent Management > Talent Development >
+-- eLogix HRMS — Performance & Talent Management > Talent Development >
 -- Learning & Development > Training Needs Identification + Analysis
 -- (2 pages, first module of the new Talent Development top-level area)
 --

@@ -72,13 +72,13 @@ const BASE_EMPLOYEES = [
 function sendNotification({ type, employee, message, channels, supervisor }) {
   const notif = { id:`RN-${Date.now()}-${Math.random().toString(36).slice(2,6)}`, type, employee:employee?.name, supervisor, message, channels, timestamp:new Date().toISOString(), read:false }
   try {
-    const ex = JSON.parse(localStorage.getItem('nephr_roster_notifications')||'[]')
-    localStorage.setItem('nephr_roster_notifications', JSON.stringify([notif,...ex].slice(0,200)))
-    const gl = JSON.parse(localStorage.getItem('nephr_hris_notifications')||'[]')
+    const ex = JSON.parse(localStorage.getItem('elogix_roster_notifications')||'[]')
+    localStorage.setItem('elogix_roster_notifications', JSON.stringify([notif,...ex].slice(0,200)))
+    const gl = JSON.parse(localStorage.getItem('elogix_hris_notifications')||'[]')
     gl.unshift({ id:notif.id, cat:type==='missing_roster'?'Action Required':'FYI', icon:type==='missing_roster'?'🔴':type==='shift_change'?'🔄':'✅', title:message, body:`${employee?.name||''} · ${employee?.dept||''} · ${new Date().toLocaleString()}`, action:'View Roster', time:'Just now', unread:true })
-    localStorage.setItem('nephr_hris_notifications', JSON.stringify(gl.slice(0,100)))
+    localStorage.setItem('elogix_hris_notifications', JSON.stringify(gl.slice(0,100)))
   } catch {}
-  console.log('[NepHR Roster Notif]', type, message, channels.join(', '))
+  console.log('[eLogix Roster Notif]', type, message, channels.join(', '))
   return notif
 }
 
@@ -135,7 +135,7 @@ export default function RosterManagementPage() {
   const [monthOffset,  setMonthOffset] = useState(0)
   const [employees,    setEmployees]   = useState(() => {
     try {
-      const saved = localStorage.getItem('nephr_roster_draft')
+      const saved = localStorage.getItem('elogix_roster_draft')
       if (saved) return JSON.parse(saved).employees
     } catch {}
     return BASE_EMPLOYEES
@@ -213,12 +213,12 @@ export default function RosterManagementPage() {
     try {
       await fetch('/api/v1/attendance/roster/save', {
         method:'POST',
-        headers:{'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('nephr_access_token')||''}`},
+        headers:{'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('elogix_access_token')||''}`},
         body: JSON.stringify({ employees, savedAt:new Date().toISOString(), savedBy:personaId }),
         signal: AbortSignal.timeout(6000),
       })
     } catch {}
-    localStorage.setItem('nephr_roster_draft', JSON.stringify({ employees, savedAt:new Date().toISOString() }))
+    localStorage.setItem('elogix_roster_draft', JSON.stringify({ employees, savedAt:new Date().toISOString() }))
     savedRef.current = employees
     setSaving(false)
     setUnsaved(false)
@@ -316,12 +316,12 @@ export default function RosterManagementPage() {
     try {
       await fetch('/api/v1/attendance/roster/publish', {
         method:'POST',
-        headers:{'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('nephr_access_token')||''}`},
+        headers:{'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('elogix_access_token')||''}`},
         body: JSON.stringify({ employees, weekOffset }),
         signal: AbortSignal.timeout(6000),
       })
     } catch {}
-    localStorage.setItem('nephr_published_roster', JSON.stringify({ published_at:new Date().toISOString(), week_offset:weekOffset, employees }))
+    localStorage.setItem('elogix_published_roster', JSON.stringify({ published_at:new Date().toISOString(), week_offset:weekOffset, employees }))
     setPublishing(false); setPublished(true)
     setTimeout(() => setPublished(false), 3000)
   }
@@ -379,7 +379,7 @@ tr:nth-child(even) td{background:#f8fafc}
 <div class="legend">
   ${Object.entries(SHIFTS).map(([k,v])=>`<div class="legend-item"><div class="dot" style="background:${v.color}"></div>${v.short} = ${v.label} (${v.hours})</div>`).join('')}
 </div>
-<div class="footer">NepHR Pro · Nepal Labour Act 2074 Compliant · Max 48h/week · OT at 1.5× Basic (Section 36)</div>
+<div class="footer">eLogix HRMS · Nepal Labour Act 2074 Compliant · Max 48h/week · OT at 1.5× Basic (Section 36)</div>
 <script>window.print()</script>
 </body></html>`
     const w = window.open('','_blank','width=1000,height=700')
@@ -636,7 +636,7 @@ tr:nth-child(even) td{background:#f8fafc}
 
   // ── NOTIFICATION HISTORY ───────────────────────────────────
   const allNotifs = useMemo(()=>{
-    try { return JSON.parse(localStorage.getItem('nephr_roster_notifications')||'[]').slice(0,30) } catch { return [] }
+    try { return JSON.parse(localStorage.getItem('elogix_roster_notifications')||'[]').slice(0,30) } catch { return [] }
   },[notifPanel])
   const unread = allNotifs.filter(n=>!n.read).length
 

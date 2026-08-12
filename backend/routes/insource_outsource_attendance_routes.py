@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/insource_outsource_attendance_routes.py
-NepHR Pro — Workforce Operations > Attendance Management > Daily Attendance
+eLogix HRMS — Workforce Operations > Attendance Management > Daily Attendance
 > Insource / Outsource Attendance (2 pages)
 URL prefix: /api/v1/insource-outsource-attendance
 

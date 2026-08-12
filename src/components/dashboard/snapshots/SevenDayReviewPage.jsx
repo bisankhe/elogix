@@ -135,7 +135,7 @@ export default function SevenDayReviewPage() {
         {icon:'👁',label:'View Full Review',key:'view'},{icon:'📧',label:'Notify IT/Finance',key:'notify'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📤',label:'Export',key:'export'},
       ]} onAction={(k,item)=>{if(k==='view')setSelected(item)}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="7 Days Review" columns={['Employee','Position','Department','Join Date','Review Due','Buddy','Checklist %','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="7 Days Review" columns={['Employee','Position','Department','Join Date','Review Due','Buddy','Checklist %','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
       <Drawer item={selected} gradient={G} onClose={()=>setSelected(null)} rows={[
         ['Employee',selected?.employee],['Position',selected?.position],['Department',selected?.dept],
         ['Join Date',selected?.join_date],['Review Due',selected?.review_due],['Buddy',selected?.buddy],

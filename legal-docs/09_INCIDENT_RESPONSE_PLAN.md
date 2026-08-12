@@ -1,5 +1,5 @@
 # INCIDENT RESPONSE PLAN (IRP)
-## NepHR Pro — Security & Data Breach Response
+## eLogix HRMS — Security & Data Breach Response
 **Document #9** | **Version:** 1.0 | **Effective Date:** June 11, 2026
 **Classification:** STRICTLY CONFIDENTIAL — Internal Use Only
 
@@ -7,7 +7,7 @@
 
 ## 1. PURPOSE & LEGAL BASIS
 
-This Incident Response Plan (IRP) defines NepHR Pro's procedures for detecting, containing, investigating, and recovering from security incidents and personal data breaches.
+This Incident Response Plan (IRP) defines eLogix HRMS's procedures for detecting, containing, investigating, and recovering from security incidents and personal data breaches.
 
 **Legal Compliance:**
 | Regulation | Requirement | Our Commitment |
@@ -38,19 +38,19 @@ This Incident Response Plan (IRP) defines NepHR Pro's procedures for detecting, 
 
 | Role | Name/Team | Responsibility | Contact |
 |---|---|---|---|
-| **Incident Commander** | CEO / CTO | Overall coordination, final decisions | incident-cmd@nephrpro.com |
-| **Security Lead** | InfoSec Team | Technical investigation & containment | security@nephrpro.com |
-| **Data Protection Officer (DPO)** | DPO | Privacy compliance, notification decisions | dpo@nephrpro.com |
-| **Legal Counsel** | Legal Team | Legal obligations, regulatory notifications | legal@nephrpro.com |
-| **Communications Lead** | PR/Comms | Client & public communications | comms@nephrpro.com |
-| **Engineering Lead** | Dev Team | System recovery, patch deployment | engineering@nephrpro.com |
-| **Customer Success** | CSM Team | Client relationship management | csm@nephrpro.com |
+| **Incident Commander** | CEO / CTO | Overall coordination, final decisions | incident-cmd@elogix.com |
+| **Security Lead** | InfoSec Team | Technical investigation & containment | security@elogix.com |
+| **Data Protection Officer (DPO)** | DPO | Privacy compliance, notification decisions | dpo@elogix.com |
+| **Legal Counsel** | Legal Team | Legal obligations, regulatory notifications | legal@elogix.com |
+| **Communications Lead** | PR/Comms | Client & public communications | comms@elogix.com |
+| **Engineering Lead** | Dev Team | System recovery, patch deployment | engineering@elogix.com |
+| **Customer Success** | CSM Team | Client relationship management | csm@elogix.com |
 
 ### Escalation Path:
 ```
 Any employee detects incident
         ↓
-Report to Security Lead (security@nephrpro.com)
+Report to Security Lead (security@elogix.com)
         ↓
 Security Lead notifies Incident Commander
         ↓
@@ -207,11 +207,11 @@ Legal authorizes external notifications
 **Template — Client Breach Notification:**
 
 ```
-Subject: [URGENT] Security Incident Notification — NepHR Pro [INC-ID]
+Subject: [URGENT] Security Incident Notification — eLogix HRMS [INC-ID]
 
 Dear [Client Administrator Name],
 
-We are writing to inform you of a security incident affecting NepHR Pro
+We are writing to inform you of a security incident affecting eLogix HRMS
 that may impact your organization's data.
 
 INCIDENT SUMMARY
@@ -254,9 +254,9 @@ Updates will be sent every [24 hours / X hours] until resolution.
 
 CONTACT
 ━━━━━━━
-Dedicated incident response: incident-[INC-ID]@nephrpro.com
-DPO: dpo@nephrpro.com
-Security: security@nephrpro.com
+Dedicated incident response: incident-[INC-ID]@elogix.com
+DPO: dpo@elogix.com
+Security: security@elogix.com
 Phone: [DEDICATED INCIDENT HOTLINE]
 
 We sincerely apologize for this incident and are committed to full
@@ -264,7 +264,7 @@ transparency throughout our investigation.
 
 [Name]
 [Title]
-NepHR Pro Pvt. Ltd.
+eLogix HRMS Pvt. Ltd.
 ```
 
 ---
@@ -276,15 +276,15 @@ NepHR Pro Pvt. Ltd.
 **Template — Data Subject Notification:**
 
 ```
-Subject: Important Notice About Your Personal Data — NepHR Pro
+Subject: Important Notice About Your Personal Data — eLogix HRMS
 
 Dear [Employee Name / "Valued User"],
 
-We are writing to inform you that NepHR Pro experienced a security
+We are writing to inform you that eLogix HRMS experienced a security
 incident that may have affected your personal information.
 
 WHAT HAPPENED
-Your employer uses NepHR Pro to manage HR data. On [DATE], we discovered
+Your employer uses eLogix HRMS to manage HR data. On [DATE], we discovered
 [brief plain-language description].
 
 INFORMATION THAT MAY HAVE BEEN AFFECTED
@@ -306,12 +306,12 @@ You have the right to contact [Supervisory Authority] if you have
 concerns about how your data has been handled.
 
 FOR MORE INFORMATION
-Email: privacy@nephrpro.com
-DPO: dpo@nephrpro.com
+Email: privacy@elogix.com
+DPO: dpo@elogix.com
 
 We deeply regret this incident and are committed to your data's protection.
 
-NepHR Pro Data Protection Team
+eLogix HRMS Data Protection Team
 ```
 
 ---
@@ -407,6 +407,6 @@ All incidents must be logged in the Incident Register:
 
 ---
 
-*Document Owner: NepHR Pro DPO & Security Lead*
+*Document Owner: eLogix HRMS DPO & Security Lead*
 *Created: June 11, 2026 | Review: June 11, 2027*
-*© 2026 NepHR Pro Pvt. Ltd. — Strictly Confidential*
+*© 2026 eLogix HRMS Pvt. Ltd. — Strictly Confidential*

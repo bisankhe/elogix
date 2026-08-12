@@ -113,7 +113,7 @@ export default function MonthlyReviewPage() {
       )}
 
       {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={IMPACT} actions={[{icon:'👁',label:'View Detail',key:'view'},{icon:'✏',label:'Edit Plan',key:'edit'},{icon:'📤',label:'Export',key:'export'}]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Monthly Workforce Review" columns={['Department','Branch','Quota','Planned','Budget NPR','Priority','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Monthly Workforce Review" columns={['Department','Branch','Quota','Planned','Budget NPR','Priority','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

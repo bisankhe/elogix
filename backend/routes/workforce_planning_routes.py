@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/workforce_planning_routes.py
-NepHR Pro — Workforce Planning Module (13 pages)
+eLogix HRMS — Workforce Planning Module (13 pages)
 URL prefix: /api/v1/wfp
 
 Endpoints for:

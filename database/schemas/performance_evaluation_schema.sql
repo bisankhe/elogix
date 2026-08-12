@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/performance_evaluation_schema.sql
--- NepHR Pro — Performance & Talent Management > Goal & Performance >
+-- eLogix HRMS — Performance & Talent Management > Goal & Performance >
 -- Performance Evaluation Module (7 pages)
 --
 -- Design note: this module sits ABOVE the Goal Management layer built

@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/recruitment_routes.py
-NepHR Pro — Complete Recruitment & Hiring Module
+eLogix HRMS — Complete Recruitment & Hiring Module
 URL prefix: /api/v1/recruit
 
 Covers all 16 Recruitment pages:
@@ -735,7 +735,7 @@ def schedule_interview():
         })
         db.session.commit()
         return created({
-            "self_schedule_link": f"https://nephr.com.np/schedule/{token}",
+            "self_schedule_link": f"https://elogix.com.np/schedule/{token}",
             "message": "Self-scheduling link sent to candidate.",
         })
     except Exception as e:
@@ -779,7 +779,7 @@ def notify_panel(interview_id):
         ), {"iid": interview_id}).fetchall()
 
         for m in members:
-            send_email(f"panel-{m.id}@nephr.com.np", "Interview Panel — Candidate Packet",
+            send_email(f"panel-{m.id}@elogix.com.np", "Interview Panel — Candidate Packet",
                       "Please find attached the candidate's resume, AI screening report, and evaluation rubric.")
 
         db.session.execute(text("""

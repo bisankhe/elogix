@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/probation_management_schema.sql
--- NepHR Pro — Onboarding > Probation Management Module Schema
+-- eLogix HRMS — Onboarding > Probation Management Module Schema
 -- Covers all 5 pages as one progressive lifecycle table set:
 --   1. probation_records       (master record, 1 per employee per probation cycle)
 --   2. probation_7day_reviews

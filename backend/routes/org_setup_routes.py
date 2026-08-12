@@ -582,7 +582,7 @@ def upload_document():
     # In production: upload file to S3 and get URL
     # file = request.files.get("file")
     # file_url = upload_to_s3(file, tenant_id=g.tenant_id)
-    file_url = data.get("file_url", f"https://storage.nephrpro.com/docs/{g.tenant_id}/{uuid.uuid4()}.pdf")
+    file_url = data.get("file_url", f"https://storage.elogix.com/docs/{g.tenant_id}/{uuid.uuid4()}.pdf")
 
     # AI extraction (if image file provided)
     ai_data = {}

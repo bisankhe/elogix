@@ -1,6 +1,6 @@
 """
 FILE: alembic/env.py
-Alembic migration environment for NepHR Pro.
+Alembic migration environment for eLogix HRMS.
 Supports both offline (SQL generation) and online (live DB) modes.
 Auto-imports all models so Alembic detects schema changes.
 """

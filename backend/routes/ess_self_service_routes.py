@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/ess_self_service_routes.py
-NepHR Pro -- HR Services & Support > Employee Self Service (ESS)
+eLogix HRMS -- HR Services & Support > Employee Self Service (ESS)
 (5 pages: My Profile, Profile Update, My Documents, My Digital
 Signature, My Internal Training Certificates)
 URL prefix: /api/v1/ess

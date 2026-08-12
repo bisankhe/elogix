@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/succession_planning_schema.sql
--- NepHR Pro -- Performance & Talent Management > Talent Development >
+-- eLogix HRMS -- Performance & Talent Management > Talent Development >
 -- Succession Planning (5 pages: Successor Identification, Talent
 -- Mapping, HiPo Employees, Readiness Assessment, Leadership Pipeline)
 --

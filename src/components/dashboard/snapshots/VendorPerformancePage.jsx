@@ -186,7 +186,7 @@ export default function VendorPerformancePage() {
       </div>
 
       {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={CTX} onAction={(k,item)=>{if(k==='view')setSelected(item)}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Vendor Performance" columns={['Vendor Code','Vendor Name','Period','Quality Score','Delivery Score','Cost Score','Service Score','Overall Score','SLA Compliance','Incidents','Risk Level','Recommendation']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Vendor Performance" columns={['Vendor Code','Vendor Name','Period','Quality Score','Delivery Score','Cost Score','Service Score','Overall Score','SLA Compliance','Incidents','Risk Level','Recommendation']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
       <Drawer item={selected} gradient={G} onClose={()=>setSelected(null)} rows={[
         ['Vendor',selected?.vendor_name],['Service',selected?.service],['Period',selected?.period],
         ['Overall Score',selected?.overall_score+'/100'],['Risk Level',selected?.overall_risk],['Trend',selected?.trend],

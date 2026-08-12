@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/data_migration_schema.sql
--- NepHR Pro -- System Administration > Operations > Data Migration
+-- eLogix HRMS -- System Administration > Operations > Data Migration
 --
 -- Platform-operator (super_admin) tooling: operates BEFORE a tenant
 -- fully exists, to pull a new client's entire HRIS dataset out of a

@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/ai_business_intelligence_schema.sql
--- NepHR Pro -- AI Business Intelligence / AI Chatbot
+-- eLogix HRMS -- AI Business Intelligence / AI Chatbot
 -- (Dashboard & Workspace > AI Assistant > AI Business Intelligence)
 --
 -- CONFIRMED GAP: ai-hr-chatbot sidebar entry existed with no

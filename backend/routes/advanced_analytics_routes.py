@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/advanced_analytics_routes.py
-NepHR Pro -- Reports, Analytics & BI > Advanced Analytics (5 pages:
+eLogix HRMS -- Reports, Analytics & BI > Advanced Analytics (5 pages:
 Predictive Analytics, AI Insights, BI Dashboard, Custom Report
 Builder, Export Center)
 URL prefix: /api/v1/advanced-analytics

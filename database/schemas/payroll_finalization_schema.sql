@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/payroll_finalization_schema.sql
--- NepHR Pro — Workforce Operations > Payroll & Compensation >
+-- eLogix HRMS — Workforce Operations > Payroll & Compensation >
 -- Payroll Finalization Module (4 pages)
 --
 -- Design note: Final Settlement (page 4) reuses fnf_settlements directly

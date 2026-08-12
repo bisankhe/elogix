@@ -1,5 +1,5 @@
 // FILE: WelcomeCommunicationPage.jsx — Welcome Communication (Employee Joining)
-// NepHR Pro — Send, preview, track welcome messages to new employees
+// eLogix HRMS — Send, preview, track welcome messages to new employees
 // FULLY FUNCTIONAL: + Create, compose & preview messages, send tracking, recipient display
 // Nepal Labour Act 2074 compliant | useApp + DeptSetupShared pattern
 

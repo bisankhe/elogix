@@ -75,7 +75,7 @@ export default function EVPManagementPage() {
   const generateAI = (pillar) => {
     setGenerating(true)
     setTimeout(()=>{
-      setAiMsg(`"At NepHR Pro, ${pillar.name.toLowerCase()} isn't just a policy - it's backed by data. ${pillar.employee_rating}/5 employee satisfaction, validated through our latest pulse survey. ${pillar.description} This is the ${pillar.name.toLowerCase()} we live, not just promise."`)
+      setAiMsg(`"At eLogix HRMS, ${pillar.name.toLowerCase()} isn't just a policy - it's backed by data. ${pillar.employee_rating}/5 employee satisfaction, validated through our latest pulse survey. ${pillar.description} This is the ${pillar.name.toLowerCase()} we live, not just promise."`)
       setGenerating(false)
     },1200)
   }
@@ -172,7 +172,7 @@ export default function EVPManagementPage() {
       )}
 
       {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={CTX} onAction={(k,item)=>{if(k==='view')setSelected(item)}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="EVP Pillars" columns={['Pillar','Weight %','Employee Rating','Market Benchmark','Status','Data Sources','Last Updated']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="EVP Pillars" columns={['Pillar','Weight %','Employee Rating','Market Benchmark','Status','Data Sources','Last Updated']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
       <Drawer item={selected} gradient={G} onClose={()=>{setSelected(null);setAiMsg('')}} rows={[
         ['Pillar',selected?.name],['Nepali',selected?.nepali],['Weight',selected?.weight+'%'],
         ['Employee Rating',selected?.employee_rating+'/5'],['Market Benchmark',selected?.market_benchmark+'/5'],

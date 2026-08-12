@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/performance_analytics_dashboard_schema.sql
--- NepHR Pro — Performance & Talent Management > Goal & Performance >
+-- eLogix HRMS — Performance & Talent Management > Goal & Performance >
 -- Performance Analytics Module (3 pages: Performance Dashboard, Goal
 -- Achievement, Productivity Analytics)
 --

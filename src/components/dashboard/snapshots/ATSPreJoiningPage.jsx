@@ -205,7 +205,7 @@ export default function ATSPreJoiningPage() {
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
             <div style={{ background:'linear-gradient(135deg,#f0fdf4,#ecfeff)', borderRadius:14, padding:20, border:'1px solid #bbf7d0' }}>
               <div style={{ fontSize:36, marginBottom:10 }}>🎉</div>
-              <div style={{ fontSize:14, fontWeight:900, color:'#0f172a', marginBottom:4 }}>Welcome to NepHR Pro!</div>
+              <div style={{ fontSize:14, fontWeight:900, color:'#0f172a', marginBottom:4 }}>Welcome to eLogix HRMS!</div>
               <div style={{ fontSize:10, color:'#374151', lineHeight:1.7, marginBottom:16 }}>
                 Dear {selJoiner.name},<br/><br/>
                 We are thrilled to welcome you as our new <strong>{selJoiner.role}</strong>. Your journey with us begins on <strong>{selJoiner.joining}</strong>. Your Employee ID is <strong>{selJoiner.empId}</strong>.<br/><br/>

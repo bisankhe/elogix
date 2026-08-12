@@ -1,6 +1,6 @@
 """
 FILE: backend/utils/excel_import.py
-SAP-style Excel Import utility for NepHR Pro.
+SAP-style Excel Import utility for eLogix HRMS.
 Supports: .xlsx, .xls, .csv upload + validation + AI column mapping.
 Used by every frontend page (SAP-style Excel upload requirement).
 """
@@ -33,7 +33,7 @@ IMPORT_TEMPLATES = {
         "optional": ["name_nepali", "pan_no", "vat_no", "province", "district",
                      "phone", "email", "labour_office_zone", "ssf_employer_no"],
         "sample_rows": [
-            {"code": "NP-001", "name": "NepHR Technologies Pvt. Ltd.",
+            {"code": "NP-001", "name": "eLogix Technologies Pvt. Ltd.",
              "registration_type": "private_limited", "pan_no": "987654321",
              "province": "Bagmati", "district": "Kathmandu"},
         ],
@@ -321,7 +321,7 @@ def build_template_xlsx(module: str) -> bytes | None:
 
     # Notes sheet
     notes_ws = wb.create_sheet("Instructions")
-    notes_ws["A1"] = "NepHR Pro — Import Instructions"
+    notes_ws["A1"] = "eLogix HRMS — Import Instructions"
     notes_ws["A2"] = f"Module: {module}"
     notes_ws["A3"] = f"Required columns: {', '.join(template['required'])}"
     notes_ws["A4"] = template.get("validation_notes", "")

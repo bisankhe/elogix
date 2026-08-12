@@ -139,7 +139,7 @@ export default function TaskLocationAssignmentPage() {
         {icon:'👁',label:'View Details',key:'view'},{icon:'🛡',label:'View Geo-Fence',key:'fence'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📤',label:'Export',key:'export'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Task & Location Assignments" columns={['Employee','Task','Location','Assigned By','Date','Start Time','End Time','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Task & Location Assignments" columns={['Employee','Task','Location','Assigned By','Date','Start Time','End Time','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

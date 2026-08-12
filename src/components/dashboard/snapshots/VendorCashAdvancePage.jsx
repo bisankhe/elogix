@@ -291,7 +291,7 @@ export default function VendorCashAdvancePage() {
       )}
 
       {ctx && <ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={CTX_ACTIONS} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel && <ExcelModal title="Cash Advances" columns={['Request No','Employee ID','Name','Vendor','Amount NPR','Purpose','Status','Applied On','Disbursement Date','Repayment Months','Outstanding']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel && <ExcelModal title="Cash Advances" columns={['Request No','Employee ID','Name','Vendor','Amount NPR','Purpose','Status','Applied On','Disbursement Date','Repayment Months','Outstanding']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

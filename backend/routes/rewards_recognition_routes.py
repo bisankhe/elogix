@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/rewards_recognition_routes.py
-NepHR Pro — Performance & Talent Management > Goal & Performance >
+eLogix HRMS — Performance & Talent Management > Goal & Performance >
 Rewards & Recognition Module (6 pages)
 URL prefix: /api/v1/rewards-recognition
 

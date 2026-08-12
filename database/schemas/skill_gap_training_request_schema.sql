@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/skill_gap_training_request_schema.sql
--- NepHR Pro — Performance & Talent Management > Talent Development >
+-- eLogix HRMS — Performance & Talent Management > Talent Development >
 -- Learning & Development > Skill Gap Matrix + Skill Gap Analysis +
 -- Training Request (3 pages, the brief's explicit pipeline)
 --

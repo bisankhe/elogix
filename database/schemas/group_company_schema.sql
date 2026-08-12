@@ -1,6 +1,6 @@
 -- ============================================================
 -- FILE: database/schemas/group_company_schema.sql
--- NepHR Pro — Group Company + Company Profile + Company Setup
+-- eLogix HRMS — Group Company + Company Profile + Company Setup
 -- Dedicated standalone schema for Organization Setup Page 1-3
 -- ============================================================
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

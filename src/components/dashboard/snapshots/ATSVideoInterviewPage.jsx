@@ -309,7 +309,7 @@ Return JSON only: {overall, confidence, clarity, eyeContact, voice, pace, sentim
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 40 }}>
           {/* AI avatar */}
           <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg,#1e40af,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, marginBottom: 24, boxShadow: '0 0 0 4px rgba(59,130,246,.3), 0 0 0 8px rgba(59,130,246,.1)' }}>🤖</div>
-          <div style={{ fontSize: 11, color: '#60a5fa', fontWeight: 700, marginBottom: 12 }}>AI Interviewer — NepHR ATS</div>
+          <div style={{ fontSize: 11, color: '#60a5fa', fontWeight: 700, marginBottom: 12 }}>AI Interviewer — eLogix ATS</div>
           <div style={{ fontSize: 16, fontWeight: 700, color: '#f8fafc', textAlign: 'center', lineHeight: 1.6, maxWidth: 500, background: '#1e293b', padding: '20px 24px', borderRadius: 14, border: '1px solid #334155' }}>
             {currentQ.q}
           </div>
@@ -445,8 +445,8 @@ export default function ATSVideoInterviewPage() {
           {/* Pending */}
           <div style={{ fontSize: 12, fontWeight: 800, color: '#0f172a', margin: '14px 0 10px' }}>Pending / Scheduled</div>
           {[
-            { name: 'Bikash Tamang', role: 'Finance Analyst', scheduledAt: 'Tomorrow 10:00 AM', link: 'https://interview.nephrpro.com/vi/bik2024' },
-            { name: 'Sunita Rana', role: 'Marketing Manager', scheduledAt: 'Jan 26 2:00 PM', link: 'https://interview.nephrpro.com/vi/sun2024' },
+            { name: 'Bikash Tamang', role: 'Finance Analyst', scheduledAt: 'Tomorrow 10:00 AM', link: 'https://interview.elogix.com/vi/bik2024' },
+            { name: 'Sunita Rana', role: 'Marketing Manager', scheduledAt: 'Jan 26 2:00 PM', link: 'https://interview.elogix.com/vi/sun2024' },
           ].map((p, i) => (
             <div key={i} style={{ background: '#fff', borderRadius: 12, padding: '12px 16px', marginBottom: 8, border: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#fef9c3', border: '2px solid #f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#92400e', flexShrink: 0 }}>{p.name.split(' ').map(x => x[0]).join('')}</div>

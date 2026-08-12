@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/career_development_routes.py
-NepHR Pro — Performance & Talent Management > Talent Development >
+eLogix HRMS — Performance & Talent Management > Talent Development >
 Career Development (4 pages: Career Pathing, Employee Development
 Plan, Training Portfolio, Leadership Development)
 URL prefix: /api/v1/career-development

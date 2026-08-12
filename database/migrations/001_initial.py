@@ -1,6 +1,6 @@
 """
 FILE: database/migrations/001_initial.py
-Alembic migration — NepHR Pro complete initial schema
+Alembic migration — eLogix HRMS complete initial schema
 Creates ALL 26 tables covering every module in the Excel requirement.
 Run: alembic upgrade head
 Prerequisites: PostgreSQL 15+, extensions uuid-ossp, ltree, pg_trgm

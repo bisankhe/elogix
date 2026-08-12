@@ -168,7 +168,7 @@ class ATSNotificationService:
         """Send Email + WhatsApp + SMS to candidate"""
         ctx = {
             'candidate_name': candidate.full_name,
-            'company_name':   'NepHR Client',
+            'company_name':   'eLogix Client',
             **context,
         }
         for channel in channels:
@@ -268,14 +268,14 @@ class ATSNotificationService:
         smtp_port = int(os.environ.get('SMTP_PORT', '587'))
         smtp_user = os.environ.get('SMTP_USER', '')
         smtp_pass = os.environ.get('SMTP_PASS', '')
-        from_addr = os.environ.get('FROM_EMAIL', smtp_user or 'hr@nephrpro.com')
+        from_addr = os.environ.get('FROM_EMAIL', smtp_user or 'hr@elogix.com')
         if not smtp_user:
             print(f'[Email] SMTP not configured. Would send to {to_email}: {subject}')
             return
         try:
             msg = MIMEMultipart('alternative')
             msg['Subject'] = subject
-            msg['From']    = f'NepHR Pro Recruitment <{from_addr}>'
+            msg['From']    = f'eLogix HRMS Recruitment <{from_addr}>'
             msg['To']      = to_email
             msg.attach(MIMEText(html_body, 'html'))
             with smtplib.SMTP(smtp_host, smtp_port) as server:

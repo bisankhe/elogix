@@ -1,5 +1,5 @@
 // FILE: AccountCreationPage.jsx — Account Creation & Employee Enrollment
-// NepHR Pro — Employee Joining module
+// eLogix HRMS — Employee Joining module
 // TWO MODES:
 //   A) IT Account Provisioning (existing — auto-triggered after NDA/contract)
 //   B) New Employee Enrollment — create profile for new candidate/hire or bulk upload

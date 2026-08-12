@@ -257,7 +257,7 @@ export default function FieldVisitTrackingPage() {
         {icon:'👁',label:'View Visit Detail',key:'view'},{icon:'🗺',label:'View Route on Map',key:'map'},
         {icon:'✅',label:'Approve',key:'approve'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Field Visit Tracking" columns={['Employee','Visit Date','Task','Location','Distance KM','TA NPR','DA NPR','Total Allowance','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Field Visit Tracking" columns={['Employee','Visit Date','Task','Location','Distance KM','TA NPR','DA NPR','Total Allowance','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/exit_analytics_routes.py
-NepHR Pro — Offboarding > Exit Analytics Module (2 pages)
+eLogix HRMS — Offboarding > Exit Analytics Module (2 pages)
 URL prefix: /api/v1/exit-analytics
 
   1. /attrition-dashboard    — Executive KPIs, trend, dept heatmap, demographics

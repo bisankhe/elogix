@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/training_calendar_routes.py
-NepHR Pro — Performance & Talent Management > Talent Development >
+eLogix HRMS — Performance & Talent Management > Talent Development >
 Learning & Development > Training Calendars (4 pages: Annual, Monthly,
 Weekly, Daily)
 URL prefix: /api/v1/training-calendar

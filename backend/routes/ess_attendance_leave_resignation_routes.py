@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/ess_attendance_leave_resignation_routes.py
-NepHR Pro -- HR Services & Support > Employee Self Service (ESS),
+eLogix HRMS -- HR Services & Support > Employee Self Service (ESS),
 second batch (8 pages: Things to Do, My Attendance, Attendance
 Request, My Leave, Leave Request, My Resignation, Letter Request,
 Cash Advance)

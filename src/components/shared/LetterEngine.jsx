@@ -1,5 +1,5 @@
 // FILE: src/components/shared/LetterEngine.jsx
-// NepHR Pro — Universal Letter Generation Engine
+// eLogix HRMS — Universal Letter Generation Engine
 // Used by: AIHRLettersPage, ExperienceLetterPage, WarningLetterPage,
 //          RelievingLetterPage, OfferLetterPage, CITLettersPage, etc.
 //
@@ -20,7 +20,7 @@ const G = 'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)'
 
 // ── CALL CLAUDE AI ───────────────────────────────────────────
 async function callClaude(prompt) {
-  const system = `You are an expert HR letter writer for NepHR Pro, a Nepal-based HRIS platform.
+  const system = `You are an expert HR letter writer for eLogix HRMS, a Nepal-based HRIS platform.
 Write professional, legally compliant HR letters that:
 - Reference Nepal Labour Act 2074 sections correctly
 - Use formal Nepali/English business language
@@ -55,7 +55,7 @@ Write professional, legally compliant HR letters that:
 // ── BUILT-IN LETTER TEMPLATES (work without API key) ─────────
 const OFFLINE_TEMPLATES = {
   offer: (f) => ({
-    english: `[${f.company || 'NepHR Pro Pvt. Ltd.'} Letterhead]
+    english: `[${f.company || 'eLogix HRMS Pvt. Ltd.'} Letterhead]
 
 LETTER OF APPOINTMENT
 
@@ -66,7 +66,7 @@ Dear ${f.employee || '[Employee Name]'},
 
 Subject: Offer of Employment — ${f.position || '[Position]'}
 
-We are pleased to offer you the position of **${f.position || '[Position]'}** in the **${f.department || '[Department]'}** department at ${f.company || 'NepHR Pro Pvt. Ltd.'}, effective **${f.start_date || '[Start Date]'}**.
+We are pleased to offer you the position of **${f.position || '[Position]'}** in the **${f.department || '[Department]'}** department at ${f.company || 'eLogix HRMS Pvt. Ltd.'}, effective **${f.start_date || '[Start Date]'}**.
 
 **Terms of Employment:**
 - Designation:      ${f.position || '[Position]'}
@@ -92,7 +92,7 @@ Sincerely,
 _______________________
 ${f.hr_name || 'HR Manager'}
 Human Resources Department
-${f.company || 'NepHR Pro Pvt. Ltd.'}`,
+${f.company || 'eLogix HRMS Pvt. Ltd.'}`,
 
     nepali: `[${f.company || 'नेपएचआर प्रो प्रा.लि.'} लेटरहेड]
 
@@ -127,7 +127,7 @@ ${f.company || 'नेपएचआर प्रो प्रा.लि.'}`
   }),
 
   experience: (f) => ({
-    english: `[${f.company || 'NepHR Pro Pvt. Ltd.'} Letterhead]
+    english: `[${f.company || 'eLogix HRMS Pvt. Ltd.'} Letterhead]
 
 CERTIFICATE OF EXPERIENCE
 
@@ -136,7 +136,7 @@ Reference No: EXP/${new Date().getFullYear()}/${String(Math.floor(Math.random()*
 
 TO WHOM IT MAY CONCERN
 
-This is to certify that **${f.employee || '[Employee Name]'}** (Employee ID: ${f.emp_id || 'EMP-XXXX'}) was employed with ${f.company || 'NepHR Pro Pvt. Ltd.'} from **${f.join_date || '[Join Date]'}** to **${f.lwd || '[Last Working Date]'}**, holding the position of **${f.position || '[Position]'}** in the **${f.department || '[Department]'}** department.
+This is to certify that **${f.employee || '[Employee Name]'}** (Employee ID: ${f.emp_id || 'EMP-XXXX'}) was employed with ${f.company || 'eLogix HRMS Pvt. Ltd.'} from **${f.join_date || '[Join Date]'}** to **${f.lwd || '[Last Working Date]'}**, holding the position of **${f.position || '[Position]'}** in the **${f.department || '[Department]'}** department.
 
 The total tenure of employment was **${f.tenure || '[Duration]'}**.
 
@@ -146,7 +146,7 @@ This certificate is issued as per the employee's request and in accordance with 
 
 We wish ${f.employee?.split(' ')[0] || 'the employee'} success in all future endeavors.
 
-For ${f.company || 'NepHR Pro Pvt. Ltd.'}
+For ${f.company || 'eLogix HRMS Pvt. Ltd.'}
 
 _______________________        _______________________
 ${f.hr_name || 'HR Manager'}                     ${f.md_name || 'Managing Director'}
@@ -175,7 +175,7 @@ ${f.hr_name || 'मानव संसाधन प्रबन्धक'}`
   }),
 
   warning: (f) => ({
-    english: `[${f.company || 'NepHR Pro Pvt. Ltd.'} Letterhead]
+    english: `[${f.company || 'eLogix HRMS Pvt. Ltd.'} Letterhead]
 
 ${f.level === 'final' ? 'FINAL WARNING NOTICE' : f.level === 'verbal' ? 'VERBAL WARNING — RECORD COPY' : 'WRITTEN WARNING NOTICE'}
 
@@ -212,7 +212,7 @@ Sincerely,
 _______________________
 ${f.hr_name || 'HR Manager'}
 Human Resources Department
-${f.company || 'NepHR Pro Pvt. Ltd.'}
+${f.company || 'eLogix HRMS Pvt. Ltd.'}
 
 **Employee Acknowledgement:**
 I acknowledge receipt of this warning letter.
@@ -252,7 +252,7 @@ ${f.company || 'नेपएचआर प्रो प्रा.लि.'}`
   }),
 
   probation_clearance: (f) => ({
-    english: `[${f.company || 'NepHR Pro Pvt. Ltd.'} Letterhead]
+    english: `[${f.company || 'eLogix HRMS Pvt. Ltd.'} Letterhead]
 
 PROBATION CLEARANCE & EMPLOYMENT CONFIRMATION
 
@@ -267,7 +267,7 @@ We are pleased to inform you that you have successfully completed your probation
 
 Your performance during the probationary period has met the expectations required for your role as **${f.position || '[Position]'}** in the **${f.department || '[Department]'}** department.
 
-As of the date of this letter, your employment status is hereby confirmed as a **Regular Employee** of ${f.company || 'NepHR Pro Pvt. Ltd.'}, in accordance with **Nepal Labour Act 2074, Section 13**.
+As of the date of this letter, your employment status is hereby confirmed as a **Regular Employee** of ${f.company || 'eLogix HRMS Pvt. Ltd.'}, in accordance with **Nepal Labour Act 2074, Section 13**.
 
 Your current terms of employment, including:
 - Basic Salary: NPR ${f.salary || '[Amount]'}/month
@@ -283,7 +283,7 @@ Sincerely,
 
 _______________________        _______________________
 ${f.hr_name || 'HR Manager'}                     ${f.ceo_name || 'CEO / Managing Director'}
-Human Resources                  ${f.company || 'NepHR Pro Pvt. Ltd.'}`,
+Human Resources                  ${f.company || 'eLogix HRMS Pvt. Ltd.'}`,
 
     nepali: `[${f.company || 'नेपएचआर प्रो प्रा.लि.'} लेटरहेड]
 
@@ -313,7 +313,7 @@ ${f.company || 'नेपएचआर प्रो प्रा.लि.'}`
   }),
 
   termination: (f) => ({
-    english: `[${f.company || 'NepHR Pro Pvt. Ltd.'} Letterhead]
+    english: `[${f.company || 'eLogix HRMS Pvt. Ltd.'} Letterhead]
 
 TERMINATION NOTICE
 
@@ -329,7 +329,7 @@ Dear ${f.employee || '[Employee Name]'},
 
 Subject: Termination of Employment
 
-This letter serves as formal notice of termination of your employment with ${f.company || 'NepHR Pro Pvt. Ltd.'}, effective **${f.termination_date || '[Date]'}**.
+This letter serves as formal notice of termination of your employment with ${f.company || 'eLogix HRMS Pvt. Ltd.'}, effective **${f.termination_date || '[Date]'}**.
 
 **Reason for Termination:**
 ${f.reason || '[State reason — performance, misconduct, redundancy, or mutual separation]'}
@@ -344,7 +344,7 @@ Please return all company property (laptop, access cards, documents) to the HR d
 
 Your Full & Final Settlement will be completed in accordance with Nepal Labour Act 2074.
 
-For ${f.company || 'NepHR Pro Pvt. Ltd.'}
+For ${f.company || 'eLogix HRMS Pvt. Ltd.'}
 
 _______________________
 ${f.hr_name || 'HR Manager'}
@@ -381,7 +381,7 @@ ${f.company || 'नेपएचआर प्रो प्रा.लि.'}`
   }),
 
   promotion: (f) => ({
-    english: `[${f.company || 'NepHR Pro Pvt. Ltd.'} Letterhead]
+    english: `[${f.company || 'eLogix HRMS Pvt. Ltd.'} Letterhead]
 
 PROMOTION LETTER
 
@@ -392,7 +392,7 @@ Dear ${f.employee || '[Employee Name]'},
 
 Subject: Promotion — ${f.new_position || '[New Position]'}
 
-We are delighted to inform you that based on your outstanding performance, dedication, and contribution to ${f.company || 'NepHR Pro Pvt. Ltd.'}, you have been promoted to the position of **${f.new_position || '[New Position]'}** in the **${f.department || '[Department]'}** department, effective **${f.effective_date || '[Date]'}**.
+We are delighted to inform you that based on your outstanding performance, dedication, and contribution to ${f.company || 'eLogix HRMS Pvt. Ltd.'}, you have been promoted to the position of **${f.new_position || '[New Position]'}** in the **${f.department || '[Department]'}** department, effective **${f.effective_date || '[Date]'}**.
 
 **Updated Terms:**
 - New Designation:  ${f.new_position || '[New Position]'}
@@ -408,7 +408,7 @@ Sincerely,
 
 _______________________
 ${f.hr_name || 'HR Manager'}
-${f.company || 'NepHR Pro Pvt. Ltd.'}`,
+${f.company || 'eLogix HRMS Pvt. Ltd.'}`,
 
     nepali: `[${f.company || 'नेपएचआर प्रो प्रा.लि.'} लेटरहेड]
 
@@ -436,7 +436,7 @@ ${f.company || 'नेपएचआर प्रो प्रा.लि.'}`
   }),
 
   transfer: (f) => ({
-    english: `[${f.company || 'NepHR Pro Pvt. Ltd.'} Letterhead]
+    english: `[${f.company || 'eLogix HRMS Pvt. Ltd.'} Letterhead]
 
 TRANSFER ORDER
 
@@ -462,13 +462,13 @@ Sincerely,
 
 _______________________
 ${f.hr_name || 'HR Manager'}
-${f.company || 'NepHR Pro Pvt. Ltd.'}`,
+${f.company || 'eLogix HRMS Pvt. Ltd.'}`,
 
     nepali: `स्थानान्तरण आदेश — ${f.employee || '[कर्मचारी]'} लाई ${f.new_location || '[नयाँ स्थान]'} मा मिति ${f.effective_date || '[मिति]'} बाट स्थानान्तरण गरिएको छ।`
   }),
 
   salary_revision: (f) => ({
-    english: `[${f.company || 'NepHR Pro Pvt. Ltd.'} Letterhead]
+    english: `[${f.company || 'eLogix HRMS Pvt. Ltd.'} Letterhead]
 
 SALARY REVISION LETTER
 
@@ -493,7 +493,7 @@ Sincerely,
 
 _______________________
 ${f.hr_name || 'HR Manager'}
-${f.company || 'NepHR Pro Pvt. Ltd.'}`,
+${f.company || 'eLogix HRMS Pvt. Ltd.'}`,
     nepali: `तलब पुनरावलोकन पत्र — ${f.employee || '[कर्मचारी]'} को तलब मिति ${f.effective_date || '[मिति]'} बाट NPR ${f.new_basic || '[रकम]'} प्रति महिनामा पुनरावलोकन गरिएको छ।`
   }),
 }
@@ -514,7 +514,7 @@ function downloadPDF(content, filename, language = 'both') {
     .header { border-bottom: 3px solid #1e1b4b; padding-bottom: 16px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-start; }
     .company-name { font-size: 18pt; font-weight: bold; color: #1e1b4b; }
     .company-sub { font-size: 9pt; color: #64748b; margin-top: 2px; }
-    .nephr-logo { font-size: 28pt; }
+    .elogix-logo { font-size: 28pt; }
     .letter-body { white-space: pre-wrap; font-size: 11pt; line-height: 1.8; }
     .letter-body strong, b { font-weight: bold; }
     .footer { margin-top: 40px; padding-top: 12px; border-top: 1px solid #e2e8f0; font-size: 9pt; color: #94a3b8; text-align: center; }
@@ -529,10 +529,10 @@ function downloadPDF(content, filename, language = 'both') {
 <body>
   <div class="header">
     <div>
-      <div class="company-name">NepHR Pro</div>
+      <div class="company-name">eLogix HRMS</div>
       <div class="company-sub">HRIS · HRMS · HRIM · HCM | Nepal Labour Act 2074 Compliant</div>
     </div>
-    <div class="nephr-logo">🏢</div>
+    <div class="elogix-logo">🏢</div>
   </div>
 
   ${language !== 'nepali' && content.english ? `
@@ -547,7 +547,7 @@ function downloadPDF(content, filename, language = 'both') {
   ` : ''}
 
   <div class="footer">
-    Generated by NepHR Pro AI · ${new Date().toLocaleString()} · Confidential HR Document
+    Generated by eLogix HRMS AI · ${new Date().toLocaleString()} · Confidential HR Document
   </div>
   <script>window.onload=()=>{window.print(); setTimeout(()=>window.close(), 2000)}<\/script>
 </body>
@@ -614,7 +614,7 @@ export default function LetterEngine({
     setLoading(true); setContent(null); setAiUsed(false)
 
     // Try Claude AI first
-    const aiPrompt = `Generate a professional HR ${templateType.replace(/_/g,' ')} letter in BOTH English and Nepali for NepHR Pro.
+    const aiPrompt = `Generate a professional HR ${templateType.replace(/_/g,' ')} letter in BOTH English and Nepali for eLogix HRMS.
 
 Employee details:
 ${Object.entries(fields).filter(([k,v])=>v).map(([k,v])=>`${FIELD_LABELS[k]||k}: ${v}`).join('\n')}
@@ -670,7 +670,7 @@ Requirements:
   const handleSend = async () => {
     setSent(false)
     try {
-      const token = localStorage.getItem('nephr_access_token')
+      const token = localStorage.getItem('elogix_access_token')
       await fetch('/api/v1/letters/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },

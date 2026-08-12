@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/dei_schema.sql
--- NepHR Pro -- Employee Experience & Culture > Diversity, Equity &
+-- eLogix HRMS -- Employee Experience & Culture > Diversity, Equity &
 -- Inclusion (5 pages: Diversity Dashboard, Gender Analytics,
 -- Inclusion Program, DEI Training, Accessibility Support)
 --

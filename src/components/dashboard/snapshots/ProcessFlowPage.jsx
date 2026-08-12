@@ -308,10 +308,10 @@ export default function ProcessFlowPage(){
 
   // State
   const [depts,setDepts]=useState(()=>{
-    try{const c=JSON.parse(localStorage.getItem('nephr_pf_custom_depts')||'[]');return[...DEPT_LIST,...c]}catch{return DEPT_LIST}
+    try{const c=JSON.parse(localStorage.getItem('elogix_pf_custom_depts')||'[]');return[...DEPT_LIST,...c]}catch{return DEPT_LIST}
   })
-  const [customFlows,setCustomFlows]=useState(()=>{try{return JSON.parse(localStorage.getItem('nephr_pf_custom_flows')||'{}')}catch{return{}}})
-  const [editedFlows,setEditedFlows]=useState(()=>{try{return JSON.parse(localStorage.getItem('nephr_pf_edited_flows')||'{}')}catch{return{}}})
+  const [customFlows,setCustomFlows]=useState(()=>{try{return JSON.parse(localStorage.getItem('elogix_pf_custom_flows')||'{}')}catch{return{}}})
+  const [editedFlows,setEditedFlows]=useState(()=>{try{return JSON.parse(localStorage.getItem('elogix_pf_edited_flows')||'{}')}catch{return{}}})
 
   const defaultDept = depts.find(d=>d.id===(persona?.id==='hr'?'hr':persona?.id==='executive'?'exec':'ops'))||depts[0]
   const [selDept,setSelDept]=useState(defaultDept)
@@ -380,7 +380,7 @@ export default function ProcessFlowPage(){
     const newFlow={...f,nodes:f.nodes.map(n=>n.id===updatedNode.id?updatedNode:n)}
     const updated={...editedFlows,[selTask.id]:newFlow}
     setEditedFlows(updated)
-    localStorage.setItem('nephr_pf_edited_flows',JSON.stringify(updated))
+    localStorage.setItem('elogix_pf_edited_flows',JSON.stringify(updated))
     setEditNode(null)
     notify('✅ Node updated and saved!')
   }
@@ -393,7 +393,7 @@ export default function ProcessFlowPage(){
     if(!flow){notify('❌ AI generation failed. Check API key.');return}
     const updated={...customFlows,[task.id]:flow}
     setCustomFlows(updated)
-    localStorage.setItem('nephr_pf_custom_flows',JSON.stringify(updated))
+    localStorage.setItem('elogix_pf_custom_flows',JSON.stringify(updated))
     setBuiltinFlows(p=>({...p,[task.id]:flow}))
     notify('✅ AI flowchart generated!')
   }
@@ -403,7 +403,7 @@ export default function ProcessFlowPage(){
     const updated=[...depts,d]
     setDepts(updated)
     const customs=updated.filter(x=>x.isCustom)
-    localStorage.setItem('nephr_pf_custom_depts',JSON.stringify(customs))
+    localStorage.setItem('elogix_pf_custom_depts',JSON.stringify(customs))
     setSelDept(d);setSelTask(null)
     notify(`✅ "${d.name}" department added with ${d.tasks.length} tasks!`,3000)
   }
@@ -416,10 +416,10 @@ export default function ProcessFlowPage(){
     const updatedDepts=depts.map(d=>d.id===selDept.id?{...d,tasks:[...d.tasks,newTask]}:d)
     setDepts(updatedDepts)
     const customs=updatedDepts.filter(x=>x.isCustom)
-    localStorage.setItem('nephr_pf_custom_depts',JSON.stringify(customs))
+    localStorage.setItem('elogix_pf_custom_depts',JSON.stringify(customs))
     const updatedFlows={...customFlows,[taskId]:flow}
     setCustomFlows(updatedFlows)
-    localStorage.setItem('nephr_pf_custom_flows',JSON.stringify(updatedFlows))
+    localStorage.setItem('elogix_pf_custom_flows',JSON.stringify(updatedFlows))
     setSelDept(updatedDepts.find(d=>d.id===selDept.id))
     notify(`✅ Task "${taskLabel}" added with AI flowchart!`)
   }
@@ -428,7 +428,7 @@ export default function ProcessFlowPage(){
     if(!selTask)return
     const updated={...editedFlows};delete updated[selTask.id]
     setEditedFlows(updated)
-    localStorage.setItem('nephr_pf_edited_flows',JSON.stringify(updated))
+    localStorage.setItem('elogix_pf_edited_flows',JSON.stringify(updated))
     notify('✅ Reverted to original flow.')
   }
 

@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/kpi_management_schema.sql
--- NepHR Pro — Performance & Talent Management > Goal & Performance >
+-- eLogix HRMS — Performance & Talent Management > Goal & Performance >
 -- Goal Management > KPI Management (1 page)
 --
 -- Design note: KPIs sit UNDERNEATH KRAs (1-3 per KRA per global best

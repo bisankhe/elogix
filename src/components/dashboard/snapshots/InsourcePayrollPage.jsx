@@ -40,7 +40,7 @@ export default function InsourcePayrollPage() {
 
       <div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#065f46',display:'flex',gap:10,flexWrap:'wrap'}}>
         <span style={{fontSize:18}}>🏢</span>
-        <div style={{flex:1,minWidth:220}}><strong>Full Control, In-House:</strong> Direct/permanent staff payroll processed entirely within NepHR Pro - zero third-party hand-off. All appointment letters, remuneration terms, and benefit entitlements stay native to this system per Nepal LA2074.</div>
+        <div style={{flex:1,minWidth:220}}><strong>Full Control, In-House:</strong> Direct/permanent staff payroll processed entirely within eLogix HRMS - zero third-party hand-off. All appointment letters, remuneration terms, and benefit entitlements stay native to this system per Nepal LA2074.</div>
       </div>
 
       <SearchBar value={search} onChange={setSearch} placeholder="Search by employee name..."/>

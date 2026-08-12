@@ -1,7 +1,7 @@
 // FILE: KPITransformationBeforePage.jsx - KPI Transformation Infographic: Before
 // (Performance & Talent > Goal & Performance > Performance Analytics)
 // Baseline-clarity visual: legacy manual-process pain points, validating
-// why the transformation to NepHR Pro was necessary.
+// why the transformation to eLogix HRMS was necessary.
 
 import { useState } from 'react'
 import { PageHeader, ContextMenu } from './DeptSetupShared.jsx'
@@ -36,7 +36,7 @@ export default function KPITransformationBeforePage() {
 
       <div style={{background:'#fef3c7',border:'1px solid #fde68a',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#78350f',display:'flex',gap:10,flexWrap:'wrap'}}>
         <span style={{fontSize:18}}>📊</span>
-        <div style={{flex:1,minWidth:200}}><strong>The Legacy Baseline:</strong> This snapshot represents the pre-NepHR Pro state - decentralized data, reactive reporting, and guesswork-driven decisions. Compare against the "After" page to see the measurable transformation.</div>
+        <div style={{flex:1,minWidth:200}}><strong>The Legacy Baseline:</strong> This snapshot represents the pre-eLogix HRMS state - decentralized data, reactive reporting, and guesswork-driven decisions. Compare against the "After" page to see the measurable transformation.</div>
       </div>
 
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(260px,1fr))',gap:14}}>

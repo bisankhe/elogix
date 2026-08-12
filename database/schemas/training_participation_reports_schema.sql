@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/training_participation_reports_schema.sql
--- NepHR Pro — Performance & Talent Management > Talent Development >
+-- eLogix HRMS — Performance & Talent Management > Talent Development >
 -- Learning & Development > Employee Training Participation List +
 -- Training Reports (2 pages, capstone of the entire L&D arc)
 --

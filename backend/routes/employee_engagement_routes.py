@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/employee_engagement_routes.py
-NepHR Pro -- Employee Experience & Culture > Employee Engagement
+eLogix HRMS -- Employee Experience & Culture > Employee Engagement
 (9 pages: Engagement Dashboard, Announcement Board, Employee
 Engagement, Employee Survey, Employee Feedback, Suggestion Box,
 Employee Events, Appreciation Program, Internal Communication)

@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/learning_portal_elearning_schema.sql
--- NepHR Pro — Performance & Talent Management > Talent Development >
+-- eLogix HRMS — Performance & Talent Management > Talent Development >
 -- Learning & Development > Learning Portal + E-Learning Management
 -- (2 pages)
 --

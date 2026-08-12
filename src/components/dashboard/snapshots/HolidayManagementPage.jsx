@@ -149,7 +149,7 @@ export default function HolidayManagementPage() {
         {icon:'👁',label:'View Details',key:'view'},{icon:'✏',label:'Edit',key:'edit'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'🗑',label:'Remove',key:'delete'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Holiday Calendar" columns={['Name','Name (Nepali)','Date AD','Date BS','Type','Category','Women Extra Day']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Holiday Calendar" columns={['Name','Name (Nepali)','Date AD','Date BS','Type','Category','Women Extra Day']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

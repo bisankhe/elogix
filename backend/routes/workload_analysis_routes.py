@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/workload_analysis_routes.py
-NepHR Pro — Performance & Talent Management > Work & Performance >
+eLogix HRMS — Performance & Talent Management > Work & Performance >
 Workload Analysis Module (2 pages)
 URL prefix: /api/v1/workload-analysis
 

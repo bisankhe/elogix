@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/vendor_finance_routes.py
-NepHR Pro — Vendor Finance & Analytics
+eLogix HRMS — Vendor Finance & Analytics
 URL prefix: /api/v1/vf
 Covers:
   1. /vf/billing       — Billing generation, 3-way match, TDS, rate enforcement

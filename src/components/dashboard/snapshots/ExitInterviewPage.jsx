@@ -212,7 +212,7 @@ export default function ExitInterviewPage() {
         {icon:'👁',label:'View Full Responses',key:'view'},{icon:'📅',label:'Schedule',key:'schedule'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📤',label:'Export (Anonymized)',key:'export'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Exit Interviews" columns={['Employee','Position','Interview Date','Conducted By','Sentiment','Sentiment Score','Rehire Eligible','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Exit Interviews" columns={['Employee','Position','Interview Date','Conducted By','Sentiment','Sentiment Score','Rehire Eligible','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

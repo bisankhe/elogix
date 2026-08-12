@@ -153,7 +153,7 @@ export default function OtherGovernmentEntitiesLettersPage() {
         {icon:'👁',label:'View Letter',key:'view'},{icon:'📤',label:'Mark Submitted',key:'submit'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📥',label:'Download PDF',key:'download'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Other Government Entities Letters" columns={['Subject','Entity','Submitted Date','Reference No','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Other Government Entities Letters" columns={['Subject','Entity','Submitted Date','Reference No','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

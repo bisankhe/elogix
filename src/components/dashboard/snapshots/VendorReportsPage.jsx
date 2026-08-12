@@ -219,7 +219,7 @@ export default function VendorReportsPage() {
         </div>
       </div>
 
-      {showExcel&&<ExcelModal title="Vendor Reports" columns={['Report Type','Period','Value','Change','Vendor','Category','Amount NPR']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Vendor Reports" columns={['Report Type','Period','Value','Change','Vendor','Category','Amount NPR']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

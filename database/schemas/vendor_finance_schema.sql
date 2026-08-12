@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/vendor_finance_schema.sql
--- NepHR Pro — Vendor Finance & Analytics Schema
+-- eLogix HRMS — Vendor Finance & Analytics Schema
 -- Covers:
 --   1. vendor_billing_records  (Bill generation, TDS, 3-way match)
 --   2. vendor_invoice_ocr      (OCR extraction metadata)

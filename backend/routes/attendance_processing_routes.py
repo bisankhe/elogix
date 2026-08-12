@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/attendance_processing_routes.py
-NepHR Pro — Workforce Operations > Attendance Management >
+eLogix HRMS — Workforce Operations > Attendance Management >
 Attendance Processing Module (5 pages)
 URL prefix: /api/v1/attendance-processing
 

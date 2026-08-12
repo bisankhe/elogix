@@ -40,8 +40,8 @@ export default function ATSAIToolsPage() {
   const [copied,  setCopied]  = useState(false)
 
   // Form states per tool
-  const [emailForm, setEmailForm] = useState({ type:'Application Received', candidate:'Gita Maharjan', role:'Senior React Dev', company:'NepHR Pro', extra:'' })
-  const [waForm,    setWaForm]    = useState({ type:'Exam Link', candidate:'Gita Maharjan', link:'https://ats.nephrpro.com/exam/abc123', date:'' })
+  const [emailForm, setEmailForm] = useState({ type:'Application Received', candidate:'Gita Maharjan', role:'Senior React Dev', company:'eLogix HRMS', extra:'' })
+  const [waForm,    setWaForm]    = useState({ type:'Exam Link', candidate:'Gita Maharjan', link:'https://ats.elogix.com/exam/abc123', date:'' })
   const [jdForm,    setJdForm]    = useState({ role:'', dept:'', skills:'', exp:'', level:'Senior' })
   const [offerForm, setOfferForm] = useState({ candidate:'', role:'', salary:'', joining:'', probation:'6 months' })
   const [fbForm,    setFbForm]    = useState({ candidate:'', stage:'Written Exam', outcome:'Not Passed', notes:'' })
@@ -132,7 +132,7 @@ export default function ATSAIToolsPage() {
                   {EMAIL_TYPES.map(t => <option key={t}>{t}</option>)}
                 </select>
               </div>
-              {[['Candidate Name','candidate','Gita Maharjan'],['Job Role','role','Senior React Developer'],['Company','company','NepHR Pro']].map(([l,k,ph]) => (
+              {[['Candidate Name','candidate','Gita Maharjan'],['Job Role','role','Senior React Developer'],['Company','company','eLogix HRMS']].map(([l,k,ph]) => (
                 <div key={k} style={{ marginBottom:10 }}>
                   <label style={{ fontSize:9, fontWeight:700, color:'#374151', display:'block', marginBottom:3 }}>{l}</label>
                   <input value={emailForm[k]} onChange={e => setEmailForm(f=>({...f,[k]:e.target.value}))} placeholder={ph} style={{ width:'100%', padding:'8px 10px', borderRadius:8, border:'1px solid #e2e8f0', fontSize:10, outline:'none', boxSizing:'border-box' }} />
@@ -153,7 +153,7 @@ export default function ATSAIToolsPage() {
                   {WA_TYPES.map(t => <option key={t}>{t}</option>)}
                 </select>
               </div>
-              {[['Candidate Name','candidate','Gita Maharjan'],['Link (if any)','link','https://ats.nephrpro.com/...'],['Date/Time (if any)','date','2081-09-02 at 10:00 AM']].map(([l,k,ph]) => (
+              {[['Candidate Name','candidate','Gita Maharjan'],['Link (if any)','link','https://ats.elogix.com/...'],['Date/Time (if any)','date','2081-09-02 at 10:00 AM']].map(([l,k,ph]) => (
                 <div key={k} style={{ marginBottom:10 }}>
                   <label style={{ fontSize:9, fontWeight:700, color:'#374151', display:'block', marginBottom:3 }}>{l}</label>
                   <input value={waForm[k]} onChange={e => setWaForm(f=>({...f,[k]:e.target.value}))} placeholder={ph} style={{ width:'100%', padding:'8px 10px', borderRadius:8, border:'1px solid #e2e8f0', fontSize:10, outline:'none', boxSizing:'border-box' }} />

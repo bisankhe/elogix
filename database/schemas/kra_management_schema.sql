@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/kra_management_schema.sql
--- NepHR Pro — Performance & Talent Management > Goal & Performance >
+-- eLogix HRMS — Performance & Talent Management > Goal & Performance >
 -- Goal Management > KRA Management (1 page)
 --
 -- Design note: reuses designations.jd_responsibilities (JSONB, already

@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/employee_social_feed_schema.sql
--- NepHR Pro -- Employee Social Feed / Employee Hub
+-- eLogix HRMS -- Employee Social Feed / Employee Hub
 -- (Employee Experience & Culture > Employee Engagement > Employee Social Feed)
 --
 -- GAP CONFIRMED before writing:

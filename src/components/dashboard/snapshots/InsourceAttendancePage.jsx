@@ -75,7 +75,7 @@ export default function InsourceAttendancePage() {
 
       <div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#065f46',display:'flex',gap:10}}>
         <span style={{fontSize:18}}>🏢</span>
-        <div><strong>Centralized Control:</strong> Direct/permanent employee attendance is fully managed within NepHR Pro - biometric, GPS, web, and QR capture all flow into one master record. Overtime, breaks, night duty, and holiday-worked counters auto-calculate and sync natively to payroll, with zero third-party hand-off.</div>
+        <div><strong>Centralized Control:</strong> Direct/permanent employee attendance is fully managed within eLogix HRMS - biometric, GPS, web, and QR capture all flow into one master record. Overtime, breaks, night duty, and holiday-worked counters auto-calculate and sync natively to payroll, with zero third-party hand-off.</div>
       </div>
 
       <div style={{display:'flex',gap:8,marginBottom:14,flexWrap:'wrap'}}>
@@ -136,7 +136,7 @@ export default function InsourceAttendancePage() {
         {icon:'👁',label:'View Full Log',key:'view'},{icon:'✏',label:'Edit Entry (Mgr/Sup)',key:'edit'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📤',label:'Export',key:'export'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Insource Attendance" columns={['Employee','Department','Date','Login','Logout','Total Hours','Break Min','Overtime Hrs','Night Duty','Holiday Worked']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Insource Attendance" columns={['Employee','Department','Date','Login','Logout','Total Hours','Break Min','Overtime Hrs','Night Duty','Holiday Worked']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

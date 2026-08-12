@@ -1,5 +1,5 @@
 // FILE: AIHRLettersPage.jsx
-// AI-powered HR Letter Generator — NepHR Pro
+// AI-powered HR Letter Generator — eLogix HRMS
 // • Claude AI writes each letter in English + Nepali
 // • Works offline with professional built-in templates
 // • Canvas e-signature pad with draw/type/upload
@@ -16,7 +16,7 @@ const VK = import.meta?.env?.VITE_ANTHROPIC_API_KEY || ''
 
 // ── CLAUDE API ────────────────────────────────────────────────
 async function callClaude(prompt) {
-  const sys = `You are a professional HR letter writer for NepHR Pro (Nepal-based HRIS/HRMS).
+  const sys = `You are a professional HR letter writer for eLogix HRMS (Nepal-based HRIS/HRMS).
 Write formal, legally compliant HR letters that:
 - Reference Nepal Labour Act 2074 sections accurately
 - Use professional business English AND formal Nepali (देवनागरी)
@@ -53,13 +53,13 @@ function offlineLetter(type, vars) {
 
   const templates = {
     offer: {
-      english: `${d}\n\nDear ${vars.name},\n\nRe: Offer of Employment — ${vars.position || 'Position'}\n\nWe are pleased to offer you the position of ${vars.position || '[Position]'} at ${vars.company || 'NepHR Pro Pvt. Ltd.'}, effective ${vars.start_date || '[Start Date]'}.\n\nYour monthly gross salary will be NPR ${vars.salary || '[Amount]'}, subject to applicable deductions including Social Security Fund (SSF) contribution of 11% as per the Social Security Act 2074 and income tax per prevailing CIT rates.\n\nThis offer is contingent upon satisfactory completion of background verification and submission of required documents. Your probationary period shall be ${vars.probation || '6'} months as per Section 13 of Nepal Labour Act 2074.\n\nPlease sign and return a copy of this letter as acceptance within ${vars.deadline || '7'} days.\n\nSincerely,\n\n${vars.signatory || '[HR Manager Name]'}\n${vars.signatory_title || 'Human Resources Manager'}\n${vars.company || 'NepHR Pro Pvt. Ltd.'}\n\nRef: Nepal Labour Act 2074, Section 10 (Written Employment Contract Mandatory)`,
+      english: `${d}\n\nDear ${vars.name},\n\nRe: Offer of Employment — ${vars.position || 'Position'}\n\nWe are pleased to offer you the position of ${vars.position || '[Position]'} at ${vars.company || 'eLogix HRMS Pvt. Ltd.'}, effective ${vars.start_date || '[Start Date]'}.\n\nYour monthly gross salary will be NPR ${vars.salary || '[Amount]'}, subject to applicable deductions including Social Security Fund (SSF) contribution of 11% as per the Social Security Act 2074 and income tax per prevailing CIT rates.\n\nThis offer is contingent upon satisfactory completion of background verification and submission of required documents. Your probationary period shall be ${vars.probation || '6'} months as per Section 13 of Nepal Labour Act 2074.\n\nPlease sign and return a copy of this letter as acceptance within ${vars.deadline || '7'} days.\n\nSincerely,\n\n${vars.signatory || '[HR Manager Name]'}\n${vars.signatory_title || 'Human Resources Manager'}\n${vars.company || 'eLogix HRMS Pvt. Ltd.'}\n\nRef: Nepal Labour Act 2074, Section 10 (Written Employment Contract Mandatory)`,
 
       nepali: `${nd}\n\nप्रिय ${vars.name},\n\nविषय: रोजगारीको प्रस्ताव — ${vars.position || 'पद'}\n\nहामीलाई ${vars.company || 'नेपएचआर प्रो प्रा.लि.'} मा तपाईंलाई ${vars.position || '[पद]'} को पदमा नियुक्तिको प्रस्ताव गर्दा खुसी लाग्छ। तपाईंको नियुक्ति ${vars.start_date || '[प्रारम्भ मिति]'} देखि प्रभावकारी हुनेछ।\n\nतपाईंको मासिक कुल तलब NPR ${vars.salary || '[रकम]'} हुनेछ। सामाजिक सुरक्षा कोष (SSF) अन्तर्गत ११% र प्रचलित दरमा आयकर कटौती हुनेछ।\n\nनेपाल श्रम ऐन २०७४ को दफा १३ बमोजिम ${vars.probation || '६'} महिनाको परिवीक्षा अवधि लागू हुनेछ।\n\nकृपया यो प्रस्ताव पत्र ${vars.deadline || '७'} दिनभित्र हस्ताक्षर गरी फिर्ता पठाउनुहोस्।\n\nभवदीय,\n\n${vars.signatory || '[मानव संसाधन प्रबन्धकको नाम]'}\n${vars.signatory_title || 'मानव संसाधन प्रबन्धक'}\n${vars.company || 'नेपएचआर प्रो प्रा.लि.'}`
     },
 
     experience: {
-      english: `${d}\n\nTO WHOM IT MAY CONCERN\n\nRe: Experience Certificate — ${vars.name}\n\nThis is to certify that ${vars.name} was employed with ${vars.company || 'NepHR Pro Pvt. Ltd.'} from ${vars.start_date || '[Start Date]'} to ${vars.end_date || '[End Date]'} in the capacity of ${vars.position || '[Position]'}, ${vars.department || '[Department]'} Department.\n\nDuring their tenure of ${vars.tenure || '[Duration]'}, ${vars.name} demonstrated ${vars.qualities || 'excellent professional competencies, strong work ethic, and consistent dedication to organizational goals'}.\n\nWe wish ${vars.name} all the best in their future endeavours.\n\nThis certificate is issued on the request of the individual and carries no financial obligation on the part of ${vars.company || 'NepHR Pro Pvt. Ltd.'}.\n\n${vars.signatory || '[Authorized Signatory]'}\n${vars.signatory_title || 'Human Resources Manager'}\n${vars.company || 'NepHR Pro Pvt. Ltd.'}\n\nCompany Seal`,
+      english: `${d}\n\nTO WHOM IT MAY CONCERN\n\nRe: Experience Certificate — ${vars.name}\n\nThis is to certify that ${vars.name} was employed with ${vars.company || 'eLogix HRMS Pvt. Ltd.'} from ${vars.start_date || '[Start Date]'} to ${vars.end_date || '[End Date]'} in the capacity of ${vars.position || '[Position]'}, ${vars.department || '[Department]'} Department.\n\nDuring their tenure of ${vars.tenure || '[Duration]'}, ${vars.name} demonstrated ${vars.qualities || 'excellent professional competencies, strong work ethic, and consistent dedication to organizational goals'}.\n\nWe wish ${vars.name} all the best in their future endeavours.\n\nThis certificate is issued on the request of the individual and carries no financial obligation on the part of ${vars.company || 'eLogix HRMS Pvt. Ltd.'}.\n\n${vars.signatory || '[Authorized Signatory]'}\n${vars.signatory_title || 'Human Resources Manager'}\n${vars.company || 'eLogix HRMS Pvt. Ltd.'}\n\nCompany Seal`,
 
       nepali: `${nd}\n\nजससँग सम्बन्धित होस्,\n\nविषय: अनुभव प्रमाणपत्र — ${vars.name}\n\nयसद्वारा प्रमाणित गरिन्छ कि ${vars.name} ले ${vars.company || 'नेपएचआर प्रो प्रा.लि.'} मा ${vars.start_date || '[प्रारम्भ मिति]'} देखि ${vars.end_date || '[समाप्ति मिति]'} सम्म ${vars.department || '[विभाग]'} विभागमा ${vars.position || '[पद]'} को रूपमा कार्य गर्नुभयो।\n\n${vars.tenure || '[अवधि]'} को कार्यकालमा ${vars.name} ले ${vars.qualities || 'उत्कृष्ट व्यावसायिक दक्षता र समर्पण'} प्रदर्शन गर्नुभयो।\n\nहामी उहाँको भविष्यमा सफलताको कामना गर्दछौं।\n\n${vars.signatory || '[अधिकृत हस्ताक्षरकर्ता]'}\n${vars.signatory_title || 'मानव संसाधन प्रबन्धक'}\n${vars.company || 'नेपएचआर प्रो प्रा.लि.'}\n\nकम्पनी छाप`
     },
@@ -71,31 +71,31 @@ function offlineLetter(type, vars) {
     },
 
     promotion: {
-      english: `${d}\n\nDear ${vars.name},\n\nRe: Promotion Letter — ${vars.new_position || 'New Position'}\n\nWe are pleased to inform you of your promotion to the position of ${vars.new_position || '[New Position]'}, ${vars.department || '[Department]'} Department, effective ${vars.effective_date || '[Date]'}.\n\nThis promotion recognises your ${vars.achievements || 'outstanding performance, leadership qualities, and significant contributions to the organization'}.\n\nYour revised monthly gross salary will be NPR ${vars.new_salary || '[Amount]'}, an increase of NPR ${vars.salary_increase || '[Increment]'}. All other terms and conditions of your employment remain unchanged.\n\nWe congratulate you and look forward to your enhanced contribution in your new role.\n\n${vars.signatory || '[Authorized Signatory]'}\n${vars.signatory_title || 'Chief Human Resources Officer'}\n${vars.company || 'NepHR Pro Pvt. Ltd.'}`,
+      english: `${d}\n\nDear ${vars.name},\n\nRe: Promotion Letter — ${vars.new_position || 'New Position'}\n\nWe are pleased to inform you of your promotion to the position of ${vars.new_position || '[New Position]'}, ${vars.department || '[Department]'} Department, effective ${vars.effective_date || '[Date]'}.\n\nThis promotion recognises your ${vars.achievements || 'outstanding performance, leadership qualities, and significant contributions to the organization'}.\n\nYour revised monthly gross salary will be NPR ${vars.new_salary || '[Amount]'}, an increase of NPR ${vars.salary_increase || '[Increment]'}. All other terms and conditions of your employment remain unchanged.\n\nWe congratulate you and look forward to your enhanced contribution in your new role.\n\n${vars.signatory || '[Authorized Signatory]'}\n${vars.signatory_title || 'Chief Human Resources Officer'}\n${vars.company || 'eLogix HRMS Pvt. Ltd.'}`,
 
       nepali: `${nd}\n\nप्रिय ${vars.name},\n\nविषय: पदोन्नति पत्र\n\nहामीलाई सूचित गर्दा हर्ष लाग्छ कि ${vars.effective_date || '[मिति]'} देखि तपाईंलाई ${vars.department || '[विभाग]'} विभागमा ${vars.new_position || '[नयाँ पद]'} मा पदोन्नति गरिएको छ।\n\nतपाईंको ${vars.achievements || 'उत्कृष्ट कार्यसम्पादन र नेतृत्व क्षमता'} को सम्मानमा यो पदोन्नति दिइएको हो।\n\nतपाईंको संशोधित मासिक तलब NPR ${vars.new_salary || '[रकम]'} हुनेछ।\n\n${vars.signatory || '[अधिकृत हस्ताक्षरकर्ता]'}\n${vars.company || 'नेपएचआर प्रो प्रा.लि.'}`
     },
 
     termination: {
-      english: `${d}\n\nDear ${vars.name},\n\nRe: Termination of Employment\n\nWe regret to inform you that your employment with ${vars.company || 'NepHR Pro Pvt. Ltd.'} is terminated effective ${vars.termination_date || '[Date]'}, as per Section ${vars.act_section || '52'} of the Nepal Labour Act 2074.\n\nThe reason for termination is: ${vars.reason || '[Reason for termination]'}.\n\nAs per Nepal Labour Act 2074:\n- Notice pay: ${vars.notice_pay || '[Amount]'} (or notice period served)\n- Gratuity: NPR ${vars.gratuity || '[Amount]'} (8.33% per year of service)\n- Leave encashment: NPR ${vars.leave_encashment || '[Amount]'}\n- Outstanding dues: NPR ${vars.outstanding || '[Amount]'}\n\nFull and Final Settlement will be processed within ${vars.settlement_days || '30 days'} as required by law.\n\nPlease return all company assets by ${vars.asset_return_date || '[Date]'}.\n\n${vars.signatory || '[Authorized Signatory]'}\n${vars.company || 'NepHR Pro Pvt. Ltd.'}\n\nRef: Nepal Labour Act 2074, Sections 52, 132, 133`,
+      english: `${d}\n\nDear ${vars.name},\n\nRe: Termination of Employment\n\nWe regret to inform you that your employment with ${vars.company || 'eLogix HRMS Pvt. Ltd.'} is terminated effective ${vars.termination_date || '[Date]'}, as per Section ${vars.act_section || '52'} of the Nepal Labour Act 2074.\n\nThe reason for termination is: ${vars.reason || '[Reason for termination]'}.\n\nAs per Nepal Labour Act 2074:\n- Notice pay: ${vars.notice_pay || '[Amount]'} (or notice period served)\n- Gratuity: NPR ${vars.gratuity || '[Amount]'} (8.33% per year of service)\n- Leave encashment: NPR ${vars.leave_encashment || '[Amount]'}\n- Outstanding dues: NPR ${vars.outstanding || '[Amount]'}\n\nFull and Final Settlement will be processed within ${vars.settlement_days || '30 days'} as required by law.\n\nPlease return all company assets by ${vars.asset_return_date || '[Date]'}.\n\n${vars.signatory || '[Authorized Signatory]'}\n${vars.company || 'eLogix HRMS Pvt. Ltd.'}\n\nRef: Nepal Labour Act 2074, Sections 52, 132, 133`,
 
       nepali: `${nd}\n\nप्रिय ${vars.name},\n\nविषय: रोजगारी समाप्तिको सूचना\n\nनेपाल श्रम ऐन २०७४ को दफा ${vars.act_section || '५२'} बमोजिम ${vars.termination_date || '[मिति]'} देखि तपाईंको रोजगारी समाप्त हुने जानकारी गराउनु पर्दा खेद लाग्छ।\n\nकारण: ${vars.reason || '[समाप्तिको कारण]'}\n\nश्रम ऐन बमोजिम:\n- सूचना पारिश्रमिक: NPR ${vars.notice_pay || '[रकम]'}\n- उपदान: NPR ${vars.gratuity || '[रकम]'} (प्रतिवर्ष ८.३३%)\n- बिदा भुक्तान: NPR ${vars.leave_encashment || '[रकम]'}\n\n${vars.settlement_days || '३०'} दिनभित्र पूर्ण र अन्तिम भुक्तान गरिनेछ।\n\n${vars.signatory || '[अधिकृत हस्ताक्षरकर्ता]'}\n${vars.company || 'नेपएचआर प्रो प्रा.लि.'}`
     },
 
     salary_revision: {
-      english: `${d}\n\nDear ${vars.name},\n\nRe: Salary Revision — Effective ${vars.effective_date || '[Date]'}\n\nWe are pleased to inform you of a revision in your compensation package, effective ${vars.effective_date || '[Date]'}.\n\nRevised Salary Structure:\n- Previous Gross Monthly Salary: NPR ${vars.old_salary || '[Amount]'}\n- Revised Gross Monthly Salary: NPR ${vars.new_salary || '[Amount]'}\n- Increment: NPR ${vars.increment || '[Amount]'} (${vars.increment_pct || '[%]'}%)\n\nSSF contribution (11% employee, 20% employer) will be calculated on the revised basic salary as per Social Security Act 2074.\n\nThis revision reflects your valuable contribution and performance. All other terms remain unchanged.\n\n${vars.signatory || '[Authorized Signatory]'}\n${vars.company || 'NepHR Pro Pvt. Ltd.'}`,
+      english: `${d}\n\nDear ${vars.name},\n\nRe: Salary Revision — Effective ${vars.effective_date || '[Date]'}\n\nWe are pleased to inform you of a revision in your compensation package, effective ${vars.effective_date || '[Date]'}.\n\nRevised Salary Structure:\n- Previous Gross Monthly Salary: NPR ${vars.old_salary || '[Amount]'}\n- Revised Gross Monthly Salary: NPR ${vars.new_salary || '[Amount]'}\n- Increment: NPR ${vars.increment || '[Amount]'} (${vars.increment_pct || '[%]'}%)\n\nSSF contribution (11% employee, 20% employer) will be calculated on the revised basic salary as per Social Security Act 2074.\n\nThis revision reflects your valuable contribution and performance. All other terms remain unchanged.\n\n${vars.signatory || '[Authorized Signatory]'}\n${vars.company || 'eLogix HRMS Pvt. Ltd.'}`,
 
       nepali: `${nd}\n\nप्रिय ${vars.name},\n\nविषय: तलब संशोधन — ${vars.effective_date || '[मिति]'} देखि प्रभावकारी\n\nतपाईंको तलब संशोधन गरिएको जानकारी दिँदा खुसी लाग्छ।\n\nसंशोधित तलब संरचना:\n- पहिलेको मासिक कुल तलब: NPR ${vars.old_salary || '[रकम]'}\n- संशोधित मासिक कुल तलब: NPR ${vars.new_salary || '[रकम]'}\n- वृद्धि: NPR ${vars.increment || '[रकम]'} (${vars.increment_pct || '[%]'}%)\n\nसामाजिक सुरक्षा ऐन २०७४ बमोजिम SSF योगदान संशोधित आधारभूत तलबमा गणना हुनेछ।\n\n${vars.signatory || '[अधिकृत हस्ताक्षरकर्ता]'}\n${vars.company || 'नेपएचआर प्रो प्रा.लि.'}`
     },
 
     transfer: {
-      english: `${d}\n\nDear ${vars.name},\n\nRe: Transfer Notice\n\nThis is to inform you that you have been transferred from ${vars.from_dept || '[From Department/Branch]'} to ${vars.to_dept || '[To Department/Branch]'}, effective ${vars.effective_date || '[Date]'}.\n\nYour designation remains ${vars.position || '[Position]'} and your terms of employment remain unchanged.\n\nPlease complete the handover of your current responsibilities by ${vars.handover_date || '[Date]'} and report to your new assignment on ${vars.joining_date || '[Date]'}.\n\n${vars.signatory || '[Authorized Signatory]'}\n${vars.company || 'NepHR Pro Pvt. Ltd.'}`,
+      english: `${d}\n\nDear ${vars.name},\n\nRe: Transfer Notice\n\nThis is to inform you that you have been transferred from ${vars.from_dept || '[From Department/Branch]'} to ${vars.to_dept || '[To Department/Branch]'}, effective ${vars.effective_date || '[Date]'}.\n\nYour designation remains ${vars.position || '[Position]'} and your terms of employment remain unchanged.\n\nPlease complete the handover of your current responsibilities by ${vars.handover_date || '[Date]'} and report to your new assignment on ${vars.joining_date || '[Date]'}.\n\n${vars.signatory || '[Authorized Signatory]'}\n${vars.company || 'eLogix HRMS Pvt. Ltd.'}`,
 
       nepali: `${nd}\n\nप्रिय ${vars.name},\n\nविषय: सरुवा सूचना\n\nतपाईंलाई ${vars.effective_date || '[मिति]'} देखि ${vars.from_dept || '[स्थान/विभाग]'} बाट ${vars.to_dept || '[नयाँ स्थान/विभाग]'} मा सरुवा गरिएको जानकारी गराइन्छ।\n\nतपाईंको पद ${vars.position || '[पद]'} नै रहनेछ र रोजगारीका शर्तहरू अपरिवर्तित रहनेछन्।\n\n${vars.signatory || '[अधिकृत हस्ताक्षरकर्ता]'}\n${vars.company || 'नेपएचआर प्रो प्रा.लि.'}`
     },
 
     probation_clearance: {
-      english: `${d}\n\nDear ${vars.name},\n\nRe: Probation Completion & Employment Confirmation\n\nWe are pleased to inform you that you have successfully completed your probationary period of ${vars.probation_period || '6 months'}, effective ${vars.effective_date || '[Date]'}.\n\nAs per Section 13 of the Nepal Labour Act 2074, your employment status is hereby confirmed as a Regular Employee of ${vars.company || 'NepHR Pro Pvt. Ltd.'}.\n\nYour performance during the probationary period has met the expectations for your role as ${vars.position || '[Position]'}. Your terms of employment, including remuneration and SSF contributions, remain unchanged.\n\nWe congratulate you and look forward to your continued contribution.\n\n${vars.signatory || '[Authorized Signatory]'}\n${vars.company || 'NepHR Pro Pvt. Ltd.'}\n\nRef: Nepal Labour Act 2074, Section 13`,
+      english: `${d}\n\nDear ${vars.name},\n\nRe: Probation Completion & Employment Confirmation\n\nWe are pleased to inform you that you have successfully completed your probationary period of ${vars.probation_period || '6 months'}, effective ${vars.effective_date || '[Date]'}.\n\nAs per Section 13 of the Nepal Labour Act 2074, your employment status is hereby confirmed as a Regular Employee of ${vars.company || 'eLogix HRMS Pvt. Ltd.'}.\n\nYour performance during the probationary period has met the expectations for your role as ${vars.position || '[Position]'}. Your terms of employment, including remuneration and SSF contributions, remain unchanged.\n\nWe congratulate you and look forward to your continued contribution.\n\n${vars.signatory || '[Authorized Signatory]'}\n${vars.company || 'eLogix HRMS Pvt. Ltd.'}\n\nRef: Nepal Labour Act 2074, Section 13`,
 
       nepali: `${nd}\n\nप्रिय ${vars.name},\n\nविषय: परिवीक्षा पूर्णता र रोजगारी पुष्टि\n\nनेपाल श्रम ऐन २०७४ को दफा १३ बमोजिम ${vars.effective_date || '[मिति]'} देखि ${vars.probation_period || '६ महिना'} को परिवीक्षा अवधि सफलतापूर्वक पूरा गर्नुभएकोमा तपाईंलाई ${vars.company || 'नेपएचआर प्रो प्रा.लि.'} को नियमित कर्मचारीको रूपमा पुष्टि गरिन्छ।\n\nतपाईंको ${vars.position || '[पद]'} को भूमिकामा कार्यसम्पादन अपेक्षा पूरा गरेकोमा बधाई दिन्छौं।\n\n${vars.signatory || '[अधिकृत हस्ताक्षरकर्ता]'}\n${vars.company || 'नेपएचआर प्रो प्रा.लि.'}`
     },
@@ -320,7 +320,7 @@ const VAR_LABELS = {
   probation_period: 'Probation Period Completed',
 }
 
-const HISTORY_KEY = 'nephr_letters_history'
+const HISTORY_KEY = 'elogix_letters_history'
 
 // ── MAIN COMPONENT ────────────────────────────────────────────
 export default function AIHRLettersPage() {
@@ -353,7 +353,7 @@ export default function AIHRLettersPage() {
 
     const prompt = `Write a professional HR ${tmpl?.label} for:
 Employee: ${vars.name}
-Company: ${vars.company || 'NepHR Pro Pvt. Ltd.'}
+Company: ${vars.company || 'eLogix HRMS Pvt. Ltd.'}
 ${Object.entries(vars).filter(([k,v]) => v && k !== 'name' && k !== 'company').map(([k,v]) => `${VAR_LABELS[k] || k}: ${v}`).join('\n')}
 
 Generate both English and formal Nepali (Devanagari script) versions.
@@ -387,7 +387,7 @@ Return ONLY valid JSON: {"english":"...","nepali":"..."}`
       type:      letterType,
       label:     tmpl?.label,
       employee:  vars.name,
-      company:   vars.company || 'NepHR Pro Pvt. Ltd.',
+      company:   vars.company || 'eLogix HRMS Pvt. Ltd.',
       generated: new Date().toISOString(),
       english:   editEn,
       nepali:    editNe,
@@ -399,7 +399,7 @@ Return ONLY valid JSON: {"english":"...","nepali":"..."}`
     try {
       await fetch('/api/v1/letters/save', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('nephr_access_token') || ''}` },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('elogix_access_token') || ''}` },
         body: JSON.stringify(record),
         signal: AbortSignal.timeout(5000),
       })
@@ -446,8 +446,8 @@ Return ONLY valid JSON: {"english":"...","nepali":"..."}`
     </head><body><div class="page">
       <div class="header">
         <div>
-          <div class="logo">🏢 NepHR Pro</div>
-          <div style="font-size:11px;color:#555;margin-top:2px">${vars.company || 'NepHR Pro Pvt. Ltd.'}</div>
+          <div class="logo">🏢 eLogix HRMS</div>
+          <div style="font-size:11px;color:#555;margin-top:2px">${vars.company || 'eLogix HRMS Pvt. Ltd.'}</div>
           <div class="badge">CONFIDENTIAL — HR DOCUMENT</div>
         </div>
         <div class="meta">
@@ -459,7 +459,7 @@ Return ONLY valid JSON: {"english":"...","nepali":"..."}`
       ${enHtml}${neHtml}
       ${sigHtml}
       <div style="margin-top:32px;font-size:9px;color:#94a3b8;border-top:1px solid #f1f5f9;padding-top:8px">
-        Generated by NepHR Pro AI · Nepal Labour Act 2074 Compliant · Nepal Electronic Transactions Act 2063
+        Generated by eLogix HRMS AI · Nepal Labour Act 2074 Compliant · Nepal Electronic Transactions Act 2063
       </div>
     </div>
     <script>window.print()</script>

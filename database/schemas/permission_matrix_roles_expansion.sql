@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/permission_matrix_roles_expansion.sql
--- NepHR Pro -- expands role_definitions and permission_matrix to
+-- eLogix HRMS -- expands role_definitions and permission_matrix to
 -- cover all 19 real roles already used throughout the software
 -- (personas.js), not just the 4 placeholder roles seeded in
 -- user_access_schema.sql (employee, department_head, hr_manager,

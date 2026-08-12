@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/employee_movement_schema.sql
--- NepHR Pro — Employee Records > Employee Movement Module (6 pages)
+-- eLogix HRMS — Employee Records > Employee Movement Module (6 pages)
 --
 -- Design note: employee_employment_history (from employee_database_schema.sql)
 -- already provides the lightweight append-only career log that powers

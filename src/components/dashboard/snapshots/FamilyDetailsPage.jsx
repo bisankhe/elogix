@@ -102,7 +102,7 @@ export default function FamilyDetailsPage() {
         {icon:'👁',label:'View Details',key:'view'},{icon:'✏',label:'Edit',key:'edit'},
         {icon:'🛡',label:'Enroll in Benefits',key:'benefits'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Family Details" columns={['Name','Relationship','Date of Birth','Occupation','Dependent','Benefits Enrolled']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Family Details" columns={['Name','Relationship','Date of Birth','Occupation','Dependent','Benefits Enrolled']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

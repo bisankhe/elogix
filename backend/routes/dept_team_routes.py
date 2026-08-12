@@ -485,5 +485,5 @@ def excel_template(module):
         io.BytesIO(xlsx_bytes),
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         as_attachment=True,
-        download_name=f"nephr_pro_{module}_template.xlsx"
+        download_name=f"elogix_hrms_{module}_template.xlsx"
     )

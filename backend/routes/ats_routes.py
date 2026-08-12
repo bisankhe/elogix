@@ -563,7 +563,7 @@ def create_video_interview():
         questions=json.dumps(d.get('questions', [])),
         time_limit=d.get('time_limit', 30),
         status='Scheduled',
-        interview_link=f"https://interview.nephrpro.com/vi/{uuid.uuid4().hex[:12]}",
+        interview_link=f"https://interview.elogix.com/vi/{uuid.uuid4().hex[:12]}",
     )
     db.session.add(vi)
     db.session.commit()

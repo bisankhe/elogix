@@ -1,5 +1,5 @@
 -- FILE: database/schemas/billing_schema.sql
--- Billing, subscription, invoice, and audit tables for NepHR Pro SaaS
+-- Billing, subscription, invoice, and audit tables for eLogix HRMS SaaS
 
 -- Subscription plans per tenant
 CREATE TABLE IF NOT EXISTS subscriptions (

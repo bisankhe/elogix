@@ -71,7 +71,7 @@ export default function LocationDeptPage() {
         })}
       </div>
       {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={['Headcount Planning','Annual Manpower Plan','Resource Allocation']} actions={[{icon:'👁',label:'View Detail',key:'view'},{icon:'📊',label:'Drill Down',key:'drill'},{icon:'📤',label:'Export',key:'export'}]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Location Department View" columns={['Name','Code','Province/Branch','Quota','Filled','Vacant','Fill Rate %','Budget NPR']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Location Department View" columns={['Name','Code','Province/Branch','Quota','Filled','Vacant','Fill Rate %','Budget NPR']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

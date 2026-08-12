@@ -182,7 +182,7 @@ export default function WFHTrackingPage() {
         {icon:'👁',label:'View Task Log',key:'view'},{icon:'💬',label:'Send Message',key:'message'},
         {icon:'🌱',label:'Wellbeing Check-in',key:'wellbeing'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="WFH Tracking" columns={['Employee','Department','Status','Login Time','Tasks Completed','Tasks Total','OKR Progress %','Burnout Risk','Weekly WFH Days']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="WFH Tracking" columns={['Employee','Department','Status','Login Time','Tasks Completed','Tasks Total','OKR Progress %','Burnout Risk','Weekly WFH Days']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

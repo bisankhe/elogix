@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/integration_hub_schema.sql
--- NepHR Pro -- Integration Hub
+-- eLogix HRMS -- Integration Hub
 -- (System Administration > Integration & API > Integration Hub)
 --
 -- GAP CONFIRMED BEFORE WRITING:
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS integration_hub_platforms (
     display_name    VARCHAR(100) NOT NULL,
     category        VARCHAR(30) CHECK (category IN ('messaging','video','email','all-in-one')),
     auth_type       VARCHAR(30) CHECK (auth_type IN ('oauth2','api_key','webhook','bot_token','smtp')),
-    -- What this platform can do in the context of NepHR Pro
+    -- What this platform can do in the context of eLogix HRMS
     supports_dm     BOOLEAN DEFAULT TRUE,   -- direct messages to individuals
     supports_channel BOOLEAN DEFAULT FALSE, -- posting to a team channel/workspace
     supports_meeting BOOLEAN DEFAULT FALSE, -- auto-creating meeting links
@@ -143,12 +143,12 @@ VALUES
     -- Leave
     ('leave_approved',      'Leave Approved',           ARRAY['whatsapp','teams','slack'],      'employee',       'Hi {employee_name}, your {leave_type} leave from {start_date} to {end_date} has been approved by {approver_name}. Enjoy your time off!', FALSE, TRUE),
     ('leave_rejected',      'Leave Rejected',           ARRAY['whatsapp','teams'],              'employee',       'Hi {employee_name}, your {leave_type} leave request for {start_date} has been declined. Reason: {reason}. Please contact HR for more information.', FALSE, TRUE),
-    ('leave_pending',       'Leave Awaiting Approval',  ARRAY['teams','slack'],                 'manager',        '{employee_name} has requested {leave_type} leave from {start_date} to {end_date}. Please review and approve in NepHR Pro.', FALSE, TRUE),
+    ('leave_pending',       'Leave Awaiting Approval',  ARRAY['teams','slack'],                 'manager',        '{employee_name} has requested {leave_type} leave from {start_date} to {end_date}. Please review and approve in eLogix HRMS.', FALSE, TRUE),
     -- Attendance
     ('attendance_regularized', 'Attendance Regularized', ARRAY['whatsapp'],                    'employee',       'Hi {employee_name}, your attendance for {date} has been regularized successfully.', FALSE, TRUE),
     ('missed_punch_submitted', 'Missed Punch Submitted', ARRAY['teams','slack'],               'manager',        '{employee_name} submitted a missed punch correction for {date}. Please review.', FALSE, TRUE),
     -- Payroll
-    ('payslip_generated',   'Payslip Generated',        ARRAY['whatsapp','email'],             'employee',       'Hi {employee_name}, your payslip for {month} {year} is ready. Please log in to NepHR Pro to download it.', FALSE, TRUE),
+    ('payslip_generated',   'Payslip Generated',        ARRAY['whatsapp','email'],             'employee',       'Hi {employee_name}, your payslip for {month} {year} is ready. Please log in to eLogix HRMS to download it.', FALSE, TRUE),
     ('payroll_approved',    'Payroll Run Approved',      ARRAY['teams','slack'],                'hr_team',        'Payroll for {month} {year} has been approved by {approver_name}. Salary disbursement is scheduled for {disbursement_date}.', FALSE, TRUE),
     -- Recruitment
     ('interview_scheduled', 'Interview Scheduled',       ARRAY['teams','zoom','google_meet','whatsapp'], 'employee', 'Hi {candidate_name}, your interview for {job_title} at {company_name} is scheduled on {interview_date} at {interview_time}. {meeting_link}', TRUE, TRUE),
@@ -157,13 +157,13 @@ VALUES
     -- Onboarding
     ('joining_confirmed',   'New Joiner Confirmed',      ARRAY['teams','slack'],                'department_head','New team member {employee_name} joins {department} on {joining_date}. Please prepare for their onboarding.', FALSE, TRUE),
     -- Performance
-    ('appraisal_due',       'Appraisal Review Due',      ARRAY['teams','slack','whatsapp'],     'manager',        'Performance appraisal review for {employee_name} is due by {due_date}. Please complete it in NepHR Pro.', FALSE, TRUE),
+    ('appraisal_due',       'Appraisal Review Due',      ARRAY['teams','slack','whatsapp'],     'manager',        'Performance appraisal review for {employee_name} is due by {due_date}. Please complete it in eLogix HRMS.', FALSE, TRUE),
     ('appraisal_completed', 'Appraisal Completed',       ARRAY['whatsapp','teams'],             'employee',       'Hi {employee_name}, your performance appraisal for {period} has been completed. Log in to view your review.', FALSE, TRUE),
     -- Documents & Certificates
-    ('certificate_generated','Certificate Generated',    ARRAY['whatsapp','email'],             'employee',       'Hi {employee_name}, your {certificate_type} certificate has been generated and is ready for download in NepHR Pro.', FALSE, TRUE),
-    ('document_ready',      'Document Ready',            ARRAY['whatsapp'],                     'employee',       'Hi {employee_name}, your {document_type} is ready. Please log in to NepHR Pro to download it.', FALSE, TRUE),
+    ('certificate_generated','Certificate Generated',    ARRAY['whatsapp','email'],             'employee',       'Hi {employee_name}, your {certificate_type} certificate has been generated and is ready for download in eLogix HRMS.', FALSE, TRUE),
+    ('document_ready',      'Document Ready',            ARRAY['whatsapp'],                     'employee',       'Hi {employee_name}, your {document_type} is ready. Please log in to eLogix HRMS to download it.', FALSE, TRUE),
     -- Approvals (generic)
-    ('approval_required',   'Approval Required',         ARRAY['teams','slack','whatsapp'],     'manager',        '{requester_name} has submitted a {request_type} request that requires your approval. Please review it in NepHR Pro.', FALSE, TRUE),
+    ('approval_required',   'Approval Required',         ARRAY['teams','slack','whatsapp'],     'manager',        '{requester_name} has submitted a {request_type} request that requires your approval. Please review it in eLogix HRMS.', FALSE, TRUE),
     ('approval_completed',  'Request Approved',          ARRAY['whatsapp'],                     'employee',       'Hi {employee_name}, your {request_type} request has been approved by {approver_name}.', FALSE, TRUE),
     -- Meetings & Webinars
     ('meeting_scheduled',   'Meeting / Webinar Scheduled',ARRAY['teams','zoom','google_meet','slack'], 'all_stakeholders', 'Meeting: {meeting_title} is scheduled on {meeting_date} at {meeting_time}. {meeting_link}', TRUE, TRUE),

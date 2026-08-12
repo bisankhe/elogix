@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/leave_settlement_routes.py
-NepHR Pro — Workforce Operations > Leave Management > Leave Settlement (2 pages)
+eLogix HRMS — Workforce Operations > Leave Management > Leave Settlement (2 pages)
 URL prefix: /api/v1/leave-settlement
 
   1. /encashment  — Leave Encashment (annual excess + terminal payout)

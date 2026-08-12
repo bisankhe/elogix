@@ -34,7 +34,7 @@ const MOCK_TEAMS = [
     section:'HR Operations', department:'Human Resources', head:'Sita Sharma', deputy:'Priya Rai',
     members:5, max_members:8, status:'active', icon:'🤝', color:'#10b981',
     team_type:'Permanent', work_mode:'Office', sprint_cycle:'Monthly',
-    tools:'NepHR Pro, MS Teams', slack_channel:'#team-hrbp',
+    tools:'eLogix HRMS, MS Teams', slack_channel:'#team-hrbp',
     cba_eligible:false, safety_committee:false,
     impact_links:[{icon:'📋',module:'HR Policies',desc:'HRBPs enforce all policies'},{icon:'🎯',module:'Grievance',desc:'First point of contact'}],
   },

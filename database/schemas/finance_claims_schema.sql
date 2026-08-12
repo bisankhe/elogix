@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/finance_claims_schema.sql
--- NepHR Pro -- Finance, Assets & Administration > Finance & Claims
+-- eLogix HRMS -- Finance, Assets & Administration > Finance & Claims
 -- (6 pages: Expense Claims, Travel Request, Reimbursement, Petty Cash
 -- Claim, Mobile & Fuel Claim, Approval Workflow)
 --

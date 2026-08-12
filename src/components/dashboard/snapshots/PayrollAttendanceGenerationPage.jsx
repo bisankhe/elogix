@@ -103,7 +103,7 @@ export default function PayrollAttendanceGenerationPage() {
         {icon:'👁',label:'View Breakdown',key:'view'},{icon:'⚠',label:'Resolve Discrepancy',key:'resolve'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📤',label:'Export',key:'export'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Payroll Attendance Batch" columns={['Employee','Department','Payable Days','LOP Days','OT Hours','OT Amount NPR','SSF Contribution NPR','Ready']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Payroll Attendance Batch" columns={['Employee','Department','Payable Days','LOP Days','OT Hours','OT Amount NPR','SSF Contribution NPR','Ready']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/employee_enrollment_schema.sql
--- NepHR Pro — Employee Enrollment Module (Onboarding > Employee Joining)
+-- eLogix HRMS — Employee Enrollment Module (Onboarding > Employee Joining)
 -- Single table with conditional Insource/Outsource fields, mirroring the
 -- dynamic progressive-disclosure form on the frontend.
 -- Nepal Labour Act 2074: 5 employment classifications (insource) +

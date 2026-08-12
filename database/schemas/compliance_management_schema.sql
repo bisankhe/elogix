@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/compliance_management_schema.sql
--- NepHR Pro -- Compliance & Risk Management > Compliance Management
+-- eLogix HRMS -- Compliance & Risk Management > Compliance Management
 -- (6 pages: Labor Compliance, Statutory Compliance, Policy Compliance,
 -- Audit Management, Annual Labour Audit, License Management)
 --

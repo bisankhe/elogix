@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/permission_submodule_matrix_schema.sql
--- NepHR Pro -- adds Create + Forward actions and SUBMODULE-level
+-- eLogix HRMS -- adds Create + Forward actions and SUBMODULE-level
 -- permission granularity to the existing permission_matrix.
 --
 -- WHY THIS FILE EXISTS (real gap, confirmed before writing):

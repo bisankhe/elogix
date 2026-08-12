@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/rewards_recognition_schema.sql
--- NepHR Pro — Performance & Talent Management > Goal & Performance >
+-- eLogix HRMS — Performance & Talent Management > Goal & Performance >
 -- Rewards & Recognition Module (6 pages)
 --
 -- Design note: Promotion/Incentive/Training/Termination Recommendation

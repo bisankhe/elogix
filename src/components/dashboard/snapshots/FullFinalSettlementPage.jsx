@@ -207,7 +207,7 @@ export default function FullFinalSettlementPage() {
         {icon:'👁',label:'View Statement',key:'view'},{icon:'💳',label:'Process Payout',key:'payout'},
         {icon:'📄',label:'Generate Letters',key:'letters'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Full & Final Settlement" columns={['Employee','Position','LWD','Total Earnings','Total Deductions','Net Payable','Payout Status','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Full & Final Settlement" columns={['Employee','Position','LWD','Total Earnings','Total Deductions','Net Payable','Payout Status','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

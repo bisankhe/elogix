@@ -121,7 +121,7 @@ export default function AttendanceApprovalPage() {
         {icon:'👁',label:'View Source Request',key:'view'},{icon:'✅',label:'Approve',key:'approve'},
         {icon:'🚫',label:'Reject',key:'reject'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Attendance Approval Queue" columns={['Employee','Department','Type','Detail','Date','Impact Hours','Manager','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Attendance Approval Queue" columns={['Employee','Department','Type','Detail','Date','Impact Hours','Manager','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

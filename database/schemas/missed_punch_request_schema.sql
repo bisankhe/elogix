@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/missed_punch_request_schema.sql
--- NepHR Pro — Workforce Operations > Attendance Management > Daily
+-- eLogix HRMS — Workforce Operations > Attendance Management > Daily
 -- Attendance > Missed Log In/Out Request (1 page)
 --
 -- Design note: integrates directly with daily_attendance_records and

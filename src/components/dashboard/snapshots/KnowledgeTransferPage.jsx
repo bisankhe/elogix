@@ -155,7 +155,7 @@ export default function KnowledgeTransferPage() {
         {icon:'👁',label:'View Full Plan',key:'view'},{icon:'📄',label:'View SOP Documents',key:'sop'},
         {icon:'✅',label:'Manager Sign-off',key:'signoff'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Knowledge Transfer" columns={['Employee','Position','LWD','Successor','Overlap Days','Tasks Reassigned','SOPs Captured','Manager Signoff']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Knowledge Transfer" columns={['Employee','Position','LWD','Successor','Overlap Days','Tasks Reassigned','SOPs Captured','Manager Signoff']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

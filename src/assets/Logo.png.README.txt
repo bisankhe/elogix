@@ -1,0 +1,3 @@
+Place your eLogix logo file named 'Logo.png' in this folder.
+The file should be: src/assets/Logo.png
+Recommended size: 512x512px PNG with transparent background

@@ -116,7 +116,7 @@ export default function ATSCommandCenterPage() {
             <div style={{ width:44, height:44, borderRadius:12, background:GA, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, boxShadow:'0 4px 12px rgba(67,56,202,.4)' }}>🧠</div>
             <div>
               <div style={{ fontSize:20, fontWeight:900, color:'#fff', letterSpacing:-.3 }}>AI Recruitment Command Center</div>
-              <div style={{ fontSize:10, color:'rgba(255,255,255,.6)', marginTop:1 }}>NepHR Pro · World-Class ATS · AI-Powered End-to-End Recruitment Automation</div>
+              <div style={{ fontSize:10, color:'rgba(255,255,255,.6)', marginTop:1 }}>eLogix HRMS · World-Class ATS · AI-Powered End-to-End Recruitment Automation</div>
             </div>
             <div style={{ marginLeft:'auto', display:'flex', gap:8, flexWrap:'wrap' }}>
               {[

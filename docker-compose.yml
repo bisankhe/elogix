@@ -1,4 +1,4 @@
-# NepHR Pro — Docker Compose (Development + Staging)
+# eLogix HRMS — Docker Compose (Development + Staging)
 version: '3.9'
 
 services:
@@ -7,9 +7,9 @@ services:
     image: postgres:15-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: nephr_pro
-      POSTGRES_USER: nephr
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-nephr_pass}
+      POSTGRES_DB: elogix_hrms
+      POSTGRES_USER: elogix
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-elogix_pass}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/schemas/complete_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
@@ -17,7 +17,7 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U nephr -d nephr_pro"]
+      test: ["CMD-SHELL", "pg_isready -U elogix -d elogix_hrms"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -42,7 +42,7 @@ services:
     restart: unless-stopped
     env_file: ./backend/.env
     environment:
-      DATABASE_URL: postgresql://nephr:${DB_PASSWORD:-nephr_pass}@db:5432/nephr_pro
+      DATABASE_URL: postgresql://elogix:${DB_PASSWORD:-elogix_pass}@db:5432/elogix_hrms
       REDIS_URL: redis://redis:6379/0
     ports:
       - "5000:5000"

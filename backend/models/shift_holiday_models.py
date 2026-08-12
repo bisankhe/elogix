@@ -1,6 +1,6 @@
 """
 FILE: backend/models/shift_holiday_models.py
-NepHR Pro — Shift Type, Holiday Calendar, Weekend Policy Models
+eLogix HRMS — Shift Type, Holiday Calendar, Weekend Policy Models
 Nepal Labour Act 2074 constraints enforced at model level.
 Used by: backend/routes/workforce_config_routes.py
 """

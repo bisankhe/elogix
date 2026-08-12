@@ -1,4 +1,4 @@
-# NepHR Pro — Global Compliance & Quality Standards
+# eLogix HRMS — Global Compliance & Quality Standards
 ## Permanent Owner Guidelines | Date: June 11, 2026 | Version: 1.0
 ## Classification: CONFIDENTIAL — Internal Reference
 
@@ -291,7 +291,7 @@ Our AI features may be HIGH-RISK under EU AI Act:
 
 ---
 
-*Document Owner: NepHR Pro Product Team*
+*Document Owner: eLogix HRMS Product Team*
 *Created: June 11, 2026*
 *Next Review: September 11, 2026*
 *Classification: CONFIDENTIAL — Internal Reference Only*

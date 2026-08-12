@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/mobile_app_config_schema.sql
--- NepHR Pro -- System Administration > Integration & API > Mobile
+-- eLogix HRMS -- System Administration > Integration & API > Mobile
 -- App Configuration (6 pages: Mobile Attendance, GPS Tracking,
 -- Geo-Fencing, Field Visit Tracking, Route Monitoring, Field Task
 -- Management)

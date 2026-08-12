@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/government_letters_schema.sql
--- NepHR Pro — Workforce Operations > Letters Module (5 pages)
+-- eLogix HRMS — Workforce Operations > Letters Module (5 pages)
 -- B2G (Business-to-Government) correspondence tracking.
 --
 -- Design note: this is distinct from hr_letter_templates/hr_letters

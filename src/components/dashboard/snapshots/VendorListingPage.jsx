@@ -319,7 +319,7 @@ export default function VendorListingPage() {
           </div>
         </div>
       )}
-      {showExcel && <ExcelModal title="Vendor Listing" columns={['Code','Name','Category','Tier','Rating','Regions','Services','AI Match','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel && <ExcelModal title="Vendor Listing" columns={['Code','Name','Category','Tier','Rating','Regions','Services','AI Match','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
       <Drawer item={selected} gradient={G} onClose={()=>setSelected(null)} rows={[
         ['Code',selected?.code],['Category',selected?.category],['Tier',selected?.tier],
         ['Rating',selected?.rating+' / 5.0 ('+selected?.reviews+' reviews)'],

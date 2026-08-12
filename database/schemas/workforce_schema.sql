@@ -1,6 +1,6 @@
 -- ============================================================
 -- FILE: database/schemas/workforce_schema.sql
--- NepHR Pro — Dedicated Workforce Configuration Schema
+-- eLogix HRMS — Dedicated Workforce Configuration Schema
 -- Covers: Insource config, Outsource vendor, SLA & Contract,
 --         Vendor Employees, Billing & Invoice,
 --         Vendor Attendance, Vendor Performance

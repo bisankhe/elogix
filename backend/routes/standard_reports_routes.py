@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/standard_reports_routes.py
-NepHR Pro -- Reports, Analytics & BI > Standard Reports (9 pages: HR
+eLogix HRMS -- Reports, Analytics & BI > Standard Reports (9 pages: HR
 Analytics, Workforce Summary, Department Reports, Attendance Reports,
 Training Reports, Payroll Reports, Recruitment Reports, Performance
 Reports, Leave Reports)

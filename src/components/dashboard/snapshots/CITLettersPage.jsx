@@ -130,7 +130,7 @@ export default function CITLettersPage() {
         {icon:'👁',label:'View Letter',key:'view'},{icon:'📥',label:'Download PDF',key:'download'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📤',label:'Export',key:'export'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="CIT Letters" columns={['Subject','Type','Employee','CIT Account','Reference No','Amount NPR','Date Sent','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="CIT Letters" columns={['Subject','Type','Employee','CIT Account','Reference No','Amount NPR','Date Sent','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

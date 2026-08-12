@@ -153,7 +153,7 @@ export default function OrientationProgramPage() {
         {icon:'👁',label:'View Full Schedule',key:'view'},{icon:'📅',label:'Reschedule Module',key:'reschedule'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📤',label:'Export',key:'export'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Orientation Program" columns={['Employee','Day','Time','Module','Type','Duration (min)','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Orientation Program" columns={['Employee','Day','Time','Module','Type','Duration (min)','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

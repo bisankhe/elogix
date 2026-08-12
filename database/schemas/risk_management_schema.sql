@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/risk_management_schema.sql
--- NepHR Pro -- Compliance & Risk Management > Risk Management
+-- eLogix HRMS -- Compliance & Risk Management > Risk Management
 -- (6 pages: KRI Dashboard, Compliance Risk, Payroll Risk, Attrition
 -- Risk, Security Risk, Risk Alerts)
 --

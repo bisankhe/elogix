@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/data_migration_routes.py
-NepHR Pro -- System Administration > Operations > Data Migration
+eLogix HRMS -- System Administration > Operations > Data Migration
 URL prefix: /api/v1/data-migration
 Super admin only -- operates before a tenant fully exists.
 """

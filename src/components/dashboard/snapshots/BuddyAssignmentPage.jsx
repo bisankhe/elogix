@@ -148,7 +148,7 @@ export default function BuddyAssignmentPage() {
         {icon:'👁',label:'View Pairing',key:'view'},{icon:'💬',label:'Message Buddy',key:'message'},
         {icon:'🔄',label:'Reassign Buddy',key:'reassign'},{icon:'📤',label:'Export',key:'export'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Buddy Assignment" columns={['New Hire','Department','Buddy','Buddy Role','Match Score','Status','Coffee Chat Date']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Buddy Assignment" columns={['New Hire','Department','Buddy','Buddy Role','Match Score','Status','Coffee Chat Date']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

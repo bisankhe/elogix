@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/ess_policies_payroll_routes.py
-NepHR Pro -- HR Services & Support > Employee Self Service (ESS),
+eLogix HRMS -- HR Services & Support > Employee Self Service (ESS),
 third batch (12 pages: Code of Conduct, HR Policies, SOP for
 Department, Organization Chart, Organogram for my Department, Process
 Flow Chart for my Department, My Payroll, My Loan Status, Payslip

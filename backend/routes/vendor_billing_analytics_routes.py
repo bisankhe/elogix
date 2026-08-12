@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/vendor_billing_analytics_routes.py
-NepHR Pro -- Reports, Analytics & BI > HR Analytics (2 pages: Vendor
+eLogix HRMS -- Reports, Analytics & BI > HR Analytics (2 pages: Vendor
 Billing Report, Insource vs Outsource Cost Report)
 URL prefix: /api/v1/vendor-billing-analytics
 

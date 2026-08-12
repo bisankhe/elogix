@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/hr_analytics_governance_routes.py
-NepHR Pro -- Reports, Analytics & BI > HR Analytics (3 pages:
+eLogix HRMS -- Reports, Analytics & BI > HR Analytics (3 pages:
 Compliance Reports, Workforce Analytics, Annual HR Audit)
 URL prefix: /api/v1/hr-analytics-governance
 

@@ -243,7 +243,7 @@ export default function VendorAssetsPage() {
       )}
 
       {ctx && <ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={CTX_ACTIONS} onAction={(k,item)=>{if(k==='view')setSelected(item)}} onClose={()=>setCtx(null)}/>}
-      {showExcel && <ExcelModal title="Inventory & Assets" columns={['Asset Code','Name','Category','Serial No','Value NPR','Condition','Status','Assigned To','Assigned Date','Return Date','Location']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel && <ExcelModal title="Inventory & Assets" columns={['Asset Code','Name','Category','Serial No','Value NPR','Condition','Status','Assigned To','Assigned Date','Return Date','Location']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
       <Drawer item={selected} gradient={G} onClose={()=>setSelected(null)} rows={[
         ['Asset Code',selected?.asset_code],['Category',selected?.category],
         ['Serial No',selected?.serial_no||'N/A'],['Value','NPR '+(selected?.value_npr||0)],

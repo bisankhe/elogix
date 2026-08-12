@@ -178,7 +178,7 @@ export default function ThirtyDayReviewPage() {
         {icon:'👁',label:'View Full Review',key:'view'},{icon:'📅',label:'Start Check-in',key:'checkin'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📤',label:'Export',key:'export'},
       ]} onAction={(k,item)=>{if(k==='view')setSelected(item)}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="30 Days Review" columns={['Employee','Position','Department','Review Date','Goals Met','Survey Avg','Red Flags','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="30 Days Review" columns={['Employee','Position','Department','Review Date','Goals Met','Survey Avg','Red Flags','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

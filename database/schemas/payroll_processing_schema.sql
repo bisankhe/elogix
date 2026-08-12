@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/payroll_processing_schema.sql
--- NepHR Pro — Workforce Operations > Payroll & Compensation >
+-- eLogix HRMS — Workforce Operations > Payroll & Compensation >
 -- Payroll Processing Module (8 pages)
 --
 -- Design note: this is the EXECUTION layer on top of payroll_setup_schema.sql

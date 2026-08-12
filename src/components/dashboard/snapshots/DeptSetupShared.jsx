@@ -174,7 +174,7 @@ export function ExcelModal({ title, columns, onClose, onImport, module }) {
   const downloadTemplate = async () => {
     try {
       // Try backend template first
-      const token = localStorage.getItem('nephr_access_token')
+      const token = localStorage.getItem('elogix_access_token')
       const res = await fetch(`/api/v1/tools/excel/template/${moduleName}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         signal: AbortSignal.timeout(8000),
@@ -184,7 +184,7 @@ export function ExcelModal({ title, columns, onClose, onImport, module }) {
         const url  = URL.createObjectURL(blob)
         const a    = document.createElement('a')
         a.href     = url
-        a.download = `nephr_${moduleName}_template.xlsx`
+        a.download = `elogix_${moduleName}_template.xlsx`
         a.click()
         URL.revokeObjectURL(url)
         return
@@ -196,7 +196,7 @@ export function ExcelModal({ title, columns, onClose, onImport, module }) {
     const url  = URL.createObjectURL(blob)
     const a    = document.createElement('a')
     a.href     = url
-    a.download = `nephr_${moduleName}_template.csv`
+    a.download = `elogix_${moduleName}_template.csv`
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -324,7 +324,7 @@ export function ExcelModal({ title, columns, onClose, onImport, module }) {
                     {result.errors?.length ? `Validation found ${result.errors.length} issue(s)` : `${result.rows||0} rows validated successfully`}
                   </div>
                   <div style={{ fontSize:10, color:'#64748b', marginTop:2 }}>
-                    {result.offline ? 'Offline mode — data queued for sync' : 'Ready to import into NepHR Pro database'}
+                    {result.offline ? 'Offline mode — data queued for sync' : 'Ready to import into eLogix HRMS database'}
                   </div>
                 </div>
               </div>

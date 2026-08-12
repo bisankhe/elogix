@@ -151,7 +151,7 @@ export default function BiometricIntegrationPage() {
         {icon:'🔄',label:'Sync Now',key:'sync'},{icon:'📋',label:'View Logs',key:'logs'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📤',label:'Export',key:'export'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Biometric Devices" columns={['Device Name','Type','Model','Branch','Status','Enrolled Users','IP Address']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Biometric Devices" columns={['Device Name','Type','Model','Branch','Status','Enrolled Users','IP Address']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

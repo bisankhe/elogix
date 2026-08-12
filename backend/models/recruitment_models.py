@@ -1,6 +1,6 @@
 """
 FILE: backend/models/recruitment_models.py
-NepHR Pro — Recruitment & Hiring Module Models (12 tables, 16 pages)
+eLogix HRMS — Recruitment & Hiring Module Models (12 tables, 16 pages)
 Nepal Labour Act 2074 Sections 6,7,11,13,22,23 enforced via SQLAlchemy events.
 """
 from __future__ import annotations

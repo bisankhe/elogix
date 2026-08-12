@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/goal_assignment_schema.sql
--- NepHR Pro — Performance & Talent Management > Goal & Performance >
+-- eLogix HRMS — Performance & Talent Management > Goal & Performance >
 -- Goal Management > Goal Assignment (1 page)
 --
 -- Design note: this is the ORCHESTRATION layer sitting ABOVE the

@@ -113,7 +113,7 @@ export default function ConfirmationManagementPage() {
         {icon:'👁',label:'View Full Record',key:'view'},{icon:'➡',label:'Go to Decision',key:'decision'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📤',label:'Export',key:'export'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Confirmation Management" columns={['Employee','Position','Manager','Join Date','Probation End','Days Remaining','Checklist Complete','Risk Level']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Confirmation Management" columns={['Employee','Position','Manager','Join Date','Probation End','Days Remaining','Checklist Complete','Risk Level']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

@@ -1,6 +1,6 @@
 -- ============================================================
 -- FILE: database/seeds/04_demo_company_data.sql
--- NepHR Pro — Complete Demo Dataset
+-- eLogix HRMS — Complete Demo Dataset
 -- Creates: 1 Group, 1 Company, 2 Branches, 3 BUs, 8 Departments,
 --          3 Sections, 4 Teams, 5 Cost Centers, 2 Work Locations,
 --          9 Grade Levels, 6 Designations, 10 Positions,
@@ -47,7 +47,7 @@ INSERT INTO group_companies
   (id, name, name_nepali, short_name, registration_no, pan_no, established_year,
    headquarters_country, group_type, status)
 VALUES
-  (:grp_id, 'NepHR Technologies Group',
+  (:grp_id, 'eLogix Technologies Group',
    'नेपएचआर टेक्नोलोजीज ग्रुप',
    'NHG', 'GC-2074-001', '123456789', 2074,
    'Nepal', 'holding', 'active')
@@ -65,13 +65,13 @@ INSERT INTO companies
    setup_completed, status)
 VALUES
   (:co_id, :grp_id,
-   'NepHR Technologies Pvt. Ltd.',
+   'eLogix Technologies Pvt. Ltd.',
    'नेपएचआर टेक्नोलोजीज प्रा.लि.',
-   'NepHR Tech', 'private_limited',
+   'eLogix Tech', 'private_limited',
    'OCR-2074-12345', '987654321', TRUE, 'VAT-2074-987',
    'Information Technology', 2074, 'BS',
    'Bagmati Province', 'Kathmandu', 'Kathmandu Metropolitan City', '4',
-   '+977-01-4123456', 'info@nephrpro.com', 'hr@nephrpro.com',
+   '+977-01-4123456', 'info@elogix.com', 'hr@elogix.com',
    'Bagmati Zone', 'SSF-2074-009876', 'PF-2074-001234',
    FALSE, 15000,
    TRUE, 'active')
@@ -87,12 +87,12 @@ VALUES
   (:br_ktm, :co_id, 'KTM-HQ', 'Kathmandu Headquarters',
    'headquarters', TRUE,
    'Bagmati Province', 'Kathmandu', 'Kathmandu Metropolitan City', '4',
-   '+977-01-4123456', 'ktm@nephrpro.com', 150, 87,
+   '+977-01-4123456', 'ktm@elogix.com', 150, 87,
    'Kathmandu Labour Office, Ekantakuna', 'active'),
   (:br_pkr, :co_id, 'PKR-BR', 'Pokhara Branch Office',
    'branch', FALSE,
    'Gandaki Province', 'Kaski', 'Pokhara Metropolitan City', '11',
-   '+977-61-456789', 'pkr@nephrpro.com', 50, 18,
+   '+977-61-456789', 'pkr@elogix.com', 50, 18,
    'Pokhara Labour Office', 'active')
 ON CONFLICT (id) DO NOTHING;
 

@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/performance_analytics_kpi_schema.sql
--- NepHR Pro — Performance & Talent Management > Goal & Performance >
+-- eLogix HRMS — Performance & Talent Management > Goal & Performance >
 -- Performance Analytics > KPI Module (6 pages)
 --
 -- Design note: pure aggregation layer. Speedometer values are computed

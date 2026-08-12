@@ -26,7 +26,7 @@ services:
     ports:
       - "3001:3000"
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-nephr_grafana_2026}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-elogix_grafana_2026}
       GF_USERS_ALLOW_SIGN_UP: 'false'
       GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s/monitoring"
     volumes:
@@ -54,7 +54,7 @@ services:
     image: prometheuscommunity/postgres-exporter:latest
     restart: unless-stopped
     environment:
-      DATA_SOURCE_NAME: ${DATABASE_URL:-postgresql://nephr:nephr_pass@db:5432/nephr_pro?sslmode=disable}
+      DATA_SOURCE_NAME: ${DATABASE_URL:-postgresql://elogix_user:elogix_pass@db:5432/elogix_hrms?sslmode=disable}
     ports:
       - "9187:9187"
 

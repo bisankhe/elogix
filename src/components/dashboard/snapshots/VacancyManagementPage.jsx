@@ -262,7 +262,7 @@ export default function VacancyManagementPage() {
       )}
 
       {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={CTX} onAction={(k,item)=>{if(k==='view')setSelected(item)}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Vacancy Management" columns={['JRF No','Position Title','Department','Branch','Grade','Salary Range','Status','Priority','Target Date','Applications','Shortlisted','LA Advertised','MoLESS Posted']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Vacancy Management" columns={['JRF No','Position Title','Department','Branch','Grade','Salary Range','Status','Priority','Target Date','Applications','Shortlisted','LA Advertised','MoLESS Posted']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
       <Drawer item={selected} gradient={G} onClose={()=>setSelected(null)} rows={[
         ['JRF No',selected?.jrf_no],['Position',selected?.title],['Department',selected?.dept],
         ['Branch',selected?.branch],['Grade',selected?.grade],['Type',selected?.type],

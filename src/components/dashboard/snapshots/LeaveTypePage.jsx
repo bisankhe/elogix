@@ -157,7 +157,7 @@ export default function LeaveTypePage() {
         {icon:'👁',label:'View Usage',key:'view'},{icon:'✏',label:'Edit Rules',key:'edit'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📤',label:'Export',key:'export'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Leave Types" columns={['Name','Code','Annual Entitlement','Is Paid','Requires Doc','Probation Eligible','Half-Day Supported','Max Carry Forward','Statutory']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Leave Types" columns={['Name','Code','Annual Entitlement','Is Paid','Requires Doc','Probation Eligible','Half-Day Supported','Max Carry Forward','Statutory']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

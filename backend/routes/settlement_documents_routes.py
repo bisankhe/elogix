@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/settlement_documents_routes.py
-NepHR Pro — Offboarding > Settlement & Documents Module (3 pages)
+eLogix HRMS — Offboarding > Settlement & Documents Module (3 pages)
 URL prefix: /api/v1/settlement
 
   1. /fnf              — Full & Final Settlement (computation grid + payout)

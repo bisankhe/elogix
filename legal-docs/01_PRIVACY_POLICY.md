@@ -1,25 +1,25 @@
 # PRIVACY POLICY
-## NepHR Pro — AI-Powered HRIS + HRMS + HRIM Platform
+## eLogix HRMS — AI-Powered HRIS + HRMS + HRIM Platform
 **Version:** 1.0 | **Effective Date:** June 11, 2026 | **Last Updated:** June 11, 2026
 
 ---
 
 ## 1. WHO WE ARE
 
-**Company Name:** NepHR Pro Pvt. Ltd.
-**Product:** NepHR Pro — AI-Powered HRIS + HRMS + HRIM SaaS Platform
-**Website:** www.nephrpro.com
-**Contact:** privacy@nephrpro.com
-**Data Protection Officer (DPO):** dpo@nephrpro.com
+**Company Name:** eLogix HRMS Pvt. Ltd.
+**Product:** eLogix HRMS — AI-Powered HRIS + HRMS + HRIM SaaS Platform
+**Website:** www.elogix.com
+**Contact:** privacy@elogix.com
+**Data Protection Officer (DPO):** dpo@elogix.com
 
-NepHR Pro is a B2B SaaS platform providing Human Resource Information Systems (HRIS), Human Resource Management Systems (HRMS), and Human Resource Information Management (HRIM) services to organizations worldwide.
+eLogix HRMS is a B2B SaaS platform providing Human Resource Information Systems (HRIS), Human Resource Management Systems (HRMS), and Human Resource Information Management (HRIM) services to organizations worldwide.
 
 ---
 
 ## 2. SCOPE & APPLICABILITY
 
 This Privacy Policy applies to:
-- All users of NepHR Pro software (web, mobile, API)
+- All users of eLogix HRMS software (web, mobile, API)
 - All client organizations (tenants) using our platform
 - All employees whose data is processed through our platform
 - All job candidates processed through our ATS module
@@ -99,7 +99,7 @@ We process personal data under the following legal bases:
 
 ## 6. AI-POWERED FEATURES — TRANSPARENCY
 
-NepHR Pro uses Artificial Intelligence for:
+eLogix HRMS uses Artificial Intelligence for:
 - **Attrition Prediction** (87.3% accuracy) — identifies flight risk
 - **Salary Recommendation** (91.2% accuracy) — market benchmarking
 - **Resume Screening** — candidate matching
@@ -179,7 +179,7 @@ We implement the following security measures:
 - Right to nominate a representative
 
 ### To Exercise Your Rights:
-📧 Email: privacy@nephrpro.com
+📧 Email: privacy@elogix.com
 ⏱️ Response time: Within 30 days (GDPR), within 45 days (CCPA)
 
 ---
@@ -234,9 +234,9 @@ Cookie preferences can be managed at any time via the Cookie Settings panel.
 
 ## 13. CHILDREN'S DATA
 
-NepHR Pro is a B2B enterprise platform.
+eLogix HRMS is a B2B enterprise platform.
 - We do NOT knowingly collect data from persons under 18
-- If you become aware that a minor's data has been submitted, contact privacy@nephrpro.com immediately
+- If you become aware that a minor's data has been submitted, contact privacy@elogix.com immediately
 
 ---
 
@@ -253,9 +253,9 @@ Continued use of the platform after changes constitutes acceptance.
 
 ## 15. CONTACT & COMPLAINTS
 
-**Data Protection Officer:** dpo@nephrpro.com
-**Privacy Team:** privacy@nephrpro.com
-**General Support:** support@nephrpro.com
+**Data Protection Officer:** dpo@elogix.com
+**Privacy Team:** privacy@elogix.com
+**General Support:** support@elogix.com
 
 **Supervisory Authorities (for complaints):**
 - 🇪🇺 EU: Your local Data Protection Authority (DPA)
@@ -266,5 +266,5 @@ Continued use of the platform after changes constitutes acceptance.
 
 ---
 
-*© 2026 NepHR Pro Pvt. Ltd. All rights reserved.*
+*© 2026 eLogix HRMS Pvt. Ltd. All rights reserved.*
 *This document is subject to legal review and should be verified by qualified legal counsel in each target jurisdiction before publication.*

@@ -156,7 +156,7 @@ export default function JDLibraryPage() {
   const [activeTab,setActiveTab]= useState('jd')
   const [library,  setLibrary]  = useState(() => {
     try {
-      const saved = JSON.parse(localStorage.getItem('nephr_jd_library')||'[]')
+      const saved = JSON.parse(localStorage.getItem('elogix_jd_library')||'[]')
       return [...BASE_LIBRARY, ...saved.filter(s=>!BASE_LIBRARY.find(b=>b.id===s.id))]
     } catch { return BASE_LIBRARY }
   })
@@ -176,7 +176,7 @@ export default function JDLibraryPage() {
   }),[library,search,deptF,levelF,statusF,signedF])
 
   const cloneToCreate = (jd) => {
-    localStorage.setItem('nephr_jd_clone', JSON.stringify(jd))
+    localStorage.setItem('elogix_jd_clone', JSON.stringify(jd))
     navTo?.('create-job-description')
   }
 

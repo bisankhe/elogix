@@ -34,12 +34,12 @@ const myTasks = [
 const events = [
   { day: '5',  month: 'Jun', title: 'Leadership Training',        sub: 'IT Dept · Mandatory',            type: 'mandatory'  },
   { day: '10', month: 'Jun', title: 'Q2 Performance Review',      sub: 'With Bikram Shrestha',            type: 'review'     },
-  { day: '13', month: 'Jun', title: '⚠️ Tax Clearance EXPIRED',  sub: 'IRD · NepHR Pro · Renew NOW',    type: 'doc_expired'},
+  { day: '13', month: 'Jun', title: '⚠️ Tax Clearance EXPIRED',  sub: 'IRD · eLogix HRMS · Renew NOW',    type: 'doc_expired'},
   { day: '15', month: 'Jun', title: 'Payroll Processing',         sub: 'Submit timesheet by Jun 12',      type: 'payroll'    },
   { day: '20', month: 'Jun', title: '🔔 Trade License Renewal',   sub: 'Dept. of Commerce · Due Jul 1',  type: 'doc_warn'   },
   { day: '20', month: 'Jun', title: 'Company Town Hall',          sub: 'All-hands · 10:00 AM',           type: 'company'    },
   { day: '30', month: 'Jun', title: 'Compliance Review Due',      sub: 'Nepal Labour Act 2017',           type: 'compliance' },
-  { day: '15', month: 'Jul', title: '⚠️ OCR Certificate Expires', sub: 'OCR · NepHR Pro · Renew by Jul 15', type: 'doc_warn'},
+  { day: '15', month: 'Jul', title: '⚠️ OCR Certificate Expires', sub: 'OCR · eLogix HRMS · Renew by Jul 15', type: 'doc_warn'},
 ]
 
 const birthdays = [

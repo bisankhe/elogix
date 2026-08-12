@@ -1,22 +1,22 @@
 # TERMS OF SERVICE
-## NepHR Pro — AI-Powered HRIS + HRMS + HRIM Platform
+## eLogix HRMS — AI-Powered HRIS + HRMS + HRIM Platform
 **Version:** 1.0 | **Effective Date:** June 11, 2026
 
 ---
 
 ## 1. AGREEMENT TO TERMS
 
-By accessing or using NepHR Pro ("Platform", "Service", "Software"), you ("Client", "User", "Subscriber") agree to be bound by these Terms of Service ("Terms"). If you do not agree, do not use the platform.
+By accessing or using eLogix HRMS ("Platform", "Service", "Software"), you ("Client", "User", "Subscriber") agree to be bound by these Terms of Service ("Terms"). If you do not agree, do not use the platform.
 
 These Terms constitute a legally binding agreement between:
-- **NepHR Pro Pvt. Ltd.** ("Company", "We", "Us")
+- **eLogix HRMS Pvt. Ltd.** ("Company", "We", "Us")
 - **The Client Organization** ("Client", "Subscriber", "Tenant")
 
 ---
 
 ## 2. DESCRIPTION OF SERVICE
 
-NepHR Pro is a cloud-based, multi-tenant B2B SaaS platform providing:
+eLogix HRMS is a cloud-based, multi-tenant B2B SaaS platform providing:
 - HRIS (Human Resource Information System)
 - HRMS (Human Resource Management System)
 - HRIM (Human Resource Information Management)
@@ -61,7 +61,7 @@ You may use the Platform solely for:
 ## 5. DATA OWNERSHIP & PRIVACY
 
 ### 5.1 Your Data Belongs to You
-- All HR data uploaded to NepHR Pro remains your property
+- All HR data uploaded to eLogix HRMS remains your property
 - We act as a **Data Processor** — you are the **Data Controller**
 - We process data only on your documented instructions
 
@@ -81,7 +81,7 @@ You may use the Platform solely for:
 ## 6. INTELLECTUAL PROPERTY
 
 ### 6.1 Our Property
-- NepHR Pro software, AI models, UI/UX designs, documentation
+- eLogix HRMS software, AI models, UI/UX designs, documentation
 - All proprietary algorithms and data processing logic
 - Brand names, logos, trademarks
 
@@ -117,7 +117,7 @@ Any suggestions or feedback you provide may be used by us to improve the platfor
 
 ## 8. ACCEPTABLE USE POLICY
 
-You must NOT use NepHR Pro to:
+You must NOT use eLogix HRMS to:
 - Violate any applicable law or regulation
 - Discriminate against employees based on protected characteristics
 - Process data for purposes beyond legitimate HR management
@@ -164,7 +164,7 @@ TO THE MAXIMUM EXTENT PERMITTED BY LAW:
 
 ## 12. INDEMNIFICATION
 
-You agree to indemnify NepHR Pro against claims arising from:
+You agree to indemnify eLogix HRMS against claims arising from:
 - Your violation of these Terms
 - Your misuse of the Platform
 - Unlawful processing of employee data on your instructions
@@ -214,11 +214,11 @@ We will notify you of material changes via:
 
 ## 16. CONTACT
 
-**Legal:** legal@nephrpro.com
-**Support:** support@nephrpro.com
-**General:** hello@nephrpro.com
+**Legal:** legal@elogix.com
+**Support:** support@elogix.com
+**General:** hello@elogix.com
 
 ---
 
-*© 2026 NepHR Pro Pvt. Ltd.*
+*© 2026 eLogix HRMS Pvt. Ltd.*
 *These Terms should be reviewed by qualified legal counsel before publication.*

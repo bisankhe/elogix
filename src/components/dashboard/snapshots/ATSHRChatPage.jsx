@@ -8,7 +8,7 @@ async function callAI(messages, sys) {
     const r = await fetch('/api/v1/ai-proxy/chat', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:1000,
-        system: sys || `You are NepHR Pro AI HR Assistant — an expert internal HR chatbot for the NepHR Pro HRMS platform. You help HR professionals with:
+        system: sys || `You are eLogix HRMS AI HR Assistant — an expert internal HR chatbot for the eLogix HRMS HRMS platform. You help HR professionals with:
 - Nepal Labour Act 2074 queries (probation, leave, termination, SSF, minimum wage)
 - ATS pipeline questions and candidate status
 - Drafting HR documents (emails, letters, policies)
@@ -44,7 +44,7 @@ const QUICK_ACTIONS = [
 export default function ATSHRChatPage() {
   const { navigate } = useApp()
   const [messages, setMessages] = useState([
-    { role:'assistant', text:'Hello! I am the NepHR Pro AI HR Assistant. I can help you with Nepal Labour Act 2074 queries, ATS pipeline questions, document drafting, salary benchmarking, and recruitment strategy. What would you like help with today?', time:new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) }
+    { role:'assistant', text:'Hello! I am the eLogix HRMS AI HR Assistant. I can help you with Nepal Labour Act 2074 queries, ATS pipeline questions, document drafting, salary benchmarking, and recruitment strategy. What would you like help with today?', time:new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) }
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -83,7 +83,7 @@ export default function ATSHRChatPage() {
           <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:6 }}>
             <div style={{ width:32, height:32, borderRadius:'50%', background:'rgba(255,255,255,.2)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16 }}>🤖</div>
             <div>
-              <div style={{ fontSize:11, fontWeight:900 }}>NepHR AI Assistant</div>
+              <div style={{ fontSize:11, fontWeight:900 }}>eLogix AI Assistant</div>
               <div style={{ fontSize:8, opacity:.7 }}>Online · HR Expert</div>
             </div>
           </div>
@@ -161,7 +161,7 @@ export default function ATSHRChatPage() {
             <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key==='Enter' && !e.shiftKey && send()} placeholder="Ask about Nepal Labour Act, candidates, HR policies, documents..." style={{ flex:1, padding:'9px 14px', borderRadius:10, border:'1px solid #e2e8f0', fontSize:10, outline:'none' }} />
             <button onClick={() => send()} disabled={!input.trim()||loading} style={{ padding:'9px 16px', borderRadius:10, border:'none', background:input.trim()&&!loading?'linear-gradient(135deg,#1e3a5f,#1e40af)':'#e2e8f0', color:input.trim()&&!loading?'#fff':'#94a3b8', fontSize:12, cursor:input.trim()&&!loading?'pointer':'default', fontWeight:700 }}>➤</button>
           </div>
-          <div style={{ fontSize:8, color:'#94a3b8', marginTop:6, textAlign:'center' }}>Press Enter to send · NepHR AI is powered by Claude · Internal use only</div>
+          <div style={{ fontSize:8, color:'#94a3b8', marginTop:6, textAlign:'center' }}>Press Enter to send · eLogix AI is powered by Claude · Internal use only</div>
         </div>
       </div>
     </div>

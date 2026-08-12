@@ -171,7 +171,7 @@ export default function ContractManagementPage() {
         {icon:'🔄',label:'Draft Renewal (AI)',key:'renew'},{icon:'📤',label:'Send for e-Sign',key:'esign'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📤',label:'Export',key:'export'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Contracts" columns={['Employee','Position','Type','Start Date','End Date','Salary NPR','Status','e-Sign Status','Compliance Score']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Contracts" columns={['Employee','Position','Type','Start Date','End Date','Salary NPR','Status','e-Sign Status','Compliance Score']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

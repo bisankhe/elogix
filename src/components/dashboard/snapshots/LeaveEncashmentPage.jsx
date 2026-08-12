@@ -133,7 +133,7 @@ export default function LeaveEncashmentPage() {
         {icon:'👁',label:'View Calculation',key:'view'},{icon:'✅',label:'Approve',key:'approve'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📤',label:'Export',key:'export'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Leave Encashment Batch" columns={['Employee','Leave Type','Days','Gross NPR','Tax NPR','Net NPR','Type','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Leave Encashment Batch" columns={['Employee','Leave Type','Days','Gross NPR','Tax NPR','Net NPR','Type','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

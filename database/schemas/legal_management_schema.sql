@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/legal_management_schema.sql
--- NepHR Pro -- Compliance & Risk Management > Legal Management
+-- eLogix HRMS -- Compliance & Risk Management > Legal Management
 -- (3 pages: Legal Case Tracking, Contract Compliance, Ethics & Governance)
 --
 -- Design note: Legal Case Tracking is deliberately the LITIGATION-

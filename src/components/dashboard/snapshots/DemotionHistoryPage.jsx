@@ -141,7 +141,7 @@ export default function DemotionHistoryPage() {
         {icon:'👁',label:'View Details',key:'view'},{icon:'⚖',label:'Legal Review',key:'legal'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📤',label:'Export',key:'export'},
       ]} onAction={(k,item)=>{if(k==='view')setSelected(item)}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Demotion History" columns={['Employee','From Title','To Title','Legal Basis','Consent','Salary Changed','Legal Review','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Demotion History" columns={['Employee','From Title','To Title','Legal Basis','Consent','Salary Changed','Legal Review','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

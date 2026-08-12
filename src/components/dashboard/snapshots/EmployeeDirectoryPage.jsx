@@ -9,27 +9,27 @@ const A = '#1e3a5f'
 
 const EMPLOYEES = [
   { id:'e1', code:'EMP-0041', name:'Gita Maharjan', position:'Cloud Architect', dept:'Information Technology',
-    branch:'KTM HQ', manager:'Rajesh Sharma', email:'gita.m@nephr.com.np', phone:'980-1111111',
+    branch:'KTM HQ', manager:'Rajesh Sharma', email:'gita.m@elogix.com.np', phone:'980-1111111',
     skills:['AWS','Kubernetes','Terraform'], status:'active', join_date:'2025-06-16', avatar_color:'#3b82f6',
     impact_links:['Employee Profile','Department Introduction'] },
   { id:'e2', code:'EMP-0038', name:'Maya Pradhan', position:'Finance Manager', dept:'Finance & Accounts',
-    branch:'KTM HQ', manager:'Sanjay Karki', email:'maya.p@nephr.com.np', phone:'980-2222222',
+    branch:'KTM HQ', manager:'Sanjay Karki', email:'maya.p@elogix.com.np', phone:'980-2222222',
     skills:['IFRS','SAP FI','Tax'], status:'active', join_date:'2025-06-09', avatar_color:'#10b981',
     impact_links:['Employee Profile'] },
   { id:'e3', code:'EMP-0012', name:'Rajesh Sharma', position:'CTO', dept:'Information Technology',
-    branch:'KTM HQ', manager:'CEO', email:'rajesh.s@nephr.com.np', phone:'980-3333333',
+    branch:'KTM HQ', manager:'CEO', email:'rajesh.s@elogix.com.np', phone:'980-3333333',
     skills:['Architecture','Leadership','Strategy'], status:'active', join_date:'2020-03-01', avatar_color:'#7c3aed',
     impact_links:['Employee Profile'] },
   { id:'e4', code:'EMP-0029', name:'Bikash Shrestha', position:'Senior IT Lead', dept:'Information Technology',
-    branch:'KTM HQ', manager:'Rajesh Sharma', email:'bikash.s@nephr.com.np', phone:'980-4444444',
+    branch:'KTM HQ', manager:'Rajesh Sharma', email:'bikash.s@elogix.com.np', phone:'980-4444444',
     skills:['React','Node.js','DevOps'], status:'active', join_date:'2022-08-15', avatar_color:'#f59e0b',
     impact_links:['Employee Profile'] },
   { id:'e5', code:'EMP-0044', name:'Hari Thapa', position:'DevOps Engineer', dept:'Information Technology',
-    branch:'KTM HQ', manager:'Bikash Shrestha', email:'hari.t@nephr.com.np', phone:'980-5555555',
+    branch:'KTM HQ', manager:'Bikash Shrestha', email:'hari.t@elogix.com.np', phone:'980-5555555',
     skills:['CI/CD','Docker','Linux'], status:'probation', join_date:'2025-05-20', avatar_color:'#ec4899',
     impact_links:['Employee Profile','60 Days Review'] },
   { id:'e6', code:'EMP-0033', name:'Sanjay Karki', position:'CFO', dept:'Finance & Accounts',
-    branch:'KTM HQ', manager:'CEO', email:'sanjay.k@nephr.com.np', phone:'980-6666666',
+    branch:'KTM HQ', manager:'CEO', email:'sanjay.k@elogix.com.np', phone:'980-6666666',
     skills:['Financial Planning','Audit','Compliance'], status:'active', join_date:'2019-11-10', avatar_color:'#06b6d4',
     impact_links:['Employee Profile'] },
 ]
@@ -154,7 +154,7 @@ export default function EmployeeDirectoryPage() {
       )}
 
       {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={CTX} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Employee Directory" columns={['Code','Name','Position','Department','Branch','Manager','Email','Phone','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Employee Directory" columns={['Code','Name','Position','Department','Branch','Manager','Email','Phone','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

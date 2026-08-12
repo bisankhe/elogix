@@ -1,12 +1,12 @@
 # DATA PROCESSING AGREEMENT (DPA)
-## NepHR Pro — GDPR / UK GDPR / DPDP Compliant
+## eLogix HRMS — GDPR / UK GDPR / DPDP Compliant
 **Version:** 1.0 | **Effective Date:** June 11, 2026
 
 ---
 
 ## PARTIES
 
-**Data Processor:** NepHR Pro Pvt. Ltd. ("Processor")
+**Data Processor:** eLogix HRMS Pvt. Ltd. ("Processor")
 **Data Controller:** [Client Organization Name] ("Controller")
 
 This DPA forms part of the main Terms of Service agreement and governs the processing of personal data.
@@ -18,14 +18,14 @@ This DPA forms part of the main Terms of Service agreement and governs the proce
 - **"Personal Data"** — any information relating to an identified or identifiable natural person
 - **"Processing"** — any operation performed on personal data
 - **"Data Subject"** — the individual whose personal data is processed (employees, candidates)
-- **"Sub-Processor"** — third party engaged by NepHR Pro to process data
+- **"Sub-Processor"** — third party engaged by eLogix HRMS to process data
 
 ---
 
 ## 2. SUBJECT MATTER & PURPOSE
 
 The Processor shall process Personal Data on behalf of the Controller solely for:
-- Operating the NepHR Pro HRIS/HRMS/HRIM platform
+- Operating the eLogix HRMS HRIS/HRMS/HRIM platform
 - Providing HR management services as described in the Terms of Service
 - Complying with legal obligations applicable to the Processor
 - No other purpose without prior written instruction from the Controller
@@ -136,7 +136,7 @@ This DPA is governed by the same law as the main Terms of Service agreement, unl
 
 ---
 
-*Signed on behalf of NepHR Pro Pvt. Ltd.:* _______________
+*Signed on behalf of eLogix HRMS Pvt. Ltd.:* _______________
 *Signed on behalf of [Client Organization]:* _______________
 *Date:* _______________
 
@@ -144,14 +144,14 @@ This DPA is governed by the same law as the main Terms of Service agreement, unl
 ---
 
 # NON-DISCLOSURE AGREEMENT (NDA)
-## NepHR Pro — Mutual Non-Disclosure Agreement
+## eLogix HRMS — Mutual Non-Disclosure Agreement
 **Version:** 1.0 | **Effective Date:** Upon Signing
 
 ---
 
 ## PARTIES
 
-**Party A:** NepHR Pro Pvt. Ltd. ("NepHR Pro")
+**Party A:** eLogix HRMS Pvt. Ltd. ("eLogix HRMS")
 **Party B:** [Client/Partner Organization Name] ("Recipient")
 
 Collectively referred to as "the Parties"
@@ -160,7 +160,7 @@ Collectively referred to as "the Parties"
 
 ## 1. PURPOSE
 
-The Parties wish to explore a potential business relationship involving NepHR Pro's HRIS/HRMS/HRIM platform and related services. In connection with this, each Party may disclose confidential information to the other.
+The Parties wish to explore a potential business relationship involving eLogix HRMS's HRIS/HRMS/HRIM platform and related services. In connection with this, each Party may disclose confidential information to the other.
 
 ---
 
@@ -239,22 +239,22 @@ This NDA shall be governed by the laws of Nepal (or as mutually agreed for inter
 
 ---
 
-*Signed:* _______________  *Date:* _______________  *(NepHR Pro Pvt. Ltd.)*
+*Signed:* _______________  *Date:* _______________  *(eLogix HRMS Pvt. Ltd.)*
 *Signed:* _______________  *Date:* _______________  *([Client/Partner])*
 
 ---
 ---
 
 # END USER LICENSE AGREEMENT (EULA)
-## NepHR Pro Platform License
+## eLogix HRMS Platform License
 **Version:** 1.0 | **Effective Date:** June 11, 2026
 
 ---
 
 ## LICENSE GRANT
 
-NepHR Pro Pvt. Ltd. grants you a **non-exclusive, non-transferable, revocable, limited license** to:
-- Access and use the NepHR Pro platform via web browser or authorized API
+eLogix HRMS Pvt. Ltd. grants you a **non-exclusive, non-transferable, revocable, limited license** to:
+- Access and use the eLogix HRMS platform via web browser or authorized API
 - Use the software solely for your organization's internal HR management
 - Allow your authorized employees to access the platform per your subscription
 
@@ -276,7 +276,7 @@ You may NOT:
 
 ## INTELLECTUAL PROPERTY
 
-All rights in the NepHR Pro platform — including source code, AI models, UI/UX designs, documentation, and brand assets — remain exclusively with NepHR Pro Pvt. Ltd.
+All rights in the eLogix HRMS platform — including source code, AI models, UI/UX designs, documentation, and brand assets — remain exclusively with eLogix HRMS Pvt. Ltd.
 
 Your HR data remains your property at all times.
 
@@ -305,20 +305,20 @@ This license terminates automatically if you:
 
 THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY.
 AI predictions and HR analytics are advisory only and may not be 100% accurate.
-NepHR Pro is not responsible for employment decisions made using the platform.
+eLogix HRMS is not responsible for employment decisions made using the platform.
 
 ---
 ---
 
 # ACCEPTABLE USE POLICY (AUP)
-## NepHR Pro Platform
+## eLogix HRMS Platform
 **Version:** 1.0 | **Effective Date:** June 11, 2026
 
 ---
 
 ## PURPOSE
 
-This Acceptable Use Policy defines the rules for responsible and lawful use of the NepHR Pro platform. All users must comply.
+This Acceptable Use Policy defines the rules for responsible and lawful use of the eLogix HRMS platform. All users must comply.
 
 ---
 
@@ -386,13 +386,13 @@ When using AI features:
 - AI recommendations are **advisory only** — human decision required
 - Document human review of all AI-influenced employment decisions
 - Regularly audit AI outputs for bias or inaccuracies
-- Report AI anomalies to support@nephrpro.com
+- Report AI anomalies to support@elogix.com
 
 ---
 
 ## REPORTING VIOLATIONS
 
-Report AUP violations to: security@nephrpro.com
+Report AUP violations to: security@elogix.com
 All reports are investigated confidentially.
 Violations may result in immediate account suspension.
 
@@ -408,5 +408,5 @@ Violations may result in:
 
 ---
 
-*© 2026 NepHR Pro Pvt. Ltd.*
+*© 2026 eLogix HRMS Pvt. Ltd.*
 *These documents are templates and must be reviewed by qualified legal counsel before use.*

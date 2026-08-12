@@ -16,7 +16,7 @@ export default class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, info) {
-    console.error('[NepHR Pro Error]', error, info)
+    console.error('[eLogix HRMS Error]', error, info)
   }
 
   render() {
@@ -28,7 +28,7 @@ export default class ErrorBoundary extends Component {
           <div style={{ width:72, height:72, borderRadius:20, background:G, display:'flex', alignItems:'center', justifyContent:'center', fontSize:36, margin:'0 auto 20px' }}>⚠️</div>
           <h1 style={{ fontSize:22, fontWeight:900, color:'#0f172a', marginBottom:8 }}>Something went wrong</h1>
           <p style={{ fontSize:13, color:'#64748b', marginBottom:24, lineHeight:1.6 }}>
-            NepHR Pro encountered an unexpected error. Your data is safe. Please refresh the page or contact support if the problem persists.
+            eLogix HRMS encountered an unexpected error. Your data is safe. Please refresh the page or contact support if the problem persists.
           </p>
           <div style={{ display:'flex', gap:10, justifyContent:'center' }}>
             <button onClick={()=>window.location.reload()}

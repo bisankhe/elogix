@@ -159,7 +159,7 @@ export default function AssetReturnPage() {
         {icon:'👁',label:'View Items',key:'view'},{icon:'📸',label:'Upload Photo',key:'photo'},
         {icon:'🧹',label:'Mark Data Wiped',key:'wipe'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Asset Return" columns={['Employee','LWD','Item','Model','Serial','Status','Condition','Photo Uploaded','Data Wiped']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Asset Return" columns={['Employee','LWD','Item','Model','Serial','Status','Condition','Photo Uploaded','Data Wiped']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/leave_setup_schema.sql
--- NepHR Pro — Workforce Operations > Leave Management > Leave Setup (4 pages)
+-- eLogix HRMS — Workforce Operations > Leave Management > Leave Setup (4 pages)
 --
 -- Design note: holiday_calendar already exists (workforce_config_schema.sql)
 -- and is reused directly by leave_year_config below — no duplication.

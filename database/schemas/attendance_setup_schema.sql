@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/attendance_setup_schema.sql
--- NepHR Pro — Workforce Operations > Attendance Management > Attendance Setup (8 pages)
+-- eLogix HRMS — Workforce Operations > Attendance Management > Attendance Setup (8 pages)
 --
 -- Design note: shift_types, holiday_calendar, weekend_policies already
 -- exist (workforce_config_schema.sql). This file ADDS: attendance policy

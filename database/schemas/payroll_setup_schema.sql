@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/payroll_setup_schema.sql
--- NepHR Pro — Workforce Operations > Payroll & Compensation >
+-- eLogix HRMS — Workforce Operations > Payroll & Compensation >
 -- Payroll Setup Module (10 pages)
 --
 -- Design note: deeply integrates with prior modules rather than

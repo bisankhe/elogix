@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/vendor_employee_schema.sql
--- NepHR Pro — Vendor Employee Management Schema
+-- eLogix HRMS — Vendor Employee Management Schema
 -- Covers:
 --   1. vendor_employees_extended   (Contingent workforce roster)
 --   2. vendor_assets               (Inventory & Asset tracking)

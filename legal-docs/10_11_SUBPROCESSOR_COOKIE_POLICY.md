@@ -1,5 +1,5 @@
 # SUB-PROCESSOR LIST
-## NepHR Pro — GDPR Article 28 Compliant Register
+## eLogix HRMS — GDPR Article 28 Compliant Register
 **Document #10** | **Version:** 1.0 | **Last Updated:** June 11, 2026
 **Classification:** Public (available to clients on request)
 
@@ -7,11 +7,11 @@
 
 ## 1. PURPOSE
 
-Under GDPR Article 28(4) and UK GDPR, NepHR Pro is required to maintain a list of all sub-processors engaged to process personal data on behalf of our clients. This document satisfies that requirement.
+Under GDPR Article 28(4) and UK GDPR, eLogix HRMS is required to maintain a list of all sub-processors engaged to process personal data on behalf of our clients. This document satisfies that requirement.
 
-**NepHR Pro's role:** Data Processor
+**eLogix HRMS's role:** Data Processor
 **Client's role:** Data Controller
-**Sub-Processor's role:** Sub-Processor (engaged by NepHR Pro)
+**Sub-Processor's role:** Sub-Processor (engaged by eLogix HRMS)
 
 ---
 
@@ -40,7 +40,7 @@ Under GDPR Article 28(4) and UK GDPR, NepHR Pro is required to maintain a list o
 |---|---|---|---|---|---|---|
 | Anthropic, PBC (Claude API) | Anthropic, PBC | AI HR assistant chatbot | **Anonymized queries only** — No employee names, IDs, or sensitive data sent | San Francisco, USA | SOC 2 Type II, data minimization controls | ✅ DPA + SCCs |
 
-> ⚠️ **Important:** The AI chatbot (Claude) only receives anonymized, context-only queries. No employee PII is transmitted to Anthropic. All AI model training is performed on NepHR Pro's own anonymized data within AWS.
+> ⚠️ **Important:** The AI chatbot (Claude) only receives anonymized, context-only queries. No employee PII is transmitted to Anthropic. All AI model training is performed on eLogix HRMS's own anonymized data within AWS.
 
 ### 3.3 Communications & Notifications
 
@@ -53,9 +53,9 @@ Under GDPR Article 28(4) and UK GDPR, NepHR Pro is required to maintain a list o
 
 | Sub-Processor | Parent Company | Purpose | Personal Data Accessed | Location | Security Standards | DPA in Place |
 |---|---|---|---|---|---|---|
-| Stripe Inc. | Stripe Inc. | Subscription billing & payment processing | Name, billing address, card (tokenized — raw card data never reaches NepHR Pro) | USA / Ireland (EU) | PCI DSS Level 1, ISO 27001, SOC 2 | ✅ Stripe DPA + SCCs |
+| Stripe Inc. | Stripe Inc. | Subscription billing & payment processing | Name, billing address, card (tokenized — raw card data never reaches eLogix HRMS) | USA / Ireland (EU) | PCI DSS Level 1, ISO 27001, SOC 2 | ✅ Stripe DPA + SCCs |
 
-> ⚠️ **Important:** NepHR Pro never stores raw payment card data. All card data is tokenized by Stripe. NepHR Pro is PCI DSS SAQ A compliant.
+> ⚠️ **Important:** eLogix HRMS never stores raw payment card data. All card data is tokenized by Stripe. eLogix HRMS is PCI DSS SAQ A compliant.
 
 ### 3.5 Security & Performance Monitoring
 
@@ -97,34 +97,34 @@ Under GDPR Article 28(4) and UK GDPR, NepHR Pro is required to maintain a list o
 ## 6. HOW TO OBJECT TO A NEW SUB-PROCESSOR
 
 If you wish to object to a proposed new sub-processor:
-1. Send written objection to: dpo@nephrpro.com
+1. Send written objection to: dpo@elogix.com
 2. Include: Your organization name, the sub-processor you object to, and your reason
 3. We will work with you to find an acceptable solution
 4. If no solution is found, you may terminate the agreement per the ToS termination clause
 
 ---
 
-*Document Owner: NepHR Pro DPO*
+*Document Owner: eLogix HRMS DPO*
 *Created: June 11, 2026 | Quarterly Review: September 11, 2026*
-*© 2026 NepHR Pro Pvt. Ltd.*
+*© 2026 eLogix HRMS Pvt. Ltd.*
 
 ---
 ---
 
 # COOKIE POLICY
-## NepHR Pro Platform
+## eLogix HRMS Platform
 **Document #11** | **Version:** 1.0 | **Effective Date:** June 11, 2026
 
 ---
 
 ## 1. WHAT ARE COOKIES?
 
-Cookies are small text files placed on your device (computer, tablet, or phone) when you access NepHR Pro. They help the platform remember your preferences, keep you logged in securely, and understand how the platform is used.
+Cookies are small text files placed on your device (computer, tablet, or phone) when you access eLogix HRMS. They help the platform remember your preferences, keep you logged in securely, and understand how the platform is used.
 
 We also use similar technologies including:
 - **Local storage** — for offline data caching
 - **Session storage** — for temporary session data
-- **Pixels** — NOT used by NepHR Pro
+- **Pixels** — NOT used by eLogix HRMS
 
 ---
 
@@ -132,10 +132,10 @@ We also use similar technologies including:
 
 | Type | Who Sets It | Description |
 |---|---|---|
-| **First-party cookies** | NepHR Pro directly | Set by our platform for core functionality |
+| **First-party cookies** | eLogix HRMS directly | Set by our platform for core functionality |
 | **Third-party cookies** | Sub-processors | Set by AWS, Cloudflare only for security |
 
-**NepHR Pro does NOT allow advertising networks or data brokers to set cookies.**
+**eLogix HRMS does NOT allow advertising networks or data brokers to set cookies.**
 
 ---
 
@@ -147,10 +147,10 @@ These cookies are essential for the platform to function. Without them, you cann
 
 | Cookie Name | Set By | Purpose | Duration | Data Stored |
 |---|---|---|---|---|
-| `nephr_session_id` | NepHR Pro | Maintains your authenticated login session | Session (deleted on browser close) | Encrypted session token |
-| `nephr_csrf_token` | NepHR Pro | Prevents Cross-Site Request Forgery attacks | Session | Random security token |
-| `nephr_tenant_id` | NepHR Pro | Identifies which organization's environment you belong to | Session | Encrypted tenant identifier |
-| `nephr_auth_role` | NepHR Pro | Stores your current access role/persona | Session | Encrypted role identifier |
+| `elogix_session_id` | eLogix HRMS | Maintains your authenticated login session | Session (deleted on browser close) | Encrypted session token |
+| `elogix_csrf_token` | eLogix HRMS | Prevents Cross-Site Request Forgery attacks | Session | Random security token |
+| `elogix_tenant_id` | eLogix HRMS | Identifies which organization's environment you belong to | Session | Encrypted tenant identifier |
+| `elogix_auth_role` | eLogix HRMS | Stores your current access role/persona | Session | Encrypted role identifier |
 | `__cf_bm` | Cloudflare | Bot management and DDoS protection | 30 minutes | Encrypted identifier |
 | `cf_clearance` | Cloudflare | Security challenge verification | 30 minutes | Security token |
 
@@ -164,12 +164,12 @@ These cookies remember your personal preferences so you don't have to reset them
 
 | Cookie Name | Set By | Purpose | Duration | Data Stored |
 |---|---|---|---|---|
-| `nephr_language` | NepHR Pro | Remembers your selected language (20 options) | 365 days | Language code (e.g., "en", "ne", "ar") |
-| `nephr_currency` | NepHR Pro | Remembers your selected currency (26 options) | 365 days | Currency code (e.g., "NPR", "USD") |
-| `nephr_theme` | NepHR Pro | Remembers dark/light mode preference | 365 days | "dark" or "light" |
-| `nephr_sidebar_state` | NepHR Pro | Remembers sidebar open/collapsed state | 365 days | Boolean |
-| `nephr_persona` | NepHR Pro | Remembers last selected persona | 365 days | Persona identifier |
-| `nephr_notifications_read` | NepHR Pro | Tracks which notifications you've read | 30 days | List of notification IDs |
+| `elogix_language` | eLogix HRMS | Remembers your selected language (20 options) | 365 days | Language code (e.g., "en", "ne", "ar") |
+| `elogix_currency` | eLogix HRMS | Remembers your selected currency (26 options) | 365 days | Currency code (e.g., "NPR", "USD") |
+| `elogix_theme` | eLogix HRMS | Remembers dark/light mode preference | 365 days | "dark" or "light" |
+| `elogix_sidebar_state` | eLogix HRMS | Remembers sidebar open/collapsed state | 365 days | Boolean |
+| `elogix_persona` | eLogix HRMS | Remembers last selected persona | 365 days | Persona identifier |
+| `elogix_notifications_read` | eLogix HRMS | Tracks which notifications you've read | 30 days | List of notification IDs |
 
 **Legal basis:** Consent (you can disable these in Cookie Settings)
 
@@ -181,9 +181,9 @@ These cookies collect **fully anonymized** information about how the platform is
 
 | Cookie Name | Set By | Purpose | Duration | Data Stored |
 |---|---|---|---|---|
-| `nephr_analytics_id` | NepHR Pro | Anonymized feature usage tracking | 365 days | Random anonymous identifier (NOT tied to your account) |
-| `nephr_performance` | NepHR Pro | Page load times and performance metrics | 30 days | Anonymized timing data |
-| `nephr_feature_flags` | NepHR Pro | A/B testing of new features | 90 days | Anonymous flag identifier |
+| `elogix_analytics_id` | eLogix HRMS | Anonymized feature usage tracking | 365 days | Random anonymous identifier (NOT tied to your account) |
+| `elogix_performance` | eLogix HRMS | Page load times and performance metrics | 30 days | Anonymized timing data |
+| `elogix_feature_flags` | eLogix HRMS | A/B testing of new features | 90 days | Anonymous flag identifier |
 
 **Legal basis:** Consent (opt-in only)
 
@@ -203,7 +203,7 @@ These cookies collect **fully anonymized** information about how the platform is
 
 ### Category 4 — ADVERTISING & TRACKING ❌ (NEVER USED)
 
-**NepHR Pro does NOT use:**
+**eLogix HRMS does NOT use:**
 - Advertising cookies
 - Cross-site tracking cookies
 - Social media tracking pixels (Facebook Pixel, LinkedIn Insight, Google Analytics)
@@ -216,7 +216,7 @@ We will **never** sell your cookie data or share it with advertising networks.
 
 ## 4. YOUR COOKIE CHOICES
 
-### Managing Cookies in NepHR Pro:
+### Managing Cookies in eLogix HRMS:
 1. Click **Settings** in the top navigation
 2. Select **Privacy & Cookies**
 3. Toggle categories on or off
@@ -233,7 +233,7 @@ Your preferences are remembered for 12 months.
 | Safari | Preferences → Privacy → Cookies |
 | Edge | Settings → Privacy → Cookies |
 
-> ⚠️ **Warning:** Disabling **Strictly Necessary** cookies will prevent you from logging in to NepHR Pro.
+> ⚠️ **Warning:** Disabling **Strictly Necessary** cookies will prevent you from logging in to eLogix HRMS.
 
 ---
 
@@ -271,12 +271,12 @@ We will notify you of material changes via:
 ## 8. CONTACT
 
 For cookie-related questions:
-- **Privacy Team:** privacy@nephrpro.com
-- **DPO:** dpo@nephrpro.com
+- **Privacy Team:** privacy@elogix.com
+- **DPO:** dpo@elogix.com
 - **ICO complaint (UK):** ico.org.uk
 - **EDPB complaint (EU):** edpb.europa.eu
 
 ---
 
-*© 2026 NepHR Pro Pvt. Ltd.*
+*© 2026 eLogix HRMS Pvt. Ltd.*
 *Cookie Policy v1.0 — Subject to legal review before final publication.*

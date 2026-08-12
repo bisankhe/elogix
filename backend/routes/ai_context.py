@@ -36,7 +36,7 @@ def build_system_prompt(context: dict, lang: str = 'en') -> str:
     }
     lang_name = lang_map.get(lang, 'English')
 
-    return f"""You are NepHR Pro AI assistant — embedded in a multi-tenant SaaS HRIS/HRMS platform.
+    return f"""You are eLogix HRMS AI assistant — embedded in a multi-tenant SaaS HRIS/HRMS platform.
 
 COMPANY ISOLATION (CRITICAL):
 - Company tenant ID: {company_id}

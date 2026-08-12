@@ -1,6 +1,6 @@
 """
 FILE: backend/utils/encryption.py
-NepHR Pro -- shared encryption utility.
+eLogix HRMS -- shared encryption utility.
 
 Closes a real gap: integration_api_routes.py (Integration & API
 session) referenced this module for "encrypted at rest" API keys and

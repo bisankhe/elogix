@@ -1,6 +1,6 @@
 -- ============================================================
 -- FILE: database/schemas/complete_schema.sql
--- NepHR Pro — COMPLETE Master PostgreSQL Schema
+-- eLogix HRMS — COMPLETE Master PostgreSQL Schema
 -- ALL modules from Excel: Company Profile, Company Setup,
 -- Group Company, Branch & Location, Business Unit,
 -- Department, Section & Unit, Team, Cost Center, Work Location,
@@ -19,8 +19,8 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 CREATE EXTENSION IF NOT EXISTS "unaccent";
 
 -- Schema
-CREATE SCHEMA IF NOT EXISTS nephr;
-SET search_path TO nephr, public;
+CREATE SCHEMA IF NOT EXISTS elogix;
+SET search_path TO elogix, public;
 
 -- ============================================================
 -- SECTION 1: GROUP COMPANY

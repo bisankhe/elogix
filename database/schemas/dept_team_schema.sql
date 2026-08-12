@@ -1,6 +1,6 @@
 -- ============================================================
 -- FILE: database/schemas/dept_team_schema.sql
--- NepHR Pro — Department & Team Setup Schema
+-- eLogix HRMS — Department & Team Setup Schema
 -- Covers: Business Unit, Department, Section, Unit,
 --         Team (Nepal CBA/Safety auto-flags), Cost Center, Work Location
 -- Standalone file — also included in complete_schema.sql

@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/skill_gap_training_request_routes.py
-NepHR Pro — Performance & Talent Management > Talent Development >
+eLogix HRMS — Performance & Talent Management > Talent Development >
 Learning & Development > Skill Gap Matrix + Analysis + Training Request
 (3 pages, the brief's explicit pipeline)
 URL prefix: /api/v1/skill-gap

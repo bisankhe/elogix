@@ -142,7 +142,7 @@ export default function AttendancePolicyPage() {
         {icon:'👁',label:'View Details',key:'view'},{icon:'✏',label:'Edit Policy',key:'edit'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📤',label:'Export',key:'export'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Attendance Policies" columns={['Name','Applies To','Grace Period','Full Day Hrs','OT Daily Cap','OT Rate','Mandatory Break','Weekly Off']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Attendance Policies" columns={['Name','Applies To','Grace Period','Full Day Hrs','OT Daily Cap','OT Rate','Mandatory Break','Weekly Off']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

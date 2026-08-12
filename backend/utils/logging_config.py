@@ -4,7 +4,7 @@
 import logging, json, os, traceback
 from datetime import datetime, timezone
 
-APP_NAME = 'nephr-pro'
+APP_NAME = 'elogix-hrms'
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper()
 LOG_FORMAT = os.getenv('LOG_FORMAT', 'json')   # 'json' or 'text'
 
@@ -44,7 +44,7 @@ def setup_logging(app=None):
     root.addHandler(handler)
 
     # File handler for data center persistent logs
-    log_file = os.getenv('LOG_FILE', '/var/log/nephr-pro/app.log')
+    log_file = os.getenv('LOG_FILE', '/var/log/elogix-hrms/app.log')
     if os.path.exists(os.path.dirname(log_file)):
         fh = logging.FileHandler(log_file)
         fh.setFormatter(JSONFormatter())

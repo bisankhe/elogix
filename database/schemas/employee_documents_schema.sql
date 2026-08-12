@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/employee_documents_schema.sql
--- NepHR Pro — Employee Records > Employee Documents Module (4 pages)
+-- eLogix HRMS — Employee Records > Employee Documents Module (4 pages)
 --   1. employee_documents          (Document Management — OCR/RBAC/retention)
 --   2. employee_contracts          (Contract Management AI-Driven)
 --   3. document_audit_log          (Digital Employee File — access trail)

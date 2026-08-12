@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/wellness_support_schema.sql
--- NepHR Pro -- Employee Experience & Culture > Wellness & Support
+-- eLogix HRMS -- Employee Experience & Culture > Wellness & Support
 -- (5 pages: Wellness Program, Mental Health Support, Insurance
 -- Management, Emergency Support, Employee Assistance Program)
 --
@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS mental_health_sessions (
 
     -- intentionally NO outcome/notes/diagnosis column in the core HR
     -- schema -- clinical content lives exclusively in the vetted
-    -- third-party therapy platform, never in NepHR Pro's database
+    -- third-party therapy platform, never in eLogix HRMS's database
     booked_at                                    TIMESTAMPTZ DEFAULT NOW()
 );
 

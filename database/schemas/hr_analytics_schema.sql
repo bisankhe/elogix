@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/hr_analytics_schema.sql
--- NepHR Pro -- Reports, Analytics & BI > HR Analytics
+-- eLogix HRMS -- Reports, Analytics & BI > HR Analytics
 -- (4 pages: Headcount Analysis, Attrition Analysis, Productivity
 -- Analysis, Cost Analysis)
 --

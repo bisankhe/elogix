@@ -20,7 +20,7 @@ class AIService:
             'department':  'Department Head: team data, performance, attendance.',
             'employee':    'Employee self-service only. Never show other employee data.',
         }
-        return f"""You are NepHR Pro AI — embedded in a multi-tenant HRIS/HRMS SaaS platform.
+        return f"""You are eLogix HRMS AI — embedded in a multi-tenant HRIS/HRMS SaaS platform.
 
 COMPANY ISOLATION: Company ID {company_id}. ONLY respond about this company's data.
 LANGUAGE: Respond entirely in {lang_name}. Every word.

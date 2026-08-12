@@ -360,7 +360,7 @@ def excel_template():
     return send_file(io.BytesIO(xlsx),
                      mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                      as_attachment=True,
-                     download_name="nephr_pro_employment_category_template.xlsx")
+                     download_name="elogix_hrms_employment_category_template.xlsx")
 
 
 # ── Helper ────────────────────────────────────────────────────

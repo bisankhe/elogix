@@ -158,7 +158,7 @@ export default function LeaveRequestPage() {
         {icon:'👁',label:'View Details',key:'view'},{icon:'✏',label:'Edit (if pending)',key:'edit'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="My Leave Requests" columns={['Leave Type','Start Date','End Date','Days','Reason','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="My Leave Requests" columns={['Leave Type','Start Date','End Date','Days','Reason','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

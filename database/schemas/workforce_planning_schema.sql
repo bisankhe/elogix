@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/workforce_planning_schema.sql
--- NepHR Pro — Workforce Planning Schema (13-page module)
+-- eLogix HRMS — Workforce Planning Schema (13-page module)
 -- Tables: workforce_plans, employee_kpis
 -- Views: v_quota_dashboard, v_vacancy_pipeline, v_headcount_summary
 -- Nepal Labour Act 2074 compliance built in.

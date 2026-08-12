@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/hr_analytics_routes.py
-NepHR Pro -- Reports, Analytics & BI > HR Analytics (4 pages:
+eLogix HRMS -- Reports, Analytics & BI > HR Analytics (4 pages:
 Headcount Analysis, Attrition Analysis, Productivity Analysis, Cost
 Analysis)
 URL prefix: /api/v1/hr-analytics

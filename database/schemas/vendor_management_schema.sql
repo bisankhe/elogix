@@ -1,6 +1,6 @@
 -- ============================================================
 -- FILE: database/schemas/vendor_management_schema.sql
--- NepHR Pro — Vendor / Outsource Management Module Schema
+-- eLogix HRMS — Vendor / Outsource Management Module Schema
 -- Covers:
 --   1. recruitment_agencies     (Vendor Profile)
 --   2. vendor_bgv               (Background Verification)

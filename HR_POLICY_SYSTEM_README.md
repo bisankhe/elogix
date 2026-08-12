@@ -1,4 +1,4 @@
-# NepHR Pro — HR Policy Management System
+# eLogix HRMS — HR Policy Management System
 ## Complete File Structure & Paths
 **Created:** June 12, 2026
 
@@ -7,7 +7,7 @@
 ## 📁 ALL FILE PATHS
 
 ```
-nephr-pro-files/
+elogix-hrms-files/
 │
 ├── 📁 database/
 │   └── schemas/
@@ -164,4 +164,4 @@ All policy templates require legal review before publication.
 Content must be localized for each country's specific requirements.
 Nepal Labour Act 2017 is the primary law for Nepal operations.
 
-*© 2026 NepHR Pro Pvt. Ltd.*
+*© 2026 eLogix HRMS Pvt. Ltd.*

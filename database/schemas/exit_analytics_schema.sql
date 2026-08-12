@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/exit_analytics_schema.sql
--- NepHR Pro — Offboarding > Exit Analytics Module (2 pages)
+-- eLogix HRMS — Offboarding > Exit Analytics Module (2 pages)
 --
 -- Design note: this module is primarily ANALYTICAL — it reads from
 -- existing tables (employees, employee_resignations, exit_interviews,

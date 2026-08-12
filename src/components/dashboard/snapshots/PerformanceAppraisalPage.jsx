@@ -119,7 +119,7 @@ export default function PerformanceAppraisalPage() {
         {icon:'👁',label:'View Full Detail',key:'view'},{icon:'✏',label:'Edit Rating',key:'edit'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Performance Appraisal" columns={['Employee','Cycle','KRA Avg','KPI Avg','Self Rating','Manager Rating','Final Rating','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Performance Appraisal" columns={['Employee','Cycle','KRA Avg','KPI Avg','Self Rating','Manager Rating','Final Rating','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

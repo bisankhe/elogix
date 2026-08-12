@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/training_feedback_roi_assessment_schema.sql
--- NepHR Pro — Performance & Talent Management > Talent Development >
+-- eLogix HRMS — Performance & Talent Management > Talent Development >
 -- Learning & Development > Training Feedback + Effectiveness of
 -- Training + ROI on Training + Assessment & Quiz (4 pages)
 --

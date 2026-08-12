@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/okr_management_routes.py
-NepHR Pro — Performance & Talent Management > Goal & Performance >
+eLogix HRMS — Performance & Talent Management > Goal & Performance >
 Goal Management > OKR Management (1 page)
 URL prefix: /api/v1/okr-management
 

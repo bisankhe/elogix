@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/okr_management_schema.sql
--- NepHR Pro — Performance & Talent Management > Goal & Performance >
+-- eLogix HRMS — Performance & Talent Management > Goal & Performance >
 -- Goal Management > OKR Management (1 page)
 --
 -- Design note: OKRs are deliberately a SEPARATE, self-referencing

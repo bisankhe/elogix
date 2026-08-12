@@ -130,7 +130,7 @@ export default function PayrollSetupPage() {
         {icon:'👁',label:'View Details',key:'view'},{icon:'✏',label:'Edit',key:'edit'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📤',label:'Export',key:'export'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Pay Groups" columns={['Pay Group Name','Employee Count','Pay Frequency','Salary Structure','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Pay Groups" columns={['Pay Group Name','Employee Count','Pay Frequency','Salary Structure','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

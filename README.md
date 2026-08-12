@@ -1,4 +1,4 @@
-# eLogix — AI-Powered HRIS · HRMS · HRIM · HCM
+# eLogix HRMS — AI-Powered HRIS · HRMS · HRIM · HCM
 
 Nepal's most comprehensive Human Resource Management SaaS platform with built-in AI business intelligence, predictive analytics, and multilingual support.
 
@@ -42,7 +42,7 @@ docker-compose up --build
 ## Project Structure
 
 ```
-eLogix-files/
+elogix-hrms-files/
 ├── src/                    # React frontend
 │   ├── components/
 │   │   ├── dashboard/      # Role dashboards + 473 page components
@@ -84,4 +84,4 @@ See `backend/.env.example` for all required variables.
 Critical: `ANTHROPIC_API_KEY`, `DATABASE_URL`, `SECRET_KEY`
 
 ## License
-Proprietary — eLogix Technologies © 2026
+Proprietary — eLogix HRMS © 2026

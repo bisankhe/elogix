@@ -1,5 +1,5 @@
 # SERVICE LEVEL AGREEMENT (SLA)
-## NepHR Pro Platform
+## eLogix HRMS Platform
 **Version:** 1.0 | **Effective Date:** June 11, 2026
 
 ---
@@ -13,7 +13,7 @@
 | Enterprise | 99.97% | 13.1 minutes |
 
 **Measurement:** Uptime is measured monthly, excluding scheduled maintenance.
-**Monitoring:** 24/7 automated monitoring with real-time status at status.nephrpro.com
+**Monitoring:** 24/7 automated monitoring with real-time status at status.elogix.com
 
 ---
 
@@ -86,14 +86,14 @@ The following are NOT counted against uptime:
 ---
 
 # DATA RETENTION POLICY
-## NepHR Pro Platform
+## eLogix HRMS Platform
 **Version:** 1.0 | **Effective Date:** June 11, 2026
 
 ---
 
 ## PURPOSE
 
-This policy defines how long NepHR Pro retains different categories of personal data, in compliance with Nepal Labour Act 2017, GDPR, UK GDPR, DPDP Act 2023, and other applicable regulations.
+This policy defines how long eLogix HRMS retains different categories of personal data, in compliance with Nepal Labour Act 2017, GDPR, UK GDPR, DPDP Act 2023, and other applicable regulations.
 
 ---
 
@@ -173,7 +173,7 @@ Upon receiving a valid erasure request:
 ---
 
 # INCIDENT RESPONSE PLAN
-## NepHR Pro — Security & Data Breach Response
+## eLogix HRMS — Security & Data Breach Response
 **Version:** 1.0 | **Effective Date:** June 11, 2026
 **Classification:** CONFIDENTIAL — Internal Use Only
 
@@ -181,7 +181,7 @@ Upon receiving a valid erasure request:
 
 ## PURPOSE
 
-This plan defines NepHR Pro's procedures for detecting, responding to, and recovering from security incidents and personal data breaches, in compliance with:
+This plan defines eLogix HRMS's procedures for detecting, responding to, and recovering from security incidents and personal data breaches, in compliance with:
 - GDPR Article 33 & 34 (72-hour notification)
 - UK GDPR Article 33
 - Nepal Privacy Act 2018
@@ -206,10 +206,10 @@ This plan defines NepHR Pro's procedures for detecting, responding to, and recov
 | Role | Responsibility | Contact |
 |---|---|---|
 | Incident Commander | Overall response coordination | CEO / CTO |
-| Security Lead | Technical investigation | security@nephrpro.com |
-| DPO (Data Protection Officer) | Privacy compliance | dpo@nephrpro.com |
-| Legal Counsel | Legal obligations, notifications | legal@nephrpro.com |
-| Communications Lead | Client & public communications | comms@nephrpro.com |
+| Security Lead | Technical investigation | security@elogix.com |
+| DPO (Data Protection Officer) | Privacy compliance | dpo@elogix.com |
+| Legal Counsel | Legal obligations, notifications | legal@elogix.com |
+| Communications Lead | Client & public communications | comms@elogix.com |
 
 ---
 
@@ -270,11 +270,11 @@ This plan defines NepHR Pro's procedures for detecting, responding to, and recov
 
 ### Client Notification Template:
 ```
-Subject: Important Security Notice — NepHR Pro
+Subject: Important Security Notice — eLogix HRMS
 
 Dear [Client Name],
 
-We are writing to inform you that NepHR Pro detected a security incident on [DATE] at [TIME] UTC.
+We are writing to inform you that eLogix HRMS detected a security incident on [DATE] at [TIME] UTC.
 
 Nature of incident: [DESCRIPTION]
 Data potentially affected: [CATEGORIES]
@@ -287,7 +287,7 @@ Immediate actions we have taken:
 
 We are continuing to investigate and will provide updates every [FREQUENCY].
 
-If you have questions, please contact: security@nephrpro.com
+If you have questions, please contact: security@elogix.com
 
 [Signature]
 ```
@@ -296,12 +296,12 @@ If you have questions, please contact: security@nephrpro.com
 ---
 
 # SUB-PROCESSOR LIST
-## NepHR Pro — GDPR Article 28 Compliant
+## eLogix HRMS — GDPR Article 28 Compliant
 **Version:** 1.0 | **Last Updated:** June 11, 2026
 
 ---
 
-Clients who have signed a Data Processing Agreement with NepHR Pro are entitled to this list under GDPR Article 28(4).
+Clients who have signed a Data Processing Agreement with eLogix HRMS are entitled to this list under GDPR Article 28(4).
 
 | # | Sub-Processor | Purpose | Data Types | Location | Safeguard |
 |---|---|---|---|---|---|
@@ -324,14 +324,14 @@ Clients who have signed a Data Processing Agreement with NepHR Pro are entitled 
 ---
 
 # COOKIE POLICY
-## NepHR Pro Platform
+## eLogix HRMS Platform
 **Version:** 1.0 | **Effective Date:** June 11, 2026
 
 ---
 
 ## WHAT ARE COOKIES?
 
-Cookies are small text files stored on your device when you access NepHR Pro. We use cookies to make the platform function correctly and securely.
+Cookies are small text files stored on your device when you access eLogix HRMS. We use cookies to make the platform function correctly and securely.
 
 ---
 
@@ -342,28 +342,28 @@ These are required for the platform to function. They cannot be disabled.
 
 | Cookie Name | Purpose | Duration |
 |---|---|---|
-| `nephr_session` | Maintains your login session | Session |
-| `nephr_csrf` | Prevents cross-site request forgery attacks | Session |
-| `nephr_tenant` | Identifies your organization's tenant | Session |
-| `nephr_role` | Stores your current role/persona | Session |
+| `elogix_session` | Maintains your login session | Session |
+| `elogix_csrf` | Prevents cross-site request forgery attacks | Session |
+| `elogix_tenant` | Identifies your organization's tenant | Session |
+| `elogix_role` | Stores your current role/persona | Session |
 
 ### 2. Functional Cookies (Opt-in)
 These remember your preferences.
 
 | Cookie Name | Purpose | Duration |
 |---|---|---|
-| `nephr_lang` | Stores language preference | 1 year |
-| `nephr_currency` | Stores currency preference | 1 year |
-| `nephr_theme` | Stores dark/light mode preference | 1 year |
-| `nephr_sidebar` | Stores sidebar state | 1 year |
+| `elogix_lang` | Stores language preference | 1 year |
+| `elogix_currency` | Stores currency preference | 1 year |
+| `elogix_theme` | Stores dark/light mode preference | 1 year |
+| `elogix_sidebar` | Stores sidebar state | 1 year |
 
 ### 3. Analytics Cookies (Opt-in)
 These help us understand how the platform is used. Data is **fully anonymized**.
 
 | Cookie Name | Purpose | Duration |
 |---|---|---|
-| `nephr_analytics` | Anonymized feature usage | 1 year |
-| `nephr_perf` | Performance monitoring | 30 days |
+| `elogix_analytics` | Anonymized feature usage | 1 year |
+| `elogix_perf` | Performance monitoring | 30 days |
 
 ### 4. Advertising/Tracking Cookies
 **We do NOT use advertising or third-party tracking cookies.**
@@ -388,14 +388,14 @@ We will notify you of material changes to this Cookie Policy via in-app notifica
 ---
 
 # AI TRANSPARENCY STATEMENT
-## NepHR Pro — EU AI Act & Responsible AI Compliance
+## eLogix HRMS — EU AI Act & Responsible AI Compliance
 **Version:** 1.0 | **Effective Date:** June 11, 2026
 
 ---
 
 ## OUR COMMITMENT TO RESPONSIBLE AI
 
-NepHR Pro is committed to transparent, fair, and accountable use of Artificial Intelligence in HR management. This statement explains how our AI works, its limitations, and your rights.
+eLogix HRMS is committed to transparent, fair, and accountable use of Artificial Intelligence in HR management. This statement explains how our AI works, its limitations, and your rights.
 
 ---
 
@@ -447,7 +447,7 @@ NepHR Pro is committed to transparent, fair, and accountable use of Artificial I
 | Hiring decisions | Initial screening only | HR + Hiring manager required |
 | Performance rating | Data analysis only | Manager decides |
 
-**NepHR Pro prohibits fully automated employment decisions.** Our platform is designed so AI can never take action without human confirmation.
+**eLogix HRMS prohibits fully automated employment decisions.** Our platform is designed so AI can never take action without human confirmation.
 
 ---
 
@@ -461,7 +461,7 @@ Under GDPR Article 22, EU AI Act, and our responsible AI policy:
 ✅ **Right to opt out** — disable AI profiling for specific employees
 ✅ **Right to transparency** — access this AI Transparency Statement at any time
 
-To exercise these rights: privacy@nephrpro.com
+To exercise these rights: privacy@elogix.com
 
 ---
 
@@ -493,8 +493,8 @@ We actively monitor our AI models for discrimination:
 ## CONTACT FOR AI CONCERNS
 
 For questions, concerns, or to exercise AI-related rights:
-- **AI Ethics Team:** ai-ethics@nephrpro.com
-- **DPO:** dpo@nephrpro.com
+- **AI Ethics Team:** ai-ethics@elogix.com
+- **DPO:** dpo@elogix.com
 - **Response time:** Within 30 days
 
 ---
@@ -509,7 +509,7 @@ This statement is reviewed quarterly and updated when:
 
 ---
 
-*© 2026 NepHR Pro Pvt. Ltd.*
+*© 2026 eLogix HRMS Pvt. Ltd.*
 *AI Transparency Statement v1.0*
 *This document is subject to regular review and legal verification.*
 *All AI accuracy figures are based on internal validation testing as of June 2026.*

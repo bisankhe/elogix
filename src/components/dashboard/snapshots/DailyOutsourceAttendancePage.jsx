@@ -73,7 +73,7 @@ export default function DailyOutsourceAttendancePage() {
 
       <div style={{background:'#faf5ff',border:'1px solid #e9d5ff',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#581c87',display:'flex',gap:10}}>
         <span style={{fontSize:18}}>🔗</span>
-        <div><strong>Federated Integration:</strong> Vendor logs attendance in their own system; this page reflects what's been synced via API into NepHR Pro. Per Nepal LA2074, outsourced staff are limited to non-core functions, and the main employer still must maintain daily attendance records - discrepancies are flagged here for resolution before payroll/billing.</div>
+        <div><strong>Federated Integration:</strong> Vendor logs attendance in their own system; this page reflects what's been synced via API into eLogix HRMS. Per Nepal LA2074, outsourced staff are limited to non-core functions, and the main employer still must maintain daily attendance records - discrepancies are flagged here for resolution before payroll/billing.</div>
       </div>
 
       <div style={{display:'flex',gap:8,marginBottom:14,flexWrap:'wrap'}}>
@@ -125,7 +125,7 @@ export default function DailyOutsourceAttendancePage() {
         {icon:'👁',label:'View Vendor Record',key:'view'},{icon:'🔄',label:'Re-Sync',key:'sync'},
         {icon:'⚠',label:'Flag Dispute',key:'dispute'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Outsource Attendance" columns={['Employee','Vendor','Role','Date','Login','Logout','Total Hrs','Sync Status','Variance']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Outsource Attendance" columns={['Employee','Vendor','Role','Date','Login','Logout','Total Hrs','Sync Status','Variance']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

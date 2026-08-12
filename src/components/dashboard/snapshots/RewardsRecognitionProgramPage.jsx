@@ -101,7 +101,7 @@ export default function RewardsRecognitionProgramPage() {
         {icon:'👁',label:'View Detail',key:'view'},{icon:'✅',label:'Approve',key:'approve'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Reward Program" columns={['Employee','Type','Amount NPR','Reason','Approval Tier','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Reward Program" columns={['Employee','Type','Amount NPR','Reason','Approval Tier','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

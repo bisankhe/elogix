@@ -9,6 +9,7 @@ import { useState, useCallback } from 'react'
 import { useApp }  from '../../context/AppContext.jsx'
 import { SIDEBAR_MENU } from '../../data/sidebarMenu.js'
 import { PERSONAS }     from '../../data/personas.js'
+import { getPlanModules, planHasFeature } from '../../data/planConfig.js'
 
 
 // ── Persona → Dashboard mapping (shown ONLY to the logged-in user) ──
@@ -294,9 +295,35 @@ export default function Sidebar({ open }) {
   if (!open) return null
 
   // ── RBAC: Determine which modules this persona can access ──
-  const allowedModules = MODULE_ACCESS[persona]   // 'all' or array of module ids
+  // Also read directly from auth storage for reliability
+  const authCtx = (() => {
+    try {
+      const u = JSON.parse(sessionStorage.getItem('elogix_user') || localStorage.getItem('elogix_user') || '{}')
+      return { role: u.role || '', level: Number(u.level) || 10 }
+    } catch { return { role: '', level: 10 } }
+  })()
+
+  // Level 1 (tenant super_admin) or eLogix admin = always full access
+  const isSuperAdmin   = persona === 'super-admin' || authCtx.level === 1 || authCtx.role === 'super_admin' || authCtx.role === 'elogix_superadmin'
+  // Get plan from company storage
+  const companyPlan = (() => {
+    try {
+      const co = JSON.parse(sessionStorage.getItem('elogix_company') || localStorage.getItem('elogix_company') || '{}')
+      return co.plan || 'trial'
+    } catch { return 'trial' }
+  })()
+
+  // Plan-based module restriction (on top of role-based)
+  const planModules    = getPlanModules(companyPlan)   // null = all, array = restricted
+  const roleModules    = isSuperAdmin ? 'all' : MODULE_ACCESS[persona]
+  const allowedModules = isSuperAdmin ? 'all'
+    : roleModules === 'all'
+      ? (planModules || 'all')
+      : Array.isArray(roleModules)
+        ? roleModules.filter(m => !planModules || planModules.includes(m))
+        : []
   const isAllAccess    = allowedModules === 'all'
-  const isEmployee     = persona === 'employee'
+  const isEmployee     = persona === 'employee' && authCtx.level >= 10
   const myDashboard    = PERSONA_DASHBOARD[persona] || PERSONA_DASHBOARD['employee']
 
   // ── Build RBAC-filtered menu ──────────────────────────────
@@ -405,7 +432,7 @@ export default function Sidebar({ open }) {
           </div>
           <div>
             <div style={{ fontSize: 14, fontWeight: 900, color: '#f8fafc', letterSpacing: '-.3px' }}>
-              NepHR Pro
+              eLogix HRMS
             </div>
             <div style={{ fontSize: 10, color: '#475569' }}>
               HRIS · HRMS · HRIM
@@ -586,7 +613,7 @@ export default function Sidebar({ open }) {
         flexShrink: 0,
       }}>
         <div style={{ fontSize: 9, color: '#334155', marginBottom: 2 }}>
-          NepHR Pro v3.0 · Multi-Tenant SaaS
+          eLogix HRMS v3.0 · Multi-Tenant SaaS
         </div>
         <div style={{ fontSize: 9, color: '#334155', marginBottom: 2 }}>
           Nepal Labour Act 2017 · RBAC · Privacy Act 2018

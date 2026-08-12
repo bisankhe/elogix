@@ -147,7 +147,7 @@ export default function HiringEventBrandingPage() {
       {msg&&<div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:10,padding:'10px 16px',fontSize:11,color:'#065f46',position:'fixed',bottom:20,right:20,zIndex:999,boxShadow:'0 4px 16px rgba(0,0,0,.1)',maxWidth:400}}>{msg}</div>}
 
       {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={IMPACT_LINKS} actions={CTX_ACTIONS} onAction={(k,item)=>{if(k==='view')setSelected(item)}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Hiring Event Branding" columns={['Name','Category','Status','Engagement','Consent','Date','Priority','Notes']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Hiring Event Branding" columns={['Name','Category','Status','Engagement','Consent','Date','Priority','Notes']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
       <Drawer item={selected} gradient={G} onClose={()=>setSelected(null)} rows={[
         ['Name',selected?.name],['Category',selected?.category],['Status',selected?.status],
         ['Engagement',selected?.engagement],['Consent Obtained',selected?.consent?'Yes':'NO - REQUIRED'],

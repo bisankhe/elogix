@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/preboarding_schema.sql
--- NepHR Pro — Onboarding > Preboarding Module Schema
+-- eLogix HRMS — Onboarding > Preboarding Module Schema
 -- Covers all 5 pages:
 --   1. preboarding_offers       (Offer Acceptance)
 --   2. biometric_captures       (Biometric Capture)

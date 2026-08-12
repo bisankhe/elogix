@@ -1,5 +1,5 @@
 """
-NepHR Pro — Organization Management Models
+eLogix HRMS — Organization Management Models
 Covers ALL modules from the Excel requirement:
   Group Company | Company Profile | Company Setup | Branch & Location |
   Business Unit | Department | Section & Unit | Team | Cost Center | Work Location

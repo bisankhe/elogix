@@ -127,7 +127,7 @@ function EventRow({ ev, platformMap }){
       {expanded && (
         <div style={{padding:'0 14px 14px',borderTop:'1px solid #f8fafc'}}>
           <div style={{fontSize:9,fontWeight:700,color:'#374151',marginBottom:6,marginTop:10}}>Message Template</div>
-          <textarea defaultValue={`Hi {employee_name}, your {request_type} has been processed. Login to NepHR Pro for details.`}
+          <textarea defaultValue={`Hi {employee_name}, your {request_type} has been processed. Login to eLogix HRMS for details.`}
             style={{width:'100%',minHeight:70,borderRadius:9,border:'1px solid #e2e8f0',padding:'8px 10px',fontSize:9,color:'#374151',resize:'vertical',boxSizing:'border-box'}}/>
           <div style={{fontSize:8,color:'#94a3b8',marginTop:4}}>Available tokens: {'{'} employee_name {'}'} {'{'} date {'}'} {'{'} manager_name {'}'} {'{'} meeting_link {'}'} and more</div>
           <div style={{display:'flex',justifyContent:'flex-end',marginTop:8}}>
@@ -165,7 +165,7 @@ export default function IntegrationHubPage(){
 
       <div style={{background:'#ecfdf5',border:'1px solid #a7f3d0',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#065f46',display:'flex',gap:10,flexWrap:'wrap'}}>
         <span style={{fontSize:18}}>🔗</span>
-        <div style={{flex:1,minWidth:200}}><strong>Your team stays in their tools -- NepHR Pro pushes notifications there.</strong> Connect WhatsApp, Teams, Slack, Zoom, Google Meet, Gmail, Outlook, or Discord once. Then every HR event -- leave approved, payslip ready, interview scheduled, holiday announced -- automatically sends a message on every connected platform to the right people, with zero manual follow-up.</div>
+        <div style={{flex:1,minWidth:200}}><strong>Your team stays in their tools -- eLogix HRMS pushes notifications there.</strong> Connect WhatsApp, Teams, Slack, Zoom, Google Meet, Gmail, Outlook, or Discord once. Then every HR event -- leave approved, payslip ready, interview scheduled, holiday announced -- automatically sends a message on every connected platform to the right people, with zero manual follow-up.</div>
       </div>
 
       <div style={{display:'flex',gap:0,marginBottom:18,background:'#f1f5f9',borderRadius:10,padding:3}}>
@@ -198,7 +198,7 @@ export default function IntegrationHubPage(){
       {tab==='events' && (
         <>
           <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:12,padding:'12px 16px',marginBottom:14,fontSize:10,color:'#475569'}}>
-            <strong style={{color:'#0f172a'}}>How it works:</strong> When an HR event happens (leave approved, payslip generated, interview scheduled...) NepHR Pro automatically sends a message to the right person on every connected platform listed for that event. Click any event to edit its message template or toggle it on/off.
+            <strong style={{color:'#0f172a'}}>How it works:</strong> When an HR event happens (leave approved, payslip generated, interview scheduled...) eLogix HRMS automatically sends a message to the right person on every connected platform listed for that event. Click any event to edit its message template or toggle it on/off.
           </div>
           <SearchBar value={search} onChange={setSearch} placeholder="Search events..."/>
           <div style={{marginTop:12}}>
@@ -241,7 +241,7 @@ export default function IntegrationHubPage(){
 
       <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
         <AIImpact color={A} lines={[
-          'Interview scheduled? NepHR Pro auto-creates a Zoom or Teams meeting link and sends it to the candidate, interviewer, and HR -- no one manually types a link into a calendar invite.',
+          'Interview scheduled? eLogix HRMS auto-creates a Zoom or Teams meeting link and sends it to the candidate, interviewer, and HR -- no one manually types a link into a calendar invite.',
           'Holiday announced in HR? It automatically posts to Teams, Slack, Discord, and WhatsApp Business simultaneously -- one action, every channel, zero copy-paste.',
           'Every message delivery is logged with platform, recipient, and status. If WhatsApp fails, you know within seconds and can resend through email as a fallback.',
           'Message templates use tokens like {employee_name} and {meeting_link} -- no code needed to customize what each notification says per event.',

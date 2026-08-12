@@ -13,7 +13,7 @@ const JOB_BOARDS = [
   {id:'jb3',name:'Merojob.com.np',      icon:'🌐',required:false, color:'#059669', desc:'Nepal top job portal'},
   {id:'jb4',name:'Kumarijob.com',       icon:'🌐',required:false, color:'#0891b2', desc:'Nepal IT-focused job portal'},
   {id:'jb5',name:'JobsNepal.net',       icon:'🌐',required:false, color:'#7c3aed', desc:'General Nepal job portal'},
-  {id:'jb6',name:'Company Website',     icon:'🏢',required:false, color:'#64748b', desc:'Career page on nephr.com.np'},
+  {id:'jb6',name:'Company Website',     icon:'🏢',required:false, color:'#64748b', desc:'Career page on elogix.com.np'},
   {id:'jb7',name:'National Newspaper',  icon:'📰',required:true,  color:'#dc2626', desc:'Mandatory per Nepal LA2074 Section 11'},
 ]
 
@@ -88,7 +88,7 @@ export default function JobPostingPage() {
   const generateAI = () => {
     setGenerating(true)
     setTimeout(()=>{
-      setAiJD(`**Senior Software Developer - NepHR Pro**\n\nWe are seeking a talented Senior Software Developer to join our growing IT team at Kathmandu HQ.\n\n**Responsibilities:**\n- Design and develop scalable backend systems using Python/Flask and React\n- Lead code reviews and mentor junior developers\n- Collaborate with HR stakeholders to deliver digital solutions\n\n**Requirements:**\n- 5+ years software development experience\n- Strong proficiency in React, Python, PostgreSQL\n- Bachelor's degree in Computer Science or related field\n\n**Salary:** NPR 80,000 - 130,000 per month\n\n*NepHR Pro is an equal opportunity employer. We do not discriminate on the basis of religion, sex, caste, race, or ethnicity.*`)
+      setAiJD(`**Senior Software Developer - eLogix HRMS**\n\nWe are seeking a talented Senior Software Developer to join our growing IT team at Kathmandu HQ.\n\n**Responsibilities:**\n- Design and develop scalable backend systems using Python/Flask and React\n- Lead code reviews and mentor junior developers\n- Collaborate with HR stakeholders to deliver digital solutions\n\n**Requirements:**\n- 5+ years software development experience\n- Strong proficiency in React, Python, PostgreSQL\n- Bachelor's degree in Computer Science or related field\n\n**Salary:** NPR 80,000 - 130,000 per month\n\n*eLogix HRMS is an equal opportunity employer. We do not discriminate on the basis of religion, sex, caste, race, or ethnicity.*`)
       setGenerating(false)
     },1500)
   }
@@ -261,7 +261,7 @@ export default function JobPostingPage() {
       )}
 
       {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={CTX} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Job Postings" columns={['Title','Department','Status','Published Date','Expiry Date','Boards','Views','Clicks','Applications','Bias Score','LA Compliant']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Job Postings" columns={['Title','Department','Status','Published Date','Expiry Date','Boards','Views','Clicks','Applications','Bias Score','LA Compliant']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
       <Drawer item={selected} gradient={G} onClose={()=>setSelected(null)} rows={[
         ['Title',selected?.title],['Department',selected?.dept],['Location',selected?.location],
         ['Salary Range',selected?.salary_range],['Status',selected?.status],

@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/government_letters_routes.py
-NepHR Pro — Workforce Operations > Letters Module (5 pages)
+eLogix HRMS — Workforce Operations > Letters Module (5 pages)
 URL prefix: /api/v1/govt-letters
 
   1. /ssf            — Social Security Fund correspondence

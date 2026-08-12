@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/training_needs_routes.py
-NepHR Pro — Performance & Talent Management > Talent Development >
+eLogix HRMS — Performance & Talent Management > Talent Development >
 Learning & Development > Training Needs Identification + Analysis
 (2 pages, first module of the Talent Development top-level area)
 URL prefix: /api/v1/training-needs

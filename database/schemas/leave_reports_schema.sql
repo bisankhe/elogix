@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/leave_reports_schema.sql
--- NepHR Pro — Workforce Operations > Leave Management > Leave
+-- eLogix HRMS — Workforce Operations > Leave Management > Leave
 -- Reports Module (3 pages)
 --
 -- Design note: this is the FINAL consolidation layer over the entire

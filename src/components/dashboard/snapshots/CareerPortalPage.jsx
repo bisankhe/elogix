@@ -21,7 +21,7 @@ const COMPANY_STATS = [
 ]
 
 const TESTIMONIALS = [
-  {name:'Rina Shrestha',role:'Software Engineer',quote:'NepHR Pro has a culture of continuous learning. Best career decision!',avatar:'RS'},
+  {name:'Rina Shrestha',role:'Software Engineer',quote:'eLogix HRMS has a culture of continuous learning. Best career decision!',avatar:'RS'},
   {name:'Bikash Karki',role:'Finance Analyst',quote:'Transparent leadership and great benefits. Highly recommend.',avatar:'BK'},
 ]
 
@@ -271,7 +271,7 @@ export default function CareerPortalPage() {
         </div>
       )}
 
-      {showExcel&&<ExcelModal title="Career Portal" columns={['Job ID','Title','Department','Location','Type','Remote','Salary','Experience','Posted','Deadline','Applicants']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Career Portal" columns={['Job ID','Title','Department','Location','Type','Remote','Salary','Experience','Posted','Deadline','Applicants']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

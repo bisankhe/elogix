@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/daily_attendance_routes.py
-NepHR Pro — Workforce Operations > Attendance Management > Daily Attendance (5 pages)
+eLogix HRMS — Workforce Operations > Attendance Management > Daily Attendance (5 pages)
 URL prefix: /api/v1/daily-attendance
 
   1. /live              — Live Attendance (real-time feed)

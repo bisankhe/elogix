@@ -671,7 +671,7 @@ def ai_policy_chat():
         ).limit(10).all()
         context = "\n\n".join([f"Policy: {p.title}\n{p.policy_statement}" for p in policies])
 
-    system_prompt = """You are an HR Policy Assistant for NepHR Pro.
+    system_prompt = """You are an HR Policy Assistant for eLogix HRMS.
 Answer employee questions about HR policies accurately and helpfully.
 Always cite the policy name and control number when relevant.
 Be concise, professional, and empathetic.

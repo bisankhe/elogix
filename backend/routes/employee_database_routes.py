@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/employee_database_routes.py
-NepHR Pro — Employee Records > Employee Database Module (7 pages)
+eLogix HRMS — Employee Records > Employee Database Module (7 pages)
 URL prefix: /api/v1/employee-db
 
   1. /directory          — Employee Directory (search/filter)

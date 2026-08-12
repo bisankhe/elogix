@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/hr_budgeting_routes.py
-NepHR Pro -- Finance, Assets & Administration > HR Budgeting (8 pages:
+eLogix HRMS -- Finance, Assets & Administration > HR Budgeting (8 pages:
 Annual HR Budget, Department Budget, Recruitment Budget, Training
 Budget, Engagement Budget, Payroll Budget, Budget Forecasting, Budget
 Variance Analysis)

@@ -9,7 +9,7 @@ const VITE_KEY=import.meta?.env?.VITE_ANTHROPIC_API_KEY||''
 const COLORS=['#7c3aed','#0ea5e9','#10b981','#f59e0b','#ef4444','#8b5cf6']
 
 async function callAI(q){
-  const sys=`You are an expert HR report writer for NepHR Pro. Generate professional, data-rich reports in markdown format. Include: Executive Summary, Key Metrics table, Analysis, Recommendations, and Action Items. Be specific with numbers. Nepal Labour Act 2074 context. Company: 312 employees, NPR 4.8M payroll, 8.2% attrition.`
+  const sys=`You are an expert HR report writer for eLogix HRMS. Generate professional, data-rich reports in markdown format. Include: Executive Summary, Key Metrics table, Analysis, Recommendations, and Action Items. Be specific with numbers. Nepal Labour Act 2074 context. Company: 312 employees, NPR 4.8M payroll, 8.2% attrition.`
   try{const r=await fetch('/api/v1/ai-proxy/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:sys,messages:[{role:'user',content:q}],model:'claude-sonnet-4-6',max_tokens:2048}),signal:AbortSignal.timeout(15000)});if(r.ok){const d=await r.json();if(d.content)return d.content}}catch{}
   if(VITE_KEY&&VITE_KEY.startsWith('sk-ant')&&VITE_KEY!=='sk-ant-your-key-here'){try{const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':VITE_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-only-beta':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:2048,system:sys,messages:[{role:'user',content:q}]})});const d=await r.json();if(r.ok&&d?.content?.[0]?.text)return d.content[0].text}catch{}}
   return null
@@ -57,7 +57,7 @@ export default function AIReportGeneratorPage(){
     setReport(''); setLoading(true)
     const r=await callAI(q)
     setReport(r||`# Monthly HR Strategic Report
-**Period:** July 2026 | **Date:** ${date} | **Prepared by:** NepHR Pro AI
+**Period:** July 2026 | **Date:** ${date} | **Prepared by:** eLogix HRMS AI
 
 ## Executive Summary
 Overall HR health: STABLE with 2 critical action areas. 312 employees, attrition 8.2% (below 12% industry avg). Engineering team at 34% flight risk requires immediate action.

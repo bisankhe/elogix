@@ -179,7 +179,7 @@ export default function ResignationManagementPage() {
         {icon:'👁',label:'View Details',key:'view'},{icon:'✅',label:'Accept Resignation',key:'accept'},
         {icon:'➡',label:'Start Exit Clearance',key:'clearance'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Resignation Management" columns={['Employee','Position','Department','Submitted Date','Proposed LWD','Required Notice','Actual Notice','Deduction NPR','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Resignation Management" columns={['Employee','Position','Department','Submitted Date','Proposed LWD','Required Notice','Actual Notice','Deduction NPR','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

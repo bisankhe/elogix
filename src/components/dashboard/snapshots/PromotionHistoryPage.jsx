@@ -168,7 +168,7 @@ export default function PromotionHistoryPage() {
         {icon:'👁',label:'View Details',key:'view'},{icon:'✍',label:'Digital Sign-off',key:'sign'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📤',label:'Export',key:'export'},
       ]} onAction={(k,item)=>{if(k==='view')setSelected(item)}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Promotion History" columns={['Employee','From Title','To Title','Department','Effective Date','Old Salary','New Salary','Approved By','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Promotion History" columns={['Employee','From Title','To Title','Department','Effective Date','Old Salary','New Salary','Approved By','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

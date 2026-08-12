@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/leave_setup_routes.py
-NepHR Pro — Workforce Operations > Leave Management > Leave Setup (4 pages)
+eLogix HRMS — Workforce Operations > Leave Management > Leave Setup (4 pages)
 URL prefix: /api/v1/leave-setup
 
   1. /leave-year, /approval-hierarchies  — Leave Setup

@@ -9,7 +9,7 @@ async function callAI(prompt, sys) {
     const r = await fetch('/api/v1/ai-proxy/chat', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 800,
-        system: sys || 'You are NepHR ATS AI Career Assistant. Be helpful, friendly, and concise. Help candidates with job applications.',
+        system: sys || 'You are eLogix ATS AI Career Assistant. Be helpful, friendly, and concise. Help candidates with job applications.',
         messages: [{ role: 'user', content: prompt }] }),
       signal: AbortSignal.timeout(20000)
     })
@@ -23,11 +23,11 @@ const JOBS = [
   { id:'j2', title:'Finance Manager', dept:'Finance', location:'Kathmandu', type:'Full-Time', salary:'NPR 90K-130K/month', exp:'5+ years', posted:'5 days ago', deadline:'2081-10-15', openings:1, tags:['FP&A','SAP','Excel','CPA'], desc:'Lead financial planning, budgeting, and compliance. Nepal Labour Act expertise required.', benefits:['Medical Insurance','Festival Bonus','SSF Enrollment','Provident Fund'], urgency:'Hiring' },
   { id:'j3', title:'HR Business Partner', dept:'HR', location:'Kathmandu / Hybrid', type:'Full-Time', salary:'NPR 60K-90K/month', exp:'4+ years', posted:'1 week ago', deadline:'2081-09-20', openings:1, tags:['HRBP','LA2074','OD','Payroll'], desc:'Partner with business units on talent strategy, performance, and culture. Nepal HR expertise essential.', benefits:['Medical Insurance','Flexible Hours','Remote Work'], urgency:'Closing Soon' },
   { id:'j4', title:'Data Scientist', dept:'Technology', location:'Kathmandu', type:'Full-Time', salary:'NPR 100K-160K/month', exp:'2+ years', posted:'3 days ago', deadline:'2081-10-01', openings:1, tags:['Python','ML','TensorFlow','SQL'], desc:'Build ML models for HR analytics, predictive attrition, and salary benchmarking.', benefits:['Medical Insurance','GPU Workstation','Conference Budget','Remote Options'], urgency:'Actively Hiring' },
-  { id:'j5', title:'Marketing Manager', dept:'Marketing', location:'Kathmandu', type:'Full-Time', salary:'NPR 70K-100K/month', exp:'5+ years', posted:'1 week ago', deadline:'2081-10-10', openings:1, tags:['Digital Marketing','SEO','Social Media','Brand'], desc:'Drive brand awareness and lead generation for NepHR Pro across Nepal and South Asia.', benefits:['Medical Insurance','Marketing Budget','Growth Opportunities'], urgency:'Hiring' },
+  { id:'j5', title:'Marketing Manager', dept:'Marketing', location:'Kathmandu', type:'Full-Time', salary:'NPR 70K-100K/month', exp:'5+ years', posted:'1 week ago', deadline:'2081-10-10', openings:1, tags:['Digital Marketing','SEO','Social Media','Brand'], desc:'Drive brand awareness and lead generation for eLogix HRMS across Nepal and South Asia.', benefits:['Medical Insurance','Marketing Budget','Growth Opportunities'], urgency:'Hiring' },
 ]
 
 const MY_APPS = [
-  { id:'a1', job:'Senior React Developer', applied:'2081-08-18', status:'Physical Interview Scheduled', stage:4, total:6, nextAction:'Interview on 2081-09-02 at 10:00 AM — NepHR Office', stages:['Applied','CV Shortlisted','Written Exam','Video Interview','Physical Interview','Final Decision'], stagesDone:[0,1,2,3,4] },
+  { id:'a1', job:'Senior React Developer', applied:'2081-08-18', status:'Physical Interview Scheduled', stage:4, total:6, nextAction:'Interview on 2081-09-02 at 10:00 AM — eLogix Office', stages:['Applied','CV Shortlisted','Written Exam','Video Interview','Physical Interview','Final Decision'], stagesDone:[0,1,2,3,4] },
   { id:'a2', job:'Data Scientist', applied:'2081-08-20', status:'Video Interview Pending', stage:3, total:6, nextAction:'Complete your AI video interview by 2081-08-30', stages:['Applied','CV Shortlisted','Written Exam','Video Interview','Physical Interview','Final Decision'], stagesDone:[0,1,2] },
 ]
 
@@ -106,7 +106,7 @@ function ApplicationTracker({ app }) {
 }
 
 function Chatbot() {
-  const [msgs, setMsgs] = useState([{ role: 'bot', text: 'Hi! I am the NepHR ATS AI Career Assistant. I can help you with job applications, interview prep, application status, and more. How can I help you today?' }])
+  const [msgs, setMsgs] = useState([{ role: 'bot', text: 'Hi! I am the eLogix ATS AI Career Assistant. I can help you with job applications, interview prep, application status, and more. How can I help you today?' }])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const endRef = useRef(null)
@@ -119,7 +119,7 @@ function Chatbot() {
     setMsgs(m => [...m, { role: 'user', text: q }])
     setLoading(true)
     const history = msgs.map(m => `${m.role === 'user' ? 'Candidate' : 'Assistant'}: ${m.text}`).join('\n')
-    const resp = await callAI(`Context:\n${history}\n\nCandidate: ${q}`, 'You are NepHR ATS AI Career Assistant. Help candidates with job search, application status, interview prep, and FAQs. Be concise (2-4 sentences max). Company: NepHR Pro, Nepal.')
+    const resp = await callAI(`Context:\n${history}\n\nCandidate: ${q}`, 'You are eLogix ATS AI Career Assistant. Help candidates with job search, application status, interview prep, and FAQs. Be concise (2-4 sentences max). Company: eLogix HRMS, Nepal.')
     setMsgs(m => [...m, { role: 'bot', text: resp || 'I am here to help! Please check your email for the latest updates on your application.' }])
     setLoading(false)
   }
@@ -128,7 +128,7 @@ function Chatbot() {
     <div style={{ display: 'flex', flexDirection: 'column', height: 420, background: '#fff', borderRadius: 14, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
       <div style={{ background: 'linear-gradient(135deg,#1e3a5f,#1e40af)', padding: '12px 16px', color: '#fff', display: 'flex', gap: 10, alignItems: 'center' }}>
         <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>🤖</div>
-        <div><div style={{ fontSize: 11, fontWeight: 800 }}>NepHR AI Career Assistant</div><div style={{ fontSize: 8, opacity: .7 }}>Online · Responds instantly</div></div>
+        <div><div style={{ fontSize: 11, fontWeight: 800 }}>eLogix AI Career Assistant</div><div style={{ fontSize: 8, opacity: .7 }}>Online · Responds instantly</div></div>
       </div>
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         {msgs.map((m, i) => (
@@ -236,7 +236,7 @@ function ApplyModal({ job, onClose, onSubmit }) {
               </div>
               <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', cursor: 'pointer', fontSize: 9, color: '#374151' }}>
                 <input type="checkbox" style={{ marginTop: 2 }} />
-                I agree to the Privacy Policy and consent to NepHR Pro storing my data for recruitment purposes (GDPR compliant).
+                I agree to the Privacy Policy and consent to eLogix HRMS storing my data for recruitment purposes (GDPR compliant).
               </label>
             </div>
           )}
@@ -285,7 +285,7 @@ export default function ATSCareerPortalPage() {
       <div style={{ background: 'linear-gradient(135deg,#0f172a 0%,#1e3a5f 50%,#1e40af 100%)', borderRadius: 14, padding: '24px 24px 20px', marginBottom: 16, color: '#fff', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: -20, right: -20, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,.04)' }} />
         <div style={{ position: 'absolute', bottom: -30, right: 80, width: 180, height: 180, borderRadius: '50%', background: 'rgba(255,255,255,.03)' }} />
-        <div style={{ fontSize: 22, fontWeight: 900, marginBottom: 4 }}>NepHR Pro Careers</div>
+        <div style={{ fontSize: 22, fontWeight: 900, marginBottom: 4 }}>eLogix HRMS Careers</div>
         <div style={{ fontSize: 11, opacity: .8, marginBottom: 16, maxWidth: 500 }}>Join the team building the future of HR technology in Nepal. We offer competitive salaries, growth, and a culture that empowers you.</div>
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
           {[{ l: 'Open Positions', v: JOBS.length },{ l: 'Avg Hiring Time', v: '18 days' },{ l: 'Employee NPS', v: '87%' },{ l: 'Remote Options', v: 'Yes' }].map(s => (

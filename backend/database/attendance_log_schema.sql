@@ -1,7 +1,7 @@
 -- ============================================================
---  NepHR Pro — Daily Attendance Log + Overtime Log Schema
+--  eLogix HRMS — Daily Attendance Log + Overtime Log Schema
 --  Nepal Labour Act 2074 compliant
---  Run: psql -U postgres -d nephr_pro -f attendance_log_schema.sql
+--  Run: psql -U postgres -d elogix_hrms -f attendance_log_schema.sql
 -- ============================================================
 
 DO $$ BEGIN

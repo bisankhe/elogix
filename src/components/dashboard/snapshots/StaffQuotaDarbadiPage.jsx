@@ -220,7 +220,7 @@ export default function StaffQuotaDarbadiPage() {
       )}
 
       {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={['Vacancy Planning','Headcount Planning','Payroll Budget','Annual Manpower Plan']} actions={CTX} onAction={(k,item)=>{if(k==='view')setSelected(item)}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Staff Quota Darbadi" columns={['Position Code','Title','Department','Grade','Type','Status','Incumbent','Monthly Salary NPR','Branch']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Staff Quota Darbadi" columns={['Position Code','Title','Department','Grade','Type','Status','Incumbent','Monthly Salary NPR','Branch']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
       <Drawer item={selected} gradient={G} onClose={()=>setSelected(null)} rows={[
         ['Position Code',selected?.code],['Title',selected?.title],
         ['Department',selected?.dept],['Grade',selected?.grade],

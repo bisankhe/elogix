@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/performance_analytics_kpi_routes.py
-NepHR Pro — Performance & Talent Management > Goal & Performance >
+eLogix HRMS — Performance & Talent Management > Goal & Performance >
 Performance Analytics > KPI Module (6 pages)
 URL prefix: /api/v1/performance-analytics-kpi
 

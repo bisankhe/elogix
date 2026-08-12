@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/mss_team_management_routes.py
-NepHR Pro -- HR Services & Support > Manager Self Service (MSS)
+eLogix HRMS -- HR Services & Support > Manager Self Service (MSS)
 (11 pages: Team Dashboard, Team Attendance, Approval Center,
 Performance Review, Team Activity Today/This Week/This Month/This
 Quarter/This Year, Forward Cash Advance Request, Minutes of Meeting)

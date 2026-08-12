@@ -99,7 +99,7 @@ export default function DeductionPage() {
         {icon:'👁',label:'View Details',key:'view'},{icon:'✏',label:'Edit',key:'edit'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📤',label:'Export',key:'export'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Deductions" columns={['Name','Code','Timing','Value/Formula','Mandatory']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Deductions" columns={['Name','Code','Timing','Value/Formula','Mandatory']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

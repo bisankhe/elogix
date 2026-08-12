@@ -1,11 +1,11 @@
 /**
  * FILE: src/utils/constants.js
- * NepHR Pro — Application-wide constants
+ * eLogix HRMS — Application-wide constants
  * Nepal Labour Act 2074 statutory values, UI config, enums.
  */
 
 // ── App ───────────────────────────────────────────────────────
-export const APP_NAME    = 'NepHR Pro'
+export const APP_NAME    = 'eLogix HRMS'
 export const APP_VERSION = '1.0.0'
 export const API_VERSION = 'v1'
 

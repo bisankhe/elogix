@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/payroll_analytics_routes.py
-NepHR Pro — Workforce Operations > Payroll & Compensation > Payroll
+eLogix HRMS — Workforce Operations > Payroll & Compensation > Payroll
 Analytics Module (2 pages, 8 sub-reports)
 URL prefix: /api/v1/payroll-analytics
 

@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/payroll_information_schema.sql
--- NepHR Pro — Workforce Operations > Payroll & Compensation >
+-- eLogix HRMS — Workforce Operations > Payroll & Compensation >
 -- Information Module (3 pages)
 --
 -- Design note: this module is the EMPLOYEE-FACING STATUTORY LEDGER,

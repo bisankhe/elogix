@@ -226,7 +226,7 @@ export default function BiometricCapturePage() {
       )}
 
       {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={CTX} onAction={(k,item)=>{if(k==='view')setSelected(item)}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Biometric Capture" columns={['Employee ID','Name','Nationality','Capture Type','Facial Status','Fingerprint Status','Consent','ID Match %','Capture Date']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Biometric Capture" columns={['Employee ID','Name','Nationality','Capture Type','Facial Status','Fingerprint Status','Consent','ID Match %','Capture Date']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
       <Drawer item={selected} gradient={G} onClose={()=>setSelected(null)} rows={[
         ['Employee ID',selected?.employee_id],['Name',selected?.name],['Nationality',selected?.nationality],
         ['Capture Type',selected?.capture_type],['Facial Status',selected?.facial_status],

@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/ess_activity_goals_helpdesk_routes.py
-NepHR Pro -- HR Services & Support > Employee Self Service (ESS),
+eLogix HRMS -- HR Services & Support > Employee Self Service (ESS),
 fourth batch (10 pages: My Goals & KPI, My Training, My Requests, My
 Activity Today/This Week/This Month/This Quarter/This Year, My
 Feedback, Helpdesk & Ticket)

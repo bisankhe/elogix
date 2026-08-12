@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/dei_routes.py
-NepHR Pro -- Employee Experience & Culture > Diversity, Equity &
+eLogix HRMS -- Employee Experience & Culture > Diversity, Equity &
 Inclusion (5 pages: Diversity Dashboard, Gender Analytics, Inclusion
 Program, DEI Training, Accessibility Support)
 URL prefix: /api/v1/dei

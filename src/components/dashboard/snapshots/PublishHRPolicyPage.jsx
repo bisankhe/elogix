@@ -8,10 +8,10 @@ import { useApp } from '../../../context/AppContext.jsx'
 const G  = 'linear-gradient(135deg,#064e3b 0%,#065f46 50%,#047857 100%)'
 const P  = '#047857'
 
-export const DRAFT_KEY   = 'nephr_policy_drafts_v2'
-export const LIBRARY_KEY = 'nephr_policy_library_v2'
-export const IMPL_KEY    = 'nephr_policy_impl_v2'
-export const READERS_KEY = 'nephr_policy_readers_v2'
+export const DRAFT_KEY   = 'elogix_policy_drafts_v2'
+export const LIBRARY_KEY = 'elogix_policy_library_v2'
+export const IMPL_KEY    = 'elogix_policy_impl_v2'
+export const READERS_KEY = 'elogix_policy_readers_v2'
 
 const EMPLOYEES = [
   { id:'e1',  name:'Bikash Shrestha',  dept:'Engineering', email:'bikash@co.com',  phone:'+977-9801234567' },
@@ -94,7 +94,7 @@ export default function PublishHRPolicyPage() {
     updateDraft(draft.id, { status:'published', publishedAt })
 
     // 5. HRIS Notification bar — all employees
-    const notifs = JSON.parse(localStorage.getItem('nephr_hris_notifications')||'[]')
+    const notifs = JSON.parse(localStorage.getItem('elogix_hris_notifications')||'[]')
     notifs.unshift({
       id:      `POL-PUB-${Date.now()}`,
       cat:     'Action Required',
@@ -107,10 +107,10 @@ export default function PublishHRPolicyPage() {
       unread:  true,
     })
     // New joiner auto-notification stored separately
-    localStorage.setItem('nephr_new_joiner_policies', JSON.stringify(
-      [...(JSON.parse(localStorage.getItem('nephr_new_joiner_policies')||'[]')), draft.id]
+    localStorage.setItem('elogix_new_joiner_policies', JSON.stringify(
+      [...(JSON.parse(localStorage.getItem('elogix_new_joiner_policies')||'[]')), draft.id]
     ))
-    localStorage.setItem('nephr_hris_notifications', JSON.stringify(notifs.slice(0,100)))
+    localStorage.setItem('elogix_hris_notifications', JSON.stringify(notifs.slice(0,100)))
 
     setPublishing(false)
     setMsg(`✅ "${draft.title}" published successfully! All ${EMPLOYEES.length} employees notified via Email · WhatsApp · Viber · Dashboard.`)

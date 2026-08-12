@@ -157,7 +157,7 @@ export default function ResumeScreeningPage() {
       </div>
 
       {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={['ATS Dashboard','Interview Scheduling','Vacancy Management']} actions={CTX} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Resume Screening" columns={['App Code','Name','Position','AI Match%','Skills Match%','Experience Match%','Education Match%','Fraud Risk%','Status','Source','Applied Date']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Resume Screening" columns={['App Code','Name','Position','AI Match%','Skills Match%','Experience Match%','Education Match%','Fraud Risk%','Status','Source','Applied Date']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/missed_punch_request_routes.py
-NepHR Pro — Workforce Operations > Attendance Management > Daily Attendance
+eLogix HRMS — Workforce Operations > Attendance Management > Daily Attendance
 > Missed Log In/Out Request (1 page)
 URL prefix: /api/v1/missed-punch
 

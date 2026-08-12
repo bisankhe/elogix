@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/employee_enrollment_routes.py
-NepHR Pro — Employee Enrollment Module (Onboarding > Employee Joining)
+eLogix HRMS — Employee Enrollment Module (Onboarding > Employee Joining)
 URL prefix: /api/v1/enrollment
 
 Single dynamic endpoint set mirroring the frontend's Insource/Outsource

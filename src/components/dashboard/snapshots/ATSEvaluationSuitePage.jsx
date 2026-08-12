@@ -411,7 +411,7 @@ function Scheduler({notify}){
         <select value={schedCand.id} onChange={e=>{setSchedCand(CANDIDATES.find(c=>c.id===e.target.value));setSelfLink('')}} style={{width:'100%',padding:'8px 10px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:11,outline:'none',marginBottom:12}}>
           {CANDIDATES.map(c=><option key={c.id} value={c.id}>{c.name} — {c.role}</option>)}
         </select>
-        <button onClick={()=>{setSelfLink(`https://schedule.nephrpro.com/book/${schedCand.id}/${Date.now().toString(36)}`);notify(`Self-booking link generated for ${schedCand.name}!`)}} style={{width:'100%',padding:'10px',borderRadius:9,border:'none',background:'linear-gradient(135deg,#059669,#1e40af)',color:'#fff',fontSize:11,fontWeight:800,cursor:'pointer',marginBottom:10}}>Generate Self-Booking Link</button>
+        <button onClick={()=>{setSelfLink(`https://schedule.elogix.com/book/${schedCand.id}/${Date.now().toString(36)}`);notify(`Self-booking link generated for ${schedCand.name}!`)}} style={{width:'100%',padding:'10px',borderRadius:9,border:'none',background:'linear-gradient(135deg,#059669,#1e40af)',color:'#fff',fontSize:11,fontWeight:800,cursor:'pointer',marginBottom:10}}>Generate Self-Booking Link</button>
         {selfLink&&<div style={{background:'#f0fdf4',borderRadius:8,padding:'10px',border:'1px solid #bbf7d0'}}>
           <div style={{fontSize:8,fontFamily:'monospace',color:'#334155',wordBreak:'break-all',marginBottom:8}}>{selfLink}</div>
           <div style={{display:'flex',gap:6}}>
@@ -492,7 +492,7 @@ export default function ATSEvaluationSuitePage(){
             <div style={{background:'#eff6ff',borderRadius:10,padding:'10px 14px',marginBottom:14,border:'1px solid #bfdbfe',display:'flex',gap:16,alignItems:'center',flexWrap:'wrap'}}>
               <div style={{flex:1}}>
                 <div style={{fontSize:12,fontWeight:800,color:'#0f172a'}}>Senior React Developer Written Assessment</div>
-                <div style={{fontSize:9,color:'#64748b',marginTop:2}}>2081-08-20 · 90 min · NepHR ATS Online Exam Portal · AI Proctoring</div>
+                <div style={{fontSize:9,color:'#64748b',marginTop:2}}>2081-08-20 · 90 min · eLogix ATS Online Exam Portal · AI Proctoring</div>
               </div>
               {wRes&&<div style={{display:'flex',gap:8,alignItems:'center'}}>
                 <div style={{textAlign:'center',padding:'6px 12px',background:'#fff',borderRadius:8,border:'1px solid #e2e8f0'}}>

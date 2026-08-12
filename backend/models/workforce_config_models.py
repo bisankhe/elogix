@@ -1,6 +1,6 @@
 """
 FILE: backend/models/workforce_config_models.py
-NepHR Pro — Workforce Configuration Models
+eLogix HRMS — Workforce Configuration Models
 COVERS:
   1. EmploymentTypeConfig  — Insource employment type overrides
   2. OutsourceVendor       — MoLESS-licensed labour supplier agencies

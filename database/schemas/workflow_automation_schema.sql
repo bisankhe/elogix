@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/workflow_automation_schema.sql
--- NepHR Pro -- System Administration > Workflow & Automation
+-- eLogix HRMS -- System Administration > Workflow & Automation
 -- (7 pages: Workflow Builder, Auto Reminder Setup, Approval Matrix /
 -- Workflow Setup, Multi-Level Approval, Notification Engine,
 -- Escalation Rules, Automation Rules)

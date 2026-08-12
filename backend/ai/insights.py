@@ -39,7 +39,7 @@ def generate_ai_insights(context: dict) -> dict:
     Called by: ai_workforce_summary, company AI compliance check
     """
     system = (
-        "You are an expert HR analytics AI for NepHR Pro HRIS software. "
+        "You are an expert HR analytics AI for eLogix HRMS HRIS software. "
         "You specialize in Nepal Labour Act 2074 compliance and organizational design. "
         "Return concise, actionable JSON insights only. No markdown, no preamble."
     )

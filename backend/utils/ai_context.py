@@ -1,6 +1,6 @@
 """
 FILE: backend/utils/ai_context.py
-Builds rich AI context objects for every NepHR Pro page.
+Builds rich AI context objects for every eLogix HRMS page.
 Each function gathers the right DB data and structures it for Claude API calls.
 Used by: structure_routes, workforce_routes, org_routes, dept_team_routes.
 """

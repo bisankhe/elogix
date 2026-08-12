@@ -478,12 +478,12 @@ export default function HRPoliciesPage() {
 
   // Simulate loading saved acknowledgments from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('nephr_policy_acks')
+    const saved = localStorage.getItem('elogix_policy_acks')
     if (saved) setAcknowledgments(JSON.parse(saved))
   }, [])
 
   const saveAck = (data) => {
-    localStorage.setItem('nephr_policy_acks', JSON.stringify(data))
+    localStorage.setItem('elogix_policy_acks', JSON.stringify(data))
   }
 
   const handleSign = (policyId) => {

@@ -120,7 +120,7 @@ export default function LateEarlyTrackingPage() {
         {icon:'👁',label:'View History',key:'view'},{icon:'💬',label:'Schedule Coaching',key:'coach'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📤',label:'Export',key:'export'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Late & Early Tracking" columns={['Employee','Department','Date','Type','Scheduled','Actual','Deviation (min)','Occurrences This Month','Chronic Flag']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Late & Early Tracking" columns={['Employee','Department','Date','Type','Scheduled','Actual','Deviation (min)','Occurrences This Month','Chronic Flag']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

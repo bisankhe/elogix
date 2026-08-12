@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/training_calendar_schema.sql
--- NepHR Pro — Performance & Talent Management > Talent Development >
+-- eLogix HRMS — Performance & Talent Management > Talent Development >
 -- Learning & Development > Training Calendars (4 pages: Annual,
 -- Monthly, Weekly, Daily)
 --

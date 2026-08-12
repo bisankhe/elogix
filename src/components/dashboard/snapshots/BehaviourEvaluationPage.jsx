@@ -103,7 +103,7 @@ export default function BehaviourEvaluationPage() {
       {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
         {icon:'👁',label:'View Detail',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Behaviour Evaluation" columns={['Employee','Department','Communication','Teamwork','Core Values','Adaptability','Integrity','Overall Avg']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Behaviour Evaluation" columns={['Employee','Department','Communication','Teamwork','Core Values','Adaptability','Integrity','Overall Avg']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

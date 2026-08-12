@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/learning_portal_elearning_routes.py
-NepHR Pro — Performance & Talent Management > Talent Development >
+eLogix HRMS — Performance & Talent Management > Talent Development >
 Learning & Development > Learning Portal + E-Learning Management
 (2 pages)
 URL prefix: /api/v1/learning-portal

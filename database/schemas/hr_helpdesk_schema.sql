@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/hr_helpdesk_schema.sql
--- NepHR Pro -- HR Services & Support > HR Helpdesk (4 pages:
+-- eLogix HRMS -- HR Services & Support > HR Helpdesk (4 pages:
 -- HR Ticketing System, Employee Queries, HR Consultation, Case Tracking)
 --
 -- Design note: deliberately distinct from THREE existing tables from

@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/goal_tracking_routes.py
-NepHR Pro — Performance & Talent Management > Goal & Performance >
+eLogix HRMS — Performance & Talent Management > Goal & Performance >
 Goal Management > Goal Tracking (1 page)
 URL prefix: /api/v1/goal-tracking
 

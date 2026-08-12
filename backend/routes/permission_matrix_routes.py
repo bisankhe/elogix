@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/permission_matrix_routes.py
-NepHR Pro -- the real, editable RBAC engine. Replaces the
+eLogix HRMS -- the real, editable RBAC engine. Replaces the
 read-only RolePermissionPage mock and gives backend middleware a
 database-backed source of truth instead of the hardcoded
 ROLE_PERMISSIONS dict in middleware/auth.py.

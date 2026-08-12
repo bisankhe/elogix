@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/ai_proxy_routes.py
-NepHR Pro -- AI Proxy endpoint
+eLogix HRMS -- AI Proxy endpoint
 
 WHY THIS FILE EXISTS:
   Browsers cannot call api.anthropic.com directly (CORS).

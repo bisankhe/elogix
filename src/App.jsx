@@ -1,5 +1,5 @@
 // ============================================================
-// FILE: src/App.jsx  - NepHR Pro Root Component
+// FILE: src/App.jsx  - eLogix HRMS Root Component
 // All 80 routes registered, no duplicate imports
 // ============================================================
 
@@ -342,6 +342,7 @@ import CustomReportBuilderPage         from './components/dashboard/snapshots/Cu
 import ExportCenterPage                from './components/dashboard/snapshots/ExportCenterPage.jsx'
 // System Administration > User & Access (4 pages)
 import UserManagementPage              from './components/dashboard/snapshots/UserManagementPage.jsx'
+import PermissionManagementPage from './components/dashboard/snapshots/PermissionManagementPage.jsx'
 import RolePermissionPage              from './components/dashboard/snapshots/RolePermissionPage.jsx'
 import PermissionMatrixPage            from './components/dashboard/snapshots/PermissionMatrixPage.jsx'
 import AccessControlPage               from './components/dashboard/snapshots/AccessControlPage.jsx'
@@ -1009,6 +1010,7 @@ const ROUTES = {
   'export-center':                               ExportCenterPage,
   // System Administration > User & Access
   'user-management':                  UserManagementPage,
+  'permission-management':              PermissionManagementPage,
   'role-permission':                     RolePermissionPage,
   'permission-matrix':                       PermissionMatrixPage,
   'access-control':                         AccessControlPage,
@@ -1579,7 +1581,6 @@ export default function App({ initialPage, onLogout }) {
           </div>
 
           {/* Page content */}
-          <QuickDock />
           <main style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
             <ContentRouter sub={sub} />
 

@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/user_access_schema.sql
--- NepHR Pro -- System Administration > User & Access
+-- eLogix HRMS -- System Administration > User & Access
 -- (4 pages: User Management, Role & Permission, Access Control,
 -- Menu Management)
 --

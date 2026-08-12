@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/asset_inventory_routes.py
-NepHR Pro -- Finance, Assets & Administration > Asset & Inventory
+eLogix HRMS -- Finance, Assets & Administration > Asset & Inventory
 (9 pages: Asset Management, IT Inventory, Furniture Inventory,
 Stationery Inventory, Asset Allocation, Asset Return, QR or Barcode
 Tracking, Warranty Tracking, Vendor Management)

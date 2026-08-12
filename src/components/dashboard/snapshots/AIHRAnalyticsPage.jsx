@@ -9,7 +9,7 @@ const COLORS=['#7c3aed','#0ea5e9','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6
 const VITE_KEY=import.meta?.env?.VITE_ANTHROPIC_API_KEY||''
 
 async function callAI(prompt){
-  const sys=`You are an expert HR Analytics AI for NepHR Pro. Provide concise, data-driven insights in 3-5 bullet points. Use specific numbers. Nepal Labour Act 2074 context. Company: 312 employees, 8.2% attrition, NPR 4.8M payroll.`
+  const sys=`You are an expert HR Analytics AI for eLogix HRMS. Provide concise, data-driven insights in 3-5 bullet points. Use specific numbers. Nepal Labour Act 2074 context. Company: 312 employees, 8.2% attrition, NPR 4.8M payroll.`
   try{
     const r=await fetch('/api/v1/ai-proxy/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:sys,messages:[{role:'user',content:prompt}],model:'claude-sonnet-4-6',max_tokens:512}),signal:AbortSignal.timeout(8000)})
     if(r.ok){const d=await r.json();if(d.content)return d.content}

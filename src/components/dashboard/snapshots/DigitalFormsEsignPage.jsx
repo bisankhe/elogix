@@ -178,7 +178,7 @@ export default function DigitalFormsEsignPage() {
       )}
 
       {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={CTX} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Digital Forms & E-sign" columns={['Employee ID','Name','Employment Contract','NDA','Handbook','Tax Form','Direct Deposit','Code of Conduct','Completion %']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Digital Forms & E-sign" columns={['Employee ID','Name','Employment Contract','NDA','Handbook','Tax Form','Direct Deposit','Code of Conduct','Completion %']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

@@ -1,6 +1,6 @@
 -- ============================================================
 -- FILE: database/schemas/workforce_config_schema.sql
--- NepHR Pro — Workforce Configuration Schema
+-- eLogix HRMS — Workforce Configuration Schema
 -- Covers: Vendor & Outsource Mapping, Shift Setup,
 --         Holiday Calendar, Weekend Policy
 -- Nepal Labour Act 2074 compliant | PostgreSQL 15+

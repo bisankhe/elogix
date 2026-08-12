@@ -64,7 +64,7 @@ export default function ATSExecutiveDashPage() {
         <div style={{ position:'absolute', bottom:-40, right:120, width:200, height:200, borderRadius:'50%', background:'rgba(255,255,255,.03)' }}/>
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
           <div>
-            <div style={{ fontSize:11, opacity:.6, marginBottom:4, letterSpacing:'.08em', textTransform:'uppercase' }}>NepHR Pro · Executive Command</div>
+            <div style={{ fontSize:11, opacity:.6, marginBottom:4, letterSpacing:'.08em', textTransform:'uppercase' }}>eLogix HRMS · Executive Command</div>
             <h2 style={{ margin:0, fontSize:22, fontWeight:900 }}>Executive Dashboard</h2>
             <p style={{ margin:'4px 0 0', fontSize:10, opacity:.7 }}>Board-level hiring intelligence · Workforce planning · Cost analytics · Recruiter performance</p>
           </div>

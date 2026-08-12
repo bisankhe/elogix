@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/succession_planning_routes.py
-NepHR Pro -- Performance & Talent Management > Talent Development >
+eLogix HRMS -- Performance & Talent Management > Talent Development >
 Succession Planning (5 pages: Successor Identification, Talent
 Mapping, HiPo Employees, Readiness Assessment, Leadership Pipeline)
 URL prefix: /api/v1/succession-planning

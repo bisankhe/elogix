@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/recruitment_schema.sql
--- NepHR Pro — Complete Recruitment & Hiring Module Schema
+-- eLogix HRMS — Complete Recruitment & Hiring Module Schema
 -- Covers all 16 Recruitment pages:
 --   1. job_requisitions          (Manpower Requisition)
 --   2. vacancies                 (Vacancy Management)

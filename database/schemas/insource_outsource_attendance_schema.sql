@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/insource_outsource_attendance_schema.sql
--- NepHR Pro — Workforce Operations > Attendance Management > Daily
+-- eLogix HRMS — Workforce Operations > Attendance Management > Daily
 -- Attendance > Insource / Outsource Attendance (2 pages)
 --
 -- Design note: Insource Attendance is a FILTERED VIEW over the

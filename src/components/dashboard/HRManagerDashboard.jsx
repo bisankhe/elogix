@@ -315,7 +315,7 @@ export default function HRManagerDashboard() {
       }}>
         <div>
           <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
-            {currentPersona?.icon} NepHR Pro Dashboard
+            {currentPersona?.icon} eLogix HRMS Dashboard
           </div>
           <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:2}}>
             {dateStr} · {timeStr} · Nepal Standard Time

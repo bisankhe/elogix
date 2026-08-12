@@ -2,7 +2,7 @@
 FILE: backend/routes/excel_voice_routes.py
 SAP-style Excel Import/Export + Voice Input endpoints.
 URL prefix: /api/v1/tools
-Available for every page in NepHR Pro.
+Available for every page in eLogix HRMS.
 """
 from flask import Blueprint, request, jsonify, g, send_file
 import io
@@ -67,7 +67,7 @@ def download_template(module):
         io.BytesIO(xlsx_bytes),
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         as_attachment=True,
-        download_name=f"nephr_pro_{module}_import_template.xlsx"
+        download_name=f"elogix_hrms_{module}_import_template.xlsx"
     )
 
 
@@ -130,7 +130,7 @@ def voice_transcribe():
         result["hint"] = (
             "Backend transcription unavailable. "
             "Use browser Web Speech API (window.SpeechRecognition) as fallback. "
-            "Already implemented in NepHR Pro frontend."
+            "Already implemented in eLogix HRMS frontend."
         )
     return jsonify(result), 200 if result.get("success") else 206
 

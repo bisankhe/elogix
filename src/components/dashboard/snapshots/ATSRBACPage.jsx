@@ -3,16 +3,16 @@ import { useState } from 'react'
 import { useApp } from '../../../context/AppContext.jsx'
 
 const COMPANIES = [
-  { id:'co1', name:'NepHR Pro Pvt. Ltd.', type:'Owner', branches:3, users:12, plan:'Enterprise', active:true },
+  { id:'co1', name:'eLogix HRMS Pvt. Ltd.', type:'Owner', branches:3, users:12, plan:'Enterprise', active:true },
   { id:'co2', name:'TechSoft Nepal',      type:'Client', branches:2, users:6, plan:'Business',   active:true },
   { id:'co3', name:'FinTech Nepal',       type:'Client', branches:1, users:4, plan:'Starter',    active:true },
   { id:'co4', name:'Marketing Hub Pvt.', type:'Client', branches:2, users:3, plan:'Business',   active:false },
 ]
 
 const BRANCHES = [
-  { id:'b1', name:'Kathmandu HQ',   company:'NepHR Pro', city:'Kathmandu', users:8, jobs:12, active:true },
-  { id:'b2', name:'Pokhara Office', company:'NepHR Pro', city:'Pokhara',   users:3, jobs:4,  active:true },
-  { id:'b3', name:'Chitwan Office', company:'NepHR Pro', city:'Chitwan',   users:2, jobs:2,  active:true },
+  { id:'b1', name:'Kathmandu HQ',   company:'eLogix HRMS', city:'Kathmandu', users:8, jobs:12, active:true },
+  { id:'b2', name:'Pokhara Office', company:'eLogix HRMS', city:'Pokhara',   users:3, jobs:4,  active:true },
+  { id:'b3', name:'Chitwan Office', company:'eLogix HRMS', city:'Chitwan',   users:2, jobs:2,  active:true },
   { id:'b4', name:'TechSoft Main',  company:'TechSoft',  city:'Kathmandu', users:4, jobs:6,  active:true },
   { id:'b5', name:'TechSoft Dev',   company:'TechSoft',  city:'Lalitpur',  users:2, jobs:3,  active:true },
 ]
@@ -29,10 +29,10 @@ const ROLES = [
 ]
 
 const USERS = [
-  { id:'u1', name:'Bikash Shrestha', email:'bikash@nephrpro.com', role:'Super Admin',    company:'NepHR Pro', branch:'Kathmandu HQ', status:'Active', lastLogin:'2 hrs ago' },
-  { id:'u2', name:'Maya Pradhan',    email:'maya@nephrpro.com',   role:'HR Director',   company:'NepHR Pro', branch:'Kathmandu HQ', status:'Active', lastLogin:'1 day ago' },
-  { id:'u3', name:'Anita Gurung',    email:'anita@nephrpro.com',  role:'Recruiter',     company:'NepHR Pro', branch:'Kathmandu HQ', status:'Active', lastLogin:'3 hrs ago' },
-  { id:'u4', name:'Ramesh Koirala',  email:'ramesh@nephrpro.com', role:'Finance Approver',company:'NepHR Pro',branch:'Kathmandu HQ', status:'Active', lastLogin:'5 days ago' },
+  { id:'u1', name:'Bikash Shrestha', email:'bikash@elogix.com', role:'Super Admin',    company:'eLogix HRMS', branch:'Kathmandu HQ', status:'Active', lastLogin:'2 hrs ago' },
+  { id:'u2', name:'Maya Pradhan',    email:'maya@elogix.com',   role:'HR Director',   company:'eLogix HRMS', branch:'Kathmandu HQ', status:'Active', lastLogin:'1 day ago' },
+  { id:'u3', name:'Anita Gurung',    email:'anita@elogix.com',  role:'Recruiter',     company:'eLogix HRMS', branch:'Kathmandu HQ', status:'Active', lastLogin:'3 hrs ago' },
+  { id:'u4', name:'Ramesh Koirala',  email:'ramesh@elogix.com', role:'Finance Approver',company:'eLogix HRMS',branch:'Kathmandu HQ', status:'Active', lastLogin:'5 days ago' },
   { id:'u5', name:'Sunita Rana',     email:'sunita@techsoft.com', role:'Company Admin', company:'TechSoft',  branch:'TechSoft Main', status:'Active', lastLogin:'6 hrs ago' },
   { id:'u6', name:'Dev Karki',       email:'dev@techsoft.com',    role:'Recruiter',     company:'TechSoft',  branch:'TechSoft Main', status:'Active', lastLogin:'1 day ago' },
   { id:'u7', name:'Priya Rai',       email:'priya@fintechne.com', role:'Hiring Manager',company:'FinTech',   branch:'FinTech HQ',   status:'Inactive', lastLogin:'2 weeks ago' },
@@ -53,7 +53,7 @@ export default function ATSRBACPage() {
   const [tab, setTab] = useState('companies')
   const [selRole, setSelRole] = useState(ROLES[2])
   const [msg, setMsg] = useState('')
-  const [inviteForm, setInviteForm] = useState({ name:'', email:'', role:'Recruiter', company:'NepHR Pro', branch:'Kathmandu HQ' })
+  const [inviteForm, setInviteForm] = useState({ name:'', email:'', role:'Recruiter', company:'eLogix HRMS', branch:'Kathmandu HQ' })
   const notify = m => { setMsg(m); setTimeout(() => setMsg(''), 3000) }
 
   return (

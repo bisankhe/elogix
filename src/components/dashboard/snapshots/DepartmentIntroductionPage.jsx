@@ -1,5 +1,5 @@
 // FILE: DepartmentIntroductionPage.jsx — Department Introduction (Employee Joining)
-// NepHR Pro — Two-way introductions:
+// eLogix HRMS — Two-way introductions:
 //   WAY 1: Introduce new employee TO the department (team meets new hire)
 //   WAY 2: Introduce department TO new employee (new hire meets team + HOD)
 // FULLY FUNCTIONAL: + Create, schedule meetings, track completion, show who/what/when

@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/performance_evaluation_routes.py
-NepHR Pro — Performance & Talent Management > Goal & Performance >
+eLogix HRMS — Performance & Talent Management > Goal & Performance >
 Performance Evaluation Module (7 pages)
 URL prefix: /api/v1/performance-evaluation
 

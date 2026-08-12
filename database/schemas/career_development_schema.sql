@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/career_development_schema.sql
--- NepHR Pro — Performance & Talent Management > Talent Development >
+-- eLogix HRMS — Performance & Talent Management > Talent Development >
 -- Career Development (4 pages: Career Pathing, Employee Development
 -- Plan, Training Portfolio, Leadership Development)
 --

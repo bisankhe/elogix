@@ -125,7 +125,7 @@ export default function EmployeeAssetsPage() {
         {icon:'👁',label:'View Receipt',key:'view'},{icon:'🔧',label:'Mark for Repair',key:'repair'},
         {icon:'↩',label:'Mark Returned',key:'return'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Employee Assets" columns={['Employee','Item','Model','Serial','Issue Date','Value NPR','Status','Custody Signed']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Employee Assets" columns={['Employee','Item','Model','Serial','Issue Date','Value NPR','Status','Custody Signed']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

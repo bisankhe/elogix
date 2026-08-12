@@ -144,7 +144,7 @@ export default function ShiftManagementPage() {
         {icon:'👁',label:'View Details',key:'view'},{icon:'✏',label:'Edit Shift',key:'edit'},
         {icon:'👥',label:'Assign Employees',key:'assign'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Shift Management" columns={['Shift Name','Start','End','Duration Hrs','Type','Night Differential %','Assigned Employees']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Shift Management" columns={['Shift Name','Start','End','Duration Hrs','Type','Night Differential %','Assigned Employees']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

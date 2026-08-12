@@ -56,7 +56,7 @@ export default function ATSAutoShortlistPage() {
   const [interviewType, setInterviewType] = useState('Physical')
   const [interviewDate, setInterviewDate] = useState('')
   const [interviewTime, setInterviewTime] = useState('10:00')
-  const [interviewVenue, setInterviewVenue] = useState('NepHR Office, Kathmandu')
+  const [interviewVenue, setInterviewVenue] = useState('eLogix Office, Kathmandu')
   const [msg, setMsg] = useState('')
   const [tab, setTab] = useState('engine') // engine | shortlist | invite | history
 

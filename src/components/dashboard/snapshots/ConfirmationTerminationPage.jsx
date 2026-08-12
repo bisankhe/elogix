@@ -169,7 +169,7 @@ export default function ConfirmationTerminationPage() {
         {icon:'👁',label:'View Full Decision',key:'view'},{icon:'📄',label:'Download Letter',key:'letter'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📤',label:'Export',key:'export'},
       ]} onAction={(k,item)=>{if(k==='view')setSelected(item)}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Confirmation or Termination" columns={['Employee','Position','Department','Join Date','Probation End','Decision','Decided Date','Decided By','Competency Score']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Confirmation or Termination" columns={['Employee','Position','Department','Join Date','Probation End','Decision','Decided Date','Decided By','Competency Score']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

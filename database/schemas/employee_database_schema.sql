@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/employee_database_schema.sql
--- NepHR Pro — Employee Records > Employee Database Module
+-- eLogix HRMS — Employee Records > Employee Database Module
 -- Covers all 7 pages. The core `employees` table already exists
 -- (see master_schema.sql / employee_models.py) — this file ADDS the
 -- related tables that extend it: family, emergency contacts, assets,

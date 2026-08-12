@@ -148,7 +148,7 @@ export default function SixtyDayReviewPage() {
         {icon:'👁',label:'View Full Review',key:'view'},{icon:'📋',label:'Create PIP',key:'pip'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📤',label:'Export',key:'export'},
       ]} onAction={(k,item)=>{if(k==='view')setSelected(item)}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="60 Days Review" columns={['Employee','Position','Department','Review Date','Avg KPI Score','Attendance %','PIP Triggered','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="60 Days Review" columns={['Employee','Position','Department','Review Date','Avg KPI Score','Attendance %','PIP Triggered','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

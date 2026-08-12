@@ -237,7 +237,7 @@ export default function ATSDashboardPage() {
       )}
 
       {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={['Vacancy Management','Job Posting','Candidate Database','HR Dashboard']} actions={CTX} onAction={(k,item)=>{if(k==='view')setSelected(item);if(k==='advance')advanceCandidate(item.id,1)}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="ATS Candidates" columns={['Name','Email','Phone','Position','Stage','AI Score','Written %','Video %','Overall %','Experience','Education']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="ATS Candidates" columns={['Name','Email','Phone','Position','Stage','AI Score','Written %','Video %','Overall %','Experience','Education']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

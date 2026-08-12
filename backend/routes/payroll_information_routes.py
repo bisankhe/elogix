@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/payroll_information_routes.py
-NepHR Pro — Workforce Operations > Payroll & Compensation > Information
+eLogix HRMS — Workforce Operations > Payroll & Compensation > Information
 Module (3 pages)
 URL prefix: /api/v1/payroll-information
 

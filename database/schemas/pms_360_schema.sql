@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/pms_360_schema.sql
--- NepHR Pro — Performance & Talent Management > Goal & Performance >
+-- eLogix HRMS — Performance & Talent Management > Goal & Performance >
 -- Goal Management > 360 Degree PMS (1 page)
 --
 -- Design note: this is the cycle/competency layer of 360 review --

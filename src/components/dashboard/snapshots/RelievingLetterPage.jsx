@@ -7,19 +7,19 @@ import { Field, ExcelModal, PageHeader, AIImpact, SearchBar, ContextMenu } from 
 const G = 'linear-gradient(135deg,#1e1b4b 0%,#4338ca 60%,#818cf8 100%)'
 const A = '#4338ca'
 
-const SAMPLE_LETTER = `[NepHR Pro Pvt. Ltd. Letterhead]
+const SAMPLE_LETTER = `[eLogix HRMS Pvt. Ltd. Letterhead]
 
 RELIEVING LETTER
 
 Date: July 10, 2025
 
-This is to confirm that Mr. Dipendra Yadav (Employee ID: EMP-0067), who served as Junior Accountant in the Finance & Accounts Department, has been formally relieved of his duties at NepHR Pro Pvt. Ltd. effective July 10, 2025.
+This is to confirm that Mr. Dipendra Yadav (Employee ID: EMP-0067), who served as Junior Accountant in the Finance & Accounts Department, has been formally relieved of his duties at eLogix HRMS Pvt. Ltd. effective July 10, 2025.
 
 Mr. Yadav has completed his notice period as required and has no pending obligations to the company. He is free to pursue employment with any other organization.
 
 We thank him for his contribution and wish him well in his future career.
 
-For NepHR Pro Pvt. Ltd.
+For eLogix HRMS Pvt. Ltd.
 
 _______________________
 Priya Adhikari
@@ -196,7 +196,7 @@ export default function RelievingLetterPage() {
         {icon:'👁',label:'Preview Letter',key:'view'},{icon:'📥',label:'Download PDF',key:'download'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📤',label:'Export',key:'export'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Relieving Letters" columns={['Employee','Position','LWD','Notice Completed','Clearance Complete','F&F Settled','Issued Date','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Relieving Letters" columns={['Employee','Position','LWD','Notice Completed','Clearance Complete','F&F Settled','Issued Date','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

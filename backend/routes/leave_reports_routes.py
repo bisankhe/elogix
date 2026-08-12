@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/leave_reports_routes.py
-NepHR Pro - Workforce Operations > Leave Management > Leave Reports (3 pages)
+eLogix HRMS - Workforce Operations > Leave Management > Leave Reports (3 pages)
 URL prefix: /api/v1/leave-reports
 
   1. /sync           - Leave & Attendance Sync (bidirectional conflict detection)

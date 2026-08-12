@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/wellness_support_routes.py
-NepHR Pro -- Employee Experience & Culture > Wellness & Support
+eLogix HRMS -- Employee Experience & Culture > Wellness & Support
 (5 pages: Wellness Program, Mental Health Support, Insurance
 Management, Emergency Support, Employee Assistance Program)
 URL prefix: /api/v1/wellness-support

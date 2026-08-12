@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/advanced_analytics_schema.sql
--- NepHR Pro -- Reports, Analytics & BI > Advanced Analytics
+-- eLogix HRMS -- Reports, Analytics & BI > Advanced Analytics
 -- (5 pages: Predictive Analytics, AI Insights, BI Dashboard, Custom
 -- Report Builder, Export Center)
 --

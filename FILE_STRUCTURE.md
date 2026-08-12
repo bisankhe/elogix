@@ -1,4 +1,4 @@
-# NepHR Pro — Complete File Structure (Updated)
+# eLogix HRMS — Complete File Structure (Updated)
 **Version 1.0.0** | React 18 + Vite + Flask + PostgreSQL | **71,107+ lines, 239 files**
 
 ---

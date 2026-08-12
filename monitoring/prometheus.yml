@@ -4,7 +4,7 @@ global:
   evaluation_interval: 15s
 
 scrape_configs:
-  - job_name: 'nephr-pro-api'
+  - job_name: 'elogix-hrms-api'
     static_configs:
       - targets: ['backend:5000']
     metrics_path: '/api/metrics'

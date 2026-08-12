@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/vendor_billing_analytics_schema.sql
--- NepHR Pro -- Reports, Analytics & BI > HR Analytics
+-- eLogix HRMS -- Reports, Analytics & BI > HR Analytics
 -- (2 pages: Vendor Billing Report, Insource vs Outsource Cost Report)
 --
 -- Design note: confirmed before writing anything that THREE existing

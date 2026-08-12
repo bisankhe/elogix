@@ -114,7 +114,7 @@ export default function EmergencyContactPage() {
         {icon:'📞',label:'Call Now',key:'call'},{icon:'✏',label:'Edit',key:'edit'},
         {icon:'★',label:'Set as Primary',key:'primary'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Emergency Contacts" columns={['Name','Relationship','Phone','Alt Phone','Address','Primary','Last Verified']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Emergency Contacts" columns={['Name','Relationship','Phone','Alt Phone','Address','Primary','Last Verified']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

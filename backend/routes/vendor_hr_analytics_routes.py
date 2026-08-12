@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/vendor_hr_analytics_routes.py
-NepHR Pro -- Reports, Analytics & BI > HR Analytics (2 pages:
+eLogix HRMS -- Reports, Analytics & BI > HR Analytics (2 pages:
 Vendor-wise Headcount, Outsource Attendance Report)
 URL prefix: /api/v1/vendor-hr-analytics
 

@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/leave_operations_schema.sql
--- NepHR Pro — Workforce Operations > Leave Management > Leave
+-- eLogix HRMS — Workforce Operations > Leave Management > Leave
 -- Operations Module (7 pages)
 --
 -- Design note: this is the TRANSACTIONAL layer sitting on top of

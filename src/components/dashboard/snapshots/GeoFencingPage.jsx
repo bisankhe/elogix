@@ -146,7 +146,7 @@ export default function GeoFencingPage() {
         {icon:'✏',label:'Edit Perimeter',key:'edit'},{icon:'👥',label:'Assign Employees',key:'assign'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📤',label:'Export',key:'export'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Geo-Fences" columns={['Name','Type','Latitude','Longitude','Radius (m)','Employees Assigned','Tracking Window']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Geo-Fences" columns={['Name','Type','Latitude','Longitude','Radius (m)','Employees Assigned','Tracking Window']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/employee_movement_routes.py
-NepHR Pro — Employee Records > Employee Movement Module (6 pages)
+eLogix HRMS — Employee Records > Employee Movement Module (6 pages)
 URL prefix: /api/v1/movement
 
   1. /promotions          — Promotion & History (AI bias check, competency scoring)

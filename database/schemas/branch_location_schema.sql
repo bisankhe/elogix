@@ -1,6 +1,6 @@
 -- ============================================================
 -- FILE: database/schemas/branch_location_schema.sql
--- NepHR Pro — Branch & Location Setup Schema
+-- eLogix HRMS — Branch & Location Setup Schema
 -- Covers: branches table with Nepal Labour Act 2074 labour zones
 -- ============================================================
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

@@ -1,5 +1,5 @@
 # ============================================================
-#  NepHR Pro — Attendance Log Router
+#  eLogix HRMS — Attendance Log Router
 #  Daily Attendance Log In / Log Out + Overtime Log
 #  Nepal Labour Act 2074 compliant
 # ============================================================

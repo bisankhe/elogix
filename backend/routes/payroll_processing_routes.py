@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/payroll_processing_routes.py
-NepHR Pro — Workforce Operations > Payroll & Compensation > Payroll
+eLogix HRMS — Workforce Operations > Payroll & Compensation > Payroll
 Processing Module (8 pages)
 URL prefix: /api/v1/payroll-processing
 

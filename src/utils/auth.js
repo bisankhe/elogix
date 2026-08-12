@@ -2,9 +2,9 @@
 // JWT token management — store, retrieve, refresh, validate
 // Used across the app for API calls and route protection
 
-const ACCESS_KEY  = 'nephr_access_token'
-const REFRESH_KEY = 'nephr_refresh_token'
-const USER_KEY    = 'nephr_user'
+const ACCESS_KEY  = 'elogix_access_token'
+const REFRESH_KEY = 'elogix_refresh_token'
+const USER_KEY    = 'elogix_user'
 
 export const auth = {
   // Store tokens after login

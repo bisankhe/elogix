@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/pms_360_routes.py
-NepHR Pro — Performance & Talent Management > Goal & Performance >
+eLogix HRMS — Performance & Talent Management > Goal & Performance >
 Goal Management > 360 Degree PMS (1 page)
 URL prefix: /api/v1/pms-360
 

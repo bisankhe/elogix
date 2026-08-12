@@ -26,11 +26,11 @@ const INITIAL_NOTIFICATIONS = [
   { id: 11, type: 'info',     icon: '🧠', module: 'AI',          title: 'AI models retrained — improved accuracy',    sub: 'Attrition: 87.3%, Salary: 91.2%',    time: 'May 28',     action: null,          read: true  },
   { id: 12, type: 'info',     icon: '📊', module: 'Reports',     title: 'Monthly HR report generated — May 2026',     sub: 'Ready for download',                  time: 'Jun 1',      action: 'Download',    read: true  },
   // ── Legal Document Expiry Alerts (Company Compliance) ──────
-  { id: 13, type: 'critical', icon: '✅', module: 'Company Docs', title: 'Tax Clearance Certificate — EXPIRED',         sub: 'NepHR Pro Pvt. Ltd. · IRD · Expired May 31', time: 'Today',      action: 'Renew',       read: false },
-  { id: 14, type: 'critical', icon: '🔖', module: 'Company Docs', title: 'Trade License renewal due in 20 days',        sub: 'NepHR Pro Pvt. Ltd. · Dept. of Commerce',    time: 'Today',      action: 'Renew',       read: false },
-  { id: 15, type: 'warning',  icon: '🏛️', module: 'Company Docs', title: 'OCR Certificate expires in 34 days',         sub: 'NepHR Pro Pvt. Ltd. · Office of Company Registrar', time: 'Today', action: 'Review',   read: false },
-  { id: 16, type: 'warning',  icon: '🔖', module: 'Company Docs', title: 'Shop & Establishment License — 29 days left', sub: 'NepHR India Pvt. Ltd. · State Labour Dept.',  time: 'Today',      action: 'Renew',       read: false },
-  { id: 17, type: 'warning',  icon: '📋', module: 'Company Docs', title: 'Labour Audit Report due for upload',          sub: 'NepHR Pro Pvt. Ltd. · DoL · Submit by Jul 31',time: 'Today',      action: 'Upload',      read: false },
+  { id: 13, type: 'critical', icon: '✅', module: 'Company Docs', title: 'Tax Clearance Certificate — EXPIRED',         sub: 'eLogix HRMS Pvt. Ltd. · IRD · Expired May 31', time: 'Today',      action: 'Renew',       read: false },
+  { id: 14, type: 'critical', icon: '🔖', module: 'Company Docs', title: 'Trade License renewal due in 20 days',        sub: 'eLogix HRMS Pvt. Ltd. · Dept. of Commerce',    time: 'Today',      action: 'Renew',       read: false },
+  { id: 15, type: 'warning',  icon: '🏛️', module: 'Company Docs', title: 'OCR Certificate expires in 34 days',         sub: 'eLogix HRMS Pvt. Ltd. · Office of Company Registrar', time: 'Today', action: 'Review',   read: false },
+  { id: 16, type: 'warning',  icon: '🔖', module: 'Company Docs', title: 'Shop & Establishment License — 29 days left', sub: 'eLogix India Pvt. Ltd. · State Labour Dept.',  time: 'Today',      action: 'Renew',       read: false },
+  { id: 17, type: 'warning',  icon: '📋', module: 'Company Docs', title: 'Labour Audit Report due for upload',          sub: 'eLogix HRMS Pvt. Ltd. · DoL · Submit by Jul 31',time: 'Today',      action: 'Upload',      read: false },
 ]
 
 const TYPE_CONFIG = {

@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/overtime_monitoring_schema.sql
--- NepHR Pro — Workforce Operations > Attendance Management >
+-- eLogix HRMS — Workforce Operations > Attendance Management >
 -- Overtime & Monitoring Module (5 pages)
 --
 -- Design note: daily_attendance_records already has overtime_hours,

@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/settlement_documents_schema.sql
--- NepHR Pro — Offboarding > Settlement & Documents Module (3 pages)
+-- eLogix HRMS — Offboarding > Settlement & Documents Module (3 pages)
 --
 -- Design note: exit_clearances (from exit_management_schema.sql) already
 -- has summary F&F fields (ff_amount_npr, ff_frozen, unpaid_salary_npr,

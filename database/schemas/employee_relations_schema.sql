@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/employee_relations_schema.sql
--- NepHR Pro -- Employee Experience & Culture > Employee Relations
+-- eLogix HRMS -- Employee Experience & Culture > Employee Relations
 -- (5 pages: Grievance Management, Complaint Management, Conflict
 -- Resolution, Disciplinary Management, Warning Letter)
 --

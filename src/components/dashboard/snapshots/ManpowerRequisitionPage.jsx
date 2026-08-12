@@ -286,7 +286,7 @@ KPI: Monthly performance metrics as defined by HOD`
       )}
 
       {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={CTX} onAction={(k,item)=>{if(k==='view')setSelected(item)}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Manpower Requisitions" columns={['MRF ID','Role','Dept','Branch','Grade','Type','Positions','Budget NPR','Status','Created On','SLA Date']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Manpower Requisitions" columns={['MRF ID','Role','Dept','Branch','Grade','Type','Positions','Budget NPR','Status','Created On','SLA Date']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
       <Drawer item={selected} gradient={G} onClose={()=>setSelected(null)} rows={[
         ['MRF ID',selected?.id],['Role',selected?.role],['Department',selected?.dept],
         ['Branch',selected?.branch],['Grade',selected?.grade],['Type',selected?.type],

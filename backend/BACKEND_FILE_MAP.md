@@ -1,4 +1,4 @@
-# NepHR Pro — Backend & Database File Map
+# eLogix HRMS — Backend & Database File Map
 
 ## Backend Structure
 

@@ -7,19 +7,19 @@ import { Field, ExcelModal, PageHeader, AIImpact, SearchBar, ContextMenu } from 
 const G = 'linear-gradient(135deg,#0c4a6e 0%,#0284c7 60%,#7dd3fc 100%)'
 const A = '#0284c7'
 
-const SAMPLE_LETTER = `[NepHR Pro Pvt. Ltd. Letterhead]
+const SAMPLE_LETTER = `[eLogix HRMS Pvt. Ltd. Letterhead]
 
 CERTIFICATE OF EXPERIENCE
 
 Date: July 12, 2025
 
-This is to certify that Mr. Dipendra Yadav (Employee ID: EMP-0067) was employed with NepHR Pro Pvt. Ltd. from April 1, 2024 to July 10, 2025, in the position of Junior Accountant, Finance & Accounts Department.
+This is to certify that Mr. Dipendra Yadav (Employee ID: EMP-0067) was employed with eLogix HRMS Pvt. Ltd. from April 1, 2024 to July 10, 2025, in the position of Junior Accountant, Finance & Accounts Department.
 
 During this period, his primary responsibilities included monthly financial reconciliation, vendor payment processing, and accounts payable management.
 
 We wish him success in his future endeavors.
 
-For NepHR Pro Pvt. Ltd.
+For eLogix HRMS Pvt. Ltd.
 
 _______________________
 Priya Adhikari
@@ -190,7 +190,7 @@ export default function ExperienceLetterPage() {
         {icon:'👁',label:'Preview Letter',key:'view'},{icon:'📥',label:'Download PDF',key:'download'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📤',label:'Export',key:'export'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Experience Letters" columns={['Employee','Position','Department','Join Date','LWD','Tenure','Requested Date','Issued Date','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Experience Letters" columns={['Employee','Position','Department','Join Date','LWD','Tenure','Requested Date','Issued Date','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

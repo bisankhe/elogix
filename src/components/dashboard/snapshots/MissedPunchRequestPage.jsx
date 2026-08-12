@@ -233,7 +233,7 @@ export default function MissedPunchRequestPage() {
         {icon:'👁',label:'View Details',key:'view'},{icon:'✅',label:'Approve',key:'approve'},
         {icon:'🚫',label:'Reject',key:'reject'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
       ]} onAction={(k,item)=>{if(k==='approve')approve(item.id);if(k==='reject')reject(item.id)}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Missed Punch Requests" columns={['Employee','Department','Date','Punch Type','Scheduled Time','Requested Time','Reason','Status','Manager']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Missed Punch Requests" columns={['Employee','Department','Date','Punch Type','Scheduled Time','Requested Time','Reason','Status','Manager']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

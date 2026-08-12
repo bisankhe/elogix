@@ -157,7 +157,7 @@ export default function ExitClearancePage() {
         {icon:'👁',label:'View Full Clearance',key:'view'},{icon:'📧',label:'Notify Pending Depts',key:'notify'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📤',label:'Export',key:'export'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Exit Clearance" columns={['Employee','Position','LWD','IT Status','Finance Status','Facilities Status','HR Status','F&F Amount','F&F Frozen']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Exit Clearance" columns={['Employee','Position','LWD','IT Status','Finance Status','Facilities Status','HR Status','F&F Amount','F&F Frozen']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

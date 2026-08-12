@@ -1,5 +1,5 @@
 // FILE: AIBusinessIntelligencePage.jsx
-// NepHR Pro - AI Business Intelligence
+// eLogix HRMS - AI Business Intelligence
 // Role-aware: CEO/Director/Executive get board-level strategic briefs.
 // HR Manager gets operational reports. Department Head gets team analytics.
 // Auto-detects user language. Responds in same language always.
@@ -160,7 +160,7 @@ function buildSystem(lang, roleLevel, personaLabel) {
 - Actionable next steps`,
   }
 
-  return `You are the AI Business Intelligence engine inside NepHR Pro, Nepal's enterprise HR platform.
+  return `You are the AI Business Intelligence engine inside eLogix HRMS, Nepal's enterprise HR platform.
 
 ## CRITICAL LANGUAGE RULE
 Respond ENTIRELY in ${langName}. Every single word - headings, tables, bullets, analysis - must be in ${langName}. Zero mixing with any other language.
@@ -214,7 +214,7 @@ function generateBIReport(text, lang, roleLevel) {
   // ── PREDICTIVE ANALYTICS ────────────────────────────────────
   if (low.match(/\b(predict|forecast|attrition risk|flight risk|risk brief|workforce analytics|turnover|churn|risk analysis)\b/)) {
     if (lang === 'ne') return `# पूर्वानुमानात्मक कार्यबल विश्लेषण - कार्यकारी संक्षिप्त
-**मिति:** ${date} | **तयार:** NepHR Pro AI | **स्तर:** ${isCEO ? 'C-Level/निर्देशक' : 'वरिष्ठ व्यवस्थापन'}
+**मिति:** ${date} | **तयार:** eLogix HRMS AI | **स्तर:** ${isCEO ? 'C-Level/निर्देशक' : 'वरिष्ठ व्यवस्थापन'}
 
 ---
 
@@ -261,7 +261,7 @@ function generateBIReport(text, lang, roleLevel) {
 3. HR BI ड्यासबोर्ड मासिक बोर्ड प्रस्तुतिमा समावेश गर्ने?`
 
     if (lang === 'hi') return `# पूर्वानुमानात्मक कार्यबल विश्लेषण - कार्यकारी संक्षेप
-**दिनांक:** ${date} | **तैयार:** NepHR Pro AI | **स्तर:** ${isCEO ? 'C-Level/निदेशक' : 'वरिष्ठ प्रबंधन'}
+**दिनांक:** ${date} | **तैयार:** eLogix HRMS AI | **स्तर:** ${isCEO ? 'C-Level/निदेशक' : 'वरिष्ठ प्रबंधन'}
 
 ---
 
@@ -298,7 +298,7 @@ function generateBIReport(text, lang, roleLevel) {
 3. मासिक HR BI Dashboard board में प्रस्तुत करना?`
 
     return `# Predictive Workforce Analytics - ${isCEO ? 'Board-Level' : 'Management'} Brief
-**Date:** ${date} | **Prepared by:** NepHR Pro AI | **For:** ${isCEO ? 'C-Suite / Board of Directors' : 'Senior Management'}
+**Date:** ${date} | **Prepared by:** eLogix HRMS AI | **For:** ${isCEO ? 'C-Suite / Board of Directors' : 'Senior Management'}
 
 ---
 
@@ -356,13 +356,13 @@ function generateBIReport(text, lang, roleLevel) {
 3. **Include** monthly HR BI dashboard in board pack starting next meeting?
 
 ---
-*Prepared by NepHR Pro AI Predictive Engine · ${date} · Confidential - ${isCEO ? 'Board & C-Suite' : 'Senior Management'} Only*`
+*Prepared by eLogix HRMS AI Predictive Engine · ${date} · Confidential - ${isCEO ? 'Board & C-Suite' : 'Senior Management'} Only*`
   }
 
   // ── STRATEGIC HR REPORT ─────────────────────────────────────
   if (low.match(/\b(report|strategic|monthly|hr report|business intelligence|bi report|summary|overview)\b/)) {
     if (lang === 'ne') return `# ${isCEO ? 'बोर्ड HR रणनीतिक प्रतिवेदन' : 'मासिक HR व्यवस्थापन प्रतिवेदन'}
-**अवधि:** ${q} | **मिति:** ${date} | **NepHR Pro AI**
+**अवधि:** ${q} | **मिति:** ${date} | **eLogix HRMS AI**
 ${isCEO ? '**प्राप्तकर्ता:** CEO / बोर्ड अफ डाइरेक्टर्स' : '**प्राप्तकर्ता:** HR व्यवस्थापन टोली'}
 
 ---
@@ -402,7 +402,7 @@ ${isCEO ? 'संस्थाको HR स्वास्थ्य: **राम�
 2. Engineering तलब समायोजन प्राधिकरण?`
 
     if (lang === 'hi') return `# ${isCEO ? 'Board HR रणनीतिक रिपोर्ट' : 'मासिक HR प्रबंधन रिपोर्ट'}
-**अवधि:** ${q} | **दिनांक:** ${date} | **NepHR Pro AI**
+**अवधि:** ${q} | **दिनांक:** ${date} | **eLogix HRMS AI**
 ${isCEO ? '**प्राप्तकर्ता:** CEO / Board of Directors' : '**प्राप्तकर्ता:** HR प्रबंधन टीम'}
 
 ---
@@ -434,7 +434,7 @@ HR स्वास्थ्य: **अच्छा** लेकिन सुधा
 2. भर्ती गति बढाने की मंजूरी?`
 
     return `# ${isCEO ? 'Board-Level HR Strategic Intelligence Report' : 'Monthly HR Management Report'}
-**Period:** ${q} | **Date:** ${date} | **Prepared by:** NepHR Pro AI
+**Period:** ${q} | **Date:** ${date} | **Prepared by:** eLogix HRMS AI
 **For:** ${isCEO ? 'CEO / Board of Directors / C-Suite' : 'HR Management Team'}
 **Classification:** ${isCEO ? 'Confidential - Board Use Only' : 'Internal - Management'}
 
@@ -489,7 +489,7 @@ Overall HR health: **STABLE with action required in 2 areas.** Workforce at 312 
 3. Include HR BI dashboard in monthly board pack going forward?
 
 ---
-*NepHR Pro AI Business Intelligence · ${date} · ${isCEO ? 'Board Confidential' : 'Management Internal'}*`
+*eLogix HRMS AI Business Intelligence · ${date} · ${isCEO ? 'Board Confidential' : 'Management Internal'}*`
   }
 
   // ── MOM ─────────────────────────────────────────────────────
@@ -526,7 +526,7 @@ Overall HR health: **STABLE with action required in 2 areas.** Workforce at 312 
 - ११ खुला पद - भर्ना गति सुधार आवश्यक
 
 ### ३. रणनीतिक सुधार प्रस्ताव
-- NepHR Pro डिजिटलाइजेशन: पेरोल, उपस्थिति, कार्यसम्पादन मोड्युल
+- eLogix HRMS डिजिटलाइजेशन: पेरोल, उपस्थिति, कार्यसम्पादन मोड्युल
 - कर्मचारी संलग्नता कार्यक्रम विस्तार
 - मासिक HR BI प्रतिवेदन CEO लाई
 
@@ -549,11 +549,11 @@ Overall HR health: **STABLE with action required in 2 areas.** Workforce at 312 
 
 ---
 **अर्को बैठक:** ${d30} | **समय:** TBD
-_NepHR Pro AI द्वारा तयार - ${date}_`
+_eLogix HRMS AI द्वारा तयार - ${date}_`
 
     if (lang === 'hi') return `# बैठक कार्यवृत्त (MOM)
 **बैठक:** ${mtitle}
-**दिनांक:** ${date} | **NepHR Pro AI**
+**दिनांक:** ${date} | **eLogix HRMS AI**
 
 ---
 
@@ -583,7 +583,7 @@ _NepHR Pro AI द्वारा तयार - ${date}_`
 | 3 | Employee Survey Launch | HR Team | ${d60} |
 
 **अगली बैठक:** ${d30}
-_NepHR Pro AI - ${date}_`
+_eLogix HRMS AI - ${date}_`
 
     return `# Minutes of Meeting
 **Meeting:** ${mtitle}
@@ -618,7 +618,7 @@ _NepHR Pro AI - ${date}_`
 **Discussion summary:**
 - CEO emphasised need for HR to become a strategic business partner, not just administrative
 - HR to present monthly BI dashboard with predictive analytics starting next month
-- Agreement to invest in NepHR Pro digital modules (payroll automation, AI analytics)
+- Agreement to invest in eLogix HRMS digital modules (payroll automation, AI analytics)
 - Employee engagement identified as priority - eNPS of 34 is below 50 benchmark
 
 ### 3. Immediate Priorities Agreed
@@ -654,7 +654,7 @@ _NepHR Pro AI - ${date}_`
 **Agenda preview:** 90-day roadmap review, salary benchmarking results, recruitment update
 
 ---
-*Prepared by NepHR Pro AI · ${date} · Please review and approve within 48 hours*`
+*Prepared by eLogix HRMS AI · ${date} · Please review and approve within 48 hours*`
   }
 
   // ── POWERPOINT ──────────────────────────────────────────────
@@ -715,7 +715,7 @@ ${isCEO ? 'CEO / बोर्ड प्रस्तुति' : 'व्यवस
 ## Slide 1: Title Slide
 **${ptopic}**
 ${isCEO ? 'Board of Directors / CEO Strategic Review' : 'Senior Management Review'}
-${date} | Prepared by: HR Department | NepHR Pro AI
+${date} | Prepared by: HR Department | eLogix HRMS AI
 
 ## Slide 2: Executive Summary (The Story in 3 Points)
 - **Situation:** 312 employees, 8.2% attrition, 11 open positions, Engineering at 34% flight risk
@@ -782,7 +782,7 @@ ${date} | Prepared by: HR Department | NepHR Pro AI
 *Thank you. Questions welcome.*
 
 ---
-*Export as PPTX from NepHR Pro Artifacts · ${date}*`
+*Export as PPTX from eLogix HRMS Artifacts · ${date}*`
   }
 
   // ── STRATEGY / ROADMAP ──────────────────────────────────────
@@ -803,7 +803,7 @@ ${date} | Prepared by: HR Department | NepHR Pro AI
 - Engineering तलब बेन्चमार्किङ
 - SSF र श्रम ऐन अडिट
 - उच्च-जोखिम कर्मचारीसँग १:१ बैठक
-- NepHR Pro पूर्ण डिजिटलाइजेशन
+- eLogix HRMS पूर्ण डिजिटलाइजेशन
 
 ### चरण २: कार्यान्वयन (३०-६० दिन)
 - तलब समायोजन लागू
@@ -853,7 +853,7 @@ ${date} | Prepared by: HR Department | NepHR Pro AI
 | 1:1 retention conversations - all 16 at-risk | HR Manager | NPR 0 | -20% risk |
 | Employee engagement pulse survey (eNPS) | HR Team | NPR 15K | Data |
 | SSF compliance audit and filing | Finance | NPR 0 | Legal |
-| Activate NepHR Pro analytics modules | IT + HR | NPR 0 | Visibility |
+| Activate eLogix HRMS analytics modules | IT + HR | NPR 0 | Visibility |
 
 ### Phase 2 - Build: Days 30-60 (${d60})
 **Goal: Strengthen the core**
@@ -893,13 +893,13 @@ ${date} | Prepared by: HR Department | NepHR Pro AI
 3. Mandate all department heads participate in Phase 1 retention conversations?
 
 ---
-*NepHR Pro AI Strategic Intelligence · ${date} · ${isCEO ? 'Board Confidential' : 'Management Internal'}*`
+*eLogix HRMS AI Strategic Intelligence · ${date} · ${isCEO ? 'Board Confidential' : 'Management Internal'}*`
   }
 
   // ── LABOUR ACT / SSF / LEGAL ─────────────────────────────────
   if (low.match(/\b(labour|labor|ssf|social security|gratuity|leave entitl|overtime|provident|compliance|legal|law 2074)\b/)) {
     return lang === 'ne' ? `# नेपाल श्रम ऐन २०७४ - मुख्य प्रावधान
-**NepHR Pro AI कानुनी संदर्भ | ${date}**
+**eLogix HRMS AI कानुनी संदर्भ | ${date}**
 
 ## बिदा अधिकार
 | बिदाको प्रकार | दिन | शर्त |
@@ -929,7 +929,7 @@ ${date} | Prepared by: HR Department | NepHR Pro AI
 ## न्यूनतम पारिश्रमिक
 - NPR **१७,३०० / महिना** (२०२४)` :
     lang === 'hi' ? `# नेपाल श्रम अधिनियम 2074 - मुख्य प्रावधान
-**NepHR Pro AI कानूनी संदर्भ | ${date}**
+**eLogix HRMS AI कानूनी संदर्भ | ${date}**
 
 ## छुट्टी अधिकार
 | छुट्टी प्रकार | दिन |
@@ -946,7 +946,7 @@ ${date} | Prepared by: HR Department | NepHR Pro AI
 ## ओवरटाइम: **1.5x** (अधिकतम 4 घंटे/दिन)
 ## न्यूनतम वेतन: **NPR 17,300/माह** (2024)` :
     `# Nepal Labour Act 2074 - Complete Compliance Reference
-**NepHR Pro AI Legal Guide | ${date}**
+**eLogix HRMS AI Legal Guide | ${date}**
 
 ## Leave Entitlements
 | Leave Type | Days | Condition |

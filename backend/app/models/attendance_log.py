@@ -1,5 +1,5 @@
 # ============================================================
-#  NepHR Pro — Attendance Log & Overtime Log Models
+#  eLogix HRMS — Attendance Log & Overtime Log Models
 #  Daily Login/Logout + Net Hours + OT with approval workflow
 #  Nepal Labour Act 2074 compliant
 # ============================================================

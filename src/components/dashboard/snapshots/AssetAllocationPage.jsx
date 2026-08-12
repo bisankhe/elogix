@@ -142,7 +142,7 @@ export default function AssetAllocationPage() {
         {icon:'👁',label:'View Allocation',key:'view'},{icon:'📥',label:'Download Receipt Form',key:'receipt'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📤',label:'Export',key:'export'},
       ]} onAction={(k,item)=>{if(k==='view')setSelected(item)}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Asset Allocation" columns={['Employee','Work Mode','Item','Model','Serial Number','Status','Signed Receipt']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Asset Allocation" columns={['Employee','Work Mode','Item','Model','Serial Number','Status','Signed Receipt']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

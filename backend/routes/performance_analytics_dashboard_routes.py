@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/performance_analytics_dashboard_routes.py
-NepHR Pro — Performance & Talent Management > Goal & Performance >
+eLogix HRMS — Performance & Talent Management > Goal & Performance >
 Performance Analytics Module (3 pages: Performance Dashboard, Goal
 Achievement, Productivity Analytics)
 URL prefix: /api/v1/performance-analytics-dashboard

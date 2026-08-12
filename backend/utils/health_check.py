@@ -79,7 +79,7 @@ def full_health_check(db=None) -> dict:
 
     return {
         'status':    overall,
-        'app':       'NepHR Pro',
+        'app':       'eLogix HRMS',
         'version':   '1.0.0',
         'timestamp': datetime.now(timezone.utc).isoformat(),
         'checks':    checks,

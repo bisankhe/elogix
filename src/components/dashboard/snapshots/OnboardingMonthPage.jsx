@@ -1,5 +1,5 @@
 // FILE: OnboardingMonthPage.jsx — Onboarding This Month
-// NepHR Pro | Staff onboarding tracker: name, designation, supervisor, dept, DOJ, employment type
+// eLogix HRMS | Staff onboarding tracker: name, designation, supervisor, dept, DOJ, employment type
 import { useState } from 'react'
 import { PageHeader, SearchBar, ExcelModal } from './DeptSetupShared.jsx'
 

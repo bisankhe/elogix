@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/wfh_tracking_schema.sql
--- NepHR Pro — Workforce Operations > Attendance Management > Daily
+-- eLogix HRMS — Workforce Operations > Attendance Management > Daily
 -- Attendance > Work From Home Tracking (1 page)
 --
 -- Design philosophy (deliberate, per the brief's own repeated warnings):

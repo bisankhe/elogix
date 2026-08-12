@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/daily_attendance_schema.sql
--- NepHR Pro — Workforce Operations > Attendance Management > Daily Attendance (5 pages)
+-- eLogix HRMS — Workforce Operations > Attendance Management > Daily Attendance (5 pages)
 --
 -- Design note: gps_punches and biometric_punch_log already exist
 -- (attendance_setup_schema.sql) as the raw capture layer with geo/biometric

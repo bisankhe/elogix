@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/vendor_hr_analytics_schema.sql
--- NepHR Pro -- Reports, Analytics & BI > HR Analytics
+-- eLogix HRMS -- Reports, Analytics & BI > HR Analytics
 -- (2 pages: Vendor-wise Headcount, Outsource Attendance Report)
 --
 -- Design note: both pages are PURE AGGREGATION over the EXISTING

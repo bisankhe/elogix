@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/integration_hub_routes.py
-NepHR Pro -- Integration Hub
+eLogix HRMS -- Integration Hub
 (System Administration > Integration & API > Integration Hub)
 
 Genuinely new -- confirmed gap before writing:

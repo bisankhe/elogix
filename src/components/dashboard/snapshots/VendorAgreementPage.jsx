@@ -271,7 +271,7 @@ export default function VendorAgreementPage() {
           </div>
         </div>
       )}
-      {showExcel && <ExcelModal title="Vendor Agreements" columns={['Code','Vendor','Type','Version','Status','Signed Date','Expiry Date','Value NPR','Auto Renew','Key Terms']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel && <ExcelModal title="Vendor Agreements" columns={['Code','Vendor','Type','Version','Status','Signed Date','Expiry Date','Value NPR','Auto Renew','Key Terms']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
       <Drawer item={selected} gradient={G} onClose={()=>setSelected(null)} rows={[
         ['Code',selected?.code],['Type',selected?.type],['Version',selected?.version],['Status',selected?.status],
         ['Signed Date',selected?.signed_date],['Effective Date',selected?.effective_date],['Expiry Date',selected?.expiry_date],

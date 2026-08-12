@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/employee_joining_routes.py
-NepHR Pro — Onboarding > Employee Joining Module (9 pages)
+eLogix HRMS — Onboarding > Employee Joining Module (9 pages)
 URL prefix: /api/v1/joining
 
   1. /signatures      — Digital Signature Creation

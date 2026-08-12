@@ -235,7 +235,7 @@ export default function VendorBillingPage() {
       )}
 
       {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={CTX} onAction={(k,item)=>{if(k==='view')setSelected(item)}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Vendor Billing" columns={['Bill No','Vendor Code','Vendor Name','Service','Period','Workers','Days','Rate/Day','Gross NPR','TDS NPR','VAT NPR','Total NPR','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Vendor Billing" columns={['Bill No','Vendor Code','Vendor Name','Service','Period','Workers','Days','Rate/Day','Gross NPR','TDS NPR','VAT NPR','Total NPR','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
       <Drawer item={selected} gradient={G} onClose={()=>setSelected(null)} rows={[
         ['Bill No',selected?.bill_no],['Vendor',selected?.vendor_name],['Service',selected?.service],
         ['Period',selected?.period],['Workers',selected?.workers],['Days Billed',selected?.days_billed],

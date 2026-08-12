@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/goal_tracking_schema.sql
--- NepHR Pro — Performance & Talent Management > Goal & Performance >
+-- eLogix HRMS — Performance & Talent Management > Goal & Performance >
 -- Goal Management > Goal Tracking (1 page)
 --
 -- Design note: this is the UNIFIED ROLLUP layer -- it does not capture

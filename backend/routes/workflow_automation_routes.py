@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/workflow_automation_routes.py
-NepHR Pro -- System Administration > Workflow & Automation (7 pages:
+eLogix HRMS -- System Administration > Workflow & Automation (7 pages:
 Workflow Builder, Auto Reminder Setup, Approval Matrix / Workflow
 Setup, Multi-Level Approval, Notification Engine, Escalation Rules,
 Automation Rules)

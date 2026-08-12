@@ -138,7 +138,7 @@ export default function CompensatoryLeavePage() {
         {icon:'👁',label:'View Source Attendance',key:'view'},{icon:'📅',label:'Schedule Use',key:'schedule'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📤',label:'Export',key:'export'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Compensatory Leave Balances" columns={['Employee','Worked Date','Source','Days Credited','Use-By Date','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Compensatory Leave Balances" columns={['Employee','Worked Date','Source','Days Credited','Use-By Date','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

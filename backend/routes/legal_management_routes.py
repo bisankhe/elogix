@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/legal_management_routes.py
-NepHR Pro -- Compliance & Risk Management > Legal Management (3 pages:
+eLogix HRMS -- Compliance & Risk Management > Legal Management (3 pages:
 Legal Case Tracking, Contract Compliance, Ethics & Governance)
 URL prefix: /api/v1/legal
 

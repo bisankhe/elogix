@@ -1,5 +1,5 @@
 // FILE: src/components/layout/QuickDock.jsx
-// NepHR Pro — macOS-style Quick Access Dock
+// eLogix HRMS — macOS-style Quick Access Dock
 //
 // Placed directly below the Navbar/Topbar area.
 // Role-aware: different icons for Employee, Manager, HR, Finance, C-Level.

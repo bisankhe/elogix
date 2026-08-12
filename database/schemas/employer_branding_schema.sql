@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/employer_branding_schema.sql
--- NepHR Pro — Employer Branding Module Schema
+-- eLogix HRMS — Employer Branding Module Schema
 -- Covers all 8 pages:
 --   1. evp_pillars              (EVP Management)
 --   2. career_page_blocks       (Career Page Builder)

@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/integration_api_routes.py
-NepHR Pro -- System Administration > Integration & API (3 pages: API
+eLogix HRMS -- System Administration > Integration & API (3 pages: API
 & Third Party Integration, Email & SMS Integration, Biometric
 Integration)
 URL prefix: /api/v1/integration

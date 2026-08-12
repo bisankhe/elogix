@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/attendance_regularization_schema.sql
--- NepHR Pro — Workforce Operations > Attendance Management > Daily
+-- eLogix HRMS — Workforce Operations > Attendance Management > Daily
 -- Attendance > Attendance Regularization (1 page)
 --
 -- Design note: Missed Log In/Out Request (missed_punch_request_schema.sql)

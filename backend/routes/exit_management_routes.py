@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/exit_management_routes.py
-NepHR Pro — Offboarding > Exit Management Module (5 pages)
+eLogix HRMS — Offboarding > Exit Management Module (5 pages)
 URL prefix: /api/v1/exit
 
   1. /resignations        — Resignation Management (notice calc, 15-day rule)

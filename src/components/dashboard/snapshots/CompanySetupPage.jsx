@@ -743,7 +743,7 @@ function CompanyProfileTab({ data, onChange, country, onCountryChange }) {
 
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
         <FI label="Company Legal Name" value={data.legal_name} onChange={v=>onChange('legal_name',v)} placeholder="As registered at government authority" required hint="Must match registration certificate exactly"/>
-        <FI label="Company Short Name / Trade Name" value={data.short_name} onChange={v=>onChange('short_name',v)} placeholder="e.g. NepHR Pro"/>
+        <FI label="Company Short Name / Trade Name" value={data.short_name} onChange={v=>onChange('short_name',v)} placeholder="e.g. eLogix HRMS"/>
 
         {country==='Nepal'&&<>
           <FI label="PAN Number" value={data.pan_number} onChange={v=>onChange('pan_number',v)} placeholder="e.g. 609875432" required hint="Permanent Account Number — IRD"/>

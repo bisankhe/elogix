@@ -128,7 +128,7 @@ export default function LoanManagementPage() {
         {icon:'👁',label:'View Amortization Schedule',key:'view'},{icon:'✅',label:'Approve',key:'approve'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Loan Management" columns={['Employee','Loan Type','Principal','Interest %','Tenure','EMI','Remaining Balance','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Loan Management" columns={['Employee','Loan Type','Principal','Interest %','Tenure','EMI','Remaining Balance','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

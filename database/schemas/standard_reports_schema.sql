@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/standard_reports_schema.sql
--- NepHR Pro -- Reports, Analytics & BI > Standard Reports
+-- eLogix HRMS -- Reports, Analytics & BI > Standard Reports
 -- (9 pages: HR Analytics, Workforce Summary, Department Reports,
 -- Attendance Reports, Training Reports, Payroll Reports, Recruitment
 -- Reports, Performance Reports, Leave Reports)

@@ -288,7 +288,7 @@ export default function VendorClearancePage() {
       )}
 
       {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={CTX} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Vendor Clearances" columns={['Clearance No','Vendor','Service','Workers','Contract End','Status','Final Invoice','Wages Cleared','SSF Cleared','Assets Returned','Labour Office Report']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Vendor Clearances" columns={['Clearance No','Vendor','Service','Workers','Contract End','Status','Final Invoice','Wages Cleared','SSF Cleared','Assets Returned','Labour Office Report']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

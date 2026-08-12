@@ -1,6 +1,6 @@
 -- ============================================================
 -- FILE: database/schemas/position_management_schema.sql
--- NepHR Pro — Position Management + Org Chart + Reporting Hierarchy
+-- eLogix HRMS — Position Management + Org Chart + Reporting Hierarchy
 -- Dedicated standalone schema. Also covered in complete_schema.sql.
 -- ============================================================
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

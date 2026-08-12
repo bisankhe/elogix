@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/certificate_generation_tracking_schema.sql
--- NepHR Pro — Performance & Talent Management > Talent Development >
+-- eLogix HRMS — Performance & Talent Management > Talent Development >
 -- Learning & Development > Generate Certificate + Certification
 -- Tracking (2 pages)
 --

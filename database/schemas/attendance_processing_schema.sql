@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/attendance_processing_schema.sql
--- NepHR Pro — Workforce Operations > Attendance Management >
+-- eLogix HRMS — Workforce Operations > Attendance Management >
 -- Attendance Processing Module (5 pages)
 --
 -- Design note: this is the CONSOLIDATION layer sitting above all

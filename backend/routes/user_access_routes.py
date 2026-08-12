@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/user_access_routes.py
-NepHR Pro -- System Administration > User & Access (4 pages: User
+eLogix HRMS -- System Administration > User & Access (4 pages: User
 Management, Role & Permission, Access Control, Menu Management)
 URL prefix: /api/v1/user-access
 

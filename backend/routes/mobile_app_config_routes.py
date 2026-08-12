@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/mobile_app_config_routes.py
-NepHR Pro -- System Administration > Integration & API > Mobile App
+eLogix HRMS -- System Administration > Integration & API > Mobile App
 Configuration (6 pages: Mobile Attendance, GPS Tracking, Geo-Fencing,
 Field Visit Tracking, Route Monitoring, Field Task Management)
 URL prefix: /api/v1/mobile-app-config

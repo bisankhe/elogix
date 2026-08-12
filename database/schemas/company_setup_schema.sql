@@ -22,7 +22,7 @@ CREATE TABLE group_companies (
 
     -- Identity
     code                    VARCHAR(20)  NOT NULL,          -- "GRP-001"
-    name                    VARCHAR(200) NOT NULL,          -- "NepHR Group Pvt. Ltd."
+    name                    VARCHAR(200) NOT NULL,          -- "eLogix Group Pvt. Ltd."
     legal_name              VARCHAR(200) NOT NULL,
     short_name              VARCHAR(50),
     description             TEXT,

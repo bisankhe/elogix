@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/employee_joining_schema.sql
--- NepHR Pro — Onboarding > Employee Joining Module Schema
+-- eLogix HRMS — Onboarding > Employee Joining Module Schema
 -- Covers all 9 pages (Biometric Capture reuses preboarding_schema.sql's
 -- biometric_captures table — same concept, post-acceptance context):
 --   1. digital_signatures        (Digital Signature Creation)

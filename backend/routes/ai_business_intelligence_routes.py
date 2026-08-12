@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/ai_business_intelligence_routes.py
-NepHR Pro -- AI Business Intelligence / AI Chatbot
+eLogix HRMS -- AI Business Intelligence / AI Chatbot
 (Dashboard & Workspace > AI Assistant > AI Business Intelligence)
 
 Calls the REAL Anthropic Claude API (configured in settings.py).
@@ -48,12 +48,12 @@ def build_system_prompt(company_ctx: dict, employee_role: str,
         "document": "You are a professional document writer. Generate complete, ready-to-use HR documents including letters, policies, proposals, and emails.",
         "workflow": "You are an agentic workflow planner. Break the user's goal into clear, numbered steps. Confirm the plan before executing. Report progress after each step.",
         "analysis": "You are an HR Business Intelligence analyst. Analyse the provided HR data in the context of Nepal Labour Act 2074, SSF, CIT regulations, and global HR best practices.",
-        "chat": "You are NepHR Pro's AI Business Intelligence assistant.",
-    }.get(session_type, "You are NepHR Pro's AI assistant.")
+        "chat": "You are eLogix HRMS's AI Business Intelligence assistant.",
+    }.get(session_type, "You are eLogix HRMS's AI assistant.")
 
     law_ctx = company_ctx.get("nepal_law_context", {})
 
-    return f"""You are NepHR Pro's AI Business Intelligence Assistant — an agentic, multilingual HR and business intelligence system.
+    return f"""You are eLogix HRMS's AI Business Intelligence Assistant — an agentic, multilingual HR and business intelligence system.
 
 ROLE: {type_instruction}
 
@@ -84,7 +84,7 @@ CAPABILITIES:
 4. Analyze attached PDF, Word, Excel, image files
 5. Voice command execution — confirm before executing multi-step tasks
 6. Plan Mode: break complex goals into steps, get approval, then execute
-7. Navigate to NepHR Pro pages by returning a JSON action block
+7. Navigate to eLogix HRMS pages by returning a JSON action block
 8. Predictive analytics and risk identification
 9. Real-time feed from company HR data
 

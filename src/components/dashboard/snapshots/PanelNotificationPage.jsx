@@ -142,7 +142,7 @@ export default function PanelNotificationPage() {
       )}
 
       {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={IMPACT_LINKS} actions={CTX_ACTIONS} onAction={(k,item)=>{if(k==='view')setSelected(item)}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Notification to Interview Panel" columns={['Name','Position','Department','Status','AI Score','Date','Stage','Priority','Notes']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Notification to Interview Panel" columns={['Name','Position','Department','Status','AI Score','Date','Stage','Priority','Notes']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
       <Drawer item={selected} gradient={G} onClose={()=>setSelected(null)} rows={[
         ['Name',selected?.name],['Position',selected?.position],['Department',selected?.dept],
         ['Status',selected?.status],['AI Score',selected?.score+'%'],['Date',selected?.date],

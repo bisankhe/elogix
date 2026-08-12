@@ -11,7 +11,7 @@ const INTEGRATIONS = [
     stats: { jobs_posted: 12, candidates: 284, hires: 8, last_sync: '2 min ago' },
     fields: [{ k: 'access_token', l: 'Access Token', ph: 'Bearer eyJ0eXAiOiJKV1Q...', type: 'password' }, { k: 'org_id', l: 'Organization ID', ph: '123456789', type: 'text' }],
     docs: 'https://developer.linkedin.com/docs/guide/v2/jobs',
-    webhook_url: 'https://api.nephrpro.com/ats/webhooks/linkedin',
+    webhook_url: 'https://api.elogix.com/ats/webhooks/linkedin',
     auto_features: ['Auto-post job on publish', 'Auto-import new applications every 15 min', 'Auto-notify candidates of status changes'] },
 
   { id: 'indeed',    group: 'Job Platforms', name: 'Indeed',             icon: '🔍', color: '#2164f3', status: 'Connected',
@@ -19,7 +19,7 @@ const INTEGRATIONS = [
     stats: { jobs_posted: 10, candidates: 196, hires: 5, last_sync: '5 min ago' },
     fields: [{ k: 'publisher_id', l: 'Publisher ID', ph: 'pub-1234567890abcdef', type: 'text' }, { k: 'api_token', l: 'API Token', ph: 'ind_***', type: 'password' }],
     docs: 'https://opensource.indeedeng.io/api-documentation',
-    webhook_url: 'https://api.nephrpro.com/ats/webhooks/indeed',
+    webhook_url: 'https://api.elogix.com/ats/webhooks/indeed',
     auto_features: ['Auto-post to Indeed on job publish', 'Auto-sync applications every 30 min'] },
 
   { id: 'naukri',    group: 'Job Platforms', name: 'Naukri.com',         icon: '📋', color: '#4a90e2', status: 'Connected',
@@ -27,7 +27,7 @@ const INTEGRATIONS = [
     stats: { jobs_posted: 8, candidates: 142, hires: 3, last_sync: '10 min ago' },
     fields: [{ k: 'api_key', l: 'API Key', ph: 'naukri_***', type: 'password' }, { k: 'client_id', l: 'Client ID', ph: 'your-client-id', type: 'text' }],
     docs: 'https://developer.naukri.com',
-    webhook_url: 'https://api.nephrpro.com/ats/webhooks/naukri',
+    webhook_url: 'https://api.elogix.com/ats/webhooks/naukri',
     auto_features: ['Auto-post jobs', 'Resdex CV auto-import based on job keywords'] },
 
   { id: 'merojob',   group: 'Job Platforms', name: 'MeroJob Nepal',      icon: '🇳🇵', color: '#c0392b', status: 'Connected',
@@ -35,7 +35,7 @@ const INTEGRATIONS = [
     stats: { jobs_posted: 15, candidates: 89, hires: 4, last_sync: '15 min ago' },
     fields: [{ k: 'api_key', l: 'MeroJob API Key', ph: 'mj_live_***', type: 'password' }, { k: 'employer_id', l: 'Employer ID', ph: 'emp-123', type: 'text' }],
     docs: 'https://merojob.com/api-docs',
-    webhook_url: 'https://api.nephrpro.com/ats/webhooks/merojob',
+    webhook_url: 'https://api.elogix.com/ats/webhooks/merojob',
     auto_features: ['Auto-post to MeroJob', 'Auto-receive CV applications', 'SMS candidate alerts'] },
 
   { id: 'jobaxle',   group: 'Job Platforms', name: 'JobAxle Nepal',      icon: '⚙️', color: '#8e44ad', status: 'Connected',
@@ -43,7 +43,7 @@ const INTEGRATIONS = [
     stats: { jobs_posted: 6, candidates: 67, hires: 2, last_sync: '20 min ago' },
     fields: [{ k: 'api_key', l: 'API Key', ph: 'ja_***', type: 'password' }],
     docs: 'https://jobaxle.com/api-docs',
-    webhook_url: 'https://api.nephrpro.com/ats/webhooks/jobaxle',
+    webhook_url: 'https://api.elogix.com/ats/webhooks/jobaxle',
     auto_features: ['Auto-publish jobs', 'Auto-import applications'] },
 
   { id: 'glassdoor', group: 'Job Platforms', name: 'Glassdoor',          icon: '🪟', color: '#0caa41', status: 'Disconnected',
@@ -51,7 +51,7 @@ const INTEGRATIONS = [
     stats: { jobs_posted: 0, candidates: 0, hires: 0, last_sync: 'Never' },
     fields: [{ k: 'partner_id', l: 'Partner ID', ph: 'partner-***', type: 'text' }, { k: 'api_key', l: 'API Key', ph: 'gd_***', type: 'password' }],
     docs: 'https://www.glassdoor.com/developer',
-    webhook_url: 'https://api.nephrpro.com/ats/webhooks/glassdoor',
+    webhook_url: 'https://api.elogix.com/ats/webhooks/glassdoor',
     auto_features: ['Post jobs to Glassdoor', 'Track employer reviews'] },
 
   // ── SOCIAL MEDIA ────────────────────────────────────────────
@@ -60,7 +60,7 @@ const INTEGRATIONS = [
     stats: { jobs_posted: 14, candidates: 118, hires: 6, last_sync: '3 min ago' },
     fields: [{ k: 'page_access_token', l: 'Page Access Token', ph: 'EAA***', type: 'password' }, { k: 'page_id', l: 'Facebook Page ID', ph: '123456789012345', type: 'text' }, { k: 'ig_account_id', l: 'Instagram Account ID', ph: '17841400000000000', type: 'text' }],
     docs: 'https://developers.facebook.com/docs/pages/jobs',
-    webhook_url: 'https://api.nephrpro.com/ats/webhooks/facebook',
+    webhook_url: 'https://api.elogix.com/ats/webhooks/facebook',
     auto_features: ['Auto-post job to Facebook + Instagram', 'Auto-reply DMs with application link', 'Auto-collect Facebook job applications'] },
 
   { id: 'twitter',   group: 'Social Media', name: 'Twitter / X',         icon: '🐦', color: '#000000', status: 'Connected',
@@ -68,7 +68,7 @@ const INTEGRATIONS = [
     stats: { jobs_posted: 8, candidates: 34, hires: 1, last_sync: '1 hr ago' },
     fields: [{ k: 'api_key', l: 'API Key', ph: 'x_api_key_***', type: 'password' }, { k: 'bearer_token', l: 'Bearer Token', ph: 'AAAA***', type: 'password' }],
     docs: 'https://developer.twitter.com/en/docs',
-    webhook_url: 'https://api.nephrpro.com/ats/webhooks/twitter',
+    webhook_url: 'https://api.elogix.com/ats/webhooks/twitter',
     auto_features: ['Auto-tweet job openings with hashtags', 'Thread with job details'] },
 
   { id: 'google',    group: 'Social Media', name: 'Google Jobs / Search', icon: '🔎', color: '#4285f4', status: 'Connected',
@@ -76,7 +76,7 @@ const INTEGRATIONS = [
     stats: { jobs_posted: 12, candidates: 203, hires: 7, last_sync: '30 min ago' },
     fields: [{ k: 'site_url', l: 'Career Site URL', ph: 'https://yourcompany.com/careers', type: 'text' }, { k: 'search_console_key', l: 'Search Console API Key', ph: 'GSC_***', type: 'password' }],
     docs: 'https://developers.google.com/search/docs/appearance/structured-data/job-posting',
-    webhook_url: 'https://api.nephrpro.com/ats/webhooks/google',
+    webhook_url: 'https://api.elogix.com/ats/webhooks/google',
     auto_features: ['Auto structured data for Google Jobs', 'Real-time job indexing ping', 'Search Console monitoring'] },
 
   // ── COMMUNICATION ────────────────────────────────────────────
@@ -85,15 +85,15 @@ const INTEGRATIONS = [
     stats: { messages_sent: 1284, templates_active: 12, delivery_rate: 98.2, last_sync: '1 min ago' },
     fields: [{ k: 'access_token', l: 'WhatsApp Access Token', ph: 'EAA***', type: 'password' }, { k: 'phone_number_id', l: 'Phone Number ID', ph: '123456789012345', type: 'text' }, { k: 'business_account_id', l: 'Business Account ID', ph: '987654321098765', type: 'text' }],
     docs: 'https://developers.facebook.com/docs/whatsapp',
-    webhook_url: 'https://api.nephrpro.com/ats/webhooks/whatsapp',
+    webhook_url: 'https://api.elogix.com/ats/webhooks/whatsapp',
     auto_features: ['Application received confirmation', 'Shortlist notification', 'Exam invite with link', 'Video interview invite', 'Interview schedule', 'Offer letter notification', 'Rejection (professional)', 'Joining reminder'] },
 
   { id: 'email',     group: 'Communication', name: 'Email (SMTP / SendGrid)', icon: '📧', color: '#1a73e8', status: 'Connected',
     capabilities: ['HTML email templates', 'SendGrid transactional', 'Custom SMTP', 'Email tracking (open/click)', 'Bounce handling'],
     stats: { emails_sent: 3847, open_rate: 68.4, click_rate: 24.1, last_sync: '30 sec ago' },
-    fields: [{ k: 'sendgrid_key', l: 'SendGrid API Key', ph: 'SG.***', type: 'password' }, { k: 'from_email', l: 'From Email', ph: 'hr@yourcompany.com', type: 'text' }, { k: 'from_name', l: 'From Name', ph: 'NepHR Recruitment Team', type: 'text' }],
+    fields: [{ k: 'sendgrid_key', l: 'SendGrid API Key', ph: 'SG.***', type: 'password' }, { k: 'from_email', l: 'From Email', ph: 'hr@yourcompany.com', type: 'text' }, { k: 'from_name', l: 'From Name', ph: 'eLogix Recruitment Team', type: 'text' }],
     docs: 'https://docs.sendgrid.com',
-    webhook_url: 'https://api.nephrpro.com/ats/webhooks/email-events',
+    webhook_url: 'https://api.elogix.com/ats/webhooks/email-events',
     auto_features: ['All stage transition emails', 'HTML branded templates', 'Bulk campaign support'] },
 
   { id: 'sms',       group: 'Communication', name: 'SMS (Twilio / Sparrow)', icon: '📱', color: '#f22f46', status: 'Connected',
@@ -101,7 +101,7 @@ const INTEGRATIONS = [
     stats: { sms_sent: 847, delivery_rate: 96.8, cost_per_sms: 'NPR 0.50', last_sync: '5 min ago' },
     fields: [{ k: 'sparrow_token', l: 'Sparrow SMS Token (Nepal)', ph: 'sparrow_***', type: 'password' }, { k: 'sparrow_identity', l: 'Sender Identity', ph: 'YourBrand', type: 'text' }, { k: 'twilio_sid', l: 'Twilio Account SID (International)', ph: 'AC***', type: 'text' }],
     docs: 'https://api.sparrowsms.com',
-    webhook_url: 'https://api.nephrpro.com/ats/webhooks/sms-events',
+    webhook_url: 'https://api.elogix.com/ats/webhooks/sms-events',
     auto_features: ['Interview reminder SMS 2h before', 'Offer notification SMS', 'OTP for candidate portal'] },
 
   // ── CALENDAR & MEETINGS ──────────────────────────────────────
@@ -110,7 +110,7 @@ const INTEGRATIONS = [
     stats: { events_created: 142, upcoming: 8, last_sync: '1 min ago' },
     fields: [{ k: 'service_account', l: 'Service Account JSON', ph: '{"type":"service_account"...}', type: 'textarea' }, { k: 'calendar_id', l: 'HR Calendar ID', ph: 'hr@yourcompany.com', type: 'text' }],
     docs: 'https://developers.google.com/calendar',
-    webhook_url: 'https://api.nephrpro.com/ats/webhooks/gcal',
+    webhook_url: 'https://api.elogix.com/ats/webhooks/gcal',
     auto_features: ['Auto-create events on panel schedule', 'Auto Google Meet link', 'Auto-invite all panel members'] },
 
   { id: 'outlook',   group: 'Calendar & Meetings', name: 'Outlook / Microsoft 365', icon: '💼', color: '#0078d4', status: 'Connected',
@@ -118,7 +118,7 @@ const INTEGRATIONS = [
     stats: { events_created: 67, upcoming: 4, last_sync: '2 min ago' },
     fields: [{ k: 'tenant_id', l: 'Azure Tenant ID', ph: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx', type: 'text' }, { k: 'client_id', l: 'App (Client) ID', ph: 'xxxxxxxx-xxxx-...', type: 'text' }, { k: 'client_secret', l: 'Client Secret', ph: 'xxx~***', type: 'password' }],
     docs: 'https://docs.microsoft.com/en-us/graph',
-    webhook_url: 'https://api.nephrpro.com/ats/webhooks/outlook',
+    webhook_url: 'https://api.elogix.com/ats/webhooks/outlook',
     auto_features: ['Teams meeting auto-create', 'Outlook calendar invite to interviewers'] },
 
   { id: 'zoom',      group: 'Calendar & Meetings', name: 'Zoom',            icon: '🔵', color: '#2D8CFF', status: 'Connected',
@@ -126,7 +126,7 @@ const INTEGRATIONS = [
     stats: { meetings_created: 38, recordings: 22, last_sync: '5 min ago' },
     fields: [{ k: 'api_key', l: 'Zoom API Key', ph: 'zoom_***', type: 'password' }, { k: 'account_id', l: 'Account ID', ph: 'abc123***', type: 'text' }],
     docs: 'https://marketplace.zoom.us/docs/api-reference',
-    webhook_url: 'https://api.nephrpro.com/ats/webhooks/zoom',
+    webhook_url: 'https://api.elogix.com/ats/webhooks/zoom',
     auto_features: ['Auto-create Zoom link on interview schedule', 'Sync recordings to candidate profile'] },
 
   // ── ESIGNATURE & VERIFICATION ────────────────────────────────
@@ -135,7 +135,7 @@ const INTEGRATIONS = [
     stats: { docs_sent: 42, signed: 38, pending: 4, last_sync: '10 min ago' },
     fields: [{ k: 'integration_key', l: 'Integration Key', ph: 'xxxxxxxx-xxxx-...', type: 'password' }, { k: 'account_id', l: 'Account ID', ph: 'your-account-id', type: 'text' }, { k: 'base_url', l: 'Base URL', ph: 'https://demo.docusign.net/restapi', type: 'text' }],
     docs: 'https://developers.docusign.com',
-    webhook_url: 'https://api.nephrpro.com/ats/webhooks/docusign',
+    webhook_url: 'https://api.elogix.com/ats/webhooks/docusign',
     auto_features: ['Auto-send offer letter for signature after HR approval', 'Auto-notify HR when signed', 'Archive signed docs to candidate profile'] },
 ]
 

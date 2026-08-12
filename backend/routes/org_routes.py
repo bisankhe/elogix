@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/org_routes.py
-NepHR Pro — Organization Management REST API
+eLogix HRMS — Organization Management REST API
 Covers: Group Company, Company Profile/Setup, Branches,
         Departments, Designations, Grade Levels,
         Positions, Org Chart, Teams, Employment Categories

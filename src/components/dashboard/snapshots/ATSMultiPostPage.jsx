@@ -90,9 +90,9 @@ export default function ATSMultiPostPage() {
     return s + (ch?.reach.includes('500M') ? 500 : ch?.reach.includes('300M') ? 300 : ch?.reach.includes('250M') ? 250 : ch?.reach.includes('#1') ? 50 : 10)
   }, 0)
 
-  const applyLink = `https://careers.nephrpro.com/apply/${selJob?.id}`
+  const applyLink = `https://careers.elogix.com/apply/${selJob?.id}`
   const whatsappLink = `https://wa.me/9779800000001?text=I would like to apply for ${selJob?.title}`
-  const referralLink = `https://careers.nephrpro.com/refer/${selJob?.id}/${Math.random().toString(36).substr(2, 8)}`
+  const referralLink = `https://careers.elogix.com/refer/${selJob?.id}/${Math.random().toString(36).substr(2, 8)}`
 
   return (
     <div style={{ fontFamily:'system-ui,sans-serif' }}>
@@ -190,7 +190,7 @@ export default function ATSMultiPostPage() {
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
           <div style={{ background:'#fff', borderRadius:14, padding:22, border:'1px solid #e2e8f0', textAlign:'center' }}>
             <div style={{ fontSize:12, fontWeight:800, color:'#0f172a', marginBottom:4 }}>QR Code — Apply Now</div>
-            <div style={{ fontSize:10, color:'#64748b', marginBottom:20 }}>{selJob?.title || 'Select a job'} · NepHR Pro</div>
+            <div style={{ fontSize:10, color:'#64748b', marginBottom:20 }}>{selJob?.title || 'Select a job'} · eLogix HRMS</div>
             <div style={{ display:'inline-block', padding:16, background:'#fff', borderRadius:14, boxShadow:'0 4px 20px rgba(0,0,0,.1)', marginBottom:16 }}>
               <QRDisplay jobTitle={selJob?.title} jobId={selJob?.id} />
             </div>
@@ -229,7 +229,7 @@ export default function ATSMultiPostPage() {
         <div>
           <div style={{ fontSize:11, fontWeight:800, color:'#0f172a', marginBottom:12 }}>All Apply Channels — {selJob?.title}</div>
           {APPLY_METHODS.map(m => {
-            const linkMap = { direct:applyLink, linkedin:`https://linkedin.com/jobs/${selJob?.id}`, facebook:`https://facebook.com/jobs/${selJob?.id}`, indeed:`https://indeed.com/job/${selJob?.id}`, qr:applyLink, whatsapp:whatsappLink, email:`mailto:careers@nephrpro.com?subject=Application: ${selJob?.title}`, referral:referralLink }
+            const linkMap = { direct:applyLink, linkedin:`https://linkedin.com/jobs/${selJob?.id}`, facebook:`https://facebook.com/jobs/${selJob?.id}`, indeed:`https://indeed.com/job/${selJob?.id}`, qr:applyLink, whatsapp:whatsappLink, email:`mailto:careers@elogix.com?subject=Application: ${selJob?.title}`, referral:referralLink }
             const link = linkMap[m.id]
             return (
               <div key={m.id} style={{ background:'#fff', borderRadius:12, padding:'12px 16px', marginBottom:8, border:'1px solid #f1f5f9', display:'flex', gap:12, alignItems:'center', flexWrap:'wrap' }}>

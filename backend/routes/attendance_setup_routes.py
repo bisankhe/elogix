@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/attendance_setup_routes.py
-NepHR Pro — Workforce Operations > Attendance Management > Attendance Setup (8 pages)
+eLogix HRMS — Workforce Operations > Attendance Management > Attendance Setup (8 pages)
 URL prefix: /api/v1/attendance-setup
 
   1. /policies              — Attendance Policy

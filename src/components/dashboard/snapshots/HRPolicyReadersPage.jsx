@@ -1,5 +1,5 @@
 // FILE: HRPolicyReadersPage.jsx — Compliance & Risk > HR Policies > Policy Readers
-// Reads REAL data from nephr_policy_readers_v2 (written by HRPolicyLibraryPage + PublishHRPolicyPage)
+// Reads REAL data from elogix_policy_readers_v2 (written by HRPolicyLibraryPage + PublishHRPolicyPage)
 // Shows: ✅ Read & Signed (names + date) | 📕 Not Yet Read (names) — per policy and per employee
 
 import { useState, useMemo } from 'react'
@@ -8,8 +8,8 @@ import { useApp } from '../../../context/AppContext.jsx'
 const G  = 'linear-gradient(135deg,#4a1d96 0%,#6d28d9 100%)'
 const P  = '#6d28d9'
 
-const READERS_KEY = 'nephr_policy_readers_v2'
-const LIBRARY_KEY = 'nephr_policy_library_v2'
+const READERS_KEY = 'elogix_policy_readers_v2'
+const LIBRARY_KEY = 'elogix_policy_library_v2'
 
 const EMPLOYEES = [
   { id:'e1',  name:'Bikash Shrestha',  dept:'Engineering', avatar:'BS' },
@@ -91,9 +91,9 @@ export default function HRPolicyReadersPage() {
     try {
       const emp = EMPLOYEES.find(e=>e.id===empId)
       const pol = allPolicies.find(p=>p.id===polId)
-      const notifs = JSON.parse(localStorage.getItem('nephr_hris_notifications')||'[]')
+      const notifs = JSON.parse(localStorage.getItem('elogix_hris_notifications')||'[]')
       notifs.unshift({ id:`REM-${Date.now()}`, cat:'Action Required', icon:'📋', title:`Policy Reminder Sent: ${emp?.name} — "${pol?.title}"`, body:`Email + WhatsApp + Dashboard notification sent · Please read and sign within 7 days`, time:'Just now', unread:true })
-      localStorage.setItem('nephr_hris_notifications', JSON.stringify(notifs.slice(0,100)))
+      localStorage.setItem('elogix_hris_notifications', JSON.stringify(notifs.slice(0,100)))
     } catch {}
   }
 

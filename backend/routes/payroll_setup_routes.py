@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/payroll_setup_routes.py
-NepHR Pro — Workforce Operations > Payroll & Compensation > Payroll Setup (10 pages)
+eLogix HRMS — Workforce Operations > Payroll & Compensation > Payroll Setup (10 pages)
 URL prefix: /api/v1/payroll-setup
 
   1.  /pay-groups                — Payroll Setup (groups, absence redistribution)

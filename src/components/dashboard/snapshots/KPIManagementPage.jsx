@@ -163,7 +163,7 @@ export default function KPIManagementPage() {
         {icon:'👁',label:'View Trend History',key:'view'},{icon:'✏',label:'Update Value',key:'update'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📤',label:'Export',key:'export'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="KPI Management" columns={['KPI Title','Parent KRA','Formula','Target','Current','Unit','Data Source','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="KPI Management" columns={['KPI Title','Parent KRA','Formula','Target','Current','Unit','Data Source','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

@@ -1,5 +1,5 @@
 # DATA RETENTION POLICY
-## NepHR Pro — AI-Powered HRIS + HRMS + HRIM Platform
+## eLogix HRMS — AI-Powered HRIS + HRMS + HRIM Platform
 **Document #8** | **Version:** 1.0 | **Effective Date:** June 11, 2026
 **Classification:** CONFIDENTIAL — Internal & Client Reference
 
@@ -8,12 +8,12 @@
 ## 1. PURPOSE & SCOPE
 
 This Data Retention Policy defines:
-- How long NepHR Pro retains each category of personal data
+- How long eLogix HRMS retains each category of personal data
 - The legal basis for each retention period
 - Deletion and destruction procedures
 - Country-specific legal requirements
 
-**Applies to:** All personal data processed through NepHR Pro across all tenants and all jurisdictions.
+**Applies to:** All personal data processed through eLogix HRMS across all tenants and all jurisdictions.
 
 ---
 
@@ -301,6 +301,6 @@ All exceptions must be documented and approved by the DPO.
 
 ---
 
-*Document Owner: NepHR Pro Data Protection Officer*
+*Document Owner: eLogix HRMS Data Protection Officer*
 *Created: June 11, 2026 | Next Review: June 11, 2027*
-*© 2026 NepHR Pro Pvt. Ltd. — Subject to legal review before final use.*
+*© 2026 eLogix HRMS Pvt. Ltd. — Subject to legal review before final use.*

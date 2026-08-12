@@ -15,7 +15,7 @@ const ALL_NOTIFS=[
   {id:8,cat:'FYI',            icon:'🎊',type:'anniv',  title:'Work Anniversary: Ram Prasad Sah — 5 Years',         body:'Ram Prasad completes 5 years on Jul 7. Consider recognition award and tenure certificate.',action:'Acknowledge',   time:'1 day ago',  priority:'low',     unread:false},
   {id:9,cat:'FYI',            icon:'✅',type:'payroll', title:'June Payroll Processed Successfully',                body:'NPR 4.8M disbursed to 312 employees. 0 errors. SSF remitted. TDS filed. Bank transfer complete.',action:'View Report',  time:'2 days ago', priority:'info',    unread:false},
   {id:10,cat:'FYI',           icon:'📋',type:'recruit','title':'New Application: Senior Engineer Role',             body:'Kavita Sharma applied via LinkedIn for Senior Engineer position. Strong fit — 7 years experience.',action:'Review CV',    time:'3 days ago', priority:'low',     unread:false},
-  {id:11,cat:'System',        icon:'⚙️',type:'system', title:'NepHR Pro System Update v4.2 Deployed',             body:'New features: AI MOM generator, enhanced predictive analytics, SSF auto-calc. No downtime.',action:'View Release', time:'3 days ago', priority:'info',    unread:false},
+  {id:11,cat:'System',        icon:'⚙️',type:'system', title:'eLogix HRMS System Update v4.2 Deployed',             body:'New features: AI MOM generator, enhanced predictive analytics, SSF auto-calc. No downtime.',action:'View Release', time:'3 days ago', priority:'info',    unread:false},
   {id:12,cat:'System',        icon:'🔒',type:'security','title':'Security: 2 Failed Login Attempts Blocked',        body:'IP 203.x.x.x attempted login to Finance admin account. Blocked by RBAC. No breach.',action:'View Log',     time:'4 days ago', priority:'medium',  unread:false},
 ]
 

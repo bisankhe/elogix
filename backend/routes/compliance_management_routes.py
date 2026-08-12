@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/compliance_management_routes.py
-NepHR Pro -- Compliance & Risk Management > Compliance Management
+eLogix HRMS -- Compliance & Risk Management > Compliance Management
 (6 pages: Labor Compliance, Statutory Compliance, Policy Compliance,
 Audit Management, Annual Labour Audit, License Management)
 URL prefix: /api/v1/compliance

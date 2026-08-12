@@ -121,7 +121,7 @@ export default function LeaveAdjustmentPage() {
         {icon:'👁',label:'View Audit Detail',key:'view'},{icon:'📎',label:'View Document',key:'doc'},
         {icon:'🔗',label:'Impact Analysis',key:'impact'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Leave Adjustments" columns={['Employee','Leave Type','Adjustment Type','Days Delta','Reason','Adjusted By','Date']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Leave Adjustments" columns={['Employee','Leave Type','Adjustment Type','Days Delta','Reason','Adjusted By','Date']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

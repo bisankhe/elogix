@@ -1,4 +1,4 @@
-# NepHR Pro Backend Dependencies
+# eLogix HRMS Backend Dependencies
 Flask==3.0.3
 Flask-SQLAlchemy==3.1.1
 Flask-CORS==4.0.1

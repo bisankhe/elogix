@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/leave_operations_routes.py
-NepHR Pro — Workforce Operations > Leave Management > Leave Operations (7 pages)
+eLogix HRMS — Workforce Operations > Leave Management > Leave Operations (7 pages)
 URL prefix: /api/v1/leave-operations
 
   1. /requests          — Leave Request

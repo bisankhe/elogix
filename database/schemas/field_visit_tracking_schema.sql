@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/field_visit_tracking_schema.sql
--- NepHR Pro — Workforce Operations > Attendance Management > Daily
+-- eLogix HRMS — Workforce Operations > Attendance Management > Daily
 -- Attendance > Field Visit Tracking (TA & DA) (1 page)
 --
 -- Design note: integrates directly with task_location_assignments and

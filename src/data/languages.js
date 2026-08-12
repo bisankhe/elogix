@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════
-//  NepHR Pro — World Languages
+//  eLogix HRMS — World Languages
 //  File: src/data/languages.js
 //  20 languages with RTL support
 // ═══════════════════════════════════════════════════

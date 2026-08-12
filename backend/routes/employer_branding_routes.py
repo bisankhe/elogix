@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/employer_branding_routes.py
-NepHR Pro — Employer Branding Module
+eLogix HRMS — Employer Branding Module
 URL prefix: /api/v1/branding
 
 Covers all 8 pages:
@@ -653,16 +653,16 @@ def create_event():
             "etype": body.get("event_type","campus_drive"), "loc": body.get("location",""),
             "virtual": body.get("is_virtual", False), "date": body["event_date"],
             "start": body.get("start_time"), "end": body.get("end_time"),
-            "reg_link": f"https://nephr.com.np/events/{event_id}",
-            "qr": f"https://nephr.com.np/checkin/{qr_token}",
-            "hashtag": body.get("social_hashtag", f"#NepHRHiring{date.today().year}"),
+            "reg_link": f"https://elogix.com.np/events/{event_id}",
+            "qr": f"https://elogix.com.np/checkin/{qr_token}",
+            "hashtag": body.get("social_hashtag", f"#eLogixHiring{date.today().year}"),
             "user": g.user_id,
         })
         db.session.commit()
         return created({
             "event_id": event_id,
-            "registration_link": f"https://nephr.com.np/events/{event_id}",
-            "qr_checkin_url": f"https://nephr.com.np/checkin/{qr_token}",
+            "registration_link": f"https://elogix.com.np/events/{event_id}",
+            "qr_checkin_url": f"https://elogix.com.np/checkin/{qr_token}",
         })
     except Exception as e:
         db.session.rollback()

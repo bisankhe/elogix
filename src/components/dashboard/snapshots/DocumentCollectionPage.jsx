@@ -181,7 +181,7 @@ export default function DocumentCollectionPage() {
       </div>
 
       {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={CTX} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Document Collection" columns={['Employee ID','Name','Citizenship','PAN','Academic','Experience','Bank','Photo','SSF','Completion %']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="Document Collection" columns={['Employee ID','Name','Citizenship','PAN','Academic','Experience','Bank','Photo','SSF','Completion %']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
       <Drawer item={selected} gradient={G} onClose={()=>setSelected(null)} rows={[
         ['Employee ID',selected?.employee_id],['Name',selected?.name],['Position',selected?.position],
         ['Completion',selected?.completion_pct+'%'],

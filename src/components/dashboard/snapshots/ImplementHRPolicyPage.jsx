@@ -1,6 +1,6 @@
 // FILE: ImplementHRPolicyPage.jsx — Compliance & Risk > Compliance Management > Implement HR Policy
-// Reads from nephr_policy_impl_v2 (written by PublishHRPolicyPage)
-// Reads reader progress from nephr_policy_readers_v2
+// Reads from elogix_policy_impl_v2 (written by PublishHRPolicyPage)
+// Reads reader progress from elogix_policy_readers_v2
 // Shows department-wise rollout, implementation checklist, training scheduler
 
 import { useState, useMemo } from 'react'
@@ -9,9 +9,9 @@ import { useApp } from '../../../context/AppContext.jsx'
 const G = 'linear-gradient(135deg,#0c4a6e 0%,#0369a1 100%)'
 const P = '#0369a1'
 
-const IMPL_KEY    = 'nephr_policy_impl_v2'
-const READERS_KEY = 'nephr_policy_readers_v2'
-const LIBRARY_KEY = 'nephr_policy_library_v2'
+const IMPL_KEY    = 'elogix_policy_impl_v2'
+const READERS_KEY = 'elogix_policy_readers_v2'
+const LIBRARY_KEY = 'elogix_policy_library_v2'
 
 const EMPLOYEES = [
   { id:'e1',  name:'Bikash Shrestha',  dept:'Engineering' }, { id:'e2',  name:'Anita Gurung',    dept:'Engineering' },
@@ -104,9 +104,9 @@ export default function ImplementHRPolicyPage() {
     setTimeout(()=>setSchedMsg(''), 4000)
     toggleStep(pol.id, 'training', true)
     try {
-      const notifs = JSON.parse(localStorage.getItem('nephr_hris_notifications')||'[]')
+      const notifs = JSON.parse(localStorage.getItem('elogix_hris_notifications')||'[]')
       notifs.unshift({ id:`TR-${Date.now()}`, cat:'FYI', icon:'🎓', title:`Policy Training Scheduled: ${pol.title}`, body:`All departments · Next 7 days · HR to facilitate`, time:'Just now', unread:true })
-      localStorage.setItem('nephr_hris_notifications', JSON.stringify(notifs.slice(0,100)))
+      localStorage.setItem('elogix_hris_notifications', JSON.stringify(notifs.slice(0,100)))
     } catch {}
   }
 

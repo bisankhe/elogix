@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/employee_documents_routes.py
-NepHR Pro — Employee Records > Employee Documents Module (4 pages)
+eLogix HRMS — Employee Records > Employee Documents Module (4 pages)
 URL prefix: /api/v1/employee-docs
 
   1. /documents          — Document Management (OCR, RBAC, retention)

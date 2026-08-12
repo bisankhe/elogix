@@ -5,7 +5,7 @@
 import { useState } from 'react'
 import { useApp } from '../../../context/AppContext.jsx'
 
-export const DRAFT_KEY = 'nephr_policy_drafts_v2'
+export const DRAFT_KEY = 'elogix_policy_drafts_v2'
 
 const G   = 'linear-gradient(135deg,#1e3a5f 0%,#1e40af 100%)'
 const P   = '#1e40af'
@@ -276,7 +276,7 @@ export default function DraftHRPolicyPage() {
 
   const [form, setForm] = useState({
     cat:'', catName:'', selectedTemplate:'', customTitle:'',
-    control:'', company:'NepHR Pro Pvt. Ltd.', owner:'HR Manager',
+    control:'', company:'eLogix HRMS Pvt. Ltd.', owner:'HR Manager',
     approver:'Chief Human Resources Officer (CHRO)',
     effectiveDate: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}),
     reviewCycle:'Annually', mandatory:true,
@@ -331,9 +331,9 @@ export default function DraftHRPolicyPage() {
 
     if (submitForApproval) {
       try {
-        const notifs = JSON.parse(localStorage.getItem('nephr_hris_notifications')||'[]')
+        const notifs = JSON.parse(localStorage.getItem('elogix_hris_notifications')||'[]')
         notifs.unshift({ id:`POL-SUB-${Date.now()}`, cat:'Action Required', icon:'📋', title:`Policy Awaiting Approval: "${title}"`, body:`Submitted by HR · Awaiting review by ${form.approver}`, action:'Publish HR Policy', actionId:'publish-hr-policy', time:'Just now', unread:true })
-        localStorage.setItem('nephr_hris_notifications', JSON.stringify(notifs.slice(0,100)))
+        localStorage.setItem('elogix_hris_notifications', JSON.stringify(notifs.slice(0,100)))
       } catch {}
       setMsg('✅ Submitted for approval! Reviewer has been notified.')
       setTimeout(()=>{ setMsg(''); navTo?.('publish-hr-policy') }, 2000)
@@ -508,7 +508,7 @@ export default function DraftHRPolicyPage() {
             <Card title="Step 2 — Policy Details & Metadata">
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0 24px' }}>
                 <FI label="Policy Number / Control ID" value={form.control} onChange={v=>set('control',v)} required placeholder="e.g. POL-EMP-001" hint="Unique identifier for version control and tracking"/>
-                <FI label="Company Name" value={form.company} onChange={v=>set('company',v)} required placeholder="NepHR Pro Pvt. Ltd."/>
+                <FI label="Company Name" value={form.company} onChange={v=>set('company',v)} required placeholder="eLogix HRMS Pvt. Ltd."/>
                 <FI label="Policy Owner" value={form.owner} onChange={v=>set('owner',v)} required placeholder="e.g. HR Manager" hint="Department or role responsible for maintaining this policy"/>
                 <FI label="Approving Authority" value={form.approver} onChange={v=>set('approver',v)} required placeholder="e.g. CHRO / CEO" hint="Who must approve this policy before publication"/>
                 <FI label="Effective Date" value={form.effectiveDate} onChange={v=>set('effectiveDate',v)} placeholder="e.g. 1 August 2026" hint="Date this policy comes into force"/>

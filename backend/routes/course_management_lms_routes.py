@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/course_management_lms_routes.py
-NepHR Pro — Performance & Talent Management > Talent Development >
+eLogix HRMS — Performance & Talent Management > Talent Development >
 Learning & Development > Course Management (Full LMS Module)
 URL prefix: /api/v1/lms
 

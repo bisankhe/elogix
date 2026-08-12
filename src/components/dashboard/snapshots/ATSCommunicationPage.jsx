@@ -33,7 +33,7 @@ const STAGES = [
 
 const TEMPLATES = {
   received: {
-    email: { subject:'We received your application — {JOB_TITLE} | NepHR Pro', body:`Dear {CANDIDATE_NAME},
+    email: { subject:'We received your application — {JOB_TITLE} | eLogix HRMS', body:`Dear {CANDIDATE_NAME},
 
 Thank you for applying for the position of {JOB_TITLE} at {COMPANY_NAME}.
 
@@ -390,7 +390,7 @@ export default function ATSCommunicationPage() {
           <div style={{ background: '#fff', borderRadius: 14, padding: 16, border: '1px solid #e2e8f0' }}>
             <div style={{ fontSize: 11, fontWeight: 800, color: '#0f172a', marginBottom: 10 }}>Send Preview</div>
             <div style={{ background: channel === 'whatsapp' ? '#e8fde8' : channel === 'sms' ? '#f0f4ff' : '#f8fafc', borderRadius: 10, padding: 12, border: '1px solid #e2e8f0', minHeight: 200, fontSize: 9, color: '#334155', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>
-              {(editedContent || currentTpl || 'Select a stage to preview the template...').replace('{CANDIDATE_NAME}', 'Gita Maharjan').replace('{JOB_TITLE}', 'Senior React Developer').replace('{COMPANY_NAME}', 'NepHR Pro').replace('{HR_NAME}', 'Maya Pradhan')}
+              {(editedContent || currentTpl || 'Select a stage to preview the template...').replace('{CANDIDATE_NAME}', 'Gita Maharjan').replace('{JOB_TITLE}', 'Senior React Developer').replace('{COMPANY_NAME}', 'eLogix HRMS').replace('{HR_NAME}', 'Maya Pradhan')}
             </div>
             <div style={{ marginTop: 10, fontSize: 8, color: '#94a3b8' }}>Variables auto-filled per candidate when sending to multiple recipients.</div>
           </div>

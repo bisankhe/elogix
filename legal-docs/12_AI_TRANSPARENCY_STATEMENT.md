@@ -1,5 +1,5 @@
 # AI TRANSPARENCY STATEMENT
-## NepHR Pro — Responsible AI in HR Management
+## eLogix HRMS — Responsible AI in HR Management
 **Document #12** | **Version:** 1.0 | **Effective Date:** June 11, 2026
 **Classification:** Public — Available to all users and clients
 
@@ -7,7 +7,7 @@
 
 ## 1. OUR COMMITMENT
 
-NepHR Pro is committed to responsible, transparent, and fair use of Artificial Intelligence in Human Resource management. We believe AI should:
+eLogix HRMS is committed to responsible, transparent, and fair use of Artificial Intelligence in Human Resource management. We believe AI should:
 - **Assist** HR professionals — never replace human judgment
 - **Explain** its recommendations in plain language
 - **Never discriminate** on protected characteristics
@@ -89,7 +89,7 @@ Step 7: Monthly retraining → Continuous improvement cycle
 
 ### 4.1 The Golden Rule
 
-> **NepHR Pro AI never makes final employment decisions.**
+> **eLogix HRMS AI never makes final employment decisions.**
 > Every AI recommendation requires documented human review before any action is taken.
 
 ### 4.2 Human Oversight Requirements by Decision Type
@@ -146,7 +146,7 @@ The following characteristics are **explicitly excluded** from all AI model feat
 | Disparate impact analysis | Quarterly | DPO + AI Team |
 | External bias review | Annually | Independent auditor |
 
-**Bias audit results:** Available to Enterprise clients upon written request to ai-ethics@nephrpro.com
+**Bias audit results:** Available to Enterprise clients upon written request to ai-ethics@elogix.com
 
 ---
 
@@ -184,10 +184,10 @@ Under GDPR Article 22, EU AI Act, and our policy:
 
 | Right | Description | How to Exercise |
 |---|---|---|
-| **Right to explanation** | Request an explanation of any AI recommendation that affected you | Email privacy@nephrpro.com |
-| **Right to human review** | Request that any AI-influenced decision be reviewed by a human | Contact your HR manager or privacy@nephrpro.com |
-| **Right to contest** | Challenge an AI-generated assessment you believe is inaccurate or unfair | Email ai-ethics@nephrpro.com |
-| **Right to opt out** | Request that AI profiling is disabled for your data | Email privacy@nephrpro.com |
+| **Right to explanation** | Request an explanation of any AI recommendation that affected you | Email privacy@elogix.com |
+| **Right to human review** | Request that any AI-influenced decision be reviewed by a human | Contact your HR manager or privacy@elogix.com |
+| **Right to contest** | Challenge an AI-generated assessment you believe is inaccurate or unfair | Email ai-ethics@elogix.com |
+| **Right to opt out** | Request that AI profiling is disabled for your data | Email privacy@elogix.com |
 | **Right to transparency** | Access this AI Transparency Statement at any time | This document |
 
 **Response time:** Within 30 days
@@ -285,7 +285,7 @@ For chatbot and other limited-risk AI features, we disclose:
 
 If you believe our AI has produced a discriminatory, inaccurate, or harmful output:
 
-1. **Email:** ai-ethics@nephrpro.com
+1. **Email:** ai-ethics@elogix.com
 2. **Subject line:** "AI Concern — [Feature Name]"
 3. **Include:** Description of the output, when it occurred, why you believe it is problematic
 4. **Response:** We will acknowledge within 5 business days and investigate fully
@@ -303,7 +303,7 @@ This statement is reviewed:
 
 ---
 
-*Document Owner: NepHR Pro AI Ethics Lead & DPO*
+*Document Owner: eLogix HRMS AI Ethics Lead & DPO*
 *Created: June 11, 2026 | Next Review: September 11, 2026*
-*© 2026 NepHR Pro Pvt. Ltd.*
+*© 2026 eLogix HRMS Pvt. Ltd.*
 *Subject to legal review. Accuracy figures based on internal testing as of June 2026.*

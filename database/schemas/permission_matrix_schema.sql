@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/permission_matrix_schema.sql
--- NepHR Pro -- the actual granular, editable RBAC engine.
+-- eLogix HRMS -- the actual granular, editable RBAC engine.
 --
 -- WHY THIS FILE EXISTS (real gap, confirmed before writing):
 -- Three permission-adjacent things already existed in this build,

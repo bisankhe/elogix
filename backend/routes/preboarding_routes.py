@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/preboarding_routes.py
-NepHR Pro — Onboarding > Preboarding Module
+eLogix HRMS — Onboarding > Preboarding Module
 URL prefix: /api/v1/preboard
 
 Covers all 5 pages:
@@ -155,7 +155,7 @@ def request_offer_otp(offer_id):
         """), {"h": otp_hash, "oid": offer_id})
         db.session.commit()
 
-        # In production: send_sms(candidate_phone, f"Your NepHR Pro OTP is {otp}")
+        # In production: send_sms(candidate_phone, f"Your eLogix HRMS OTP is {otp}")
         return success({"otp_sent": True, "message": "OTP sent to your registered mobile number.",
                         "_dev_otp": otp})  # remove _dev_otp in production
     except Exception as e:

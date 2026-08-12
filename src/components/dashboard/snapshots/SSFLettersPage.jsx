@@ -138,7 +138,7 @@ export default function SSFLettersPage() {
         {icon:'👁',label:'View Letter',key:'view'},{icon:'📥',label:'Download PDF',key:'download'},
         {icon:'📤',label:'Mark as Submitted',key:'submit'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="SSF Letters" columns={['Subject','Type','Employee','SSF No','Reference No','Date Sent','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[NepHR Import]", f.name, result); }}/>}
+      {showExcel&&<ExcelModal title="SSF Letters" columns={['Subject','Type','Employee','SSF No','Reference No','Date Sent','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
 }

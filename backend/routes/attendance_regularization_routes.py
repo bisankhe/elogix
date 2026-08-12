@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/attendance_regularization_routes.py
-NepHR Pro — Workforce Operations > Attendance Management > Daily Attendance
+eLogix HRMS — Workforce Operations > Attendance Management > Daily Attendance
 > Attendance Regularization (1 page)
 URL prefix: /api/v1/attendance-regularization
 

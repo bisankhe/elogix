@@ -14,9 +14,9 @@ const SAVED_COMPANIES = [
   {
     id: 'comp-001',
     code: 'NP-001',
-    name: 'NepHR Pro Pvt. Ltd.',
-    legal_name: 'NepHR Pro Private Limited',
-    short_name: 'NepHR Pro',
+    name: 'eLogix HRMS Pvt. Ltd.',
+    legal_name: 'eLogix HRMS Private Limited',
+    short_name: 'eLogix HRMS',
     logo: '🏢',
     company_type: 'Private Limited (Pvt. Ltd.)',
     industry: 'Information Technology',
@@ -34,8 +34,8 @@ const SAVED_COMPANIES = [
     municipality: 'Kathmandu Metropolitan City',
     ward_no: '14',
     phone: '+977-1-4567890',
-    email: 'info@nephrpro.com.np',
-    hr_email: 'hr@nephrpro.com.np',
+    email: 'info@elogix.com.np',
+    hr_email: 'hr@elogix.com.np',
     labour_office_zone: 'Bagmati Province Labour Office',
     min_wage_applicable: 15000,
     foreign_worker_pct: 2.1,
@@ -43,7 +43,7 @@ const SAVED_COMPANIES = [
     fiscal_year_type: 'NEPALI',
     established_date: '2020-06-15',
     branches_count: 4,
-    group_company: 'NepHR Group Holdings',
+    group_company: 'eLogix Group Holdings',
     doc_compliance_pct: 90,
     documents: [
       { category: 'ocr_certificate',    name: 'Company Registration (OCR)', status: 'verified', expiry: '2026-07-15', days_left: 34, icon: '🏛️' },
@@ -61,9 +61,9 @@ const SAVED_COMPANIES = [
   {
     id: 'comp-002',
     code: 'IN-001',
-    name: 'NepHR India Pvt. Ltd.',
-    legal_name: 'NepHR India Private Limited',
-    short_name: 'NepHR India',
+    name: 'eLogix India Pvt. Ltd.',
+    legal_name: 'eLogix India Private Limited',
+    short_name: 'eLogix India',
     logo: '🏬',
     company_type: 'Private Limited',
     industry: 'Information Technology',
@@ -80,8 +80,8 @@ const SAVED_COMPANIES = [
     district: 'New Delhi',
     municipality: 'NDMC',
     phone: '+91-11-45678900',
-    email: 'info@nephrindia.com',
-    hr_email: 'hr@nephrindia.com',
+    email: 'info@elogixindia.com',
+    hr_email: 'hr@elogixindia.com',
     labour_office_zone: 'Delhi Labour Office',
     min_wage_applicable: 0,
     foreign_worker_pct: 0,
@@ -89,7 +89,7 @@ const SAVED_COMPANIES = [
     fiscal_year_type: 'GREGORIAN',
     established_date: '2021-04-01',
     branches_count: 2,
-    group_company: 'NepHR Group Holdings',
+    group_company: 'eLogix Group Holdings',
     doc_compliance_pct: 80,
     documents: [
       { category: 'incorporation_certificate', name: 'Certificate of Incorporation', status: 'verified', expiry: null,         days_left: null, icon: '🏛️' },
@@ -462,6 +462,13 @@ export default function CompanyProfilePage() {
           </div>
           <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
             {allAlerts.map((alert, i) => {
+              const URGENCY_LEVELS = {
+                critical: { label:'Critical', icon:'🔴', bg:'#fef2f2', color:'#dc2626', border:'#fecaca' },
+                high:     { label:'High',     icon:'🟠', bg:'#fff7ed', color:'#ea580c', border:'#fed7aa' },
+                medium:   { label:'Medium',   icon:'🟡', bg:'#fffbeb', color:'#d97706', border:'#fde68a' },
+                low:      { label:'Low',      icon:'🟢', bg:'#f0fdf4', color:'#16a34a', border:'#bbf7d0' },
+              }
+              const urg = URGENCY_LEVELS[alert.urgency] || URGENCY_LEVELS.critical
               return (
                 <div key={i} style={{ display:'flex', alignItems:'center', gap:10,
                   background:'#fff', borderRadius:8, padding:'8px 12px',

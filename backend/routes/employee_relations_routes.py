@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/employee_relations_routes.py
-NepHR Pro -- Employee Experience & Culture > Employee Relations
+eLogix HRMS -- Employee Experience & Culture > Employee Relations
 (5 pages: Grievance Management, Complaint Management, Conflict
 Resolution, Disciplinary Management, Warning Letter)
 URL prefix: /api/v1/employee-relations

@@ -21,13 +21,13 @@ const QUICK_PROMPTS = [
 ]
 
 // ── System Prompt ─────────────────────────────────────────────
-const SYSTEM_PROMPT = `You are NepHR Pro AI Assistant — an expert HR advisor integrated into the NepHR Pro HRIS/HRMS/HRIM platform. You have deep knowledge of:
+const SYSTEM_PROMPT = `You are eLogix HRMS AI Assistant — an expert HR advisor integrated into the eLogix HRMS HRIS/HRMS/HRIM platform. You have deep knowledge of:
 
 1. Nepal Labour Act 2017 and Labour Rules 2018
 2. Nepal Right to Privacy Act 2018
 3. Nepal Income Tax Act (PAYE, PF, Gratuity, SSF)
 4. HR best practices for South Asia and global standards
-5. NepHR Pro platform features: attendance, leave, payroll, performance, recruitment, compliance
+5. eLogix HRMS platform features: attendance, leave, payroll, performance, recruitment, compliance
 
 Key rules:
 - Always provide accurate, actionable HR advice
@@ -139,7 +139,7 @@ export default function AIAssistantModal({ onClose }) {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: `Namaste! 🙏 I'm your NepHR Pro AI HR Assistant.\n\nI can help you with:\n• 📋 Nepal Labour Act 2017 queries\n• 📊 HR analytics & insights\n• 💰 Payroll & compliance questions\n• 👥 Workforce management guidance\n• 🎯 Performance & recruitment advice\n\nHow can I help you today?`,
+      content: `Namaste! 🙏 I'm your eLogix HRMS AI HR Assistant.\n\nI can help you with:\n• 📋 Nepal Labour Act 2017 queries\n• 📊 HR analytics & insights\n• 💰 Payroll & compliance questions\n• 👥 Workforce management guidance\n• 🎯 Performance & recruitment advice\n\nHow can I help you today?`,
       time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
     }
   ])
@@ -201,7 +201,7 @@ export default function AIAssistantModal({ onClose }) {
       // Fallback response when API unavailable
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: `I'm having trouble connecting to the AI service right now. Please try again in a moment.\n\nFor urgent HR queries:\n• Check Nepal Labour Act 2017 documentation\n• Contact your HR Manager\n• Email: hr@nephrpro.com\n\n📋 Error: ${err.message}`,
+        content: `I'm having trouble connecting to the AI service right now. Please try again in a moment.\n\nFor urgent HR queries:\n• Check Nepal Labour Act 2017 documentation\n• Contact your HR Manager\n• Email: hr@elogix.com\n\n📋 Error: ${err.message}`,
         time: aiNow,
       }])
     } finally {
@@ -258,7 +258,7 @@ export default function AIAssistantModal({ onClose }) {
             display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20,
           }}>🧠</div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>NepHR AI Assistant</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>eLogix AI Assistant</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', display: 'inline-block', animation: 'pulse 2s infinite' }} />
               <span style={{ fontSize: 11, color: '#a5b4fc' }}>Online · Nepal Labour Act expert</span>

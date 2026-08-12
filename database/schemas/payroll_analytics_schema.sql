@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/payroll_analytics_schema.sql
--- NepHR Pro — Workforce Operations > Payroll & Compensation >
+-- eLogix HRMS — Workforce Operations > Payroll & Compensation >
 -- Payroll Analytics Module (2 pages, 8 sub-reports)
 --
 -- Design note: this module is PURE AGGREGATION over existing tables --

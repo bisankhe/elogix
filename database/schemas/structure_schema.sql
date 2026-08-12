@@ -1,6 +1,6 @@
 -- ============================================================
 -- FILE: database/schemas/structure_schema.sql
--- NepHR Pro — Structure & Hierarchy Schema
+-- eLogix HRMS — Structure & Hierarchy Schema
 -- Covers: Job Family, Grade Level, Designation Setup,
 --         Reporting Hierarchy, Org Chart, Position Management
 -- Nepal Labour Act 2074 salary constraints enforced at DB level

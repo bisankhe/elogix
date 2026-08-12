@@ -1,6 +1,6 @@
 -- ================================================================
 -- FILE: database/schemas/leave_settlement_schema.sql
--- NepHR Pro — Workforce Operations > Leave Management > Leave
+-- eLogix HRMS — Workforce Operations > Leave Management > Leave
 -- Settlement Module (2 pages)
 --
 -- Design note: integrates directly with employee_leave_balances and

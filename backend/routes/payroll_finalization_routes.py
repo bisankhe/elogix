@@ -1,6 +1,6 @@
 """
 FILE: backend/routes/payroll_finalization_routes.py
-NepHR Pro — Workforce Operations > Payroll & Compensation > Payroll
+eLogix HRMS — Workforce Operations > Payroll & Compensation > Payroll
 Finalization Module (4 pages)
 URL prefix: /api/v1/payroll-finalization
 
