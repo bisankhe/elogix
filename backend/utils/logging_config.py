@@ -57,3 +57,7 @@ def setup_logging(app=None):
 
 # Convenience logger for use across the app
 logger = logging.getLogger(APP_NAME)
+def get_logger(name=None):
+    if name:
+        return logging.getLogger(f"{APP_NAME}.{name}")
+    return logger
