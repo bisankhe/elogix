@@ -8,6 +8,7 @@ on:
 
 jobs:
  # 1. Test Backend
+# 1. Test Backend
   test-backend:
     runs-on: ubuntu-latest
     services:
@@ -28,10 +29,11 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -r backend/requirements.txt
-      - run: python -m pytest tests/ -v
+      - run: python -m pytest backend/tests/ -v
         env:
           DATABASE_URL: postgresql://elogix:testpass@localhost:5432/elogix_test
           FLASK_ENV: testing
+          PYTHONPATH: backend
   # 2. Build Frontend Static Assets
   build-frontend:
     runs-on: ubuntu-latest
