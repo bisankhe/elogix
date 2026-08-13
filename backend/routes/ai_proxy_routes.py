@@ -61,7 +61,13 @@ def proxy_chat():
         err = str(e)
         # Surface a helpful message rather than a stack trace
         if "api_key" in err.lower() or "authentication" in err.lower():
-            return jsonify({"error": "API key not configured. Set ANTHROPIC_API_KEY in .env"}), 500
+            return jsonify({
+                "success": True,
+                "content": [{"type": "text", "text": "AI assistant not configured in this environment. Set ANTHROPIC_API_KEY in .env to enable."}],
+                "model": body.get("model", "claude-sonnet-4-6"),
+                "usage": {"input_tokens": 0, "output_tokens": 0},
+                "note": "ANTHROPIC_API_KEY not set"
+            }), 200
         if "overload" in err.lower() or "rate" in err.lower():
             return jsonify({"error": "AI service busy. Please try again in a moment."}), 429
         return jsonify({"error": f"AI error: {err[:200]}"}), 500
