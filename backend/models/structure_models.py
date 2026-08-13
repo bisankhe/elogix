@@ -16,10 +16,18 @@ from sqlalchemy.orm import relationship, DeclarativeBase
 from sqlalchemy.dialects.postgresql import UUID, JSONB, ARRAY
 from sqlalchemy.types import UserDefinedType
 
-# Custom LTREE type definition for PostgreSQL
+# Custom LTREE type — PostgreSQL ltree extension
+# SQLAlchemy does not ship LTREE natively; we define a lightweight shim
 class LTREE(UserDefinedType):
-    def get_col_spec(self, **kw):
-        return "LTREE"
+    """PostgreSQL ltree type for hierarchical label trees."""
+    cache_ok = True
+    def get_col_spec(self, **kw): return "LTREE"
+    def bind_processor(self, dialect):
+        def process(value): return value
+        return process
+    def result_processor(self, dialect, coltype):
+        def process(value): return value
+        return process
 import uuid, enum
 
 try:
@@ -649,4 +657,3 @@ class Position(AuditMixin, Base):
             "ai_time_to_fill_est": self.ai_time_to_fill_est,
             "effective_from": str(self.effective_from) if self.effective_from else None,
         }
-     
