@@ -21,7 +21,7 @@ _client = None
 def get_client():
     global _client
     if _client is None:
-        _client = Anthropic(api_key=Config.ANTHROPIC_API_KEY)
+        _client = Anthropic(api_key=Config.ANTHROPIC_API_KEY) if Config.ANTHROPIC_API_KEY else None
     return _client
 
 

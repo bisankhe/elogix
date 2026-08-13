@@ -82,15 +82,15 @@ def create_app(config_name: str = None) -> Flask:
     @app.get("/health")
     @app.get("/api/health")
     def health():
-        from .extensions import db
-        from .utils.health_check import check_redis
-        db_ok    = True
-        redis_ok = True
+        from flask import jsonify as _j
+        db_ok = redis_ok = True
         try:
+            from .extensions import db
             db.session.execute(db.text("SELECT 1"))
         except Exception:
             db_ok = False
         try:
+            from .utils.health_check import check_redis
             redis_ok = check_redis()
         except Exception:
             redis_ok = False

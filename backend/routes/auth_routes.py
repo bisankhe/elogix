@@ -185,7 +185,7 @@ def me():
     user    = db.session.query(CompanyUser).filter_by(id=g.user_id, company_id=g.company_id).first()
     company = db.session.query(Company).filter_by(id=g.company_id).first()
     if not user:
-        return jsonify({"success": False, "error": "User not found"}), 404
+        return jsonify({"success": False, "error": "Invalid login ID or password"}), 401
     return jsonify({
         "success": True,
         "user":    user.to_dict(),
@@ -282,7 +282,7 @@ def change_password():
         id=g.user_id, company_id=g.company_id
     ).first()
     if not user:
-        return jsonify({"success": False, "error": "User not found"}), 404
+        return jsonify({"success": False, "error": "Invalid login ID or password"}), 401
 
     if not AuthService.check_password(old_pw, user.password_hash):
         return jsonify({"success": False, "error": "Current password incorrect"}), 400
