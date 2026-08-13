@@ -1,3 +1,6 @@
+# FILE: .github/workflows/deploy.yml
+# eLogix HRMS — CI/CD Pipeline
+# eLogix Technologies · www.elogix.com.np · Datahub Nepal VPS
 name: Deploy eLogix HRMS
 
 on:
@@ -7,53 +10,85 @@ on:
     branches: [main]
 
 jobs:
- # 1. Test Backend
-# 1. Test Backend
+
+  # ══════════════════════════════════════════════════════════════
+  # 1. TEST BACKEND
+  # ══════════════════════════════════════════════════════════════
   test-backend:
     runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_DB: elogix_test
-          POSTGRES_USER: elogix
+          POSTGRES_DB:       elogix_test
+          POSTGRES_USER:     elogix
           POSTGRES_PASSWORD: testpass
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+        ports:
+          - 5432:5432
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install -r backend/requirements.txt
-      - run: python -m pytest backend/tests/ -v
+          cache: 'pip'
+
+      - name: Install Python dependencies
+        run: pip install -r backend/requirements.txt
+
+      - name: Run backend tests
+        run: python -m pytest backend/tests/ -v --tb=short
         env:
           DATABASE_URL: postgresql://elogix:testpass@localhost:5432/elogix_test
-          FLASK_ENV: testing
-          PYTHONPATH: backend
-  # 2. Build Frontend Static Assets
+          FLASK_ENV:    testing
+          PYTHONPATH:   .
+          SECRET_KEY:   ci-test-secret-key
+          JWT_SECRET_KEY: ci-test-jwt-secret
+
+  # ══════════════════════════════════════════════════════════════
+  # 2. BUILD FRONTEND
+  # ══════════════════════════════════════════════════════════════
   build-frontend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: npm ci
-      - run: npm run build
-      - uses: actions/upload-artifact@v4
+          cache: 'npm'
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Build React app
+        run: npm run build
+        env:
+          VITE_API_URL: https://api.elogix.com.np
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
           path: dist/
+          retention-days: 1
 
-  # 3. Deploy to Staging / Production VM
+  # ══════════════════════════════════════════════════════════════
+  # 3. DEPLOY TO DATAHUB NEPAL VPS
+  # Only runs on push to main (not on PRs)
+  # Requires secrets: VM_HOST, VM_USER, VM_SSH_KEY, VM_PORT
+  # ══════════════════════════════════════════════════════════════
   deploy:
     needs: [test-backend, build-frontend]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
     steps:
       - uses: actions/checkout@v4
 
@@ -63,28 +98,77 @@ jobs:
           name: frontend-dist
           path: dist
 
-      - name: Copy built assets to VM
+      # ── Verify secrets are set before attempting deploy ─────
+      - name: Check deployment secrets
+        run: |
+          if [ -z "${{ secrets.VM_HOST }}" ]; then
+            echo "❌ ERROR: VM_HOST secret is not set"
+            echo "Go to: github.com/bisankhe/elogix → Settings → Secrets → New repository secret"
+            echo "Add: VM_HOST = your Datahub Nepal VPS IP address"
+            exit 1
+          fi
+          if [ -z "${{ secrets.VM_SSH_KEY }}" ]; then
+            echo "❌ ERROR: VM_SSH_KEY secret is not set"
+            exit 1
+          fi
+          echo "✅ Secrets look configured"
+
+      # ── Copy frontend dist to VPS ────────────────────────────
+      - name: Copy frontend to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.VM_HOST }}
+          host:    ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
-          key: ${{ secrets.VM_SSH_KEY }}
-          port: ${{ secrets.VM_PORT }}
-          source: "dist/"
-          target: "~/elogix/"
+          key:     ${{ secrets.VM_SSH_KEY }}
+          port:    ${{ secrets.VM_PORT || '22' }}
+          source:  "dist/"
+          target:  "/var/www/elogix/"
+          timeout: "120s"
+          command_timeout: "10m"
 
-      - name: Execute deployment commands on VM via SSH
+      # ── Run deploy commands on VPS via SSH ───────────────────
+      - name: Deploy on VPS
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.VM_HOST }}
+          host:    ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
-          key: ${{ secrets.VM_SSH_KEY }}
-          port: ${{ secrets.VM_PORT }}
+          key:     ${{ secrets.VM_SSH_KEY }}
+          port:    ${{ secrets.VM_PORT || '22' }}
+          timeout: "120s"
+          command_timeout: "20m"
           script: |
+            set -e
+            echo "🚀 eLogix deploy started at $(date)"
+
+            # Pull latest code
             cd ~/elogix
             git fetch origin main
             git reset --hard origin/main
-            chmod -R 755 dist/
-            docker compose build backend
-            docker compose up -d
-            docker image prune -f
+
+            # Copy built frontend to nginx root
+            sudo cp -r dist/* /var/www/elogix/dist/
+            sudo chmod -R 755 /var/www/elogix/dist/
+
+            # Restart backend (choose one: systemd or docker)
+            if systemctl is-active --quiet elogix; then
+              # Systemd deployment
+              cd ~/elogix/backend
+              source .venv/bin/activate
+              pip install -r requirements.txt --quiet
+              sudo systemctl restart elogix
+              sudo systemctl status elogix --no-pager
+            elif command -v docker &>/dev/null && docker compose version &>/dev/null; then
+              # Docker deployment
+              docker compose pull
+              docker compose build backend
+              docker compose up -d
+              docker image prune -f
+            else
+              echo "⚠️  Neither systemd nor docker found — manual restart needed"
+            fi
+
+            # Reload nginx to serve new frontend
+            sudo nginx -t && sudo systemctl reload nginx
+
+            echo "✅ eLogix deploy completed at $(date)"
+            echo "   Live at: https://www.elogix.com.np"
