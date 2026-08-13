@@ -117,24 +117,24 @@ jobs:
       - name: Copy frontend to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
-          host:    ${{ secrets.VM_HOST }}
+          host:     ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
-          key:     ${{ secrets.VM_SSH_KEY }}
-          port:    ${{ secrets.VM_PORT || '22' }}
-          source:  "dist/"
-          target:  "/var/www/elogix/"
-          timeout: "120s"
+          key:      ${{ secrets.VM_SSH_KEY }}
+          port:     ${{ secrets.VM_PORT || '22' }}
+          source:   "dist/"
+          target:   "/var/www/elogix/"
+          timeout:  "120s"
           command_timeout: "10m"
 
       # ── Run deploy commands on VPS via SSH ───────────────────
       - name: Deploy on VPS
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host:    ${{ secrets.VM_HOST }}
+          host:     ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
-          key:     ${{ secrets.VM_SSH_KEY }}
-          port:    ${{ secrets.VM_PORT || '22' }}
-          timeout: "120s"
+          key:      ${{ secrets.VM_SSH_KEY }}
+          port:     ${{ secrets.VM_PORT || '22' }}
+          timeout:  "120s"
           command_timeout: "20m"
           script: |
             set -e
@@ -157,14 +157,25 @@ jobs:
               pip install -r requirements.txt --quiet
               sudo systemctl restart elogix
               sudo systemctl status elogix --no-pager
-            elif command -v docker &>/dev/null && docker compose version &>/dev/null; then
+            elif command -v docker &>/devnull && docker compose version &>/devnull; then
               # Docker deployment
-              docker compose pull
-              docker compose build backend
+              docker compose pull || true
+
+              # Build backend image checking for Dockerfile location
+              if [ -f "backend/Dockerfile" ]; then
+                echo "🔨 Building backend image from backend/Dockerfile..."
+                docker build -t elogix-backend:latest -f backend/Dockerfile ./backend
+              elif [ -f "Dockerfile" ]; then
+                echo "🔨 Building backend image from root Dockerfile..."
+                docker build -t elogix-backend:latest -f Dockerfile .
+              else
+                echo "⚠️ No Dockerfile found in root or backend/ directory!"
+              fi
+
               docker compose up -d
               docker image prune -f
             else
-              echo "⚠️  Neither systemd nor docker found — manual restart needed"
+              echo "⚠️ Neither systemd nor docker found — manual restart needed"
             fi
 
             # Reload nginx to serve new frontend
