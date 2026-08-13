@@ -128,3 +128,8 @@ config = {
     "production":  ProductionConfig,
     "testing":     TestingConfig,
 }
+
+
+# ── Compatibility alias ───────────────────────────────────────
+# Some routes import 'Config' — alias to BaseConfig
+Config = BaseConfig
