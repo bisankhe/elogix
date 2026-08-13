@@ -143,6 +143,7 @@ export default function HolidayCalendarPage() {
       {view==='matrix' && (
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:12}}>
           {[...Array(12)].map((_,i)=>{
+            const mNum = i+1
             const mHols = byMonth[mNum]||[]
             const mName = calMode==='BS'?MONTHS_BS[i]:MONTHS_AD[i]
             return (

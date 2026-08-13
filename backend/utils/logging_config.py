@@ -57,3 +57,12 @@ def setup_logging(app=None):
 
 # Convenience logger for use across the app
 logger = logging.getLogger(APP_NAME)
+
+
+def get_logger(name: str) -> logging.Logger:
+    """
+    Return a named logger.
+    Usage: logger = get_logger('elogix.email')
+    Equivalent to logging.getLogger(name) but ensures setup_logging was called.
+    """
+    return logging.getLogger(name)

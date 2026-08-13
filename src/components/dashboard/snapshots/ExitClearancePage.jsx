@@ -131,8 +131,8 @@ export default function ExitClearancePage() {
                   return (
                     <div key={key} style={{padding:'12px 14px',borderRight:'1px solid #f8fafc'}}>
                       <div style={{display:'flex',gap:6,alignItems:'center',marginBottom:6}}>
-                        <span style={{fontSize:14}}>{dc.icon}</span>
-                        <span style={{fontSize:10,fontWeight:800,color:dc.color}}>{dc.label}</span>
+                        <span style={{fontSize:14}}>{sc.icon}</span>
+                        <span style={{fontSize:10,fontWeight:800,color:sc.color}}>{sc.label}</span>
                         <span style={{marginLeft:'auto',fontSize:12}}>{sc.icon}</span>
                       </div>
                       {dept.note&&<div style={{fontSize:9,color:'#64748b',marginBottom:4}}>{dept.note}</div>}

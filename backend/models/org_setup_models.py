@@ -80,6 +80,21 @@ class GroupCompany(Base):
     logo_url          = Column(Text)
     description       = Column(Text)
     status            = Column(Enum(EntityStatus), default=EntityStatus.ACTIVE)
+    # Routes compatibility aliases — branch_name maps to name
+    @property
+    def branch_name(self):       return self.name
+    @branch_name.setter
+    def branch_name(self, v):    self.name = v
+
+    @property
+    def branch_code(self):       return self.code
+    @branch_code.setter
+    def branch_code(self, v):    self.code = v
+
+    @property
+    def tenant_id(self):         return self.company_id
+    @tenant_id.setter
+    def tenant_id(self, v):      pass  # ignored — company_id is the tenant key
 
     # AI fields
     ai_risk_score     = Column(Float,  default=0.0)
@@ -559,3 +574,10 @@ class WorkLocation(Base):
         Index("idx_wl_company", "company_id"),
         Index("idx_wl_branch",  "branch_id"),
     )
+
+
+# ── Compatibility aliases ─────────────────────────────────────
+# org_setup_routes.py imports these names; aliased here so we
+# don't have to change every route file.
+BranchLocation = Branch
+LegalDocument  = CompanyLegalDocument

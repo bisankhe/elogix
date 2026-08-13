@@ -206,7 +206,7 @@ export default function ATSInterviewPanelPage() {
                 <div style={{ marginBottom: 14 }}>
                   <div style={{ fontSize: 10, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Panel Committee ({selPanel.interviewers.length})</div>
                   {selPanel.interviewers.map(iv => {
-                    if (!interviewer) return null
+                    const interviewer = (INTERVIEWERS||[]).find(i=>i.id===iv) || {avatar:iv?.charAt(0)||'?',name:iv||'Unknown'}
                     const sc = selPanel.scores[iv] || selPanel.scores[interviewer.avatar]
                     return (
                       <div key={iv} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid #f8fafc' }}>

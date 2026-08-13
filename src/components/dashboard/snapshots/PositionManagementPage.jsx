@@ -497,10 +497,10 @@ function PositionManagement() {
           const rc  = riskCfg[pos.attrition_risk] || riskCfg.low
           return (
             <div key={pos.id}
-              style={{background:st.bg,border:`1px solid ${isOpen?'#3b82f6':st.border}`,
+              style={{background:st.bg,border:`1px solid ${selected===pos.id?'#3b82f6':st.border}`,
                 borderRadius:10,overflow:'hidden',cursor:'pointer',
                 borderLeft:`4px solid ${pos.status==='filled'?'#10b981':pos.status==='frozen'?'#94a3b8':'#f59e0b'}`}}
-              onClick={()=>setSelected(isOpen?null:pos.id)}>
+              onClick={()=>setSelected(selected===pos.id?null:pos.id)}>
               <div style={{padding:'12px 14px',display:'flex',alignItems:'center',gap:12}}>
                 {/* Status indicator */}
                 <div style={{width:40,height:40,borderRadius:10,

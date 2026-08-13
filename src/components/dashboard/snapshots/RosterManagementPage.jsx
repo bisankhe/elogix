@@ -173,6 +173,7 @@ export default function RosterManagementPage() {
     return Array.from({length:7}, (_,i) => { const day=new Date(d); day.setDate(d.getDate()+i); return day })
   }, [weekOffset])
   const monthDates = useMemo(() => {
+    const d = new Date(today); d.setDate(1); d.setMonth(d.getMonth() + monthOffset)
     const days = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate()
     return Array.from({length:days}, (_,i) => new Date(d.getFullYear(), d.getMonth(), i+1))
   }, [monthOffset])
@@ -573,6 +574,7 @@ tr:nth-child(even) td{background:#f8fafc}
             <tbody>
               {filtered.map(emp=>{
                 let totalHrs = 0
+                const canEdit = canEditEmployee(emp)
                 return (
                   <tr key={emp.id} style={{ borderBottom:'1px solid #f8fafc' }}>
                     <td style={{ padding:'4px 8px' }}>

@@ -84,6 +84,10 @@ export default function WorkloadAnalysisDepartmentwisePage() {
             </tr></thead>
             <tbody>
               {filtered.map(d=>{
+                const ic = d.fte_gap > 2 ? {c:'#dc2626',bg:'#fef2f2',label:'Overloaded'}
+                         : d.fte_gap > 0 ? {c:'#d97706',bg:'#fffbeb',label:'High'}
+                         : d.fte_gap > -1? {c:'#0369a1',bg:'#eff6ff',label:'Optimal'}
+                         : {c:'#16a34a',bg:'#f0fdf4',label:'Low'}
                 return (
                   <tr key={d.id} style={{borderBottom:'1px solid #f8fafc'}}
                     onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:d.dept,...d}})}}>

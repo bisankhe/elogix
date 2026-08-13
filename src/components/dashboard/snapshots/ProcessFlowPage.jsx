@@ -303,6 +303,18 @@ function AddTaskModal({dept,onAdd,onClose}){
 }
 
 // ── MAIN COMPONENT ────────────────────────────────────────────
+// ── AI Flow generator (stub — replace with real Anthropic API call) ──
+async function generateTaskFlow(dept, taskLabel) {
+  // In production this calls the Anthropic API
+  // For dev, return a mock flow
+  return [
+    { id:'s1', label:'Initiate Request',    type:'start',   role:'Employee',   time:'5 min'  },
+    { id:'s2', label:'Review & Validate',    type:'process', role:'Supervisor', time:'30 min' },
+    { id:'s3', label:'HR Approval',          type:'process', role:'HR Manager', time:'1 day'  },
+    { id:'s4', label:'Final Confirmation',   type:'end',     role:'System',     time:'Auto'   },
+  ]
+}
+
 export default function ProcessFlowPage(){
   const{persona}=useApp()
 

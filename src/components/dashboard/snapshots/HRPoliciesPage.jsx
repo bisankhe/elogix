@@ -509,6 +509,7 @@ export default function HRPoliciesPage() {
     return matchCat && matchSearch
   })
 
+  const mandatory    = filtered.filter(p => p.mandatory !== false)
   const signedCount = mandatory.filter(p => acknowledgments[p.id] === 'signed').length
   const allCompliant = signedCount === mandatory.length
 

@@ -36,6 +36,8 @@ const STATUS_CFG = {
 const REASON_LABELS = {better_opportunity:'Better Opportunity',personal:'Personal Reasons',higher_studies:'Higher Studies',relocation:'Relocation',other:'Other'}
 
 export default function ResignationManagementPage() {
+  const [msg, setMsg] = useState('')
+  const notify = m => { setMsg(m); setTimeout(() => setMsg(''), 3000) }
   const [resignations, setResignations] = useState(RESIGNATIONS)
   const [search, setSearch] = useState('')
   const [showAdd, setShowAdd] = useState(false)

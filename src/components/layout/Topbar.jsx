@@ -392,7 +392,7 @@ export default function Topbar({ sidebarOpen, setSidebarOpen, onLangClick, onNot
         <span style={{ fontSize: 18 }}>{currentPersona?.icon}</span>
         <div>
           <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a', lineHeight: 1.2 }}>
-            {t(currentPersona?.labelKey) || currentPersona?.label}
+            {(() => { try { const u=JSON.parse(sessionStorage.getItem('elogix_user')||localStorage.getItem('elogix_user')||'{}'); return u.full_name||u.name||t(currentPersona?.labelKey)||currentPersona?.label||'User' } catch { return currentPersona?.label||'User' } })()}
           </div>
           <div style={{ fontSize: 10, color: '#94a3b8' }}>eLogix HRMS</div>
         </div>

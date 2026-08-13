@@ -37,6 +37,7 @@ export default function SkillGapMatrixPage() {
   filtered.forEach(row=>SKILLS.forEach(skill=>{
     const level = row.levels[skill]
     if (!level) return
+    const ratio = typeof level === 'number' ? level/5 : (level==='proficient'?1:level==='developing'?.7:.4)
     if (ratio>=1) proficientCount++; else if (ratio>=0.7) developingCount++; else criticalCount++
   }))
 

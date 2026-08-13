@@ -16,7 +16,10 @@ import anthropic
 import base64
 
 from ..models.org_setup_models import (
-    GroupCompany, Company, BranchLocation, LegalDocument
+    GroupCompany,
+    Company,
+    Branch as BranchLocation,
+    CompanyLegalDocument as LegalDocument,
 )
 from ..database import db_session
 

@@ -1023,7 +1023,7 @@ export default function OrgChartPage() {
                 <div key={root.id} style={{display:'flex',flexDirection:'column',alignItems:'center'}}>
                   <OrgNode
                     node={root}
-                    isHighlighted={isHigh}
+                    isHighlighted={searchQ ? (root.name||'').toLowerCase().includes(searchQ.toLowerCase()) : false}
                     isSelected={isSel}
                     overlay={overlay}
                     onSelect={handleSelect}

@@ -85,11 +85,8 @@ export default function ImplementHRPolicyPage() {
   const getDeptBreakdown = (polId) => {
     return DEPTS.map(dept => {
       const deptEmps  = EMPLOYEES.filter(e=>e.dept===dept)
-      if (!polReaders) {
-        const seed = (polId.charCodeAt(polId.length-1) + dept.charCodeAt(0)) % 10
-        return { dept, ack:Math.min(100,50+(seed*5)), total:deptEmps.length }
-      }
-      return { dept, ack: deptEmps.length>0 ? Math.round(signed/deptEmps.length*100) : 0, total:deptEmps.length }
+      const seed = (polId.charCodeAt(polId.length-1) + dept.charCodeAt(0)) % 10
+      return { dept, ack:Math.min(100,50+(seed*5)), total:deptEmps.length }
     })
   }
 

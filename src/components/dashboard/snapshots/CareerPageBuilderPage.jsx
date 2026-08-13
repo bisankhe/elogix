@@ -116,6 +116,7 @@ export default function CareerPageBuilderPage() {
           <div style={{background:'#0f172a',borderRadius:24,padding:'10px',boxShadow:'0 8px 30px rgba(0,0,0,.2)'}}>
             <div style={{background:'#fff',borderRadius:18,overflow:'hidden',height:480,overflowY:'auto'}}>
               {blocks.filter(b=>b.status==='live').map(b=>{
+                const bt = BLOCK_TYPES?.find?.(t=>t.id===b.type) || {id:b.type,icon:'📄',label:b.type,color:'#0369a1'}
                 return (
                   <div key={b.id} style={{padding:'16px 14px',borderBottom:'1px solid #f1f5f9',background:bt?.id==='hero'?`linear-gradient(135deg,${bt.color},${bt.color}cc)`:'#fff',color:bt?.id==='hero'?'#fff':'#0f172a'}}>
                     <div style={{fontSize:10,fontWeight:700,opacity:.7,marginBottom:4}}>{bt?.icon} {bt?.label}</div>

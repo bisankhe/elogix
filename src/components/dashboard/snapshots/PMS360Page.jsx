@@ -108,6 +108,10 @@ export default function PMS360Page() {
             <polygon points={selfPoints} fill={`${A}22`} stroke={A} strokeWidth="2"/>
             <polygon points={managerPoints} fill="#7c3aed22" stroke="#7c3aed" strokeWidth="2" strokeDasharray="4,3"/>
             {COMPETENCIES.map((c,i)=>{
+              const angle = (i/COMPETENCIES.length)*2*Math.PI - Math.PI/2
+              const r = 90, cx = 100, cy = 100
+              const x = cx + (r+14)*Math.cos(angle)
+              const y = cy + (r+14)*Math.sin(angle)
               return <text key={i} x={x} y={y} fontSize="9" fill="#475569" textAnchor="middle">{c.name}</text>
             })}
           </svg>

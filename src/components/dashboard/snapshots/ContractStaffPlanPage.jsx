@@ -78,7 +78,7 @@ export default function ContractStaffPlanPage() {
               <div key={i} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:3}}>
                 <div style={{fontSize:9,color:A,fontWeight:700}}>{v}</div>
                 <div style={{width:'100%',background:`${A}18`,borderRadius:4,overflow:'hidden',display:'flex',alignItems:'flex-end',height:55}}>
-                  <div style={{width:'100%',height:`${pct}%`,background:`linear-gradient(180deg,${A},${A}88)`,borderRadius:4}}/>
+                  <div style={{width:'100%',height:`${maxV>minV?Math.round((v-minV)/(maxV-minV)*100):50}%`,background:`linear-gradient(180deg,${A},${A}88)`,borderRadius:4}}/>
                 </div>
                 <div style={{fontSize:8,color:'#94a3b8',textAlign:'center',lineHeight:1}}>{MONTHS_BS[i].substring(0,3)}</div>
               </div>
