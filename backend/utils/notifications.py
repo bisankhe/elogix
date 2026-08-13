@@ -227,3 +227,107 @@ def run_daily_alerts(db, company_id: str, hr_email: str) -> dict:
             sent.append(f"ssf_violation:{r['vendor_name']}")
 
     return {"alerts_sent": len(sent), "details": sent, "run_at": datetime.utcnow().isoformat()}
+
+
+# ── SMS / Viber / Push notification stubs ────────────────────
+# Production: integrate Sparrow SMS (Nepal), Viber Bot API, Firebase FCM
+
+SPARROW_TOKEN = os.getenv("SPARROW_SMS_TOKEN", "")
+SPARROW_FROM  = os.getenv("SPARROW_SMS_FROM", "eLogix")
+SPARROW_URL   = "https://api.sparrowsms.com/v2/sms/"
+
+def send_sms(to: str, message: str) -> bool:
+    """Send SMS via Sparrow SMS (Nepal). Falls back to log if token not set."""
+    if not SPARROW_TOKEN:
+        log.warning("Sparrow SMS token not set — SMS not sent to %s: %s", to, message[:50])
+        return False
+    try:
+        import urllib.request, json as _json
+        payload = _json.dumps({
+            "token":   SPARROW_TOKEN,
+            "from":    SPARROW_FROM,
+            "to":      to,
+            "text":    message,
+        }).encode()
+        req = urllib.request.Request(
+            SPARROW_URL,
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            ok = resp.status == 200
+            log.info("SMS %s to %s: %s", "sent" if ok else "failed", to, resp.status)
+            return ok
+    except Exception as e:
+        log.error("SMS send failed to %s: %s", to, e)
+        return False
+
+
+def send_viber(to: str, message: str, sender_name: str = "eLogix HRMS") -> bool:
+    """Send Viber message. Falls back to log if bot token not set."""
+    viber_token = os.getenv("VIBER_BOT_TOKEN", "")
+    if not viber_token:
+        log.warning("Viber token not set — message not sent to %s", to)
+        return False
+    try:
+        import urllib.request, json as _json
+        payload = _json.dumps({
+            "auth_token": viber_token,
+            "receiver":   to,
+            "type":       "text",
+            "text":       message,
+            "sender":     {"name": sender_name},
+        }).encode()
+        req = urllib.request.Request(
+            "https://chatapi.viber.com/pa/send_message",
+            data=payload,
+            headers={"Content-Type": "application/json", "X-Viber-Auth-Token": viber_token},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            result = _json.loads(resp.read())
+            ok = result.get("status") == 0
+            log.info("Viber %s to %s", "sent" if ok else "failed", to)
+            return ok
+    except Exception as e:
+        log.error("Viber send failed to %s: %s", to, e)
+        return False
+
+
+def send_push(device_token: str, title: str, body: str, data: dict = None) -> bool:
+    """Send Firebase FCM push notification. Stub — configure FCM key in prod."""
+    fcm_key = os.getenv("FCM_SERVER_KEY", "")
+    if not fcm_key:
+        log.warning("FCM key not set — push not sent to %s", device_token)
+        return False
+    try:
+        import urllib.request, json as _json
+        payload = _json.dumps({
+            "to": device_token,
+            "notification": {"title": title, "body": body},
+            "data": data or {},
+        }).encode()
+        req = urllib.request.Request(
+            "https://fcm.googleapis.com/fcm/send",
+            data=payload,
+            headers={
+                "Authorization": f"key={fcm_key}",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            result = _json.loads(resp.read())
+            ok = result.get("success", 0) > 0
+            log.info("FCM push %s to %s", "sent" if ok else "failed", device_token[:20])
+            return ok
+    except Exception as e:
+        log.error("FCM push failed: %s", e)
+        return False
+
+
+def send_otp_sms(to: str, otp: str, purpose: str = "verification") -> bool:
+    """Send OTP via SMS — used by preboarding, auth, etc."""
+    message = f"Your eLogix HRMS {purpose} OTP is: {otp}. Valid for 10 minutes. Do not share."
+    return send_sms(to, message)
