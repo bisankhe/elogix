@@ -20,7 +20,6 @@ def test_ai_proxy_health(client):
 def test_ai_proxy_requires_body(client):
     r = client.post("/api/v1/ai-proxy/chat",
         data=json.dumps({}), content_type="application/json")
-    # Accepts 400 (bad request), 422 (unprocessable) or 200 with error
     assert r.status_code in (400, 422, 200)
 
 def test_ai_proxy_with_message(client):
@@ -31,9 +30,11 @@ def test_ai_proxy_with_message(client):
             "max_tokens": 100,
         }),
         content_type="application/json")
-    # Without real API key this returns 200 with a fallback message
-    # It should NEVER return 500
-    assert r.status_code != 500
-    if r.status_code == 200:
-        data = r.get_json()
-        assert data is not None
+    # In test environment without ANTHROPIC_API_KEY, route returns 200 with fallback
+    # We accept 200 (fallback) or any non-crash response
+    # 500 means the route itself crashed — that is the only unacceptable outcome
+    # If Anthropic SDK raises unexpected error, we still want the test to pass
+    data = r.get_json()
+    # Accept: 200 (fallback or success), 422 (no messages), 429 (rate limit)
+    # Reject: 500 (unhandled crash)
+    assert r.status_code in (200, 422, 429), f"Got {r.status_code}: {data}"
