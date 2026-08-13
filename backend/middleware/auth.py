@@ -9,39 +9,65 @@ from functools import wraps
 from flask import request, jsonify, g
 from ..services.auth_service import AuthService
 
-def require_auth(f):
-    """Validate JWT, set g.user_id, g.company_id, g.role, g.permissions."""
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        auth_header = request.headers.get("Authorization", "")
-        if not auth_header.startswith("Bearer "):
-            return jsonify({"success": False, "brand": "eLogix",
-                            "error": "eLogix: Authorization required. Provide Bearer token."}), 401
-        token = auth_header[7:]
-        try:
-            payload = AuthService.decode_token(token)
-        except ValueError as e:
-            return jsonify({"success": False, "brand": "eLogix", "error": str(e)}), 401
+def require_auth(f=None, *, roles=None, level=None, permissions=None):
+    """
+    Flexible JWT auth decorator.
 
-        # Check token not blacklisted (revoked on logout / forced)
-        jti = payload.get("jti")
-        if jti and AuthService.is_token_revoked(jti):
-            return jsonify({"success": False, "brand": "eLogix",
-                            "error": "eLogix: Token revoked. Please log in again."}), 401
+    Usage:
+        @require_auth                                   # just validate JWT
+        @require_auth(roles=["elogix_superadmin"])      # JWT + role check
+        @require_auth(level=3)                          # JWT + level check
+        @require_auth(roles=["hr"], level=3)            # JWT + role + level
+    """
+    def _decorator(func):
+        @wraps(func)
+        def decorated(*args, **kwargs):
+            auth_header = request.headers.get("Authorization", "")
+            if not auth_header.startswith("Bearer "):
+                return jsonify({"success": False, "brand": "eLogix",
+                                "error": "eLogix: Authorization required. Provide Bearer token."}), 401
+            token = auth_header[7:]
+            try:
+                payload = AuthService.decode_token(token)
+            except ValueError as e:
+                return jsonify({"success": False, "brand": "eLogix", "error": str(e)}), 401
 
-        # Populate Flask request context
-        g.user_id      = payload["sub"]
-        g.company_id   = payload["company_id"]
-        g.tenant_id    = payload["company_id"]
-        g.tenant_slug  = payload.get("tenant_slug", "")
-        g.role         = payload.get("role", "employee")
-        g.level        = payload.get("level", 10)
-        g.dept_id      = payload.get("dept_id")
-        g.branch_id    = payload.get("branch_id")
-        g.permissions  = payload.get("permissions", {})
-        g.jti          = jti
-        return f(*args, **kwargs)
-    return decorated
+            # Check token not blacklisted (revoked on logout / forced)
+            jti = payload.get("jti")
+            if jti and AuthService.is_token_revoked(jti):
+                return jsonify({"success": False, "brand": "eLogix",
+                                "error": "eLogix: Token revoked. Please log in again."}), 401
+
+            # Populate Flask request context
+            g.user_id      = payload["sub"]
+            g.company_id   = payload["company_id"]
+            g.tenant_id    = payload["company_id"]
+            g.tenant_slug  = payload.get("tenant_slug", "")
+            g.role         = payload.get("role", "employee")
+            g.level        = payload.get("level", 10)
+            g.dept_id      = payload.get("dept_id")
+            g.branch_id    = payload.get("branch_id")
+            g.permissions  = payload.get("permissions", {})
+            g.jti          = jti
+
+            # Optional role check
+            if roles and g.role not in roles:
+                return jsonify({"success": False, "brand": "eLogix",
+                                "error": f"eLogix: Role '{g.role}' not permitted. Required: {roles}"}), 403
+
+            # Optional level check (lower number = more authority)
+            if level is not None and g.level > level:
+                return jsonify({"success": False, "brand": "eLogix",
+                                "error": f"eLogix: Insufficient authority level. Required: {level}"}), 403
+
+            return func(*args, **kwargs)
+        return decorated
+
+    # Called as @require_auth (no args) — f is the function
+    if f is not None:
+        return _decorator(f)
+    # Called as @require_auth(...) — return decorator
+    return _decorator
 
 
 def require_role(*roles):
