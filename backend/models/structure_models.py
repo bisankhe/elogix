@@ -13,7 +13,13 @@ from sqlalchemy     import (Column, String, Boolean, Integer, Float, Text,
                             Date, DateTime, ForeignKey, Enum, DECIMAL, JSON,
                             Index, CheckConstraint, UniqueConstraint, event)
 from sqlalchemy.orm import relationship, DeclarativeBase
-from sqlalchemy.dialects.postgresql import UUID, JSONB, ARRAY, LTREE
+from sqlalchemy.dialects.postgresql import UUID, JSONB, ARRAY
+from sqlalchemy.types import UserDefinedType
+
+# Custom LTREE type definition for PostgreSQL
+class LTREE(UserDefinedType):
+    def get_col_spec(self, **kw):
+        return "LTREE"
 import uuid, enum
 
 try:
@@ -643,3 +649,4 @@ class Position(AuditMixin, Base):
             "ai_time_to_fill_est": self.ai_time_to_fill_est,
             "effective_from": str(self.effective_from) if self.effective_from else None,
         }
+     

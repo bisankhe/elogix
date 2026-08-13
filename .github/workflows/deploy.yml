@@ -1,6 +1,3 @@
-# eLogix HRMS — CI/CD Pipeline
-# Runs on: push to main → test → build → deploy to staging → manual approve → production
-
 name: Deploy eLogix HRMS
 
 on:
@@ -10,7 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  # 1. Test Backend
+ # 1. Test Backend
+# 1. Test Backend
   test-backend:
     runs-on: ubuntu-latest
     services:
@@ -28,56 +26,65 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: '3.12' }
+        with:
+          python-version: '3.12'
       - run: pip install -r backend/requirements.txt
       - run: python -m pytest backend/tests/ -v
         env:
           DATABASE_URL: postgresql://elogix:testpass@localhost:5432/elogix_test
           FLASK_ENV: testing
-
-  # 2. Build Frontend
+          PYTHONPATH: backend
+  # 2. Build Frontend Static Assets
   build-frontend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20' }
+        with:
+          node-version: '20'
       - run: npm ci
       - run: npm run build
-        env:
-          VITE_ANTHROPIC_API_KEY: ${{ secrets.VITE_ANTHROPIC_API_KEY }}
       - uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
           path: dist/
 
-  # 3. Deploy to Staging (auto on main push)
-  deploy-staging:
+  # 3. Deploy to Staging / Production VM
+  deploy:
     needs: [test-backend, build-frontend]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    environment: staging
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with: { name: frontend-dist, path: dist }
-      - name: Deploy to staging server
-        run: |
-          echo "Deploy to staging here"
-          # ssh user@staging.elogix.com 'cd /app && git pull && docker-compose up -d'
 
-  # 4. Deploy to Production (manual approval required)
-  deploy-production:
-    needs: deploy-staging
-    runs-on: ubuntu-latest
-    environment:
-      name: production
-      url: https://app.elogix.com
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with: { name: frontend-dist, path: dist }
-      - name: Deploy to production
-        run: |
-          echo "Deploy to production here"
-          # ssh user@production.elogix.com 'cd /app && git pull && docker-compose up -d'
+      - name: Download compiled frontend assets
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: dist
+
+      - name: Copy built assets to VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: ${{ secrets.VM_PORT }}
+          source: "dist/"
+          target: "~/elogix/"
+
+      - name: Execute deployment commands on VM via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: ${{ secrets.VM_PORT }}
+          script: |
+            cd ~/elogix
+            git fetch origin main
+            git reset --hard origin/main
+            chmod -R 755 dist/
+            docker compose build backend
+            docker compose up -d
+            docker image prune -f
