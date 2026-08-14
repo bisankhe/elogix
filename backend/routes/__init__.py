@@ -104,7 +104,8 @@ from .integration_hub_routes import hub_bp
 from .mobile_app_config_routes import mobile_bp
 from .data_migration_routes import data_migration_bp
 from .system_settings_routes import sys_settings_bp
-from .ai_proxy_routes import ai_proxy_bp
+from .ai_proxy_routes   import ai_proxy_bp
+from .ai_chat_routes    import ai_chat_bp
 from .ai_business_intelligence_routes import ai_bi_bp
 
 ALL_BLUEPRINTS = [
