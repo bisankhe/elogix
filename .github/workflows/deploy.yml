@@ -88,6 +88,13 @@ jobs:
     needs: [test-backend, build-frontend]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+<<<<<<< HEAD
+=======
+    env:
+      VM_HOST: ${{ secrets.VM_HOST }}
+      DEPLOY_METHOD: ${{ secrets.DEPLOY_METHOD }}
+      DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
+>>>>>>> 27f16b92b0db8b62b5f91f9455f8ca9c3c4e71da
 
     steps:
       - uses: actions/checkout@v4
@@ -98,6 +105,7 @@ jobs:
           name: frontend-dist
           path: dist
 
+<<<<<<< HEAD
       # ── Option A: SCP + SSH direct (works if port 22 is open) ──
       - name: Copy files to VPS (SCP)
         if: ${{ secrets.VM_HOST != '' && secrets.DEPLOY_METHOD != 'webhook' }}
@@ -115,6 +123,23 @@ jobs:
 
       - name: Run deploy commands via SSH
         if: ${{ secrets.VM_HOST != '' && secrets.DEPLOY_METHOD != 'webhook' }}
+=======
+      # ── Option A: Direct SSH & SCP Deploy ──
+      - name: Upload frontend artifact to VPS staging
+        if: env.VM_HOST != '' && env.DEPLOY_METHOD != 'webhook'
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: ${{ secrets.VM_PORT || '22' }}
+          source: "dist/"
+          target: "/tmp/elogix-dist/"
+          timeout: "60s"
+
+      - name: Deploy updates on VPS via SSH
+        if: env.VM_HOST != '' && env.DEPLOY_METHOD != 'webhook'
+>>>>>>> 27f16b92b0db8b62b5f91f9455f8ca9c3c4e71da
         uses: appleboy/ssh-action@v1.2.0
         with:
           host:            ${{ secrets.VM_HOST }}
@@ -126,24 +151,27 @@ jobs:
           script: |
             set -e
             echo "🚀 eLogix deploy started at $(date)"
+            
+            # 1. Update source repo
             cd ~/elogix
-
-            # Pull latest code
             git fetch origin main
             git reset --hard origin/main
 
-            # Copy built frontend to nginx root
-            sudo cp -r dist/* /var/www/elogix/dist/
+            # 2. Sync fresh React build to Nginx directory
+            sudo mkdir -p /var/www/elogix/dist
+            sudo cp -r /tmp/elogix-dist/dist/* /var/www/elogix/dist/
             sudo chmod -R 755 /var/www/elogix/dist/
+            rm -rf /tmp/elogix-dist
 
-            # Restart backend — systemd or docker
+            # 3. Restart Backend Service (systemd or Docker)
             if systemctl is-active --quiet elogix; then
-              cd ~/elogix/backend
-              source .venv/bin/activate
-              pip install -r requirements.txt --quiet
+              cd ~/elogix
+              source .venv/bin/activate || true
+              pip install -r backend/config/requirements.txt --quiet
               sudo systemctl restart elogix
               sudo systemctl status elogix --no-pager
-            elif command -v docker &>/dev/null && docker compose version &>/dev/null; then
+            elif command -v docker &>/devnull && docker compose version &>/devnull; then
+              cd ~/elogix
               docker compose pull || true
               if [ -f "backend/Dockerfile" ]; then
                 docker build -t elogix-backend:latest -f backend/Dockerfile ./backend
@@ -153,17 +181,20 @@ jobs:
               docker compose up -d
               docker image prune -f
             else
-              echo "⚠️  No systemd or docker — restart eLogix manually"
+              echo "⚠️ No active systemd service or docker container running for backend."
             fi
 
+            # 4. Reload Nginx
             sudo nginx -t && sudo systemctl reload nginx
-            echo "✅ eLogix deploy done at $(date)"
-            echo "   Live: https://www.elogix.com.np"
-        continue-on-error: true
+            echo "✅ eLogix deployment completed successfully at $(date)"
 
-      # ── Option B: Webhook trigger (use if SCP times out) ─────
+      # ── Option B: Webhook Fallback ──
       - name: Trigger VPS webhook
+<<<<<<< HEAD
         if: ${{ secrets.DEPLOY_WEBHOOK_URL != '' }}
+=======
+        if: env.DEPLOY_WEBHOOK_URL != '' && env.DEPLOY_METHOD == 'webhook'
+>>>>>>> 27f16b92b0db8b62b5f91f9455f8ca9c3c4e71da
         run: |
           curl -s -X POST \
             -H "Authorization: Bearer ${{ secrets.DEPLOY_WEBHOOK_SECRET }}" \
@@ -171,7 +202,7 @@ jobs:
             -d "{\"ref\":\"main\",\"sha\":\"${{ github.sha }}\"}" \
             "${{ secrets.DEPLOY_WEBHOOK_URL }}" \
             --max-time 30 --retry 3 --retry-delay 5 \
-          || echo "⚠️  Webhook not configured — deploy manually on VPS"
+          || echo "⚠️ Webhook trigger failed — check VPS webhook configuration."
 
       - name: Deploy summary
         run: |
