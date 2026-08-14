@@ -701,6 +701,8 @@ function AIAssistantPanel({ onQuery, onClose }) {
 
 // ── Main Org Chart Page ───────────────────────────────────────
 export default function OrgChartPage() {
+  const [msg, setMsg] = useState('')
+  const notify = (m) => { setMsg(m); setTimeout(()=>setMsg(''),3000) }
   const { persona } = useApp()
 
   const [selectedNode, setSelectedNode]   = useState(null)

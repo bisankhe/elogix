@@ -115,9 +115,9 @@ export default function CompensationAnalyticsPage() {
           {TOTAL_REWARDS.map((r,i)=>(
             <div key={i} style={{marginBottom:8}}>
               <div style={{display:'flex',justifyContent:'space-between',fontSize:10,marginBottom:3}}>
-                <span style={{color:'#64748b'}}>{r.component}</span><span style={{fontWeight:700,color:r.color}}>{r.pct}%</span>
+                <span style={{color:'#64748b'}}>{r.component}</span><span style={{fontWeight:700,color:r.color}}>{r.(pct||0)}%</span>
               </div>
-              <div style={{height:6,background:'#f1f5f9',borderRadius:6,overflow:'hidden'}}><div style={{width:`${r.pct}%`,height:'100%',background:r.color,borderRadius:6}}/></div>
+              <div style={{height:6,background:'#f1f5f9',borderRadius:6,overflow:'hidden'}}><div style={{width:`${r.(pct||0)}%`,height:'100%',background:r.color,borderRadius:6}}/></div>
             </div>
           ))}
         </div>

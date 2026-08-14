@@ -334,9 +334,9 @@ export default function AIInsightsPage() {
                   <div key={i} className="mb-2">
                     <div className="flex justify-between text-xs mb-1">
                       <span className="text-gray-600">{r.label}</span>
-                      <span className="font-bold text-gray-900">{r.pct}%</span>
+                      <span className="font-bold text-gray-900">{r.(pct||0)}%</span>
                     </div>
-                    <ProgressBar value={r.pct} color={r.color} />
+                    <ProgressBar value={r.(pct||0)} color={r.color} />
                   </div>
                 ))}
               </Card>

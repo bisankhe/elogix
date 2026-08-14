@@ -49,6 +49,8 @@ const BASE_IMPL = [
 ]
 
 export default function ImplementHRPolicyPage() {
+  const [msg, setMsg] = useState('')
+  const notify = (m) => { setMsg(m); setTimeout(()=>setMsg(''),3000) }
   const { navTo } = useApp()
 
   // Load saved implementation states

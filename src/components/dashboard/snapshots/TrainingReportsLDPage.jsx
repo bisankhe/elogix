@@ -71,7 +71,7 @@ export default function TrainingReportsLDPage() {
           <svg width="100" height="100" viewBox="0 0 36 36">
             {pieSlices.map((s,i)=>(
               <circle key={i} cx="18" cy="18" r="15.5" fill="none" stroke={s.c} strokeWidth="6"
-                strokeDasharray={`${s.pct} ${100-s.pct}`} strokeDashoffset={25-s.start} transform="rotate(-90 18 18)"/>
+                strokeDasharray={`${s.(pct||0)} ${100-s.(pct||0)}`} strokeDashoffset={25-s.start} transform="rotate(-90 18 18)"/>
             ))}
           </svg>
           <div>
@@ -79,7 +79,7 @@ export default function TrainingReportsLDPage() {
             {TRAINING_TYPE_BREAKDOWN.map((t,i)=>(
               <div key={i} style={{display:'flex',gap:6,alignItems:'center',marginBottom:4}}>
                 <span style={{width:8,height:8,borderRadius:4,background:t.c,display:'inline-block'}}/>
-                <span style={{fontSize:9,color:'#374151'}}>{t.type} ({t.pct}%)</span>
+                <span style={{fontSize:9,color:'#374151'}}>{t.type} ({t.(pct||0)}%)</span>
               </div>
             ))}
           </div>

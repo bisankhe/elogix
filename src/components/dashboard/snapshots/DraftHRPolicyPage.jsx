@@ -636,7 +636,7 @@ export default function DraftHRPolicyPage() {
                 {form.linkedModules.length>0 && (
                   <div style={{ background:'#f0fdf4', borderRadius:12, padding:14, border:'1px solid #bbf7d0' }}>
                     <div style={{ fontSize:10, fontWeight:700, color:'#15803d', marginBottom:8 }}>🔗 Linked Modules</div>
-                    {form.linkedModules.map(m=><div key={m} style={{ fontSize:9, color:'#15803d', marginBottom:3 }}>• {m}</div>)}
+                    {form.linkedModules.map(m=><div key={m||""} style={{ fontSize:9, color:'#15803d', marginBottom:3 }}>• {m||""}</div>)}
                   </div>
                 )}
                 <div style={{ display:'flex', flexDirection:'column', gap:8 }}>

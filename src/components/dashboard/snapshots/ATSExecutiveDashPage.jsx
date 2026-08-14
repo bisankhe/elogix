@@ -47,6 +47,8 @@ function SBar({ val, max, color='#3b82f6' }) {
 }
 
 export default function ATSExecutiveDashPage() {
+  const [msg, setMsg] = useState('')
+  const notify = (m) => { setMsg(m); setTimeout(()=>setMsg(''),3000) }
   const { navigate } = useApp()
   const [period, setPeriod] = useState('FY 2081')
   const [tab, setTab] = useState('overview')

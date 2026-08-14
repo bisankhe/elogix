@@ -110,7 +110,7 @@ function AppraisalGauge({ pct, total, completed }) {
           strokeLinecap="round" transform="rotate(-90 50 50)"
           style={{ transition: 'stroke-dasharray 1s ease' }}
         />
-        <text x="50" y="46" textAnchor="middle" fontSize="18" fontWeight="800" fill="#0f172a">{pct}%</text>
+        <text x="50" y="46" textAnchor="middle" fontSize="18" fontWeight="800" fill="#0f172a">{typeof pct!=="undefined"?pct:0}%</text>
         <text x="50" y="58" textAnchor="middle" fontSize="8"  fill="#94a3b8">completed</text>
       </svg>
       <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>
@@ -125,6 +125,8 @@ function AppraisalGauge({ pct, total, completed }) {
 
 // ── Main Component ───────────────────────────────────────────
 export default function PerformanceSnapshot() {
+  const [msg, setMsg] = useState('')
+  const notify = (m) => { setMsg(m); setTimeout(()=>setMsg(''),3000) }
   const { t, cc } = useApp()
   const [activeTab, setActiveTab] = useState('overview')
   const [selectedDept, setSelectedDept] = useState('All')
@@ -211,13 +213,13 @@ export default function PerformanceSnapshot() {
                   <div className="flex justify-between text-xs mb-1">
                     <span className="text-gray-700 font-medium">{k.name}</span>
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-gray-900">{k.pct}%</span>
+                      <span className="font-bold text-gray-900">{k.(pct||0)}%</span>
                       <Pill color={k.pct >= 98 ? 'green' : k.pct >= 92 ? 'yellow' : 'red'}>
                         {k.pct >= 98 ? 'On Track' : k.pct >= 92 ? 'Close' : 'Behind'}
                       </Pill>
                     </div>
                   </div>
-                  <ProgressBar value={k.pct} color={k.pct >= 98 ? '#10b981' : k.pct >= 92 ? '#f59e0b' : '#ef4444'} />
+                  <ProgressBar value={k.(pct||0)} color={k.pct >= 98 ? '#10b981' : k.pct >= 92 ? '#f59e0b' : '#ef4444'} />
                 </div>
               ))}
             </div>
@@ -393,9 +395,9 @@ export default function PerformanceSnapshot() {
                 <div key={i} className="mb-3">
                   <div className="flex justify-between text-xs mb-1">
                     <span className="text-gray-700 font-medium">{o.outcome}</span>
-                    <span className="font-bold text-gray-900">{o.count} cases ({o.pct}%)</span>
+                    <span className="font-bold text-gray-900">{o.count} cases ({o.(pct||0)}%)</span>
                   </div>
-                  <ProgressBar value={o.pct} color={o.color} />
+                  <ProgressBar value={o.(pct||0)} color={o.color} />
                 </div>
               ))}
             </Card>

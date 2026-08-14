@@ -56,10 +56,10 @@ export default function ATSAnalyticsPage(){
             <div key={i} style={{marginBottom:10}}>
               <div style={{display:'flex',justifyContent:'space-between',fontSize:10,marginBottom:4}}>
                 <span style={{fontWeight:700,color:'#334155'}}>{f.stage}</span>
-                <span style={{color:'#94a3b8'}}>{f.count.toLocaleString()} candidates · {f.pct}%</span>
+                <span style={{color:'#94a3b8'}}>{f.count.toLocaleString()} candidates · {f.(pct||0)}%</span>
               </div>
               <div style={{height:28,background:'#f1f5f9',borderRadius:6,overflow:'hidden',position:'relative'}}>
-                <div style={{height:'100%',width:`${f.pct}%`,background:f.color,borderRadius:6,display:'flex',alignItems:'center',paddingLeft:8,transition:'width .6s'}}>
+                <div style={{height:'100%',width:`${f.(pct||0)}%`,background:f.color,borderRadius:6,display:'flex',alignItems:'center',paddingLeft:8,transition:'width .6s'}}>
                   {f.pct>8&&<span style={{fontSize:10,fontWeight:800,color:'#fff'}}>{f.count}</span>}
                 </div>
               </div>
@@ -81,10 +81,10 @@ export default function ATSAnalyticsPage(){
                 <div key={i} style={{marginBottom:10}}>
                   <div style={{display:'flex',justifyContent:'space-between',fontSize:10,marginBottom:3}}>
                     <span style={{fontWeight:700,color:'#334155'}}>{s.s}</span>
-                    <span style={{color:'#94a3b8'}}>{s.pct}%</span>
+                    <span style={{color:'#94a3b8'}}>{s.(pct||0)}%</span>
                   </div>
                   <div style={{height:22,background:'#f1f5f9',borderRadius:5,overflow:'hidden'}}>
-                    <div style={{height:'100%',width:`${s.pct}%`,background:colors[i],borderRadius:5,transition:'width .5s'}}/>
+                    <div style={{height:'100%',width:`${s.(pct||0)}%`,background:colors[i],borderRadius:5,transition:'width .5s'}}/>
                   </div>
                 </div>
               )

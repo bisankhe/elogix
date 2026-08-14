@@ -137,8 +137,8 @@ export default function AttritionDashboardPage() {
         <div style={{fontSize:12,fontWeight:800,color:'#0f172a',marginBottom:12}}>⚖ Gender Distribution of Exits</div>
         <div style={{display:'flex',height:24,borderRadius:12,overflow:'hidden'}}>
           {DEMOGRAPHICS.gender.map((g,i)=>(
-            <div key={i} style={{width:`${g.pct}%`,background:i===0?'#3b82f6':'#ec4899',display:'flex',alignItems:'center',justifyContent:'center'}}>
-              <span style={{fontSize:10,fontWeight:700,color:'#fff'}}>{g.label} {g.pct}%</span>
+            <div key={i} style={{width:`${g.(pct||0)}%`,background:i===0?'#3b82f6':'#ec4899',display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <span style={{fontSize:10,fontWeight:700,color:'#fff'}}>{g.label} {g.(pct||0)}%</span>
             </div>
           ))}
         </div>

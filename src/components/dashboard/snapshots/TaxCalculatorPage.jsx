@@ -312,7 +312,7 @@ export default function TaxCalculatorPage() {
                       <span style={{color:b.color,fontWeight:700}}>NPR {nr(b.tax)}</span>
                     </div>
                     <div style={{height:8,background:'#f1f5f9',borderRadius:4,overflow:'hidden'}}>
-                      <div style={{height:'100%',width:`${b.pct}%`,background:b.color,borderRadius:4,transition:'width .4s'}}/>
+                      <div style={{height:'100%',width:`${b.(pct||0)}%`,background:b.color,borderRadius:4,transition:'width .4s'}}/>
                     </div>
                     <div style={{fontSize:8,color:'#94a3b8',marginTop:1}}>NPR {nr(b.amount)} taxable</div>
                   </div>

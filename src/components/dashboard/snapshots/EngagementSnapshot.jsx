@@ -338,8 +338,8 @@ export default function EngagementSnapshot() {
               { icon: '😔', label: 'Negative',  pct: 10, color: '#ef4444', pill: 'red',    insight: 'Finance dept drives most negative sentiment — act now.' },
             ].map((s, i) => (
               <Card key={i} title={`${s.icon} ${s.label} Sentiment`}>
-                <div className="text-4xl font-black text-center my-4" style={{ color: s.color }}>{s.pct}%</div>
-                <ProgressBar value={s.pct} color={s.color} />
+                <div className="text-4xl font-black text-center my-4" style={{ color: s.color }}>{s.(pct||0)}%</div>
+                <ProgressBar value={s.(pct||0)} color={s.color} />
                 <p className="text-xs text-gray-500 mt-3 italic">{s.insight}</p>
               </Card>
             ))}

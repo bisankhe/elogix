@@ -4,7 +4,11 @@
  * eLogix Technologies · www.elogix.com.np
  */
 
-const ELOGIX_API   = import.meta.env.VITE_API_URL || 'https://www.elogix.com.np/api/v1'
+// Auto-detect: use relative /api in production (nginx proxies it)
+// Use VITE_API_URL env var to override for external API
+const IS_DEV     = import.meta.env.DEV
+const ELOGIX_API = import.meta.env.VITE_API_URL ||
+  (IS_DEV ? 'http://localhost:5000/api/v1' : '/api/v1')
 const ELOGIX_ADMIN = import.meta.env.VITE_ADMIN_URL || 'https://www.elogix.com.np/api/elogix-admin/v1'
 
 // ── Tenant detection (subdomain → localStorage → null) ────────

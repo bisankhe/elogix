@@ -267,9 +267,9 @@ function AddDeptModal({onAdd,onClose}){
 
 // ── ADD TASK MODAL ────────────────────────────────────────────
 function AddTaskModal({dept,onAdd,onClose}){
-  const [name,setName]=useState('')
-  const [gen,setGen]=useState(false)
-  const [err,setErr]=useState('')
+  const [name2,setName]=useState('')
+  const [gen2,setGen]=useState(false)
+  const [err2,setErr]=useState('')
 
   const handle = async () => {
     if(!name.trim()){setErr('Please enter a task name.');return}
@@ -284,17 +284,17 @@ function AddTaskModal({dept,onAdd,onClose}){
   return(
     <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.55)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center'}} onClick={onClose}>
       <div style={{background:'#fff',borderRadius:16,padding:28,maxWidth:440,width:'90%',boxShadow:'0 20px 60px rgba(0,0,0,.2)'}} onClick={e=>e.stopPropagation()}>
-        <div style={{fontSize:15,fontWeight:800,color:'#0f172a',marginBottom:6}}>➕ Add Task to {dept.name}</div>
+        <div style={{fontSize:15,fontWeight:800,color:'#0f172a',marginBottom:6}}>➕ Add Task to {dept.name2}</div>
         <div style={{fontSize:10,color:'#64748b',marginBottom:18}}>AI will generate a complete swimlane process flowchart for this task.</div>
         <div style={{marginBottom:18}}>
           <label style={{fontSize:10,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>Task / Function Name <span style={{color:'#ef4444'}}>*</span></label>
-          <input value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. Employee Grievance Handling, Vendor Evaluation..." style={{width:'100%',padding:'10px 12px',borderRadius:10,border:'1px solid #e2e8f0',fontSize:11,outline:'none',boxSizing:'border-box'}}/>
+          <input value={name2} onChange={e=>setName(e.target.value)} placeholder="e.g. Employee Grievance Handling, Vendor Evaluation..." style={{width:'100%',padding:'10px 12px',borderRadius:10,border:'1px solid #e2e8f0',fontSize:11,outline:'none',boxSizing:'border-box'}}/>
         </div>
-        {err && <div style={{fontSize:10,color:'#ef4444',marginBottom:12,padding:'8px 12px',background:'#fef2f2',borderRadius:8}}>{err}</div>}
+        {err2 && <div style={{fontSize:10,color:'#ef4444',marginBottom:12,padding:'8px 12px',background:'#fef2f2',borderRadius:8}}>{err2}</div>}
         <div style={{display:'flex',gap:10}}>
           <button onClick={onClose} style={{flex:1,padding:'10px',borderRadius:10,border:'1px solid #e2e8f0',background:'#fff',color:'#64748b',fontSize:11,cursor:'pointer'}}>Cancel</button>
-          <button onClick={handle} disabled={gen} style={{flex:2,padding:'10px',borderRadius:10,border:'none',background:gen?'#e2e8f0':'linear-gradient(135deg,#1e3a5f,#1e40af)',color:gen?'#94a3b8':'#fff',fontSize:11,fontWeight:800,cursor:gen?'default':'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
-            {gen?<><span style={{width:14,height:14,border:'2px solid rgba(255,255,255,.3)',borderTop:'2px solid #fff',borderRadius:'50%',display:'inline-block',animation:'pfSpin 1s linear infinite'}}/>Generating...</>:'🤖 Generate Flowchart'}
+          <button onClick={handle} disabled={gen2} style={{flex:2,padding:'10px',borderRadius:10,border:'none',background:gen2?'#e2e8f0':'linear-gradient(135deg,#1e3a5f,#1e40af)',color:gen2?'#94a3b8':'#fff',fontSize:11,fontWeight:800,cursor:gen2?'default':'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+            {gen2?<><span style={{width:14,height:14,border:'2px solid rgba(255,255,255,.3)',borderTop:'2px solid #fff',borderRadius:'50%',display:'inline-block',animation:'pfSpin 1s linear infinite'}}/>Generating...</>:'🤖 Generate Flowchart'}
           </button>
         </div>
       </div>
@@ -344,7 +344,7 @@ export default function ProcessFlowPage(){
     setTimeout(async ()=>{
       const key = firstDept.id+'_'+firstTask.id
       if (customFlows[key] || (typeof builtinFlows !== 'undefined' && builtinFlows[key])) return
-      notify('🤖 AI is generating the '+firstDept.name+' → '+firstTask.label+' process flow...')
+      notify('🤖 AI is generating the '+firstDept.name2+' → '+firstTask.label+' process flow...')
       const flow = await generateTaskFlow(firstDept, firstTask.label)
       if (flow) {
         setCustomFlows(p=>({...p,[key]:flow}))
@@ -400,7 +400,7 @@ export default function ProcessFlowPage(){
   // AI-generate a task flow on the fly
   const aiGenerateTaskFlow=async(task)=>{
     setGenTask(task.id)
-    const flow=await generateDeptFlow({name:selDept.name,taskLabel:task.label})
+    const flow=await generateDeptFlow({name2:selDept.name2,taskLabel:task.label})
     setGenTask(null)
     if(!flow){notify('❌ AI generation failed. Check API key.');return}
     const updated={...customFlows,[task.id]:flow}
@@ -417,7 +417,7 @@ export default function ProcessFlowPage(){
     const customs=updated.filter(x=>x.isCustom)
     localStorage.setItem('elogix_pf_custom_depts',JSON.stringify(customs))
     setSelDept(d);setSelTask(null)
-    notify(`✅ "${d.name}" department added with ${d.tasks.length} tasks!`,3000)
+    notify(`✅ "${d.name2}" department added with ${d.tasks.length} tasks!`,3000)
   }
 
   // Add new task to existing dept
@@ -446,7 +446,7 @@ export default function ProcessFlowPage(){
 
   // Groups for sidebar
   const groups={}
-  depts.filter(d=>!search||d.name.toLowerCase().includes(search.toLowerCase())||d.tasks.some(t=>t.label.toLowerCase().includes(search.toLowerCase()))).forEach(d=>{if(!groups[d.group])groups[d.group]=[];groups[d.group].push(d)})
+  depts.filter(d=>!search||d.name2.toLowerCase().includes(search.toLowerCase())||d.tasks.some(t=>t.label.toLowerCase().includes(search.toLowerCase()))).forEach(d=>{if(!groups[d.group])groups[d.group]=[];groups[d.group].push(d)})
 
   const flow=selTask?getFlow(selTask.id):null
   const stats=flow?{total:flow.nodes.filter(n=>n.type!=='start'&&n.type!=='end').length,ai:flow.nodes.filter(n=>n.type==='ai').length,dec:flow.nodes.filter(n=>n.type==='decision').length}:null
@@ -502,7 +502,7 @@ export default function ProcessFlowPage(){
                       style={{padding:'8px 10px',cursor:'pointer',background:isA?d.color+'18':'#fff',borderLeft:`3px solid ${isA?d.color:'transparent'}`,borderBottom:'1px solid #f8fafc',display:'flex',alignItems:'center',gap:8,transition:'all .12s'}}>
                       <span style={{fontSize:15,flexShrink:0}}>{d.icon}</span>
                       <div style={{flex:1,minWidth:0}}>
-                        <div style={{fontSize:10,fontWeight:isA?700:500,color:isA?d.color:'#334155',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{d.name}</div>
+                        <div style={{fontSize:10,fontWeight:isA?700:500,color:isA?d.color:'#334155',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{d.name2}</div>
                         <div style={{fontSize:8,color:'#94a3b8'}}>{d.tasks.length} tasks{d.isCustom?' · Custom':''}</div>
                       </div>
                     </div>
@@ -522,7 +522,7 @@ export default function ProcessFlowPage(){
               <div style={{background:`${selDept.color}10`,border:`1px solid ${selDept.color}30`,borderRadius:14,padding:'14px 20px',marginBottom:16,display:'flex',alignItems:'center',gap:12,flexWrap:'wrap'}}>
                 <span style={{fontSize:32}}>{selDept.icon}</span>
                 <div style={{flex:1}}>
-                  <div style={{fontSize:16,fontWeight:900,color:'#0f172a'}}>{selDept.name}</div>
+                  <div style={{fontSize:16,fontWeight:900,color:'#0f172a'}}>{selDept.name2}</div>
                   <div style={{fontSize:10,color:'#64748b',marginTop:2}}>
                     {selDept.tasks.length} tasks — click any task card to view its detailed swimlane process flowchart
                   </div>
@@ -583,7 +583,7 @@ export default function ProcessFlowPage(){
                   <div style={{flex:1}}>
                     <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
                       <span style={{fontSize:13,fontWeight:800,color:'#0f172a'}}>{selTask.label}</span>
-                      <span style={{fontSize:9,color:'#64748b'}}>— {selDept.name}</span>
+                      <span style={{fontSize:9,color:'#64748b'}}>— {selDept.name2}</span>
                       {editedFlows[selTask.id]&&<span style={{fontSize:8,fontWeight:700,padding:'1px 7px',borderRadius:8,background:'#fffbeb',color:'#92400e'}}>Modified</span>}
                     </div>
                     {f&&<div style={{fontSize:10,color:'#64748b',marginTop:2}}>{f.subtitle}</div>}

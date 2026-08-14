@@ -54,6 +54,8 @@ function notify(msg, setMsg) {
 }
 
 export default function PermissionManagementPage() {
+  const [msg, setMsg] = useState('')
+  const notify = m => { setMsg(m); setTimeout(()=>setMsg(''),3000) }
   const [tab,        setTab]        = useState('roles')     // roles | users | matrix
   const [roles,      setRoles]      = useState({...ROLE_TEMPLATES})
   const [users,      setUsers]      = useState(DEMO_USERS)

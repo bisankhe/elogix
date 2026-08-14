@@ -109,9 +109,9 @@ export default function WorklifeBalancePage() {
               <div key={b.range} style={{background:'#fff',borderRadius:12,border:`2px solid ${b.color}30`,padding:'16px',textAlign:'center'}}>
                 <div style={{fontSize:28,fontWeight:900,color:b.color,marginBottom:4}}>{b.count}</div>
                 <div style={{fontSize:10,fontWeight:700,color:'#374151'}}>{b.range}</div>
-                <div style={{fontSize:20,fontWeight:800,color:b.color,marginTop:4}}>{b.pct}%</div>
+                <div style={{fontSize:20,fontWeight:800,color:b.color,marginTop:4}}>{b.(pct||0)}%</div>
                 <div style={{height:6,background:'#f1f5f9',borderRadius:3,marginTop:8,overflow:'hidden'}}>
-                  <div style={{height:'100%',width:b.pct+'%',background:b.color,borderRadius:3}}/>
+                  <div style={{height:'100%',width:b.(pct||0)+'%',background:b.color,borderRadius:3}}/>
                 </div>
               </div>
             ))}
