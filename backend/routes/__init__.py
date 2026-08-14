@@ -210,6 +210,7 @@ ALL_BLUEPRINTS = [
     mobile_bp,           # /api/v1/mobile-app-config
     data_migration_bp,   # /api/v1/data-migration
     sys_settings_bp,     # /api/v1/system-settings
-    ai_proxy_bp,          # /api/v1/ai-proxy (no auth)
+    ai_proxy_bp,
+    ai_chat_bp,          # /api/v1/ai-proxy (no auth)
     ai_bi_bp,              # /api/v1/ai-bi
 ]

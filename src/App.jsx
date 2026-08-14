@@ -743,7 +743,7 @@ const ROUTES = {
   'policy-readers':             HRPolicyReadersPage,
   'policy-compliance-report':   HRPoliciesPage,
   'ai-business-intelligence':       AIBusinessIntelligencePage,
-  'ai-hr-chatbot':                      AIBusinessIntelligencePage,
+  'ai-hr-chatbot':                  ATSHRChatPage,
   // ── AI Assistant Module ──────────────────────────────────────
   'ai-hr-analytics':                    AIHRAnalyticsPage,
   'ai-policy-assistant':                AIPolicyAssistantPage,

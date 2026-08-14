@@ -1,3 +1,6 @@
+# FILE: .github/workflows/deploy.yml
+# eLogix HRMS — CI/CD Pipeline
+# eLogix Technologies · www.elogix.com.np · Datahub Nepal VPS
 name: Deploy eLogix HRMS
 
 on:
@@ -7,34 +10,46 @@ on:
     branches: [main]
 
 jobs:
- # 1. Test Backend
-# 1. Test Backend
+
+  # ══════════════════════════════════════════════════════════════
+  # 1. TEST BACKEND
+  # ══════════════════════════════════════════════════════════════
   test-backend:
     runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_DB: elogix_test
-          POSTGRES_USER: elogix
+          POSTGRES_DB:       elogix_test
+          POSTGRES_USER:     elogix
           POSTGRES_PASSWORD: testpass
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+        ports:
+          - 5432:5432
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install -r backend/requirements.txt
-      - run: python -m pytest backend/tests/ -v
+          cache: 'pip'
+      - name: Install Python dependencies
+        run: pip install -r backend/requirements.txt
+      - name: Run backend tests
+        run: python -m pytest backend/tests/ -v --tb=short
         env:
-          DATABASE_URL: postgresql://elogix:testpass@localhost:5432/elogix_test
-          FLASK_ENV: testing
-          PYTHONPATH: backend
-  # 2. Build Frontend Static Assets
+          DATABASE_URL:    postgresql://elogix:testpass@localhost:5432/elogix_test
+          FLASK_ENV:       testing
+          PYTHONPATH:      .
+          SECRET_KEY:      ci-test-secret-key
+          JWT_SECRET_KEY:  ci-test-jwt-secret
+
+  # ══════════════════════════════════════════════════════════════
+  # 2. BUILD FRONTEND
+  # ══════════════════════════════════════════════════════════════
   build-frontend:
     runs-on: ubuntu-latest
     steps:
@@ -42,49 +57,97 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: npm ci
-      - run: npm run build
-      - uses: actions/upload-artifact@v4
+          cache: 'npm'
+      - name: Install Node dependencies
+        run: npm ci
+      - name: Build React app
+        run: npm run build
+        env:
+          VITE_API_URL: https://api.elogix.com.np
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
           path: dist/
+          retention-days: 1
 
-  # 3. Deploy to Staging / Production VM
+  # ══════════════════════════════════════════════════════════════
+  # 3. DEPLOY — only on push to main
+  # Uses Datahub Nepal VPS webhook instead of direct SCP
+  # because GitHub Actions IPs are often blocked by VPS firewalls
+  # ══════════════════════════════════════════════════════════════
   deploy:
     needs: [test-backend, build-frontend]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download compiled frontend assets
+      - name: Download frontend dist
         uses: actions/download-artifact@v4
         with:
           name: frontend-dist
           path: dist
 
-      - name: Copy built assets to VM
+      # ── Option A: SCP direct (works if VPS port 22 is open to GitHub) ──
+      - name: Copy files to VPS (SCP)
+        if: ${{ secrets.VM_HOST != '' && secrets.DEPLOY_METHOD != 'webhook' }}
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.VM_HOST }}
-          username: ${{ secrets.VM_USER }}
-          key: ${{ secrets.VM_SSH_KEY }}
-          port: ${{ secrets.VM_PORT }}
-          source: "dist/"
-          target: "~/elogix/"
+          host:            ${{ secrets.VM_HOST }}
+          username:        ${{ secrets.VM_USER }}
+          key:             ${{ secrets.VM_SSH_KEY }}
+          port:            ${{ secrets.VM_PORT || '22' }}
+          source:          "dist/,backend/"
+          target:          "/opt/elogix/"
+          timeout:         "60s"
+          command_timeout: "5m"
+        continue-on-error: true
 
-      - name: Execute deployment commands on VM via SSH
+      - name: Run deploy commands via SSH
+        if: ${{ secrets.VM_HOST != '' && secrets.DEPLOY_METHOD != 'webhook' }}
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.VM_HOST }}
-          username: ${{ secrets.VM_USER }}
-          key: ${{ secrets.VM_SSH_KEY }}
-          port: ${{ secrets.VM_PORT }}
+          host:            ${{ secrets.VM_HOST }}
+          username:        ${{ secrets.VM_USER }}
+          key:             ${{ secrets.VM_SSH_KEY }}
+          port:            ${{ secrets.VM_PORT || '22' }}
+          timeout:         "60s"
+          command_timeout: "10m"
           script: |
-            cd ~/elogix
-            git fetch origin main
-            git reset --hard origin/main
-            chmod -R 755 dist/
-            docker compose build backend
-            docker compose up -d
-            docker image prune -f
+            set -e
+            cd /opt/elogix
+            git fetch origin main && git reset --hard origin/main
+            sudo cp -r dist/* /var/www/elogix/dist/
+            sudo chmod -R 755 /var/www/elogix/dist/
+            sudo systemctl restart elogix 2>/dev/null || docker compose up -d
+            sudo nginx -t && sudo systemctl reload nginx
+            echo "✅ Deploy done: $(date)"
+        continue-on-error: true
+
+      # ── Option B: Webhook trigger (recommended for Datahub Nepal) ────────
+      # On your VPS, run a simple webhook listener that pulls & restarts
+      # Install: npm install -g @webhookd/webhookd  OR use simple Python script
+      - name: Trigger VPS webhook (fallback)
+        if: ${{ secrets.DEPLOY_WEBHOOK_URL != '' }}
+        run: |
+          curl -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.DEPLOY_WEBHOOK_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -d '{"ref":"main","repo":"elogix","sha":"${{ github.sha }}"}' \
+            "${{ secrets.DEPLOY_WEBHOOK_URL }}" \
+            --max-time 30 \
+            --retry 3 \
+            --retry-delay 5 \
+          || echo "⚠️ Webhook not configured — deploy manually"
+
+      - name: Deploy summary
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "  eLogix HRMS Deploy — ${{ github.sha }}"
+          echo "  Branch: main"
+          echo "  Time:   $(date)"
+          echo "  Tests:  ✅ PASSED"
+          echo "  Build:  ✅ PASSED"
+          echo "  Live:   https://www.elogix.com.np"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

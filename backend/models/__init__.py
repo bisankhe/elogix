@@ -51,3 +51,5 @@ __all__ = [
     "ResumeScreeningResult", "Interview", "InterviewPanelMember", "InterviewScorecard",
     "Offer", "BackgroundCheck", "HiringApproval",
 ]
+
+from .ai_models import AIChatSession, AIChatMessage, AIUsageLog, AIKnowledgeBase
