@@ -23,6 +23,28 @@ const PLANS = [
 const INDUSTRIES = ['Banking & Finance','Human Resources','IT & Technology','Telecom',
   'Healthcare','Education','Manufacturing','Retail','NGO/INGO','Government','Other']
 
+// ── InputField — defined OUTSIDE component to prevent remount on every keystroke ──
+function Inp({ label, k, type='text', placeholder, required, value, onChange }) {
+  return (
+    <div style={{marginBottom:14}}>
+      <label style={{fontSize:11,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>
+        {label}{required&&<span style={{color:'#dc2626',marginLeft:2}}>*</span>}
+      </label>
+      <input
+        type={type}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder||label}
+        style={inp}
+        onFocus={e=>e.target.style.borderColor=A}
+        onBlur={e=>e.target.style.borderColor='#e2e8f0'}
+        autoComplete={type==='email'?'email':type==='password'?'new-password':'off'}
+        name={k}
+      />
+    </div>
+  )
+}
+
 export default function RegisterPage({ onSuccess }) {
   const [step,    setStep]    = useState(1)
   const [loading, setLoading] = useState(false)
@@ -65,18 +87,6 @@ export default function RegisterPage({ onSuccess }) {
     }
   }
 
-  const Inp = ({label, k, type='text', placeholder, required}) => (
-    <div style={{marginBottom:14}}>
-      <label style={{fontSize:11,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>
-        {label}{required&&<span style={{color:'#dc2626',marginLeft:2}}>*</span>}
-      </label>
-      <input type={type} value={form[k]} onChange={e=>sf(k,e.target.value)}
-        placeholder={placeholder||label}
-        style={inp}
-        onFocus={e=>e.target.style.borderColor=A}
-        onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
-    </div>
-  )
 
   if (done) return (
     <div style={{minHeight:'100vh',background:'#f0fdf4',display:'flex',alignItems:'center',
@@ -167,7 +177,7 @@ export default function RegisterPage({ onSuccess }) {
               <div style={{fontSize:11,color:'#64748b',marginBottom:24}}>Tell us about your company</div>
               <Inp label="Company Name" k="company_name" required
                 placeholder="e.g. Himalayan Bank Ltd."
-                onChange_extra={(v)=>{ sf('company_name',v); if(!form.slug) sf('slug',autoSlug(v)) }}/>
+                onChange_extra={(v)=>{ sf('company_name',v); if(!form.slug) sf('slug',autoSlug(v)) }} value={form["company_name"]} onChange={e=>sf("company_name",e.target.value)}/>
               <div style={{marginBottom:14}}>
                 <label style={{fontSize:11,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>
                   Company Portal URL <span style={{color:'#dc2626'}}>*</span>
@@ -193,7 +203,7 @@ export default function RegisterPage({ onSuccess }) {
                     {INDUSTRIES.map(ind=><option key={ind}>{ind}</option>)}
                   </select>
                 </div>
-                <Inp label="Phone" k="phone" placeholder="+977-01-XXXXXXX"/>
+                <Inp label="Phone" k="phone" placeholder="+977-01-XXXXXXX" value={form["phone"]} onChange={e=>sf("phone",e.target.value)}/>
               </div>
             </div>
           )}
@@ -204,9 +214,9 @@ export default function RegisterPage({ onSuccess }) {
               <div style={{fontWeight:900,fontSize:18,color:'#0f172a',marginBottom:4}}>Admin Account</div>
               <div style={{fontSize:11,color:'#64748b',marginBottom:24}}>This will be the Super Admin for {form.company_name}</div>
               <Inp label="Full Name" k="admin_name" required placeholder="HR Admin / Manager"/>
-              <Inp label="Admin Email" k="admin_email" type="email" required placeholder="hr@yourcompany.com"/>
-              <Inp label="Password" k="password" type="password" required placeholder="Min 10 chars with uppercase, number, symbol"/>
-              <Inp label="Confirm Password" k="confirm_password" type="password" required placeholder="Re-enter password"/>
+              <Inp label="Admin Email" k="admin_email" type="email" required placeholder="hr@yourcompany.com" value={form["admin_email"]} onChange={e=>sf("admin_email",e.target.value)}/>
+              <Inp label="Password" k="password" type="password" required placeholder="Min 10 chars with uppercase, number, symbol" value={form["password"]} onChange={e=>sf("password",e.target.value)}/>
+              <Inp label="Confirm Password" k="confirm_password" type="password" required placeholder="Re-enter password" value={form["confirm_password"]} onChange={e=>sf("confirm_password",e.target.value)}/>
               <div style={{background:'#fffbeb',border:'1px solid #fde68a',borderRadius:9,
                 padding:'10px 14px',fontSize:10,color:'#92400e'}}>
                 🔐 Password must be at least 10 characters with uppercase, lowercase, number and symbol.<br/>
