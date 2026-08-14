@@ -20,8 +20,8 @@ jobs:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_DB:       elogix_test
-          POSTGRES_USER:     elogix
+          POSTGRES_DB: elogix_test
+          POSTGRES_USER: elogix
           POSTGRES_PASSWORD: testpass
         options: >-
           --health-cmd pg_isready
@@ -45,10 +45,10 @@ jobs:
       - name: Run backend tests
         run: python -m pytest backend/tests/ -v --tb=short
         env:
-          DATABASE_URL:   postgresql://elogix:testpass@localhost:5432/elogix_test
-          FLASK_ENV:      testing
-          PYTHONPATH:     .
-          SECRET_KEY:     ci-test-secret-key
+          DATABASE_URL: postgresql://elogix:testpass@localhost:5432/elogix_test
+          FLASK_ENV: testing
+          PYTHONPATH: .
+          SECRET_KEY: ci-test-secret-key
           JWT_SECRET_KEY: ci-test-jwt-secret
 
   # ══════════════════════════════════════════════════════════════
@@ -88,6 +88,11 @@ jobs:
     needs: [test-backend, build-frontend]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    # Job-level environment variables allow secret values to be evaluated in step-level `if` conditionals
+    env:
+      VM_HOST: ${{ secrets.VM_HOST }}
+      DEPLOY_METHOD: ${{ secrets.DEPLOY_METHOD }}
+      DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
 
     steps:
       - uses: actions/checkout@v4
@@ -100,28 +105,28 @@ jobs:
 
       # ── Option A: SCP + SSH direct (works if port 22 is open) ──
       - name: Copy files to VPS (SCP)
-        if: ${{ secrets.VM_HOST != '' && secrets.DEPLOY_METHOD != 'webhook' }}
+        if: env.VM_HOST != '' && env.DEPLOY_METHOD != 'webhook'
         uses: appleboy/scp-action@v0.1.7
         with:
-          host:            ${{ secrets.VM_HOST }}
-          username:        ${{ secrets.VM_USER }}
-          key:             ${{ secrets.VM_SSH_KEY }}
-          port:            ${{ secrets.VM_PORT || '22' }}
-          source:          "dist/,backend/"
-          target:          "/opt/elogix/"
-          timeout:         "60s"
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: ${{ secrets.VM_PORT || '22' }}
+          source: "dist/,backend/"
+          target: "/opt/elogix/"
+          timeout: "60s"
           command_timeout: "5m"
         continue-on-error: true
 
       - name: Run deploy commands via SSH
-        if: ${{ secrets.VM_HOST != '' && secrets.DEPLOY_METHOD != 'webhook' }}
+        if: env.VM_HOST != '' && env.DEPLOY_METHOD != 'webhook'
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host:            ${{ secrets.VM_HOST }}
-          username:        ${{ secrets.VM_USER }}
-          key:             ${{ secrets.VM_SSH_KEY }}
-          port:            ${{ secrets.VM_PORT || '22' }}
-          timeout:         "60s"
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: ${{ secrets.VM_PORT || '22' }}
+          timeout: "60s"
           command_timeout: "20m"
           script: |
             set -e
@@ -163,7 +168,7 @@ jobs:
 
       # ── Option B: Webhook trigger (use if SCP times out) ─────
       - name: Trigger VPS webhook
-        if: ${{ secrets.DEPLOY_WEBHOOK_URL != '' }}
+        if: env.DEPLOY_WEBHOOK_URL != ''
         run: |
           curl -s -X POST \
             -H "Authorization: Bearer ${{ secrets.DEPLOY_WEBHOOK_SECRET }}" \
