@@ -30,22 +30,26 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
           cache: 'pip'
+
       - name: Install Python dependencies
         run: pip install -r backend/requirements.txt
+
       - name: Run backend tests
         run: python -m pytest backend/tests/ -v --tb=short
         env:
-          DATABASE_URL:    postgresql://elogix:testpass@localhost:5432/elogix_test
-          FLASK_ENV:       testing
-          PYTHONPATH:      .
-          SECRET_KEY:      ci-test-secret-key
-          JWT_SECRET_KEY:  ci-test-jwt-secret
+          DATABASE_URL:   postgresql://elogix:testpass@localhost:5432/elogix_test
+          FLASK_ENV:      testing
+          PYTHONPATH:     .
+          SECRET_KEY:     ci-test-secret-key
+          JWT_SECRET_KEY: ci-test-jwt-secret
 
   # ══════════════════════════════════════════════════════════════
   # 2. BUILD FRONTEND
@@ -54,16 +58,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
+
       - name: Install Node dependencies
         run: npm ci
+
       - name: Build React app
         run: npm run build
         env:
           VITE_API_URL: https://api.elogix.com.np
+
       - name: Upload dist artifact
         uses: actions/upload-artifact@v4
         with:
@@ -72,14 +80,15 @@ jobs:
           retention-days: 1
 
   # ══════════════════════════════════════════════════════════════
-  # 3. DEPLOY — only on push to main
-  # Uses Datahub Nepal VPS webhook instead of direct SCP
-  # because GitHub Actions IPs are often blocked by VPS firewalls
+  # 3. DEPLOY TO DATAHUB NEPAL VPS
+  # Only runs on push to main (not on PRs)
+  # Requires secrets: VM_HOST, VM_USER, VM_SSH_KEY, VM_PORT
   # ══════════════════════════════════════════════════════════════
   deploy:
     needs: [test-backend, build-frontend]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
     steps:
       - uses: actions/checkout@v4
 
@@ -89,7 +98,7 @@ jobs:
           name: frontend-dist
           path: dist
 
-      # ── Option A: SCP direct (works if VPS port 22 is open to GitHub) ──
+      # ── Option A: SCP + SSH direct (works if port 22 is open) ──
       - name: Copy files to VPS (SCP)
         if: ${{ secrets.VM_HOST != '' && secrets.DEPLOY_METHOD != 'webhook' }}
         uses: appleboy/scp-action@v0.1.7
@@ -113,41 +122,62 @@ jobs:
           key:             ${{ secrets.VM_SSH_KEY }}
           port:            ${{ secrets.VM_PORT || '22' }}
           timeout:         "60s"
-          command_timeout: "10m"
+          command_timeout: "20m"
           script: |
             set -e
-            cd /opt/elogix
-            git fetch origin main && git reset --hard origin/main
+            echo "🚀 eLogix deploy started at $(date)"
+            cd ~/elogix
+
+            # Pull latest code
+            git fetch origin main
+            git reset --hard origin/main
+
+            # Copy built frontend to nginx root
             sudo cp -r dist/* /var/www/elogix/dist/
             sudo chmod -R 755 /var/www/elogix/dist/
-            sudo systemctl restart elogix 2>/dev/null || docker compose up -d
+
+            # Restart backend — systemd or docker
+            if systemctl is-active --quiet elogix; then
+              cd ~/elogix/backend
+              source .venv/bin/activate
+              pip install -r requirements.txt --quiet
+              sudo systemctl restart elogix
+              sudo systemctl status elogix --no-pager
+            elif command -v docker &>/dev/null && docker compose version &>/dev/null; then
+              docker compose pull || true
+              if [ -f "backend/Dockerfile" ]; then
+                docker build -t elogix-backend:latest -f backend/Dockerfile ./backend
+              elif [ -f "Dockerfile" ]; then
+                docker build -t elogix-backend:latest -f Dockerfile .
+              fi
+              docker compose up -d
+              docker image prune -f
+            else
+              echo "⚠️  No systemd or docker — restart eLogix manually"
+            fi
+
             sudo nginx -t && sudo systemctl reload nginx
-            echo "✅ Deploy done: $(date)"
+            echo "✅ eLogix deploy done at $(date)"
+            echo "   Live: https://www.elogix.com.np"
         continue-on-error: true
 
-      # ── Option B: Webhook trigger (recommended for Datahub Nepal) ────────
-      # On your VPS, run a simple webhook listener that pulls & restarts
-      # Install: npm install -g @webhookd/webhookd  OR use simple Python script
-      - name: Trigger VPS webhook (fallback)
+      # ── Option B: Webhook trigger (use if SCP times out) ─────
+      - name: Trigger VPS webhook
         if: ${{ secrets.DEPLOY_WEBHOOK_URL != '' }}
         run: |
           curl -s -X POST \
             -H "Authorization: Bearer ${{ secrets.DEPLOY_WEBHOOK_SECRET }}" \
             -H "Content-Type: application/json" \
-            -d '{"ref":"main","repo":"elogix","sha":"${{ github.sha }}"}' \
+            -d "{\"ref\":\"main\",\"sha\":\"${{ github.sha }}\"}" \
             "${{ secrets.DEPLOY_WEBHOOK_URL }}" \
-            --max-time 30 \
-            --retry 3 \
-            --retry-delay 5 \
-          || echo "⚠️ Webhook not configured — deploy manually"
+            --max-time 30 --retry 3 --retry-delay 5 \
+          || echo "⚠️  Webhook not configured — deploy manually on VPS"
 
       - name: Deploy summary
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "  eLogix HRMS Deploy — ${{ github.sha }}"
-          echo "  Branch: main"
-          echo "  Time:   $(date)"
-          echo "  Tests:  ✅ PASSED"
-          echo "  Build:  ✅ PASSED"
+          echo "  Branch: main  |  Time: $(date)"
+          echo "  Tests:  ✅ PASSED  |  Build: ✅ PASSED"
           echo "  Live:   https://www.elogix.com.np"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
