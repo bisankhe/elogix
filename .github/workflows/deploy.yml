@@ -30,18 +30,12 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-<<<<<<< HEAD
-=======
-
->>>>>>> 6ed13a5ca5d3ea1bdc074883843eb694c48d46e3
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
           cache: 'pip'
-<<<<<<< HEAD
       - name: Install Python dependencies
         run: pip install -r backend/requirements.txt
       - name: Run backend tests
@@ -52,20 +46,6 @@ jobs:
           PYTHONPATH:      .
           SECRET_KEY:      ci-test-secret-key
           JWT_SECRET_KEY:  ci-test-jwt-secret
-=======
-
-      - name: Install Python dependencies
-        run: pip install -r backend/requirements.txt
-
-      - name: Run backend tests
-        run: python -m pytest backend/tests/ -v --tb=short
-        env:
-          DATABASE_URL: postgresql://elogix:testpass@localhost:5432/elogix_test
-          FLASK_ENV:    testing
-          PYTHONPATH:   .
-          SECRET_KEY:   ci-test-secret-key
-          JWT_SECRET_KEY: ci-test-jwt-secret
->>>>>>> 6ed13a5ca5d3ea1bdc074883843eb694c48d46e3
 
   # ══════════════════════════════════════════════════════════════
   # 2. BUILD FRONTEND
@@ -74,28 +54,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-<<<<<<< HEAD
       - name: Install Node dependencies
         run: npm ci
-=======
-
-      - name: Install Node dependencies
-        run: npm ci
-
->>>>>>> 6ed13a5ca5d3ea1bdc074883843eb694c48d46e3
       - name: Build React app
         run: npm run build
         env:
           VITE_API_URL: https://api.elogix.com.np
-<<<<<<< HEAD
-=======
-
->>>>>>> 6ed13a5ca5d3ea1bdc074883843eb694c48d46e3
       - name: Upload dist artifact
         uses: actions/upload-artifact@v4
         with:
@@ -104,24 +72,14 @@ jobs:
           retention-days: 1
 
   # ══════════════════════════════════════════════════════════════
-<<<<<<< HEAD
   # 3. DEPLOY — only on push to main
   # Uses Datahub Nepal VPS webhook instead of direct SCP
   # because GitHub Actions IPs are often blocked by VPS firewalls
-=======
-  # 3. DEPLOY TO DATAHUB NEPAL VPS
-  # Only runs on push to main (not on PRs)
-  # Requires secrets: VM_HOST, VM_USER, VM_SSH_KEY, VM_PORT
->>>>>>> 6ed13a5ca5d3ea1bdc074883843eb694c48d46e3
   # ══════════════════════════════════════════════════════════════
   deploy:
     needs: [test-backend, build-frontend]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-<<<<<<< HEAD
-=======
-
->>>>>>> 6ed13a5ca5d3ea1bdc074883843eb694c48d46e3
     steps:
       - uses: actions/checkout@v4
 
@@ -131,7 +89,6 @@ jobs:
           name: frontend-dist
           path: dist
 
-<<<<<<< HEAD
       # ── Option A: SCP direct (works if VPS port 22 is open to GitHub) ──
       - name: Copy files to VPS (SCP)
         if: ${{ secrets.VM_HOST != '' && secrets.DEPLOY_METHOD != 'webhook' }}
@@ -194,90 +151,3 @@ jobs:
           echo "  Build:  ✅ PASSED"
           echo "  Live:   https://www.elogix.com.np"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-=======
-      # ── Verify secrets are set before attempting deploy ─────
-      - name: Check deployment secrets
-        run: |
-          if [ -z "${{ secrets.VM_HOST }}" ]; then
-            echo "❌ ERROR: VM_HOST secret is not set"
-            echo "Go to: github.com/bisankhe/elogix → Settings → Secrets → New repository secret"
-            echo "Add: VM_HOST = your Datahub Nepal VPS IP address"
-            exit 1
-          fi
-          if [ -z "${{ secrets.VM_SSH_KEY }}" ]; then
-            echo "❌ ERROR: VM_SSH_KEY secret is not set"
-            exit 1
-          fi
-          echo "✅ Secrets look configured"
-
-      # ── Copy frontend dist to VPS ────────────────────────────
-      - name: Copy frontend to VPS
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host:     ${{ secrets.VM_HOST }}
-          username: ${{ secrets.VM_USER }}
-          key:      ${{ secrets.VM_SSH_KEY }}
-          port:     ${{ secrets.VM_PORT || '22' }}
-          source:   "dist/"
-          target:   "/var/www/elogix/"
-          timeout:  "120s"
-          command_timeout: "10m"
-
-      # ── Run deploy commands on VPS via SSH ───────────────────
-      - name: Deploy on VPS
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host:     ${{ secrets.VM_HOST }}
-          username: ${{ secrets.VM_USER }}
-          key:      ${{ secrets.VM_SSH_KEY }}
-          port:     ${{ secrets.VM_PORT || '22' }}
-          timeout:  "120s"
-          command_timeout: "20m"
-          script: |
-            set -e
-            echo "🚀 eLogix deploy started at $(date)"
-
-            # Pull latest code
-            cd ~/elogix
-            git fetch origin main
-            git reset --hard origin/main
-
-            # Copy built frontend to nginx root
-            sudo cp -r dist/* /var/www/elogix/dist/
-            sudo chmod -R 755 /var/www/elogix/dist/
-
-            # Restart backend (choose one: systemd or docker)
-            if systemctl is-active --quiet elogix; then
-              # Systemd deployment
-              cd ~/elogix/backend
-              source .venv/bin/activate
-              pip install -r requirements.txt --quiet
-              sudo systemctl restart elogix
-              sudo systemctl status elogix --no-pager
-            elif command -v docker &>/devnull && docker compose version &>/devnull; then
-              # Docker deployment
-              docker compose pull || true
-
-              # Build backend image checking for Dockerfile location
-              if [ -f "backend/Dockerfile" ]; then
-                echo "🔨 Building backend image from backend/Dockerfile..."
-                docker build -t elogix-backend:latest -f backend/Dockerfile ./backend
-              elif [ -f "Dockerfile" ]; then
-                echo "🔨 Building backend image from root Dockerfile..."
-                docker build -t elogix-backend:latest -f Dockerfile .
-              else
-                echo "⚠️ No Dockerfile found in root or backend/ directory!"
-              fi
-
-              docker compose up -d
-              docker image prune -f
-            else
-              echo "⚠️ Neither systemd nor docker found — manual restart needed"
-            fi
-
-            # Reload nginx to serve new frontend
-            sudo nginx -t && sudo systemctl reload nginx
-
-            echo "✅ eLogix deploy completed at $(date)"
-            echo "   Live at: https://www.elogix.com.np"
->>>>>>> 6ed13a5ca5d3ea1bdc074883843eb694c48d46e3
