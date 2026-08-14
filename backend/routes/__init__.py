@@ -2,6 +2,8 @@
 FILE: backend/routes/__init__.py
 All Flask blueprints — registered in app.py via ALL_BLUEPRINTS list.
 """
+from .auth import auth_bp
+from .ai_proxy import ai_chat_bp
 from .auth_routes                  import auth_bp
 from .company_setup_routes         import company_bp
 from .org_setup_routes             import org_setup_bp
