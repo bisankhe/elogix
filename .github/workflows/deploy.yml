@@ -118,7 +118,6 @@ jobs:
           target: "/tmp/elogix-dist/"
           timeout: "60s"
           command_timeout: "5m"
-        continue-on-error: true
 
       - name: Deploy on VPS via SSH
         if: env.VM_HOST != '' && env.DEPLOY_METHOD != 'webhook'
@@ -139,38 +138,33 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
 
-            # 2. Sync React build to Nginx
+            # 2. Sync React build to Docker mounted volume AND system path
+            mkdir -p ~/elogix/dist
+            cp -r /tmp/elogix-dist/dist/* ~/elogix/dist/
             sudo mkdir -p /var/www/elogix/dist
             sudo cp -r /tmp/elogix-dist/dist/* /var/www/elogix/dist/
             sudo chmod -R 755 /var/www/elogix/dist
             rm -rf /tmp/elogix-dist
 
-            # 3. Restart backend
-            if systemctl is-active --quiet elogix; then
+            # 3. Rebuild containers and trigger force recreation
+            if command -v docker &>/dev/null && docker compose version &>/dev/null; then
+              cd ~/elogix
+              docker compose up -d --build --force-recreate
+              docker image prune -f
+            elif systemctl is-active --quiet elogix; then
               cd ~/elogix
               source .venv/bin/activate || true
               pip install -r backend/requirements.txt --quiet
               sudo systemctl restart elogix
               sudo systemctl status elogix --no-pager
-            elif command -v docker &>/dev/null && docker compose version &>/dev/null; then
-              cd ~/elogix
-              docker compose pull || true
-              if [ -f "backend/Dockerfile" ]; then
-                docker build -t elogix-backend:latest -f backend/Dockerfile ./backend
-              elif [ -f "Dockerfile" ]; then
-                docker build -t elogix-backend:latest -f Dockerfile .
-              fi
-              docker compose up -d
-              docker image prune -f
             else
               echo "⚠️ No systemd or docker — restart eLogix manually"
             fi
 
             # 4. Reload Nginx
-            sudo nginx -t && sudo systemctl reload nginx
+            sudo nginx -t && sudo systemctl reload nginx || true
             echo "✅ eLogix deploy completed at $(date)"
             echo "   Live: https://www.elogix.com.np"
-        continue-on-error: true
 
       # ── Option B: Webhook fallback ────────────────────────────
       - name: Trigger VPS webhook
