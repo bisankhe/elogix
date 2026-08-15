@@ -69,10 +69,10 @@ export default function TenureChartPage() {
               <div key={d.range} style={{cursor:'pointer'}} onClick={()=>setSel(sel===d.range?null:d.range)}>
                 <div style={{display:'flex',justifyContent:'space-between',fontSize:10,marginBottom:5}}>
                   <span style={{fontWeight:700,color:sel===d.range?d.color:'#374151'}}>{d.range}</span>
-                  <span style={{fontWeight:800,color:d.color}}>{d.count} staff ({d.(pct||0)}%)</span>
+                  <span style={{fontWeight:800,color:d.color}}>{d.count} staff ({(d.pct||0)}%)</span>
                 </div>
                 <div style={{height:32,background:'#f1f5f9',borderRadius:8,overflow:'hidden',position:'relative'}}>
-                  <div style={{height:'100%',background:d.color,width:d.(pct||0)+'%',borderRadius:8,transition:'width .4s',display:'flex',alignItems:'center',paddingLeft:8}}>
+                  <div style={{height:'100%',background:d.color,width:(d.pct||0)+'%',borderRadius:8,transition:'width .4s',display:'flex',alignItems:'center',paddingLeft:8}}>
                     {d.pct>10&&<span style={{fontSize:9,color:'#fff',fontWeight:700}}>{d.count} employees</span>}
                   </div>
                 </div>
@@ -91,7 +91,7 @@ export default function TenureChartPage() {
                 <div style={{width:14,height:14,borderRadius:3,background:d.color,flexShrink:0}}/>
                 <span style={{fontSize:11,fontWeight:600,color:'#374151',flex:1}}>{d.range}</span>
                 <span style={{fontSize:11,fontWeight:900,color:d.color}}>{d.count}</span>
-                <span style={{fontSize:9,color:'#94a3b8'}}>{d.(pct||0)}%</span>
+                <span style={{fontSize:9,color:'#94a3b8'}}>{(d.pct||0)}%</span>
               </div>
             ))}
           </div>
@@ -109,7 +109,7 @@ export default function TenureChartPage() {
                 <tr key={d.range} style={{borderBottom:'1px solid #f1f5f9',background:i%2?'#fafafa':'#fff'}}>
                   <td style={{padding:'11px 14px'}}><div style={{display:'flex',gap:8,alignItems:'center'}}><div style={{width:10,height:10,borderRadius:2,background:d.color}}/><span style={{fontWeight:700}}>{d.range}</span></div></td>
                   <td style={{padding:'11px 14px',fontWeight:900,color:d.color,fontSize:14}}>{d.count}</td>
-                  <td style={{padding:'11px 14px'}}><div style={{display:'flex',gap:6,alignItems:'center'}}><div style={{height:6,width:60,background:'#f1f5f9',borderRadius:3}}><div style={{height:'100%',width:d.(pct||0)+'%',background:d.color,borderRadius:3}}/></div><span style={{fontWeight:700,color:d.color}}>{d.(pct||0)}%</span></div></td>
+                  <td style={{padding:'11px 14px'}}><div style={{display:'flex',gap:6,alignItems:'center'}}><div style={{height:6,width:60,background:'#f1f5f9',borderRadius:3}}><div style={{height:'100%',width:(d.pct||0)+'%',background:d.color,borderRadius:3}}/></div><span style={{fontWeight:700,color:d.color}}>{(d.pct||0)}%</span></div></td>
                   <td style={{padding:'11px 14px',color:'#475569'}}>{['6 months','1.5 years','3.5 years','7.5 years','12+ years'][i]}</td>
                   <td style={{padding:'11px 14px'}}><span style={{fontSize:8,fontWeight:700,padding:'3px 9px',borderRadius:20,background:d.color+'18',color:d.color}}>{['New','Growing','Core','Senior','Expert'][i]}</span></td>
                 </tr>

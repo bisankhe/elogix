@@ -143,7 +143,7 @@ export default function RecruitmentDashboardPage() {
                 <span style={{fontWeight:800,color:s.color}}>{s.count}</span>
               </div>
               <div style={{height:8,background:'#f1f5f9',borderRadius:8,overflow:'hidden'}}>
-                <div style={{width:`${s.(pct||0)}%`,height:'100%',background:`linear-gradient(90deg,${s.color},${s.color}88)`,borderRadius:8}}/>
+                <div style={{width:`${(s.pct||0)}%`,height:'100%',background:`linear-gradient(90deg,${s.color},${s.color}88)`,borderRadius:8}}/>
               </div>
             </div>
           ))}

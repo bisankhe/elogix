@@ -85,7 +85,7 @@ export default function OvertimeMonitoringPage() {
                 <span style={{fontSize:11,fontWeight:800,color:b.pct>=100?'#dc2626':'#b45309'}}>{b.weekly_ot_hours}/{b.cap}h</span>
               </div>
               <div style={{height:6,background:'#f1f5f9',borderRadius:6,overflow:'hidden',marginBottom:6}}>
-                <div style={{width:`${b.(pct||0)}%`,height:'100%',background:b.pct>=100?'#dc2626':'#f59e0b',borderRadius:6}}/>
+                <div style={{width:`${(b.pct||0)}%`,height:'100%',background:b.pct>=100?'#dc2626':'#f59e0b',borderRadius:6}}/>
               </div>
               <div style={{fontSize:9,color:'#64748b'}}>{b.note}</div>
             </div>

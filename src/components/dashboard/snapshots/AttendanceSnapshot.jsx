@@ -268,13 +268,13 @@ export default function AttendanceSnapshot() {
                       <span className="text-gray-400">{d.present} / {d.total} present</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-gray-900">{d.(pct||0)}%</span>
+                      <span className="font-bold text-gray-900">{(d.pct||0)}%</span>
                       <Pill color={d.pct >= 90 ? 'green' : d.pct >= 80 ? 'yellow' : 'red'}>
                         {d.pct >= 90 ? 'Excellent' : d.pct >= 80 ? 'Good' : 'Low'}
                       </Pill>
                     </div>
                   </div>
-                  <ProgressBar value={d.(pct||0)} color={d.pct >= 90 ? '#10b981' : d.pct >= 80 ? '#f59e0b' : '#ef4444'} />
+                  <ProgressBar value={(d.pct||0)} color={d.pct >= 90 ? '#10b981' : d.pct >= 80 ? '#f59e0b' : '#ef4444'} />
                 </div>
               ))}
             </div>
@@ -302,7 +302,7 @@ export default function AttendanceSnapshot() {
                 <div key={i} className="flex items-center justify-between py-2.5 border-b border-gray-50 last:border-none">
                   <div>
                     <div className="text-sm font-semibold text-gray-800">{d.dept} Department</div>
-                    <div className="text-xs text-gray-400">Attendance: {d.(pct||0)}% — {d.total - d.present} absent</div>
+                    <div className="text-xs text-gray-400">Attendance: {(d.pct||0)}% — {d.total - d.present} absent</div>
                   </div>
                   <Pill color={d.pct < 80 ? 'red' : 'yellow'}>
                     {d.pct < 80 ? 'Critical' : 'Review'}

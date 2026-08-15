@@ -65,9 +65,9 @@ export default function AIAttendanceInsightsPage(){
               <div key={i}>
                 <div style={{display:'flex',justifyContent:'space-between',marginBottom:2}}>
                   <span style={{fontSize:9,color:'#64748b'}}>{s.label}</span>
-                  <span style={{fontSize:9,fontWeight:700,color:s.color}}>{s.val} ({s.(pct||0)}%)</span>
+                  <span style={{fontSize:9,fontWeight:700,color:s.color}}>{s.val} ({(s.pct||0)}%)</span>
                 </div>
-                <div style={{height:6,background:'#f1f5f9',borderRadius:3,overflow:'hidden'}}><div style={{height:'100%',width:`${s.(pct||0)}%`,background:s.color,borderRadius:3}}/></div>
+                <div style={{height:6,background:'#f1f5f9',borderRadius:3,overflow:'hidden'}}><div style={{height:'100%',width:`${(s.pct||0)}%`,background:s.color,borderRadius:3}}/></div>
               </div>
             ))}
           </div>

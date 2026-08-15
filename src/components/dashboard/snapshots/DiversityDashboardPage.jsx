@@ -60,7 +60,7 @@ export default function DiversityDashboardPage() {
             {REPRESENTATION.map((r,i)=>(
               <div key={i} style={{display:'flex',gap:6,alignItems:'center',marginBottom:4}}>
                 <span style={{width:8,height:8,borderRadius:4,background:r.c,display:'inline-block'}}/>
-                <span style={{fontSize:9,color:'#374151'}}>{r.group} ({r.(pct||0)}%)</span>
+                <span style={{fontSize:9,color:'#374151'}}>{r.group} ({(r.pct||0)}%)</span>
               </div>
             ))}
           </div>

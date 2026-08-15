@@ -660,12 +660,12 @@ export default function AIBusinessIntelligencePage() {
                         <span style={{ fontSize:9, fontWeight:700, padding:'1px 7px', borderRadius:10,
                           background:r.pct>30?'#fef2f2':r.pct>20?'#fffbeb':'#f0fdf4',
                           color:r.pct>30?'#dc2626':r.pct>20?'#d97706':'#16a34a' }}>
-                          {r.(pct||0)}%
+                          {(r.pct||0)}%
                         </span>
                       </div>
                     </div>
                     <div style={{ height:8, background:'#f1f5f9', borderRadius:8, overflow:'hidden' }}>
-                      <div style={{ height:'100%', width:`${r.(pct||0)}%`, background:r.color, borderRadius:8, transition:'width .5s' }}/>
+                      <div style={{ height:'100%', width:`${(r.pct||0)}%`, background:r.color, borderRadius:8, transition:'width .5s' }}/>
                     </div>
                     <div style={{ fontSize:9, color:'#94a3b8', marginTop:2 }}>{r.reason}</div>
                   </div>

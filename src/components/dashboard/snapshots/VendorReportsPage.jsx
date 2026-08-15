@@ -171,11 +171,11 @@ export default function VendorReportsPage() {
                 <div key={i} style={{marginBottom:12}}>
                   <div style={{display:'flex',justifyContent:'space-between',marginBottom:5,fontSize:11}}>
                     <span style={{color:'#475569',fontWeight:600}}>{item.label}</span>
-                    <span style={{fontWeight:800,color:item.color}}>{item.(pct||0)}{typeof item.value==='number'&&item.value>100?'%':''}</span>
+                    <span style={{fontWeight:800,color:item.color}}>{(item.pct||0)}{typeof item.value==='number'&&item.value>100?'%':''}</span>
                   </div>
                   <div style={{height:10,background:'#f1f5f9',borderRadius:10,overflow:'hidden'}}>
                     <div style={{
-                      width:`${item.(pct||0)}%`,height:'100%',borderRadius:10,
+                      width:`${(item.pct||0)}%`,height:'100%',borderRadius:10,
                       background:`linear-gradient(90deg,${item.color},${item.color}88)`,
                       transition:'width .8s ease'
                     }}/>

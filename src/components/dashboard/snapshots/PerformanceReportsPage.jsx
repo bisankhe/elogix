@@ -76,9 +76,9 @@ export default function PerformanceReportsPage() {
           {COMPLETION_TRACKER.map((c,i)=>(
             <div key={i} style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:14,padding:'14px 18px'}}>
               <div style={{display:'flex',justifyContent:'space-between',marginBottom:6,fontSize:11}}>
-                <span style={{fontWeight:700,color:'#0f172a'}}>{c.dept}</span><span style={{fontWeight:700,color:c.pct<80?'#ef4444':'#10b981'}}>{c.completed}/{c.total} ({c.(pct||0)}%)</span>
+                <span style={{fontWeight:700,color:'#0f172a'}}>{c.dept}</span><span style={{fontWeight:700,color:c.pct<80?'#ef4444':'#10b981'}}>{c.completed}/{c.total} ({(c.pct||0)}%)</span>
               </div>
-              <div style={{height:8,background:'#f1f5f9',borderRadius:8,overflow:'hidden'}}><div style={{width:`${c.(pct||0)}%`,height:'100%',background:c.pct<80?'#ef4444':'#10b981',borderRadius:8}}/></div>
+              <div style={{height:8,background:'#f1f5f9',borderRadius:8,overflow:'hidden'}}><div style={{width:`${(c.pct||0)}%`,height:'100%',background:c.pct<80?'#ef4444':'#10b981',borderRadius:8}}/></div>
             </div>
           ))}
         </div>

@@ -183,11 +183,11 @@ export default function ATSCommandCenterPage() {
                 <div key={i} style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
                   <div style={{ fontSize:10, fontWeight:600, color:'#374151', width:100, flexShrink:0 }}>{s.stage}</div>
                   <div style={{ flex:1, height:28, background:'#f8fafc', borderRadius:8, overflow:'hidden', position:'relative' }}>
-                    <div style={{ height:'100%', width:`${s.(pct||0)}%`, background:s.color, borderRadius:8, minWidth:24, transition:'width 1s', display:'flex', alignItems:'center', paddingLeft:8 }}>
+                    <div style={{ height:'100%', width:`${(s.pct||0)}%`, background:s.color, borderRadius:8, minWidth:24, transition:'width 1s', display:'flex', alignItems:'center', paddingLeft:8 }}>
                       <span style={{ fontSize:9, fontWeight:700, color:'#fff', whiteSpace:'nowrap' }}>{s.count}</span>
                     </div>
                   </div>
-                  <div style={{ fontSize:10, fontWeight:700, color:s.color, width:34, textAlign:'right' }}>{s.(pct||0)}%</div>
+                  <div style={{ fontSize:10, fontWeight:700, color:s.color, width:34, textAlign:'right' }}>{(s.pct||0)}%</div>
                 </div>
               ))}
               <div style={{ display:'flex', gap:16, marginTop:12, padding:'10px 14px', background:'#f8fafc', borderRadius:10 }}>
@@ -299,10 +299,10 @@ export default function ATSCommandCenterPage() {
               <div key={i} style={{ padding:'14px 16px', borderRadius:12, border:'1px solid #e2e8f0', background:'#fafafa' }}>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
                   <span style={{ fontSize:12, fontWeight:700, color:'#0f172a' }}>{s.name}</span>
-                  <span style={{ fontSize:11, fontWeight:900, color:s.color }}>{s.(pct||0)}%</span>
+                  <span style={{ fontSize:11, fontWeight:900, color:s.color }}>{(s.pct||0)}%</span>
                 </div>
                 <div style={{ height:8, background:'#f1f5f9', borderRadius:4, overflow:'hidden', marginBottom:6 }}>
-                  <div style={{ height:'100%', width:`${s.(pct||0)}%`, background:s.color, borderRadius:4 }}/>
+                  <div style={{ height:'100%', width:`${(s.pct||0)}%`, background:s.color, borderRadius:4 }}/>
                 </div>
                 <div style={{ fontSize:9, color:'#64748b' }}>{s.count} applications</div>
               </div>

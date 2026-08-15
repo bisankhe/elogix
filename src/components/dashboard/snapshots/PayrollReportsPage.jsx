@@ -84,9 +84,9 @@ export default function PayrollReportsPage() {
               <div style={{fontSize:22,fontWeight:900,color:A}}>{w.count}</div>
               <div style={{fontSize:10,fontWeight:700,color:'#0f172a',marginTop:4}}>{w.category}</div>
               <div style={{height:6,background:'#f1f5f9',borderRadius:6,overflow:'hidden',marginTop:8}}>
-                <div style={{width:`${w.(pct||0)}%`,height:'100%',background:A,borderRadius:6}}/>
+                <div style={{width:`${(w.pct||0)}%`,height:'100%',background:A,borderRadius:6}}/>
               </div>
-              <div style={{fontSize:9,color:'#94a3b8',marginTop:4}}>{w.(pct||0)}% of total workforce</div>
+              <div style={{fontSize:9,color:'#94a3b8',marginTop:4}}>{(w.pct||0)}% of total workforce</div>
             </div>
           ))}
         </div>

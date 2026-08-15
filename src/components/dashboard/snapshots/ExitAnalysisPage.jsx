@@ -82,10 +82,10 @@ export default function ExitAnalysisPage() {
             <div key={i} style={{marginBottom:10}}>
               <div style={{display:'flex',justifyContent:'space-between',marginBottom:3,fontSize:10}}>
                 <span style={{color:'#374151',fontWeight:600}}>{r.reason}</span>
-                <span style={{color:A,fontWeight:700}}>{r.count} ({r.(pct||0)}%)</span>
+                <span style={{color:A,fontWeight:700}}>{r.count} ({(r.pct||0)}%)</span>
               </div>
               <div style={{height:8,background:'#f1f5f9',borderRadius:8,overflow:'hidden'}}>
-                <div style={{width:`${r.(pct||0)}%`,height:'100%',background:`linear-gradient(90deg,${A},${A}88)`,borderRadius:8}}/>
+                <div style={{width:`${(r.pct||0)}%`,height:'100%',background:`linear-gradient(90deg,${A},${A}88)`,borderRadius:8}}/>
               </div>
             </div>
           ))}

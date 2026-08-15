@@ -287,7 +287,7 @@ export default function RecruitmentSnapshot() {
                 <div key={i} style={{ background: '#fef9f0', border: '1px solid #fed7aa', borderRadius: 10, padding: 12 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: '#c2410c', marginBottom: 4 }}>{d.from}</div>
                   <div style={{ fontSize: 20, fontWeight: 900, color: '#ef4444' }}>{d.lost} lost</div>
-                  <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 6 }}>{d.(pct||0)}% drop-off rate</div>
+                  <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 6 }}>{(d.pct||0)}% drop-off rate</div>
                   <div style={{ fontSize: 10, color: '#475569', marginBottom: 4 }}>Reason: {d.reason}</div>
                   <div style={{ fontSize: 10, fontWeight: 600, color: '#3b82f6' }}>Fix: {d.improvement}</div>
                 </div>
