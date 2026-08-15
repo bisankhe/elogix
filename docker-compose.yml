@@ -51,6 +51,7 @@ services:
     env_file:
       - .env
     environment:
+      - CORS_ORIGINS=https://elogix.com.np,https://www.elogix.com.np
       - PYTHONPATH=/app:/app/backend
       - DATABASE_URL=postgresql://elogix:${DB_PASSWORD:-elogix_pass}@db:5432/elogix_hrms
       - REDIS_URL=redis://redis:6379/0
