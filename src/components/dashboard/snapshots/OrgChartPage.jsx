@@ -701,6 +701,7 @@ function AIAssistantPanel({ onQuery, onClose }) {
 
 // ── Main Org Chart Page ───────────────────────────────────────
 export default function OrgChartPage() {
+  const [searchQ, setSearchQ] = useState('')
   const [msg, setMsg] = useState('')
   const notify = (m) => { setMsg(m); setTimeout(()=>setMsg(''),3000) }
   const { persona } = useApp()
@@ -801,6 +802,12 @@ export default function OrgChartPage() {
   }
 
   const rootNodes = buildTree(null, visibleNodes)
+
+  // Component-level handleSelect for root-level map
+  const handleSelect = (n) => {
+    setSelectedNode(prev => prev?.id === n?.id ? null : n)
+    if (n) setShowDetail(true)
+  }
 
   return (
     <div>

@@ -78,6 +78,7 @@ export default function AutomatedPayrollPage() {
 
       <div style={{display:'grid',gap:12,marginTop:14}}>
         {filtered.map(r=>{
+          const sc = STATUS_CFG[r.status] || {c:'#64748b',bg:'#f8fafc',label:r.status,icon:'📋'}
           return (
             <div key={r.id}
               onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:r.employee,...r}})}}

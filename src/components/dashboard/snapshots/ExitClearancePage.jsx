@@ -128,6 +128,7 @@ export default function ExitClearancePage() {
               <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))',gap:0}}>
                 {Object.entries(c.departments).map(([key,dept])=>{
                   const sc = STATUS_CFG[dept.status]
+                   const dc = DEPT_CFG[key] || {color:'#64748b',label:key,responsibility:''}
                   return (
                     <div key={key} style={{padding:'12px 14px',borderRight:'1px solid #f8fafc'}}>
                       <div style={{display:'flex',gap:6,alignItems:'center',marginBottom:6}}>
@@ -138,7 +139,7 @@ export default function ExitClearancePage() {
                       {dept.note&&<div style={{fontSize:9,color:'#64748b',marginBottom:4}}>{dept.note}</div>}
                     {dept.approver&&<div style={{fontSize:8,color:'#94a3b8',marginBottom:4}}>👤 {dept.approver}</div>}
                     {dept.assets_received&&dept.assets_received.length>0&&<div style={{fontSize:8,color:'#10b981',marginBottom:4}}>📦 {dept.assets_received.join(', ')}</div>}
-                    <div style={{fontSize:8,color:'#94a3b8',fontStyle:'italic',marginBottom:4}}>{dc.responsibility?.substring(0,60)}...</div>
+                    <div style={{fontSize:8,color:'#94a3b8',fontStyle:'italic',marginBottom:4}}>{sc.responsibility?.substring(0,60)}...</div>
                       {dept.status==='pending'?(
                         <button onClick={()=>clearDept(c.id,key)} style={{width:'100%',padding:'5px',borderRadius:6,border:'none',background:`${dc.color}15`,color:dc.color,fontSize:9,fontWeight:700,cursor:'pointer'}}>Mark Cleared</button>
                       ):(

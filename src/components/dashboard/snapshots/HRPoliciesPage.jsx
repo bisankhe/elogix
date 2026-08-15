@@ -422,6 +422,7 @@ function PolicyReader({ policy, ackStatus, onClose, onSign, onProgressUpdate }) 
 function ComplianceDashboard({ acknowledgments }) {
   const mandatory = ALL_POLICIES.filter(p => p.mandatory)
   const signed = Object.values(acknowledgments).filter(s => s === 'signed').length
+  const pct = mandatory.length ? Math.round(signed / mandatory.length * 100) : 0
 
   return (
     <div>

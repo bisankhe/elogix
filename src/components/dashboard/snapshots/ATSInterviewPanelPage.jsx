@@ -234,6 +234,7 @@ export default function ATSInterviewPanelPage() {
                     <div style={{ fontSize: 10, fontWeight: 800, color: '#065f46', marginBottom: 6 }}>Panel Scorecard Summary</div>
                     {['Technical', 'Communication', 'Leadership', 'Culture Fit', 'Attitude'].map((c, i) => {
                       const keys = ['tech', 'comm', 'lead', 'culture', 'attitude']
+                      const avg = selPanel.scores[keys[i]] || 0
                       return (
                         <div key={c} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, padding: '2px 0' }}>
                           <span style={{ color: '#374151' }}>{c}</span>

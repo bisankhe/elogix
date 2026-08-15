@@ -600,6 +600,7 @@ tr:nth-child(even) td{background:#f8fafc}
                       </div>
                     </td>
                     {Array.from({length:Math.min(daysInMonth,31)},(_,di)=>di+1).map(d=>{
+                      const date = new Date(yr, mo, d)
                       const idx  = getDayIdx(date)
                       const sh   = emp.roster[idx]||null
                       const cfg  = sh?SHIFTS[sh]:null

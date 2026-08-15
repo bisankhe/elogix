@@ -75,6 +75,7 @@ export default function PayrollApprovalPage() {
 
       <div style={{display:'grid',gap:10,marginTop:14,marginBottom:18}}>
         {filtered.map(e=>{
+          const sc = STATUS_CFG[e.status] || {c:'#64748b',bg:'#f8fafc',label:e.status,icon:'📋'}
           return (
             <div key={e.id}
               onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:e.employee,...e}})}}

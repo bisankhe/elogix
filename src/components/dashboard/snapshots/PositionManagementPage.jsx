@@ -393,6 +393,7 @@ function DesignationSetup() {
 
 // ── Tab 3: Position Management ────────────────────────────────
 function PositionManagement() {
+  const [selected, setSelected] = useState(null)
   const [filter,   setFilter]   = useState('all')
 
   const filtered = POSITIONS.filter(p =>
@@ -493,8 +494,9 @@ function PositionManagement() {
       {/* Position cards */}
       <div style={{display:'flex',flexDirection:'column',gap:7}}>
         {filtered.map(pos=>{
-          const st  = statusCfg[pos.status] || statusCfg.vacant
-          const rc  = riskCfg[pos.attrition_risk] || riskCfg.low
+          const st     = statusCfg[pos.status] || statusCfg.vacant
+          const rc     = riskCfg[pos.attrition_risk] || riskCfg.low
+          const isOpen = selected === pos.id
           return (
             <div key={pos.id}
               style={{background:st.bg,border:`1px solid ${selected===pos.id?'#3b82f6':st.border}`,

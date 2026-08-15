@@ -74,6 +74,7 @@ export default function SkillGapMatrixPage() {
               <tr key={i}>
                 <td style={{padding:'8px 10px',fontWeight:700,color:'#0f172a',whiteSpace:'nowrap'}}>{row.employee}<div style={{fontSize:8,color:'#94a3b8',fontWeight:400}}>{row.dept}</div></td>
                 {SKILLS.map(skill=>{
+                   const level = row.skills?.[skill] || 0
                   return (
                     <td key={skill} style={{padding:4,textAlign:'center'}}>
                       <div onClick={()=>level&&setSelectedCell({employee:row.employee,skill,level,required:REQUIRED_LEVELS[skill]})}
