@@ -24,7 +24,7 @@ const INDUSTRIES = ['Banking & Finance','Human Resources','IT & Technology','Tel
   'Healthcare','Education','Manufacturing','Retail','NGO/INGO','Government','Other']
 
 // ── InputField — defined OUTSIDE component to prevent remount on every keystroke ──
-function Inp({ label, k, type='text', placeholder, required, value, onChange }) {
+function Inp({ label, k, type='text', placeholder, required, value, onChange, onChange_extra, readOnly }) {
   return (
     <div style={{marginBottom:14}}>
       <label style={{fontSize:11,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>
@@ -33,9 +33,10 @@ function Inp({ label, k, type='text', placeholder, required, value, onChange }) 
       <input
         type={type}
         value={value}
-        onChange={onChange}
+        onChange={e=>{ onChange&&onChange(e); onChange_extra&&onChange_extra(e.target.value) }}
         placeholder={placeholder||label}
         style={inp}
+        readOnly={readOnly}
         onFocus={e=>e.target.style.borderColor=A}
         onBlur={e=>e.target.style.borderColor='#e2e8f0'}
         autoComplete={type==='email'?'email':type==='password'?'new-password':'off'}
@@ -177,7 +178,7 @@ export default function RegisterPage({ onSuccess }) {
               <div style={{fontSize:11,color:'#64748b',marginBottom:24}}>Tell us about your company</div>
               <Inp label="Company Name" k="company_name" required
                 placeholder="e.g. Himalayan Bank Ltd."
-                onChange_extra={(v)=>{ sf('company_name',v); if(!form.slug) sf('slug',autoSlug(v)) }} value={form["company_name"]} onChange={e=>sf("company_name",e.target.value)}/>
+                onChange_extra={(v)=>{ sf('company_name',v); setForm(p=>p.slug?p:{...p,slug:autoSlug(v)}) }} value={form["company_name"]}/>
               <div style={{marginBottom:14}}>
                 <label style={{fontSize:11,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>
                   Company Portal URL <span style={{color:'#dc2626'}}>*</span>
@@ -213,7 +214,7 @@ export default function RegisterPage({ onSuccess }) {
             <div>
               <div style={{fontWeight:900,fontSize:18,color:'#0f172a',marginBottom:4}}>Admin Account</div>
               <div style={{fontSize:11,color:'#64748b',marginBottom:24}}>This will be the Super Admin for {form.company_name}</div>
-              <Inp label="Full Name" k="admin_name" required placeholder="HR Admin / Manager"/>
+              <Inp label="Full Name" k="admin_name" required placeholder="HR Admin / Manager" value={form["admin_name"]} onChange={e=>sf("admin_name",e.target.value)}/>
               <Inp label="Admin Email" k="admin_email" type="email" required placeholder="hr@yourcompany.com" value={form["admin_email"]} onChange={e=>sf("admin_email",e.target.value)}/>
               <Inp label="Password" k="password" type="password" required placeholder="Min 10 chars with uppercase, number, symbol" value={form["password"]} onChange={e=>sf("password",e.target.value)}/>
               <Inp label="Confirm Password" k="confirm_password" type="password" required placeholder="Re-enter password" value={form["confirm_password"]} onChange={e=>sf("confirm_password",e.target.value)}/>
@@ -301,7 +302,8 @@ export default function RegisterPage({ onSuccess }) {
             )}
             {step<4?(
               <button onClick={()=>{
-                if (step===1&&(!form.company_name||!form.slug)){setError('Company name and URL required');return}
+                if (step===1&&!form.company_name){setError('Company name is required');return}
+                if (step===1&&!form.slug){sf('slug',form.company_name.toLowerCase().replace(/[^a-z0-9]/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'').slice(0,30));setError('');setStep(s=>s+1);return}
                 if (step===2&&(!form.admin_name||!form.admin_email||!form.password)){setError('Fill all admin details');return}
                 if (step===2&&form.password!==form.confirm_password){setError('Passwords do not match');return}
                 setError('');setStep(s=>s+1)
