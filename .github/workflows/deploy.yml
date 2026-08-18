@@ -58,10 +58,20 @@ jobs:
           JWT_SECRET_KEY: ci-test-jwt-secret
 
   # ══════════════════════════════════════════════════════════════
+<<<<<<< HEAD
   # 2. BUILD FRONTEND
+=======
+  # 2. BUILD BACKEND DOCKER IMAGE
+>>>>>>> 1ce5437ac5505878f9b69567cc6a0109dd419b78
   # ══════════════════════════════════════════════════════════════
   build-frontend:
     runs-on: ubuntu-latest
+<<<<<<< HEAD
+=======
+    permissions:
+      contents: read
+      packages: write
+>>>>>>> 1ce5437ac5505878f9b69567cc6a0109dd419b78
     steps:
       - uses: actions/checkout@v4
 
@@ -73,6 +83,7 @@ jobs:
       - name: Install Node dependencies
         run: npm ci
 
+<<<<<<< HEAD
       - name: Build React app
         run: npm run build
         env:
@@ -86,6 +97,8 @@ jobs:
           path: dist/
           retention-days: 1
 
+=======
+>>>>>>> 1ce5437ac5505878f9b69567cc6a0109dd419b78
   # ══════════════════════════════════════════════════════════════
   # 3. DEPLOY TO DATAHUB NEPAL VPS
   # Only runs on push to main (not on pull_request)
@@ -141,6 +154,7 @@ jobs:
             sudo cp -r dist/* /var/www/elogix/dist/
             sudo chmod -R 755 /var/www/elogix/dist/
 
+<<<<<<< HEAD
             # Restart Flask backend
             if systemctl is-active --quiet elogix; then
               cd ~/elogix/backend
@@ -151,6 +165,12 @@ jobs:
             else
               echo "ℹ️  elogix systemd service not running — skipping restart"
             fi
+=======
+            # 3. Pull pre-built backend image and recreate containers
+            docker compose pull
+            docker compose up -d --force-recreate
+            docker image prune -f
+>>>>>>> 1ce5437ac5505878f9b69567cc6a0109dd419b78
 
             # Reload nginx
             sudo nginx -t && sudo systemctl reload nginx
@@ -174,6 +194,10 @@ jobs:
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "  eLogix HRMS — ${{ github.sha }}"
+<<<<<<< HEAD
           echo "  Tests  ✅  Build  ✅"
+=======
+          echo "  Tests: ✅ PASSED  |  Backend Image Built: ✅ PASSED"
+>>>>>>> 1ce5437ac5505878f9b69567cc6a0109dd419b78
           echo "  Live:  https://www.elogix.com.np"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
