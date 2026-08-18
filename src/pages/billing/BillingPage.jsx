@@ -31,6 +31,7 @@ const ADDONS_ACTIVE = []
 export default function BillingPage() {
   const { company, companyPlan: ctxPlan } = useAuth()
   const [tab,        setTab]        = useState('overview')
+  const REFERRAL_CODE = company?.referral_code || 'ELX-REF-' + Math.random().toString(36).substr(2,6).toUpperCase()
   const [planId,     setPlanId]     = useState(ctxPlan || 'growth')
   const [msg,        setMsg]        = useState('')
   const [upgrading,  setUpgrading]  = useState(null)

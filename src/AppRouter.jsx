@@ -39,7 +39,11 @@ export default function AppRouter() {
     if (data?.goto === 'elogix-admin' || data?.admin) {
       setPage('elogix-admin')
     } else {
-      setInitialPage(data?.goto || getDashboardPage())
+      // Use business-type landing page if available
+      const landing = data?.landing || data?.goto || getDashboardPage()
+      // Clear pending login session
+      try { sessionStorage.removeItem('elogix_pending_login') } catch {}
+      setInitialPage(landing)
       setPage('app')
     }
   }

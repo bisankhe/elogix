@@ -663,6 +663,7 @@ import ATSCommunicationPage     from './components/dashboard/snapshots/ATSCommun
 import ATSMultiPostPage         from './components/dashboard/snapshots/ATSMultiPostPage.jsx'
 import ATSExecutiveDashPage     from './components/dashboard/snapshots/ATSExecutiveDashPage.jsx'
 import ATSAIToolsPage           from './components/dashboard/snapshots/ATSAIToolsPage.jsx'
+import ReferralCommissionPage      from './components/dashboard/snapshots/ReferralCommissionPage.jsx'
 import TenantModulePermissionPage from './components/dashboard/snapshots/TenantModulePermissionPage.jsx'
 import ATSHRChatPage            from './components/dashboard/snapshots/ATSHRChatPage.jsx'
 import ATSRBACPage              from './components/dashboard/snapshots/ATSRBACPage.jsx'
@@ -744,6 +745,7 @@ const ROUTES = {
   'policy-readers':             HRPolicyReadersPage,
   'policy-compliance-report':   HRPoliciesPage,
   'ai-business-intelligence':       AIBusinessIntelligencePage,
+  'referral-commission':             ReferralCommissionPage,
   'tenant-module-permissions':      TenantModulePermissionPage,
   'ai-hr-chatbot':                  ATSHRChatPage,
   // ── AI Assistant Module ──────────────────────────────────────

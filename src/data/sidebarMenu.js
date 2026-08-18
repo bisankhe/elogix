@@ -743,6 +743,7 @@ export const SIDEBAR_MENU = [
       // User & Access
       { id: 'user-management',          label: 'User Management',                      group: 'User & Access' },
       { id: 'role-permission',          label: 'Role & Permission',                    group: 'User & Access' },
+      { id: 'referral-commission', label: 'Referral & Commission', icon: '🤝', badge: 'SA' },
       { id: 'tenant-module-permissions', label: 'Tenant Module Permissions', icon: '🔐', badge: 'SA' },
       { id: 'permission-management', label: 'Permission Management', icon: '🔐', group: 'Access Control', badge: 'NEW', desc: 'Assign & revoke user/role access' },
       { id: 'permission-matrix',        label: 'Permission Matrix',                    group: 'User & Access' },
