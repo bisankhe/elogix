@@ -85,12 +85,21 @@ jobs:
   # ══════════════════════════════════════════════════════════════
   # 3. DEPLOY TO DATAHUB NEPAL VPS
   # Only runs on push to main (not on PRs)
-  # Requires secrets: VM_HOST, VM_USER, VM_SSH_KEY, VM_PORT
   # ══════════════════════════════════════════════════════════════
   deploy:
     needs: [test-backend, build-frontend]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    # 💡 FIX: Map secrets to environment variables so 'if:' conditions can read them safely
+    env:
+      VM_HOST: ${{ secrets.VM_HOST }}
+      VM_USER: ${{ secrets.VM_USER }}
+      VM_SSH_KEY: ${{ secrets.VM_SSH_KEY }}
+      VM_PORT: ${{ secrets.VM_PORT }}
+      DEPLOY_METHOD: ${{ secrets.DEPLOY_METHOD }}
+      DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
+      DEPLOY_WEBHOOK_SECRET: ${{ secrets.DEPLOY_WEBHOOK_SECRET }}
 
     steps:
       - uses: actions/checkout@v4
@@ -103,26 +112,26 @@ jobs:
 
       # ── Option A: SCP + SSH direct ─────────────────────────────
       - name: Copy files to VPS (SCP)
-        if: ${{ secrets.VM_HOST != '' && secrets.DEPLOY_METHOD != 'webhook' }}
+        if: env.VM_HOST != '' && env.DEPLOY_METHOD != 'webhook'
         uses: appleboy/scp-action@v0.1.7
         with:
-          host:            ${{ secrets.VM_HOST }}
-          username:        ${{ secrets.VM_USER }}
-          key:             ${{ secrets.VM_SSH_KEY }}
-          port:            ${{ secrets.VM_PORT || '22' }}
+          host:            ${{ env.VM_HOST }}
+          username:        ${{ env.VM_USER }}
+          key:             ${{ env.VM_SSH_KEY }}
+          port:            ${{ env.VM_PORT || '22' }}
           source:          "dist/"
           target:          "~/elogix/"
           timeout:         "60s"
           command_timeout: "5m"
 
       - name: Run deploy commands via SSH
-        if: ${{ secrets.VM_HOST != '' && secrets.DEPLOY_METHOD != 'webhook' }}
+        if: env.VM_HOST != '' && env.DEPLOY_METHOD != 'webhook'
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host:            ${{ secrets.VM_HOST }}
-          username:        ${{ secrets.VM_USER }}
-          key:             ${{ secrets.VM_SSH_KEY }}
-          port:            ${{ secrets.VM_PORT || '22' }}
+          host:            ${{ env.VM_HOST }}
+          username:        ${{ env.VM_USER }}
+          key:             ${{ env.VM_SSH_KEY }}
+          port:            ${{ env.VM_PORT || '22' }}
           timeout:         "60s"
           command_timeout: "20m"
           script: |
@@ -160,13 +169,13 @@ jobs:
 
       # ── Option B: Webhook trigger (fallback) ──────────────────
       - name: Trigger VPS webhook
-        if: ${{ secrets.DEPLOY_WEBHOOK_URL != '' }}
+        if: env.DEPLOY_WEBHOOK_URL != ''
         run: |
           curl -s -X POST \
-            -H "Authorization: Bearer ${{ secrets.DEPLOY_WEBHOOK_SECRET }}" \
+            -H "Authorization: Bearer ${{ env.DEPLOY_WEBHOOK_SECRET }}" \
             -H "Content-Type: application/json" \
             -d "{\"ref\":\"main\",\"sha\":\"${{ github.sha }}\"}" \
-            "${{ secrets.DEPLOY_WEBHOOK_URL }}" \
+            "${{ env.DEPLOY_WEBHOOK_URL }}" \
             --max-time 30 --retry 3 --retry-delay 5 \
           || echo "⚠️ Webhook not configured — deploy manually on VPS"
 
