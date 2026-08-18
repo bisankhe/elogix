@@ -87,7 +87,16 @@ function downloadCSV(data, filename) {
 
 export default function ELogixAdminPage({ onLogout }) {
   const [tab, setTab] = useState('dashboard')
-  const [companies, setCompanies] = useState(MOCK_COMPANIES)
+  const [companies, setCompanies] = useState(() => {
+    // Merge hardcoded mock data with localStorage-registered tenants
+    try {
+      const pending = JSON.parse(localStorage.getItem('elogix_pending_tenants') || '[]')
+      // Avoid duplicates by slug
+      const existing_slugs = new Set(MOCK_COMPANIES.map(c=>c.slug))
+      const new_tenants = pending.filter(t => !existing_slugs.has(t.slug))
+      return [...MOCK_COMPANIES, ...new_tenants]
+    } catch { return MOCK_COMPANIES }
+  })
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [selected, setSelected] = useState(null)
@@ -140,9 +149,37 @@ export default function ELogixAdminPage({ onLogout }) {
       support_tier:'standard', currency:'NPR',
     }
     setCompanies(p=>[...p, newC])
+    // Also save to localStorage so it persists and LoginPage can use it
+    try {
+      const pending = JSON.parse(localStorage.getItem('elogix_pending_tenants') || '[]')
+      pending.push({...newC, business_type:'custom', modules:[], landing:'employee-dashboard'})
+      localStorage.setItem('elogix_pending_tenants', JSON.stringify(pending))
+      const regCos = JSON.parse(localStorage.getItem('elogix_registered_companies') || '{}')
+      regCos[createForm.slug] = { id:newC.id, name:newC.company_name||newC.name,
+        plan:newC.plan, status:newC.status, business_type:'custom', modules:[], country:newC.country||'Nepal',
+        currency:newC.currency||'NPR', created_at:newC.created_at }
+      localStorage.setItem('elogix_registered_companies', JSON.stringify(regCos))
+      if (createForm.admin_email) {
+        const regUsers = JSON.parse(localStorage.getItem('elogix_registered_tenants') || '{}')
+        const slugKey = createForm.slug.toUpperCase().slice(0,4)
+        regUsers[createForm.admin_email] = { id:`ELX-${slugKey}-0001`, name:createForm.admin_name||'Admin',
+          role:'super_admin', level:1, company:createForm.slug, pw:'Admin@2083', business_type:'custom' }
+        localStorage.setItem('elogix_registered_tenants', JSON.stringify(regUsers))
+      }
+    } catch(e) { console.warn('localStorage error:', e) }
     notify(`✅ ${createForm.company_name} provisioned → ${createForm.slug}.elogix.com.np`)
     setShowCreateModal(false)
     setCreateForm({company_name:'',slug:'',admin_email:'',admin_name:'',plan:'starter',industry:'',country:'Nepal',phone:'',account_manager:'',sales_rep:''})
+  }
+
+  const refreshTenants = () => {
+    try {
+      const pending = JSON.parse(localStorage.getItem('elogix_pending_tenants') || '[]')
+      const existing_slugs = new Set(MOCK_COMPANIES.map(c=>c.slug))
+      const new_tenants = pending.filter(t => !existing_slugs.has(t.slug))
+      setCompanies([...MOCK_COMPANIES, ...new_tenants])
+      notify(`✅ Refreshed — ${new_tenants.length} registered tenant(s) loaded`)
+    } catch(e) { notify('⚠️ Could not load tenants') }
   }
 
   const Tab = ({id,label,icon}) => (

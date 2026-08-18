@@ -19,7 +19,7 @@ export const LEVEL_PERMISSIONS = {
 }
 
 export const ROLE_DASHBOARD = {
-  super_admin:     'super-admin-dashboard',
+  super_admin:     'employee-dashboard',  // new tenants see main dashboard first
   executive:       'executive-dashboard',
   hr_manager:      'hr-dashboard',
   hr_admin:        'hr-dashboard',

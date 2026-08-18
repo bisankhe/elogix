@@ -85,8 +85,23 @@ const ELOGIX_ADMIN_CREDS = {
   'support@elogix.com.np': { name:'Ramesh Joshi',       role:'support',           pw:'Support@2083'      },
   'billing@elogix.com.np': { name:'Sita Karki',         role:'billing',           pw:'Billing@2083'      },
 }
-const TENANT_USERS = {
-  'admin@demo.com':    { name:'Ram Thapa',     role:'super_admin',     level:1,  company:'demo', pw:'Admin@2083'  },
+// ── Dynamic tenant registry — merges static + localStorage-registered tenants ──
+function getRegisteredTenants() {
+  try {
+    const stored = JSON.parse(localStorage.getItem('elogix_registered_tenants') || '{}')
+    return stored
+  } catch { return {} }
+}
+function getRegisteredCompanies() {
+  try {
+    const stored = JSON.parse(localStorage.getItem('elogix_registered_companies') || '{}')
+    return stored
+  } catch { return {} }
+}
+
+const STATIC_TENANT_USERS = {
+
+  'admin@demo.com':    { name:'Ram Thapa',     role:'super_admin',     level:1,  company:'demo', pw:'Admin@2083',   business_type:'it_software'  },
   'ELX-DEMO-0001':     { name:'Ram Thapa',     role:'super_admin',     level:1,  company:'demo', pw:'Admin@2083'  },
   '9841000001':        { name:'Ram Thapa',     role:'super_admin',     level:1,  company:'demo', pw:'Admin@2083'  },
   'hr@demo.com':       { name:'Sita Shrestha', role:'hr_manager',      level:3,  company:'demo', pw:'HR@2083'     },
@@ -101,11 +116,16 @@ const TENANT_USERS = {
   'admin@himalayan.com':{ name:'Bikash KC',    role:'super_admin',     level:1,  company:'himalayan', pw:'Admin@2083' },
   'ELX-HIMA-0001':     { name:'Bikash KC',     role:'super_admin',     level:1,  company:'himalayan', pw:'Admin@2083' },
 }
-const COMPANIES = {
+const STATIC_COMPANIES = {
   demo:      { name:'Demo Company Pvt Ltd',       plan:'growth',     status:'active' },
   himalayan: { name:'Himalayan Bank Ltd.',         plan:'business',   status:'active' },
   solidfuture:{ name:'Solid Future HR Consulting', plan:'enterprise', status:'active' },
 }
+// Merge static + dynamically registered
+const TENANT_USERS = { ...STATIC_TENANT_USERS, ...getRegisteredTenants() }
+const COMPANIES    = { ...STATIC_COMPANIES,    ...getRegisteredCompanies() }
+
+
 
 function detectLoginType(id) {
   if (!id) return 'unknown'
@@ -137,12 +157,19 @@ function mockResolve(loginId, password) {
   return {
     success:true, isAdmin:false,
     access_token:'mock_'+Date.now(), refresh_token:'mockR_'+Date.now(),
-    user:{ id:'u1', full_name:u.name, role:u.role, level:u.level,
+    business_type: u.business_type || co.business_type || 'custom',
+    landing: getBizLanding(u.business_type || co.business_type),
+    user:{ id: u.id||'u1', full_name:u.name, role:u.role, level:u.level,
            email:id.includes('@')?id:`${id}@elogix.com.np`,
            emp_id:id.startsWith('ELX')?id:'ELX-DEMO-0001',
-           department_id:null, branch_id:null },
-    company:{ id:'c1', name:co.name, slug:u.company, plan:co.plan, status:co.status,
-              portal_url:`https://${u.company}.elogix.com.np`, currency:'NPR', timezone:'Asia/Kathmandu' },
+           department_id:null, branch_id:null,
+           business_type: u.business_type || co.business_type || 'custom' },
+    company:{ id: co.id||'c1', name:co.name, slug:u.company, plan:co.plan, status:co.status,
+              portal_url:`https://${u.company}.elogix.com.np`,
+              currency: co.currency||'NPR', timezone:'Asia/Kathmandu',
+              business_type: co.business_type||'custom',
+              modules: co.modules||[],
+              country: co.country||'Nepal' },
     permissions:{},
   }
 }
@@ -204,6 +231,22 @@ export default function LoginPage({ onLoginSuccess }) {
   })
 
   // ── Login handler ──────────────────────────────────────────
+  const getBizTypeLanding = (bizType) => {
+    const LANDING_MAP = {
+      recruitment_agency: 'ats-command-center',
+      bank_finance:       'employee-dashboard',
+      hospital_health:    'employee-dashboard',
+      ngo_ingo:           'employee-dashboard',
+      it_software:        'ats-executive-dashboard',
+      manufacturing:      'employee-dashboard',
+      hotel_hospitality:  'employee-dashboard',
+      education:          'employee-dashboard',
+      government:         'employee-dashboard',
+      custom:             'employee-dashboard',
+    }
+    return LANDING_MAP[bizType] || 'employee-dashboard'
+  }
+
   const handleLogin = async (e) => {
     e.preventDefault()
     const id = form.loginId.trim()
@@ -223,8 +266,14 @@ export default function LoginPage({ onLoginSuccess }) {
         loginAdmin(data, form.adminKey)
         onLoginSuccess?.({ goto:'elogix-admin', admin:data.admin })
       } else {
+            // Add business_type landing redirect
+        const bizPending = (() => {
+          try { return JSON.parse(sessionStorage.getItem('elogix_pending_login')||'{}') } catch { return {} }
+        })()
+        const landing = data.landing || bizPending.landing ||
+          (data.user?.business_type ? getBizTypeLanding(data.user.business_type) : null)
         loginTenant(data, form.remember)
-        onLoginSuccess?.(data)
+        onLoginSuccess?.({ ...data, landing })
       }
     } catch (err) {
       setError(err.message || 'Connection error. Please try again.')
