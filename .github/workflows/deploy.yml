@@ -62,7 +62,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write   # Required to push images to GitHub Container Registry (GHCR)
+      packages: write
     steps:
       - uses: actions/checkout@v4
 
@@ -90,7 +90,8 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile.frontend
+          # Assuming your frontend/root Dockerfile is named 'Dockerfile' at the root directory
+          file: ./Dockerfile
           push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
           tags: ghcr.io/${{ github.repository_owner }}/elogix-frontend:latest
           cache-from: type=gha
