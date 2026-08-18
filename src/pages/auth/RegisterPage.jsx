@@ -265,34 +265,78 @@ export default function RegisterPage({ onSuccess }) {
 
   // ── Submit ───────────────────────────────────────────────
   const handleSubmit = async () => {
+    if (!form.company_name||!form.slug||!form.admin_email||!form.password) {
+      setError('Please fill all required fields'); return
+    }
+    if (form.password !== form.confirm_password) { setError('Passwords do not match'); return }
     setLoading(true); setError('')
     try {
       let data
-      try { data = await eLogixAPI.createCompany(form) }
-      catch {
+      try { data = await eLogixAPI.createCompany(form) } catch {}
+
+      // ── Always save to localStorage (works with or without API) ──
+      const slugKey = (form.slug||'COMP').toUpperCase().replace(/[^A-Z]/g,'').slice(0,4)||'COMP'
+      const empId   = `ELX-${slugKey}-0001`
+
+      const regUsers = JSON.parse(localStorage.getItem('elogix_registered_tenants')||'{}')
+      regUsers[form.admin_email.toLowerCase()] = {
+        id:empId, name:form.admin_name||'Admin', role:'super_admin', level:1,
+        company:form.slug, pw:form.password, business_type:form.business_type,
+      }
+      regUsers[empId] = { ...regUsers[form.admin_email.toLowerCase()] }
+      localStorage.setItem('elogix_registered_tenants', JSON.stringify(regUsers))
+
+      const regCos = JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}')
+      regCos[form.slug] = {
+        id:`c_${form.slug}`, name:form.company_name, plan:form.plan,
+        status:form.plan==='trial'?'trial':'active',
+        business_type:form.business_type, business_label:form.business_label,
+        modules:form.modules, country:form.country||'Nepal', currency:form.currency||'NPR',
+        landing:form.landing, admin_email:form.admin_email, admin_name:form.admin_name,
+        created_at:new Date().toISOString().split('T')[0],
+      }
+      localStorage.setItem('elogix_registered_companies', JSON.stringify(regCos))
+
+      const pending = JSON.parse(localStorage.getItem('elogix_pending_tenants')||'[]')
+      if (!pending.find(t=>t.slug===form.slug)) {
+        pending.push({
+          id:`c_${form.slug}`, name:form.company_name, slug:form.slug,
+          plan:form.plan, status:form.plan==='trial'?'trial':'active',
+          employee_count:0,
+          max_employees:{trial:10,starter:50,growth:250,business:500,enterprise:1000}[form.plan]||10,
+          created_at:new Date().toISOString().split('T')[0],
+          account_manager:'New Signup', support_tier:'standard',
+          industry:form.business_label, country:form.country||'Nepal',
+          currency:form.currency||'NPR', pending_invoice:0, last_payment:null,
+          business_type:form.business_type, modules:form.modules,
+          admin_email:form.admin_email, phone:form.phone,
+        })
+        localStorage.setItem('elogix_pending_tenants', JSON.stringify(pending))
+      }
+
+      if (!data?.success) {
         data = {
-          success:      true,
-          portal_url:   `https://${form.slug}.elogix.com.np`,
-          company_name: form.company_name,
-          plan:         form.plan,
-          note:         'Account created! Check your email for login details.',
+          success:true, emp_id:empId,
+          portal_url:`https://${form.slug}.elogix.com.np`,
+          company_name:form.company_name, plan:form.plan,
+          note:`✅ Registration complete! Awaiting SuperAdmin approval. You will be notified via ${form.admin_email}`,
         }
       }
-      if (!data.success) { setError(data.error || 'Registration failed'); return }
-      try { sessionStorage.setItem('elogix_pending_login', JSON.stringify({ slug: form.slug, business_type: form.business_type, landing: form.landing })) } catch {}
+      try { sessionStorage.setItem('elogix_pending_login', JSON.stringify({
+        slug:form.slug, business_type:form.business_type, landing:form.landing,
+      })) } catch {}
       setDone(data)
     } catch(err) {
-      setError(err.message || 'Registration failed. Try again.')
+      setError(err.message||'Registration failed. Try again.')
     } finally { setLoading(false) }
   }
-
   // ── SUCCESS ──────────────────────────────────────────────
   if (done) return (
     <div style={{ minHeight:'100vh',background:'#f0fdf4',display:'flex',alignItems:'center',
       justifyContent:'center',fontFamily:'system-ui,sans-serif',padding:24 }}>
       <div style={{ textAlign:'center',maxWidth:520 }}>
         <div style={{ fontSize:72,marginBottom:12 }}>🎉</div>
-        <div style={{ fontSize:26,fontWeight:900,color:'#065f46',marginBottom:6 }}>Welcome to eLogix!</div>
+        <div style={{ fontSize:26,fontWeight:900,color:'#065f46',marginBottom:6 }}>Registration Complete! 🎉</div>
         <div style={{ fontSize:13,color:'#374151',marginBottom:20,lineHeight:1.7 }}>
           Your <b>{done.company_name}</b> account is ready.<br/>
           Configured for <b>{form.business_icon} {form.business_label}</b> ·
@@ -304,7 +348,12 @@ export default function RegisterPage({ onSuccess }) {
           <div style={{ fontSize:15,fontWeight:800,color:A }}>https://{form.slug}.elogix.com.np</div>
           <div style={{ marginTop:10,padding:'8px 12px',background:'#f0fdf4',borderRadius:9,
             fontSize:11,color:'#065f46',lineHeight:1.6 }}>
-            ✅ {form.modules.length} modules enabled · {done.note}
+            <div style={{ fontSize:11,color:'#065f46',lineHeight:1.8 }}>
+              ✅ {form.modules.length} modules pre-configured<br/>
+              📧 Login credentials: <b>{form.admin_email}</b><br/>
+              ⏳ <b>Pending SuperAdmin approval</b> — eLogix team will review and activate your account within 24 hours<br/>
+              📞 Questions? <a href="mailto:support@elogix.com.np" style={{color:'#0369a1'}}>support@elogix.com.np</a>
+            </div>
           </div>
         </div>
         <a href="/login" style={{ display:'inline-block',padding:'12px 32px',borderRadius:10,

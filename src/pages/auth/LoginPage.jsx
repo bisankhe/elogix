@@ -121,9 +121,8 @@ const STATIC_COMPANIES = {
   himalayan: { name:'Himalayan Bank Ltd.',         plan:'business',   status:'active' },
   solidfuture:{ name:'Solid Future HR Consulting', plan:'enterprise', status:'active' },
 }
-// Merge static + dynamically registered
-const TENANT_USERS = { ...STATIC_TENANT_USERS, ...getRegisteredTenants() }
-const COMPANIES    = { ...STATIC_COMPANIES,    ...getRegisteredCompanies() }
+// NOTE: Do NOT merge here at module level — localStorage may not have data yet.
+// Instead, merge INSIDE mockResolve() on every call so it's always fresh.
 
 
 
@@ -137,6 +136,10 @@ function detectLoginType(id) {
 }
 
 function mockResolve(loginId, password) {
+  // Read fresh from localStorage on EVERY login attempt
+  const TENANT_USERS = { ...STATIC_TENANT_USERS, ...getRegisteredTenants() }
+  const COMPANIES    = { ...STATIC_COMPANIES,    ...getRegisteredCompanies() }
+
   const id   = loginId.trim()
   const type = detectLoginType(id)
   if (type === 'elogix_admin') {
@@ -154,6 +157,23 @@ function mockResolve(loginId, password) {
   if (u.pw !== password) return { success:false, error:'Incorrect password. Try again or click Forgot password.' }
   const co = COMPANIES[u.company] || { name:'Your Company', plan:'trial', status:'active' }
   if (co.status === 'suspended') return { success:false, error:'Account suspended. Contact support@elogix.com.np' }
+
+  // Check if this is a newly registered tenant waiting for SuperAdmin approval
+  // If their company is in registered_companies but NOT in approved_tenants,
+  // they need to wait for SuperAdmin to approve
+  const regCo = (() => {
+    try { return JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}') } catch { return {} }
+  })()[u.company]
+  const approvedTenants = (() => {
+    try { return JSON.parse(localStorage.getItem('elogix_approved_tenants')||'{}') } catch { return {} }
+  })()
+  const pendingTenants = (() => {
+    try { return JSON.parse(localStorage.getItem('elogix_pending_tenants')||'[]') } catch { return [] }
+  })()
+  const isPendingApproval = pendingTenants.some(t => t.slug === u.company) && !approvedTenants[u.company]
+  if (isPendingApproval) {
+    return { success:false, error:'⏳ Your account is pending SuperAdmin approval. You will receive an email once approved. Contact support@elogix.com.np' }
+  }
   return {
     success:true, isAdmin:false,
     access_token:'mock_'+Date.now(), refresh_token:'mockR_'+Date.now(),

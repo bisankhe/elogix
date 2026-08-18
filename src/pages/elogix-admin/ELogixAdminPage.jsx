@@ -87,16 +87,20 @@ function downloadCSV(data, filename) {
 
 export default function ELogixAdminPage({ onLogout }) {
   const [tab, setTab] = useState('dashboard')
-  const [companies, setCompanies] = useState(() => {
-    // Merge hardcoded mock data with localStorage-registered tenants
+  const [companies, setCompanies] = useState(MOCK_COMPANIES)
+
+  // Load registered tenants on every mount (picks up new self-registrations)
+  useEffect(() => {
     try {
       const pending = JSON.parse(localStorage.getItem('elogix_pending_tenants') || '[]')
-      // Avoid duplicates by slug
-      const existing_slugs = new Set(MOCK_COMPANIES.map(c=>c.slug))
+      const existing_slugs = new Set(MOCK_COMPANIES.map(c => c.slug))
       const new_tenants = pending.filter(t => !existing_slugs.has(t.slug))
-      return [...MOCK_COMPANIES, ...new_tenants]
-    } catch { return MOCK_COMPANIES }
-  })
+      if (new_tenants.length > 0) {
+        setCompanies([...MOCK_COMPANIES, ...new_tenants])
+        console.log(`✅ Loaded ${new_tenants.length} registered tenant(s) from localStorage`)
+      }
+    } catch(e) { console.warn('Could not load tenants:', e) }
+  }, [])
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [selected, setSelected] = useState(null)
@@ -182,6 +186,31 @@ export default function ELogixAdminPage({ onLogout }) {
     } catch(e) { notify('⚠️ Could not load tenants') }
   }
 
+  const approveTenant = (tenant) => {
+    setCompanies(prev => {
+      if (prev.find(c => c.slug === tenant.slug)) return prev
+      return [...prev, { ...tenant, status: tenant.plan==='trial'?'trial':'active' }]
+    })
+    const updated = pendingTenants.filter(t => t.slug !== tenant.slug)
+    setPendingTenants(updated)
+    localStorage.setItem('elogix_pending_tenants', JSON.stringify(updated))
+    const approved = JSON.parse(localStorage.getItem('elogix_approved_tenants') || '{}')
+    approved[tenant.slug] = { approved_at: new Date().toISOString(), approved_by: 'SuperAdmin' }
+    localStorage.setItem('elogix_approved_tenants', JSON.stringify(approved))
+    notify(`✅ ${tenant.name} approved! They can now login with ${tenant.admin_email}`)
+  }
+
+  const rejectTenant = (tenant) => {
+    const updated = pendingTenants.filter(t => t.slug !== tenant.slug)
+    setPendingTenants(updated)
+    localStorage.setItem('elogix_pending_tenants', JSON.stringify(updated))
+    const regUsers = JSON.parse(localStorage.getItem('elogix_registered_tenants') || '{}')
+    delete regUsers[tenant.admin_email]
+    localStorage.setItem('elogix_registered_tenants', JSON.stringify(regUsers))
+    notify(`❌ ${tenant.name} rejected and removed.`)
+  }
+
+
   const Tab = ({id,label,icon}) => (
     <button onClick={()=>setTab(id)}
       style={{padding:'9px 18px',borderRadius:20,border:`1.5px solid ${tab===id?A:'#e2e8f0'}`,
@@ -262,6 +291,7 @@ export default function ELogixAdminPage({ onLogout }) {
       {/* Tabs */}
       <div style={{background:'#fff',padding:'10px 20px',borderBottom:'1px solid #f1f5f9',
         display:'flex',gap:8,overflowX:'auto'}}>
+        <Tab id="pending"   label={`Pending Approval ${pendingTenants.length>0?`(${pendingTenants.length})`:''}` } icon="⏳"/>
         <Tab id="dashboard" label="Companies" icon="🏢"/>
         <Tab id="billing"   label="Billing"    icon="💰"/>
         <Tab id="tickets"   label="Support"    icon="🎫"/>
