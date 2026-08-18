@@ -58,18 +58,28 @@ jobs:
           JWT_SECRET_KEY: ci-test-jwt-secret
 
   # ══════════════════════════════════════════════════════════════
-  # 2. BUILD FRONTEND
+  # 2. BUILD BACKEND DOCKER IMAGE
   # ══════════════════════════════════════════════════════════════
-  build-frontend:
+  build-images:
+    needs: [test-backend]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
+      - name: Log in to GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+<<<<<<< HEAD
       - name: Install Node dependencies
         run: npm ci
 
@@ -81,19 +91,31 @@ jobs:
 
       - name: Upload dist artifact
         uses: actions/upload-artifact@v4
+=======
+      - name: Build and push Backend Image
+        uses: docker/build-push-action@v5
+>>>>>>> 5b890100e14ec71d3db63d0e863f0107e7e6717f
         with:
-          name: frontend-dist
-          path: dist/
-          retention-days: 1
+          context: .
+          file: ./backend/Dockerfile
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          tags: ghcr.io/${{ github.repository_owner }}/elogix-backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   # ══════════════════════════════════════════════════════════════
   # 3. DEPLOY TO DATAHUB NEPAL VPS
+<<<<<<< HEAD
   # Only runs on push to main (not on pull_request)
+=======
+  # Only runs on push to main — not on PRs
+>>>>>>> 5b890100e14ec71d3db63d0e863f0107e7e6717f
   # ══════════════════════════════════════════════════════════════
   deploy:
-    needs: [test-backend, build-frontend]
+    needs: [build-images]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+<<<<<<< HEAD
 
     steps:
       - uses: actions/checkout@v4
@@ -121,6 +143,10 @@ jobs:
 
       - name: Run deploy commands via SSH
         if: ${{ secrets.VM_HOST != '' }}
+=======
+    steps:
+      - name: Deploy on VPS via SSH
+>>>>>>> 5b890100e14ec71d3db63d0e863f0107e7e6717f
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.VM_HOST }}
@@ -131,6 +157,7 @@ jobs:
           command_timeout: "20m"
           script: |
             set -e
+<<<<<<< HEAD
             echo "🚀 eLogix deploy started — $(date)"
             cd ~/elogix
             git fetch origin main
@@ -168,12 +195,42 @@ jobs:
             "${{ secrets.DEPLOY_WEBHOOK_URL }}" \
             --max-time 30 --retry 3 --retry-delay 5 \
           || echo "⚠️  Webhook not configured — deploy manually on VPS"
+=======
+            echo "🚀 eLogix deploy started at $(date)"
+
+            cd ~/elogix
+            
+            # 1. Pull latest code/compose configuration
+            git fetch origin main
+            git reset --hard origin/main
+
+            # 2. Authenticate Docker with GHCR on the VPS
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            # 3. Pull pre-built backend image and recreate containers
+            docker compose pull
+            docker compose up -d --force-recreate
+            docker image prune -f
+
+            # 4. Reload Nginx
+            sudo nginx -t && sudo systemctl reload nginx || true
+            echo "✅ eLogix deploy completed at $(date)"
+            echo "  Live: https://www.elogix.com.np"
+>>>>>>> 5b890100e14ec71d3db63d0e863f0107e7e6717f
 
       # ── Summary ────────────────────────────────────────────────
       - name: Deploy summary
         run: |
+<<<<<<< HEAD
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "  eLogix HRMS — ${{ github.sha }}"
           echo "  Tests  ✅  Build  ✅"
           echo "  Live:  https://www.elogix.com.np"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+=======
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "  eLogix HRMS — ${{ github.sha }}"
+          echo "  Tests: ✅ PASSED  |  Backend Image Built: ✅ PASSED"
+          echo "  Live:  https://www.elogix.com.np"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+>>>>>>> 5b890100e14ec71d3db63d0e863f0107e7e6717f
