@@ -55,7 +55,7 @@ jobs:
           JWT_SECRET_KEY: ci-test-jwt-secret
 
   # ══════════════════════════════════════════════════════════════
-  # 2. BUILD DOCKER IMAGES (Backend & Frontend)
+  # 2. BUILD BACKEND DOCKER IMAGE
   # ══════════════════════════════════════════════════════════════
   build-images:
     needs: [test-backend]
@@ -83,17 +83,6 @@ jobs:
           file: ./backend/Dockerfile
           push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
           tags: ghcr.io/${{ github.repository_owner }}/elogix-backend:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build and push Frontend Image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          # Assuming your frontend/root Dockerfile is named 'Dockerfile' at the root directory
-          file: ./Dockerfile
-          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-          tags: ghcr.io/${{ github.repository_owner }}/elogix-frontend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -128,7 +117,7 @@ jobs:
             # 2. Authenticate Docker with GHCR on the VPS
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-            # 3. Pull pre-built images and recreate containers
+            # 3. Pull pre-built backend image and recreate containers
             docker compose pull
             docker compose up -d --force-recreate
             docker image prune -f
@@ -142,6 +131,6 @@ jobs:
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "  eLogix HRMS — ${{ github.sha }}"
-          echo "  Tests: ✅ PASSED  |  Images Built: ✅ PASSED"
+          echo "  Tests: ✅ PASSED  |  Backend Image Built: ✅ PASSED"
           echo "  Live:  https://www.elogix.com.np"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
