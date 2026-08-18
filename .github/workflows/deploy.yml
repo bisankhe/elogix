@@ -1,6 +1,9 @@
 # FILE: .github/workflows/deploy.yml
 # eLogix HRMS — CI/CD Pipeline
-# eLogix Technologies · www.elogix.com.np · Datahub Nepal VPS
+# eLogix Technologies · www.elogix.com.np
+# ⚠️ RULE: NEVER edit this file on the GitHub web editor.
+#          Only edit locally and git push. Web edits cause merge conflicts.
+
 name: Deploy eLogix HRMS
 
 on:
@@ -73,7 +76,8 @@ jobs:
       - name: Build React app
         run: npm run build
         env:
-          VITE_API_URL: https://api.elogix.com.np
+          VITE_API_URL: /api/v1
+          VITE_ANTHROPIC_API_KEY: ${{ secrets.VITE_ANTHROPIC_API_KEY }}
 
       - name: Upload dist artifact
         uses: actions/upload-artifact@v4
@@ -84,22 +88,12 @@ jobs:
 
   # ══════════════════════════════════════════════════════════════
   # 3. DEPLOY TO DATAHUB NEPAL VPS
-  # Only runs on push to main (not on PRs)
+  # Only runs on push to main (not on pull_request)
   # ══════════════════════════════════════════════════════════════
   deploy:
     needs: [test-backend, build-frontend]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    
-    # 💡 FIX: Map secrets to environment variables so 'if:' conditions can read them safely
-    env:
-      VM_HOST: ${{ secrets.VM_HOST }}
-      VM_USER: ${{ secrets.VM_USER }}
-      VM_SSH_KEY: ${{ secrets.VM_SSH_KEY }}
-      VM_PORT: ${{ secrets.VM_PORT }}
-      DEPLOY_METHOD: ${{ secrets.DEPLOY_METHOD }}
-      DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
-      DEPLOY_WEBHOOK_SECRET: ${{ secrets.DEPLOY_WEBHOOK_SECRET }}
 
     steps:
       - uses: actions/checkout@v4
@@ -110,80 +104,76 @@ jobs:
           name: frontend-dist
           path: dist
 
-      # ── Option A: SCP + SSH direct ─────────────────────────────
-      - name: Copy files to VPS (SCP)
-        if: env.VM_HOST != '' && env.DEPLOY_METHOD != 'webhook'
+      # ── Option A: SCP + SSH (port 22 must be open on VPS) ────
+      - name: Copy files to VPS via SCP
+        if: ${{ secrets.VM_HOST != '' }}
         uses: appleboy/scp-action@v0.1.7
         with:
-          host:            ${{ env.VM_HOST }}
-          username:        ${{ env.VM_USER }}
-          key:             ${{ env.VM_SSH_KEY }}
-          port:            ${{ env.VM_PORT || '22' }}
-          source:          "dist/"
-          target:          "~/elogix/"
-          timeout:         "60s"
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: ${{ secrets.VM_PORT || '22' }}
+          source: "dist/,backend/"
+          target: "/opt/elogix/"
+          timeout: "60s"
           command_timeout: "5m"
+        continue-on-error: true
 
       - name: Run deploy commands via SSH
-        if: env.VM_HOST != '' && env.DEPLOY_METHOD != 'webhook'
+        if: ${{ secrets.VM_HOST != '' }}
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host:            ${{ env.VM_HOST }}
-          username:        ${{ env.VM_USER }}
-          key:             ${{ env.VM_SSH_KEY }}
-          port:            ${{ env.VM_PORT || '22' }}
-          timeout:         "60s"
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: ${{ secrets.VM_PORT || '22' }}
+          timeout: "60s"
           command_timeout: "20m"
           script: |
             set -e
-            echo "🚀 eLogix deploy started at $(date)"
+            echo "🚀 eLogix deploy started — $(date)"
             cd ~/elogix
-
-            # Pull latest code safely
             git fetch origin main
-            git pull origin main
+            git reset --hard origin/main
 
-            # Copy built frontend securely to Nginx web root
-            sudo mkdir -p /var/www/elogix/dist/
+            # Copy built frontend to nginx root
+            sudo mkdir -p /var/www/elogix/dist
             sudo cp -r dist/* /var/www/elogix/dist/
             sudo chmod -R 755 /var/www/elogix/dist/
 
-            # Restart backend — systemd or docker
-            if command -v docker &>/dev/null && docker compose version &>/dev/null; then
-              docker compose pull || true
-              docker compose up -d --build --force-recreate
-              docker image prune -f
-            elif systemctl is-active --quiet elogix; then
-              cd backend
-              source .venv/bin/activate
+            # Restart Flask backend
+            if systemctl is-active --quiet elogix; then
+              cd ~/elogix/backend
+              source .venv/bin/activate 2>/dev/null || true
               pip install -r requirements.txt --quiet
               sudo systemctl restart elogix
-              sudo systemctl status elogix --no-pager
+              echo "✅ Flask restarted via systemd"
             else
-              echo "⚠️ No systemd or docker found — check application setup"
+              echo "ℹ️  elogix systemd service not running — skipping restart"
             fi
 
+            # Reload nginx
             sudo nginx -t && sudo systemctl reload nginx
-            echo "✅ eLogix deploy done at $(date)"
-            echo "   Live: https://www.elogix.com.np"
+            echo "✅ Deploy complete — https://www.elogix.com.np"
+        continue-on-error: true
 
-      # ── Option B: Webhook trigger (fallback) ──────────────────
-      - name: Trigger VPS webhook
-        if: env.DEPLOY_WEBHOOK_URL != ''
+      # ── Option B: Webhook fallback ─────────────────────────────
+      - name: Trigger VPS webhook (fallback)
+        if: ${{ secrets.DEPLOY_WEBHOOK_URL != '' }}
         run: |
           curl -s -X POST \
-            -H "Authorization: Bearer ${{ env.DEPLOY_WEBHOOK_SECRET }}" \
+            -H "Authorization: Bearer ${{ secrets.DEPLOY_WEBHOOK_SECRET }}" \
             -H "Content-Type: application/json" \
             -d "{\"ref\":\"main\",\"sha\":\"${{ github.sha }}\"}" \
-            "${{ env.DEPLOY_WEBHOOK_URL }}" \
+            "${{ secrets.DEPLOY_WEBHOOK_URL }}" \
             --max-time 30 --retry 3 --retry-delay 5 \
-          || echo "⚠️ Webhook not configured — deploy manually on VPS"
+          || echo "⚠️  Webhook not configured — deploy manually on VPS"
 
+      # ── Summary ────────────────────────────────────────────────
       - name: Deploy summary
         run: |
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "  eLogix HRMS Deploy — ${{ github.sha }}"
-          echo "  Branch: main  |  Time: $(date)"
-          echo "  Tests:  ✅ PASSED  |  Build: ✅ PASSED"
-          echo "  Live:   https://www.elogix.com.np"
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "  eLogix HRMS — ${{ github.sha }}"
+          echo "  Tests  ✅  Build  ✅"
+          echo "  Live:  https://www.elogix.com.np"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

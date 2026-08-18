@@ -101,6 +101,12 @@ export default function ELogixAdminPage({ onLogout }) {
       }
     } catch(e) { console.warn('Could not load tenants:', e) }
   }, [])
+  // Pending self-registered tenants waiting for SuperAdmin approval
+  const [pendingTenants, setPendingTenants] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('elogix_pending_tenants') || '[]') }
+    catch { return [] }
+  })
+
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [selected, setSelected] = useState(null)
@@ -300,6 +306,82 @@ export default function ELogixAdminPage({ onLogout }) {
       </div>
 
       <div style={{padding:'16px 20px'}}>
+
+      {/* ── PENDING APPROVAL TAB ── */}
+      {tab==='pending'&&(
+        <div>
+          <div style={{marginBottom:16,display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:10}}>
+            <div>
+              <div style={{fontSize:15,fontWeight:900,color:'#0f172a'}}>⏳ Pending Tenant Approvals ({pendingTenants.length})</div>
+              <div style={{fontSize:11,color:'#64748b',marginTop:2}}>Companies that self-registered — approve to give them access</div>
+            </div>
+            <button onClick={()=>{try{const f=JSON.parse(localStorage.getItem('elogix_pending_tenants')||'[]');setPendingTenants(f);notify(`🔄 ${f.length} pending`)}catch{}}}
+              style={{padding:'8px 16px',borderRadius:9,border:'1.5px solid #e2e8f0',background:'#fff',fontSize:11,fontWeight:700,cursor:'pointer'}}>
+              🔄 Refresh
+            </button>
+          </div>
+          {pendingTenants.length===0?(
+            <div style={{background:'#fff',borderRadius:12,padding:'48px',textAlign:'center',boxShadow:'0 1px 4px rgba(0,0,0,.06)'}}>
+              <div style={{fontSize:48,marginBottom:12}}>✅</div>
+              <div style={{fontSize:14,fontWeight:700,color:'#374151',marginBottom:6}}>No pending approvals</div>
+              <div style={{fontSize:11,color:'#64748b'}}>New registrations will appear here</div>
+            </div>
+          ):(
+            <div style={{display:'grid',gap:12}}>
+              {pendingTenants.map(t=>{
+                const BTI={recruitment_agency:'🎯',bank_finance:'🏦',hospital_health:'🏥',ngo_ingo:'🌱',it_software:'💻',manufacturing:'🏭',hotel_hospitality:'🏨',education:'🎓',government:'🏛️',custom:'⚙️'}
+                return(
+                  <div key={t.slug} style={{background:'#fff',borderRadius:12,padding:20,boxShadow:'0 2px 8px rgba(0,0,0,.06)',border:'2px solid #fde68a'}}>
+                    <div style={{display:'flex',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
+                          <span style={{fontSize:28}}>{BTI[t.business_type]||'🏢'}</span>
+                          <div>
+                            <div style={{fontSize:15,fontWeight:900,color:'#0f172a'}}>{t.name}</div>
+                            <div style={{fontSize:10,color:'#64748b'}}>{t.slug}.elogix.com.np · {t.created_at}</div>
+                          </div>
+                        </div>
+                        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(150px,1fr))',gap:8}}>
+                          {[['Plan',t.plan?.toUpperCase()],['Business',t.business_type?.replace(/_/g,' ')],
+                            ['Admin Email',t.admin_email],['Phone',t.phone||'—'],
+                            ['Country',t.country||'Nepal'],['Modules',`${(t.modules||[]).length} modules`],
+                            ['Max Emp',t.max_employees||10],['Currency',t.currency||'NPR'],
+                          ].map(([lb,v])=>(
+                            <div key={lb} style={{padding:'8px 10px',background:'#f8fafc',borderRadius:8,border:'1px solid #e2e8f0'}}>
+                              <div style={{fontSize:9,color:'#94a3b8',marginBottom:2}}>{lb}</div>
+                              <div style={{fontSize:11,fontWeight:700,color:'#0f172a',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{v||'—'}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div style={{display:'flex',flexDirection:'column',gap:8,minWidth:160,flexShrink:0}}>
+                        <button onClick={()=>approveTenant(t)}
+                          style={{padding:'11px 20px',borderRadius:9,border:'none',
+                            background:'linear-gradient(135deg,#059669,#0369a1)',
+                            color:'#fff',fontSize:12,fontWeight:800,cursor:'pointer'}}>
+                          ✅ Approve & Activate
+                        </button>
+                        <button onClick={()=>{
+                            const pw=window.prompt(`Set password for ${t.admin_email}\n(Cancel = keep registered password):`)
+                            if(pw?.trim()){try{const ru=JSON.parse(localStorage.getItem('elogix_registered_tenants')||'{}');if(ru[t.admin_email?.toLowerCase()]){ru[t.admin_email.toLowerCase()].pw=pw.trim();localStorage.setItem('elogix_registered_tenants',JSON.stringify(ru))}}catch{}}
+                            approveTenant(t)
+                          }}
+                          style={{padding:'9px 20px',borderRadius:9,border:'1.5px solid #0369a1',background:'#eff6ff',color:'#0369a1',fontSize:11,fontWeight:700,cursor:'pointer'}}>
+                          🔑 Approve + Set Password
+                        </button>
+                        <button onClick={()=>{if(window.confirm(`Reject ${t.name}?`))rejectTenant(t)}}
+                          style={{padding:'8px 20px',borderRadius:9,border:'1.5px solid #fecaca',background:'#fef2f2',color:'#dc2626',fontSize:11,fontWeight:700,cursor:'pointer'}}>
+                          ❌ Reject
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── COMPANIES TAB ── */}
       {tab==='dashboard'&&(
