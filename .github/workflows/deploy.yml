@@ -55,72 +55,53 @@ jobs:
           JWT_SECRET_KEY: ci-test-jwt-secret
 
   # ══════════════════════════════════════════════════════════════
-  # 2. BUILD FRONTEND
+  # 2. BUILD DOCKER IMAGES (Backend & Frontend)
   # ══════════════════════════════════════════════════════════════
-  build-frontend:
+  build-images:
+    needs: [test-backend]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
         with:
-          node-version: '20'
-          cache: 'npm'
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install Node dependencies
-        run: npm ci
-
-      - name: Build React app
-        run: npm run build
-        env:
-          VITE_API_URL: /api/v1
-
-      - name: Upload dist artifact
-        uses: actions/upload-artifact@v4
+      - name: Build and push Backend Image
+        uses: docker/build-push-action@v5
         with:
-          name: frontend-dist
-          path: dist/
-          retention-days: 1
+          context: .
+          file: ./backend/Dockerfile # Adjust path if your Dockerfile is elsewhere
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          tags: ghcr.io/${{ github.repository_owner }}/elogix-backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push Frontend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.frontend # Adjust path to your frontend Dockerfile
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          tags: ghcr.io/${{ github.repository_owner }}/elogix-frontend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   # ══════════════════════════════════════════════════════════════
   # 3. DEPLOY TO DATAHUB NEPAL VPS
-  # Only runs on push to main — not on PRs
-  # Requires GitHub Secrets: VM_HOST, VM_USER, VM_SSH_KEY, VM_PORT
   # ══════════════════════════════════════════════════════════════
   deploy:
-    needs: [test-backend, build-frontend]
+    needs: [build-images]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    env:
-      VM_HOST: ${{ secrets.VM_HOST }}
-      DEPLOY_METHOD: ${{ secrets.DEPLOY_METHOD }}
-      DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
-
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Download frontend dist
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-dist
-          path: dist
-
-      # ── Option A: SCP + SSH direct ───────────────────────────
-      - name: Copy files to VPS (SCP)
-        if: env.VM_HOST != '' && env.DEPLOY_METHOD != 'webhook'
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VM_HOST }}
-          username: ${{ secrets.VM_USER }}
-          key: ${{ secrets.VM_SSH_KEY }}
-          port: ${{ secrets.VM_PORT || '22' }}
-          source: "dist/"
-          target: "/tmp/elogix-dist/"
-          timeout: "60s"
-          command_timeout: "5m"
-
       - name: Deploy on VPS via SSH
-        if: env.VM_HOST != '' && env.DEPLOY_METHOD != 'webhook'
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.VM_HOST }}
@@ -133,55 +114,29 @@ jobs:
             set -e
             echo "🚀 eLogix deploy started at $(date)"
 
-            # 1. Pull latest code
             cd ~/elogix
+            
+            # Pull latest compose file/configs
             git fetch origin main
             git reset --hard origin/main
 
-            # 2. Sync React build to Docker mounted volume AND system path
-            mkdir -p ~/elogix/dist
-            cp -r /tmp/elogix-dist/dist/* ~/elogix/dist/
-            sudo mkdir -p /var/www/elogix/dist
-            sudo cp -r /tmp/elogix-dist/dist/* /var/www/elogix/dist/
-            sudo chmod -R 755 /var/www/elogix/dist
-            rm -rf /tmp/elogix-dist
+            # Log into registry on server (if using private images)
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-            # 3. Rebuild containers and trigger force recreation
-            if command -v docker &>/dev/null && docker compose version &>/dev/null; then
-              cd ~/elogix
-              docker compose up -d --build --force-recreate
-              docker image prune -f
-            elif systemctl is-active --quiet elogix; then
-              cd ~/elogix
-              source .venv/bin/activate || true
-              pip install -r backend/requirements.txt --quiet
-              sudo systemctl restart elogix
-              sudo systemctl status elogix --no-pager
-            else
-              echo "⚠️ No systemd or docker — restart eLogix manually"
-            fi
+            # Pull pre-built images and recreate containers instantly
+            docker compose pull
+            docker compose up -d --force-recreate
+            docker image prune -f
 
-            # 4. Reload Nginx
+            # Reload Nginx if required
             sudo nginx -t && sudo systemctl reload nginx || true
             echo "✅ eLogix deploy completed at $(date)"
-            echo "   Live: https://www.elogix.com.np"
-
-      # ── Option B: Webhook fallback ────────────────────────────
-      - name: Trigger VPS webhook
-        if: env.DEPLOY_WEBHOOK_URL != ''
-        run: |
-          curl -s -X POST \
-            -H "Authorization: Bearer ${{ secrets.DEPLOY_WEBHOOK_SECRET }}" \
-            -H "Content-Type: application/json" \
-            -d "{\"ref\":\"main\",\"sha\":\"${{ github.sha }}\"}" \
-            "${{ secrets.DEPLOY_WEBHOOK_URL }}" \
-            --max-time 30 --retry 3 --retry-delay 5 \
-          || echo "⚠️ Webhook not configured — deploy manually on VPS"
+            echo "  Live: https://www.elogix.com.np"
 
       - name: Deploy summary
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "  eLogix HRMS — ${{ github.sha }}"
-          echo "  Tests: ✅ PASSED  |  Build: ✅ PASSED"
+          echo "  Tests: ✅ PASSED  |  Images Built: ✅ PASSED"
           echo "  Live:  https://www.elogix.com.np"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
