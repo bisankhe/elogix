@@ -170,7 +170,13 @@ function mockResolve(loginId, password) {
   const pendingTenants = (() => {
     try { return JSON.parse(localStorage.getItem('elogix_pending_tenants')||'[]') } catch { return [] }
   })()
-  const isPendingApproval = pendingTenants.some(t => t.slug === u.company) && !approvedTenants[u.company]
+  // Only check pending approval for DYNAMICALLY registered companies
+  // Static demo accounts (demo, himalayan etc.) bypass this check
+  const STATIC_COMPANY_SLUGS = ['demo', 'himalayan', 'solidfuture']
+  const isDynamicCompany = !STATIC_COMPANY_SLUGS.includes(u.company)
+  const isPendingApproval = isDynamicCompany &&
+    pendingTenants.some(t => t.slug === u.company) &&
+    !approvedTenants[u.company]
   if (isPendingApproval) {
     return { success:false, error:'⏳ Your account is pending SuperAdmin approval. You will receive an email once approved. Contact support@elogix.com.np' }
   }
