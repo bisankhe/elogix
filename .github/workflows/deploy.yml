@@ -99,8 +99,8 @@ jobs:
           port: ${{ secrets.VM_PORT || '22' }}
           script: |
             set -e
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             cd /opt/elogix
-            docker compose pull
-            docker compose up -d --remove-orphans
+            docker compose -f /opt/elogix/docker-compose.yml pull
+            docker compose -f /opt/elogix/docker-compose.yml up -d --remove-orphans
             docker image prune -f
