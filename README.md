@@ -1,87 +1,66 @@
-# eLogix HRMS — AI-Powered HRIS · HRMS · HRIM · HCM
+# eLogix HRMS — Production Credentials
+eLogix Technologies · www.elogix.com.np
 
-Nepal's most comprehensive Human Resource Management SaaS platform with built-in AI business intelligence, predictive analytics, and multilingual support.
+## ⚠️ SECURITY RULES
+1. NEVER push any of these files to GitHub
+2. NEVER share on WhatsApp, email, or Messenger
+3. Store in password manager (Bitwarden / 1Password) only
+4. Set file permissions: chmod 600 backend/.env
 
-## Tech Stack
-- **Frontend**: React 18 + Vite 5 + Tailwind CSS
-- **Backend**: Python Flask + SQLAlchemy
-- **Database**: PostgreSQL 15
-- **AI**: Claude claude-sonnet-4-6 (Anthropic)
-- **Cache**: Redis
-- **Deployment**: Docker + Nginx
+## Files in this package
+- backend/.env       — Copy to /opt/elogix/backend/.env on VPS
+- setup_postgres.sh  — Run ONCE on VPS to create database + user
+- docker-compose.yml — Production Docker Compose with credentials
 
-## Quick Start (Development)
+## Step-by-step setup on VPS
 
-```bash
-# 1. Install frontend dependencies
-npm install
-
-# 2. Set environment variables
-cp .env.example .env
-cp backend/.env.example backend/.env
-# Edit both .env files with your values
-
-# 3. Start frontend
-npm run dev
-
-# 4. Start backend (separate terminal)
-python run.py
+### Step 1: Create PostgreSQL database
+```
+ssh elogix@YOUR_VPS_IP
+bash setup_postgres.sh
 ```
 
-## Quick Start (Docker)
-
-```bash
-cp backend/.env.example backend/.env
-# Edit backend/.env with real values
-
-docker-compose up --build
-# App: http://localhost:80
-# API: http://localhost:5000
+### Step 2: Copy .env to VPS
+```
+scp backend/.env elogix@YOUR_VPS_IP:/opt/elogix/backend/.env
+chmod 600 /opt/elogix/backend/.env
 ```
 
-## Project Structure
-
+### Step 3: Run database migrations
 ```
-elogix-hrms-files/
-├── src/                    # React frontend
-│   ├── components/
-│   │   ├── dashboard/      # Role dashboards + 473 page components
-│   │   ├── layout/         # Sidebar, Topbar, QuickDock
-│   │   ├── shared/         # HRCopilot, Cards, StatCard etc.
-│   │   └── modals/
-│   ├── context/            # AppContext, AuthContext
-│   ├── data/               # sidebarMenu.js, personas.js
-│   ├── utils/              # auth.js, api.js, rbac.js
-│   └── App.jsx             # ContentRouter (530 routes)
-├── backend/
-│   ├── routes/             # 105 Flask blueprint files
-│   ├── models/             # 15 SQLAlchemy model files
-│   ├── services/           # Auth, Email, AI, Storage, Tenant
-│   ├── middleware/         # JWT auth, tenant isolation
-│   └── app.py              # Flask application factory
-├── database/
-│   ├── schemas/            # 106 PostgreSQL schema files
-│   ├── migrations/         # Alembic migrations
-│   └── seeds/              # Demo data
-├── legal-docs/             # Privacy policy, ToS, DPA, SLA
-├── docker-compose.yml
-├── nginx.conf
-└── .github/workflows/      # CI/CD pipeline
+cd /opt/elogix
+source backend/.venv/bin/activate
+python -m flask db upgrade
 ```
 
-## Key Features
-- 518 sidebar menu items, all routed
-- 20 language support (Nepali, Hindi, English, Arabic, Chinese...)
-- macOS-style Quick Dock (role-aware)
-- HR Co-Pilot AI chatbot (right-side panel)
-- AI Business Intelligence with Claude API
-- Predictive attrition analytics
-- Nepal Labour Act 2074 compliance built-in
-- Multi-tenant SaaS architecture
+### Step 4: Restart backend
+```
+sudo systemctl restart elogix
+sudo systemctl status elogix
+```
 
-## Environment Variables
-See `backend/.env.example` for all required variables.
-Critical: `ANTHROPIC_API_KEY`, `DATABASE_URL`, `SECRET_KEY`
+## Credentials Summary
+| Service    | User/Key          | Value                                    |
+|------------|-------------------|------------------------------------------|
+| PostgreSQL | User              | elogix_prod                              |
+| PostgreSQL | Database          | elogix_hrms_prod                         |
+| PostgreSQL | Password          | Yb5cnpltBSxA9TiGFWTU2NWEORmH            |
+| SuperAdmin | Email             | admin@elogix.com.np                      |
+| SuperAdmin | Password          | 9r@Ce*EuvGbgywrAinOA                     |
+| MinIO      | Access Key        | 2JZQhLQ1TvfHK8LdvJMy                     |
 
-## License
-Proprietary — eLogix HRMS © 2026
+## Still needed (paste into backend/.env)
+- SENDGRID_API_KEY — get from sendgrid.com
+- SPARROW_SMS_TOKEN — get from sparrowsms.com.np
+- ESEWA_MERCHANT_CODE + SECRET — get from eSewa merchant portal
+- KHALTI_SECRET_KEY — get from Khalti dashboard
+- SENTRY_DSN — optional, for error tracking
+
+## .gitignore — add these lines
+```
+backend/.env
+.env
+.env.production
+*.env
+setup_postgres.sh
+```
