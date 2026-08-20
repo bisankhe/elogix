@@ -1,31 +1,16 @@
-FROM python:3.12-slim
-
-WORKDIR /app
-
-# System dependencies
-RUN apt-get update && apt-get install -y \
-    gcc libpq-dev curl && \
-    rm -rf /var/lib/apt/lists/*
-
-# Create non-root user early
-RUN useradd -m -u 1000 nephr
-
-# Install Python dependencies
-COPY backend/requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy backend files into /app
-COPY --chown=nephr:nephr backend/ .
-
-# Copy Alembic files from root build context
-COPY --chown=nephr:nephr alembic.ini ./alembic.ini
-COPY --chown=nephr:nephr alembic/ ./alembic
-
-USER nephr
-
-EXPOSE 5000
-
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:5000/api/health || exit 1
-
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "--timeout", "120", "run:app"]
+backend:
+    image: ghcr.io/bisankhe/elogix/backend:latest
+    container_name: elogix_backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    command: sh -c "alembic upgrade head && gunicorn --bind 0.0.0.0:5000 --workers 4 --timeout 120 'backend.app:create_app()'"
+    ports:
+      - "5000:5000"
+    depends_on:
+      elogix_db:
+        condition: service_healthy
+      elogix_redis:
+        condition: service_healthy
+    networks:
+      - elogix-network
