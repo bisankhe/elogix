@@ -1,113 +1,158 @@
 // FILE: src/components/auth/ProtectedRoute.jsx
-// eLogix HRMS — Route Guard
-// Guards every page: auth check + role check + plan check
+// eLogix HRMS — Route Guard Component
+// ─────────────────────────────────────────────────────────────────────
+// Integrates with:
+//   src/context/AuthContext.jsx      — isAuthenticated, isAdmin, permissions, getDashboardPage()
+//   src/hooks/usePermissions.jsx     — canAccess() / hasModule() for component-level checks
+//   src/utils/rbac.js                — RBAC permission definitions
+//   src/AppRouter.jsx                — wraps all route <Route> definitions
+//   src/pages/elogix-admin/ELogixAdminPage.jsx  — adminOnly target
+//   src/components/dashboard/*.jsx  — tenantOnly targets
+//   src/components/shared/LoadingScreen.jsx    — shown while auth hydrates
+//
+// USAGE in AppRouter.jsx:
+//
+//   // Any authenticated user (tenant or admin):
+//   <ProtectedRoute><SomePage /></ProtectedRoute>
+//
+//   // eLogix admin staff only:
+//   <ProtectedRoute adminOnly><ELogixAdminPage /></ProtectedRoute>
+//
+//   // Tenant users only, specific roles:
+//   <ProtectedRoute tenantOnly roles={['hr_manager','hr_officer']}>
+//     <HRManagerDashboard />
+//   </ProtectedRoute>
+//
+//   // Tenant users only, module gate:
+//   <ProtectedRoute tenantOnly module="recruitment_ats">
+//     <ATSCommandCenterPage />
+//   </ProtectedRoute>
+//
+//   // Both role + module:
+//   <ProtectedRoute tenantOnly roles={['super_admin','payroll_manager']} module="payroll">
+//     <PayrollProcessingPage />
+//   </ProtectedRoute>
+//
 // eLogix Technologies · www.elogix.com.np
-import { useEffect, useState } from 'react'
-import LoadingScreen from '../shared/LoadingScreen.jsx'
-import { useAuth } from '../../context/AuthContext.jsx'
 
-export default function ProtectedRoute({ children, requiredLevel = null, requiredRole = null, module = null }) {
-  const { isAuthenticated, level, role, canAccess, company } = useAuth()
-  const [checking, setChecking] = useState(true)
-  const [denied,   setDenied]   = useState(null)
+import { useEffect }   from 'react'
+import { useAuth }     from '../../context/AuthContext.jsx'
+import LoadingScreen   from '../shared/LoadingScreen.jsx'
+
+/**
+ * @param {object}    props
+ * @param {string[]}  [props.roles]      - Allowed tenant roles. Omit = any authenticated user.
+ * @param {string}    [props.module]     - Required module key (from resolveTenantPermissions).
+ * @param {boolean}   [props.adminOnly]  - Only eLogix internal staff (elogix_* roles).
+ * @param {boolean}   [props.tenantOnly] - Only tenant company users (not eLogix admin).
+ * @param {string}    [props.redirect]   - Fallback redirect path. Default: '/login'.
+ * @param {ReactNode} props.children
+ */
+export default function ProtectedRoute({
+  roles,
+  module,
+  adminOnly  = false,
+  tenantOnly = false,
+  redirect   = '/login',
+  children,
+}) {
+  const {
+    isAuthenticated,
+    isAdmin,
+    ready,
+    currentUser,
+    permissions,
+    getDashboardPage,
+  } = useAuth()
 
   useEffect(() => {
-    const check = async () => {
-      // 1. Not authenticated → login
-      if (!isAuthenticated) {
-        const token = localStorage.getItem('elogix_token')
-        if (!token) { window.location.href = '/login'; return }
-        // Try refresh
-        try {
-          const slug    = localStorage.getItem('elogix_tenant') || ''
-          const refresh = localStorage.getItem('elogix_refresh_token')
-          const res     = await fetch('/api/v1/auth/refresh', {
-            method:'POST', headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({ refresh_token: refresh })
-          })
-          if (!res.ok) { window.location.href = '/login'; return }
-          const data = await res.json()
-          if (data.access_token) localStorage.setItem('elogix_token', data.access_token)
-          else { window.location.href = '/login'; return }
-        } catch { window.location.href = '/login'; return }
-      }
+    if (!ready) return
 
-      // 2. Company suspended / cancelled
-      if (company && !['active','trial'].includes(company.status)) {
-        setDenied({
-          icon: '⚠️',
-          title: `eLogix Account ${company.status.charAt(0).toUpperCase()+company.status.slice(1)}`,
-          message: company.status === 'suspended'
-            ? 'Your eLogix account has been suspended. Please contact support@elogix.com.np to reactivate.'
-            : 'Your eLogix account has been cancelled.',
-          action: 'Contact support@elogix.com.np'
-        })
-        setChecking(false); return
-      }
-
-      // 3. Level check
-      if (requiredLevel && level > requiredLevel) {
-        setDenied({
-          icon: '🔒', title: 'Access Restricted',
-          message: `This page requires authority level ${requiredLevel} or above. Your level: ${level}.`,
-          action: 'Contact your HR Administrator'
-        })
-        setChecking(false); return
-      }
-
-      // 4. Role check
-      if (requiredRole) {
-        const allowed = Array.isArray(requiredRole) ? requiredRole : [requiredRole]
-        if (!allowed.includes(role)) {
-          setDenied({
-            icon: '🚫', title: 'Permission Denied',
-            message: `This page requires role: ${allowed.join(' or ')}. Your role: ${role}.`,
-            action: 'Contact your HR Administrator'
-          })
-          setChecking(false); return
-        }
-      }
-
-      // 5. Module access check
-      if (module && !canAccess(module)) {
-        setDenied({
-          icon: '🔐', title: 'Module Access Denied',
-          message: `You do not have permission to access the ${module} module.`,
-          action: 'Contact your HR Administrator'
-        })
-        setChecking(false); return
-      }
-
-      setChecking(false)
+    // 1. Must be authenticated in some form
+    if (!isAuthenticated && !isAdmin) {
+      window.location.replace(redirect)
+      return
     }
-    check()
-  }, [isAuthenticated, level, role, company])
 
-  if (checking) return <LoadingScreen message="Verifying eLogix access..." />
+    // 2. Admin-only route — eLogix staff only (elogix-admin/*)
+    if (adminOnly && !isAdmin) {
+      // Tenant user tried to access eLogix admin → send to their dashboard
+      window.location.replace('/' + getDashboardPage())
+      return
+    }
 
-  if (denied) return (
-    <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center',
-                   background:'#f8fafc', fontFamily:'system-ui,sans-serif', padding:24 }}>
-      <div style={{ textAlign:'center', maxWidth:420 }}>
-        <div style={{ fontSize:64, marginBottom:12 }}>{denied.icon}</div>
-        <div style={{ fontSize:22, fontWeight:900, color:'#0f172a', marginBottom:8 }}>{denied.title}</div>
-        <div style={{ fontSize:13, color:'#64748b', marginBottom:24, lineHeight:1.7 }}>{denied.message}</div>
-        <div style={{ fontSize:12, color:'#0369a1', background:'#f0f9ff', padding:'10px 16px',
-                       borderRadius:10, marginBottom:20 }}>{denied.action}</div>
-        <button onClick={()=>window.history.back()}
-          style={{ padding:'10px 24px', borderRadius:9, border:'1.5px solid #e2e8f0',
-                    background:'#fff', fontSize:12, cursor:'pointer', marginRight:8 }}>
-          ← Go Back
-        </button>
-        <button onClick={()=>window.location.href='/'}
-          style={{ padding:'10px 24px', borderRadius:9, border:'none',
-                    background:'linear-gradient(135deg,#0c4a6e,#0369a1)',
-                    color:'#fff', fontSize:12, fontWeight:700, cursor:'pointer' }}>
-          🏠 Dashboard
-        </button>
-      </div>
-    </div>
-  )
+    // 3. Tenant-only route — eLogix admins should not browse tenant dashboards
+    if (tenantOnly && isAdmin && !isAuthenticated) {
+      window.location.replace('/elogix-admin')
+      return
+    }
+
+    // 4. Role check — only for tenant users
+    if (roles?.length > 0 && currentUser && !isAdmin) {
+      if (!roles.includes(currentUser.role)) {
+        console.warn(`[eLogix ProtectedRoute] Role "${currentUser.role}" not in allowed: [${roles.join(', ')}]`)
+        window.location.replace('/' + getDashboardPage())
+        return
+      }
+    }
+
+    // 5. Module check — plan + biz_type + role must include this module
+    if (module && permissions && !isAdmin) {
+      if (!permissions.modules.includes(module)) {
+        console.warn(`[eLogix ProtectedRoute] Module "${module}" not in tenant permissions. Plan: ${permissions.plan}`)
+        window.location.replace('/' + getDashboardPage())
+        return
+      }
+    }
+  }, [ready, isAuthenticated, isAdmin, currentUser, permissions])
+
+  // Still hydrating auth state — show loading to prevent flash
+  if (!ready) return <LoadingScreen />
+
+  // Not authenticated — redirect fires in useEffect, render nothing
+  if (!isAuthenticated && !isAdmin) return null
+
+  // Role/module violations — redirect fires in useEffect
+  if (adminOnly && !isAdmin) return null
+  if (roles?.length > 0 && currentUser && !isAdmin && !roles.includes(currentUser.role)) return null
 
   return children
+}
+
+
+// ══════════════════════════════════════════════════════════════════════
+// CONVENIENCE WRAPPERS
+// Use these in AppRouter.jsx for cleaner route definitions
+// ══════════════════════════════════════════════════════════════════════
+
+/**
+ * Gates eLogix internal admin routes (/elogix-admin/*)
+ * Maps to: src/pages/elogix-admin/ELogixAdminPage.jsx
+ *          src/pages/admin/ELogixAdminPanel.jsx
+ */
+export function AdminRoute({ children }) {
+  return <ProtectedRoute adminOnly>{children}</ProtectedRoute>
+}
+
+/**
+ * Gates tenant dashboard routes with optional role + module constraints.
+ * Maps to: src/components/dashboard/*.jsx
+ *          src/components/dashboard/snapshots/*.jsx
+ *          src/pages/company/*.jsx
+ */
+export function TenantRoute({ roles, module, children }) {
+  return (
+    <ProtectedRoute tenantOnly roles={roles} module={module}>
+      {children}
+    </ProtectedRoute>
+  )
+}
+
+/**
+ * Gates routes accessible by both eLogix admin AND tenant users.
+ * E.g. billing pages, settings accessible to both.
+ * Maps to: src/pages/billing/*.jsx
+ */
+export function AuthRoute({ children }) {
+  return <ProtectedRoute>{children}</ProtectedRoute>
 }

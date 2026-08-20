@@ -3,7 +3,7 @@
 // All 80 routes registered, no duplicate imports
 // ============================================================
 
-import { useState, useCallback, createContext, useContext } from 'react'
+import { useState, useEffect, useCallback, createContext, useContext } from 'react'
 import { PERSONAS }   from './data/personas.js'
 import { ROLE_TO_PERSONA, ROLE_TO_DEFAULT_PAGE, getTenantContext } from './data/rolePersonaMap.js'
 import { CURRENCIES } from './data/currencies.js'
@@ -45,6 +45,9 @@ import DepartmentDashboard  from './components/dashboard/DepartmentDashboard.jsx
 import BranchDashboard      from './components/dashboard/BranchDashboard.jsx'
 import EmployeeDashboard    from './components/dashboard/EmployeeDashboard.jsx'
 import RecruitmentDashboard from './components/dashboard/RecruitmentDashboard.jsx'
+
+// ── Company Setup Dashboard (super_admin landing — replaces blank GenericPage) ──
+import CompanyDashboardPage from './pages/company/CompanyDashboardPage.jsx'
 
 // Snapshots & Analytics
 import AttendanceSnapshot   from './components/dashboard/snapshots/AttendanceSnapshot.jsx'
@@ -703,26 +706,34 @@ export const useApp = () => {
 
 // ── Route Map ─────────────────────────────────────────────────
 const ROUTES = {
+  // ── Persona dashboard routes (original keys — keep for sidebar nav) ──
   'super-admin-dashboard':  SuperAdminDashboard,
   'executive-dashboard':    ExecutiveDashboard,
   'hr-dashboard':           HRManagerDashboard,
-  // Role-based persona dashboards
-  'finance-dashboard':                 FinanceDashboard,
-  'it-admin-dashboard':                    ITAdministratorDashboard,
-  'recruitment-officer-dashboard':             RecruitmentOfficerDashboard,
-  'procurement-dashboard':                         ProcurementDashboard,
-  'admin-workspace-dashboard':                         AdminWorkspaceDashboard,
-  'sales-dashboard':                                       SalesDashboard,
-  'customer-service-dashboard':                                CustomerServiceDashboard,
-  'legal-dashboard':                                               LegalDashboard,
-  'operations-dashboard':                                              OperationsDashboard,
-  'learning-development-dashboard':                                        LearningDevelopmentDashboard,
-  'hr-officer-dashboard':                                                      HROfficerDashboard,
-  'marketing-dashboard':                                                           MarketingDashboard,
-  'department-dashboard':   DepartmentDashboard,
-  'branch-dashboard':       BranchDashboard,
-  'employee-dashboard':     EmployeeDashboard,
-  'recruitment-dashboard':  RecruitmentDashboard,
+
+  // ── Aliases: keys returned by tenantRouting.js getLandingRoute() ──
+  // These MUST match ROLE_LANDING values in src/utils/tenantRouting.js
+  'company-dashboard':           CompanyDashboardPage,      // super_admin, company_admin
+  'hr-manager-dashboard':        HRManagerDashboard,        // hr_manager
+  'payroll-dashboard':           SuperAdminDashboard,       // payroll_officer, payroll_manager (uses admin dash payroll section)
+  'team-dashboard':              DepartmentDashboard,       // team_lead
+  'ld-dashboard':                LearningDevelopmentDashboard, // learning_development
+  'finance-dashboard':           FinanceDashboard,
+  'it-admin-dashboard':          ITAdministratorDashboard,
+  'recruitment-dashboard':       RecruitmentDashboard,      // recruitment_manager, recruiter
+  'recruitment-officer-dashboard': RecruitmentOfficerDashboard,
+  'procurement-dashboard':       ProcurementDashboard,
+  'admin-workspace-dashboard':   AdminWorkspaceDashboard,
+  'sales-dashboard':             SalesDashboard,
+  'customer-service-dashboard':  CustomerServiceDashboard,
+  'legal-dashboard':             LegalDashboard,
+  'operations-dashboard':        OperationsDashboard,
+  'learning-development-dashboard': LearningDevelopmentDashboard,
+  'hr-officer-dashboard':        HROfficerDashboard,
+  'marketing-dashboard':         MarketingDashboard,
+  'department-dashboard':        DepartmentDashboard,
+  'branch-dashboard':            BranchDashboard,
+  'employee-dashboard':          EmployeeDashboard,
   'attendance-snapshot':    AttendanceSnapshot,
   'leave-snapshot':         LeaveSnapshot,
   'payroll-snapshot':       PayrollSnapshot,
@@ -1507,25 +1518,44 @@ export default function App({ initialPage, onLogout }) {
   const [showProfile,  setShowProfile]  = useState(false)
   const [showSettings, setShowSettings] = useState(false)
 
-  // Logout: clears ALL auth data so next open shows login page
+  // Logout: clears ALL auth data so next open shows login page.
+  // Includes both legacy keys (elogix_user, elogix_company) and new
+  // AuthContext key (elogix_session) written by AuthContext.jsx.
   const handleLogout = useCallback(() => {
-    ;['elogix_token','elogix_refresh_token','elogix_user','elogix_company',
-      'elogix_permissions','elogix_tenant','elogix_admin_token',
-      'elogix_admin_user','elogix_admin_key','elogix_remember',
-    ].forEach(k => localStorage.removeItem(k))
-    sessionStorage.clear()
+    ;[
+      'elogix_session',          // new AuthContext session key
+      'elogix_admin_session',    // new AuthContext admin key
+      'elogix_token','elogix_refresh_token',
+      'elogix_user','elogix_company',
+      'elogix_permissions','elogix_tenant',
+      'elogix_admin_token','elogix_admin_user','elogix_admin_key',
+      'elogix_remember',
+    ].forEach(k => { localStorage.removeItem(k); sessionStorage.removeItem(k) })
     onLogout?.()
   }, [onLogout])
   const toggleExpanded = useCallback((id) => setExpanded(prev => ({ ...prev, [id]: !prev[id] })), [])
 
-  // Apply initialPage from router when provided
-  useState(() => {
-    if (initialPage) {
-      setSub(initialPage)
-      const ctx = getTenantContext()
-      if (ctx.role) setPersonaState(ROLE_TO_PERSONA[ctx.role] || 'super-admin')
-    }
-  })
+  // Apply initialPage from AppRouter whenever it changes.
+  // useState() was used here before — it only ran once and never
+  // reacted to prop updates. useEffect with [initialPage] dep fixes this.
+  useEffect(() => {
+    if (!initialPage) return
+    setSub(initialPage)
+    // Read role from the new elogix_session key (written by AuthContext)
+    // with fallback to legacy elogix_user key for backwards compat
+    const session = (() => {
+      try {
+        return JSON.parse(
+          sessionStorage.getItem('elogix_session') ||
+          localStorage.getItem('elogix_session') ||
+          sessionStorage.getItem('elogix_user') ||
+          localStorage.getItem('elogix_user') || '{}'
+        )
+      } catch { return {} }
+    })()
+    const role = session?.user?.role || session?.role
+    if (role) setPersonaState(ROLE_TO_PERSONA[role] || 'super-admin')
+  }, [initialPage])
 
   const ctx = {
     persona, switchPersona, currentPersona,
@@ -1580,7 +1610,17 @@ export default function App({ initialPage, onLogout }) {
               Confidential - Encrypted . RBAC . Nepal Privacy Act 2018
             </span>
             <span style={{ marginLeft: 'auto', fontSize: 11, color: '#b45309' }}>
-              {currentPersona?.icon} {t(currentPersona?.labelKey) || currentPersona?.label}
+              {currentPersona?.icon} {(() => {
+                try {
+                  const sess = JSON.parse(
+                    sessionStorage.getItem('elogix_session') ||
+                    localStorage.getItem('elogix_session') || 'null'
+                  )
+                  const role = sess?.user?.role
+                  if (role) return role.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())
+                } catch {}
+                return t(currentPersona?.labelKey) || currentPersona?.label
+              })()}
             </span>
           </div>
 

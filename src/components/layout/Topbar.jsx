@@ -72,8 +72,11 @@ function UserMenu({ currentPersona, t, onClose, onLogout, onProfile, onSettings,
       {/* Logout */}
       <button
         onClick={() => {
-          onClose()
+          // Call logout FIRST, then close the menu.
+          // Reversing this prevents React unmounting the component
+          // before onLogout() can execute its state updates.
           if (onLogout) onLogout()
+          onClose()
         }}
         style={{
           width: '100%', display: 'flex', alignItems: 'center', gap: 10,
@@ -392,9 +395,40 @@ export default function Topbar({ sidebarOpen, setSidebarOpen, onLangClick, onNot
         <span style={{ fontSize: 18 }}>{currentPersona?.icon}</span>
         <div>
           <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a', lineHeight: 1.2 }}>
-            {(() => { try { const u=JSON.parse(sessionStorage.getItem('elogix_user')||localStorage.getItem('elogix_user')||'{}'); return u.full_name||u.name||t(currentPersona?.labelKey)||currentPersona?.label||'User' } catch { return currentPersona?.label||'User' } })()}
+            {(() => {
+              try {
+                // Read from new elogix_session key (written by AuthContext.jsx)
+                const sess = JSON.parse(
+                  sessionStorage.getItem('elogix_session') ||
+                  localStorage.getItem('elogix_session') || 'null'
+                )
+                if (sess?.user?.full_name) return sess.user.full_name
+                // Fallback: legacy elogix_user key
+                const u = JSON.parse(
+                  sessionStorage.getItem('elogix_user') ||
+                  localStorage.getItem('elogix_user') || '{}'
+                )
+                return u.full_name || u.name || t(currentPersona?.labelKey) || currentPersona?.label || 'User'
+              } catch { return currentPersona?.label || 'User' }
+            })()}
           </div>
-          <div style={{ fontSize: 10, color: '#94a3b8' }}>eLogix HRMS</div>
+          <div style={{ fontSize: 10, color: '#94a3b8' }}>
+            {(() => {
+              try {
+                // Show role label from session — not hardcoded persona
+                const sess = JSON.parse(
+                  sessionStorage.getItem('elogix_session') ||
+                  localStorage.getItem('elogix_session') || 'null'
+                )
+                const role = sess?.user?.role
+                if (role) {
+                  // Convert role key to readable label: super_admin → Super Admin
+                  return role.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())
+                }
+                return 'eLogix HRMS'
+              } catch { return 'eLogix HRMS' }
+            })()}
+          </div>
         </div>
       </div>
 
@@ -475,9 +509,9 @@ export default function Topbar({ sidebarOpen, setSidebarOpen, onLangClick, onNot
       </TBtn>
 
       {/* ── Avatar / User Menu ── */}
-      <div style={{ position: 'relative' }} onClick={e => e.stopPropagation()}>
+      <div style={{ position: 'relative' }}>
         <button
-          onClick={() => setShowUserMenu(s => !s)}
+          onClick={(e) => { e.stopPropagation(); setShowUserMenu(s => !s) }}
           style={{
             width: 34, height: 34, borderRadius: '50%',
             background: `linear-gradient(135deg,${currentPersona?.color || '#3b82f6'},#8b5cf6)`,
