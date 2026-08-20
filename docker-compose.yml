@@ -1,95 +1,48 @@
 version: '3.8'
 
 services:
-  # ══════════════════════════════════════════════════════════════
-  # 1. PostgreSQL Database
-  # ══════════════════════════════════════════════════════════════
-  db:
-    image: postgres:15-alpine
-    container_name: elogix_db
-    restart: unless-stopped
+  backend:
+    image: ghcr.io/bisankhe/elogix/backend:latest
+    restart: always
+    command: sh -c "alembic upgrade head && gunicorn --bind 0.0.0.0:5000 backend.app:app"
+    env_file:
+      - .env
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - elogix-network
+
+  frontend:
+    image: ghcr.io/bisankhe/elogix/frontend:latest
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - elogix-network
+
+  database:
+    image: postgres:15
+    restart: always
     environment:
-      POSTGRES_DB: elogix_hrms
-      POSTGRES_USER: elogix
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-elogix_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-elogix_prod}
+      POSTGRES_USER: ${POSTGRES_USER:-elogix}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/schemas/complete_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
-      - ./database/seeds/04_demo_company_data.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
-    ports:
-      - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U elogix -d elogix_hrms"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-elogix}"]
       interval: 10s
       timeout: 5s
       retries: 5
-
-  # ══════════════════════════════════════════════════════════════
-  # 2. Redis Cache
-  # ══════════════════════════════════════════════════════════════
-  redis:
-    image: redis:7-alpine
-    container_name: elogix_redis
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-
-  # ══════════════════════════════════════════════════════════════
-  # 3. Flask Backend Service
-  # ══════════════════════════════════════════════════════════════
-  backend:
-    build:
-      context: .
-      dockerfile: backend/Dockerfile
-    container_name: elogix_backend
-    restart: unless-stopped
-    env_file:
-      - .env
-    environment:
-      - CORS_ORIGINS=https://elogix.com.np,https://www.elogix.com.np
-      - PYTHONPATH=/app:/app/backend
-      - DATABASE_URL=postgresql://elogix:${DB_PASSWORD:-elogix_pass}@db:5432/elogix_hrms
-      - REDIS_URL=redis://redis:6379/0
-      - FLASK_ENV=production
-    # --chdir backend points Gunicorn directly to where run.py is located
-    command: gunicorn --bind 0.0.0.0:5000 --chdir backend run:app
-    ports:
-      - "5000:5000"
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    volumes:
-      - .:/app
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/api/health')"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-
-  # ══════════════════════════════════════════════════════════════
-  # 4. React Frontend (Nginx Reverse Proxy)
-  # ══════════════════════════════════════════════════════════════
-  frontend:
-    image: nginx:alpine
-    container_name: elogix_frontend
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./dist:/usr/share/nginx/html:ro
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-    depends_on:
-      backend:
-        condition: service_healthy
+    networks:
+      - elogix-network
 
 volumes:
   postgres_data:
-    driver: local
+
+networks:
+  elogix-network:
+    driver: bridge
