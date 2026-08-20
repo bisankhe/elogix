@@ -14,16 +14,18 @@ RUN useradd -m -u 1000 nephr
 COPY backend/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy ONLY the backend application files directly into /app
+# Copy backend files into /app
 COPY --chown=nephr:nephr backend/ .
+
+# Copy Alembic files from root build context
+COPY --chown=nephr:nephr alembic.ini ./alembic.ini
+COPY --chown=nephr:nephr alembic/ ./alembic
 
 USER nephr
 
 EXPOSE 5000
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:5000/api/health || exit 1
 
-# Start Gunicorn WSGI server
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "--timeout", "120", "--access-logfile", "-", "run:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "--timeout", "120", "run:app"]

@@ -6,6 +6,7 @@
 version: '3.9'
 
 services:
+<<<<<<< HEAD
 
   elogix_db:
     image: postgres:15-alpine
@@ -22,10 +23,46 @@ services:
       - "127.0.0.1:5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U elogix_prod -d elogix_hrms_prod"]
+=======
+backend:
+    image: ghcr.io/bisankhe/elogix/backend:latest
+    restart: always
+    command: sh -c "alembic upgrade head && gunicorn --bind 0.0.0.0:5000 app:app"
+    env_file:
+      - .env
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - elogix-network
+
+  frontend:
+    image: ghcr.io/bisankhe/elogix/frontend:latest
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - elogix-network
+
+  database:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-elogix_prod}
+      POSTGRES_USER: ${POSTGRES_USER:-elogix}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-elogix}"]
+>>>>>>> 347ac643dfa5e53a012d0f6e8f0432f49f242a11
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
+<<<<<<< HEAD
       - elogix_net
 
   elogix_redis:
@@ -81,3 +118,13 @@ networks:
 volumes:
   postgres_prod_data:
   redis_prod_data:
+=======
+      - elogix-network
+
+volumes:
+  postgres_data:
+
+networks:
+  elogix-network:
+    driver: bridge
+>>>>>>> 347ac643dfa5e53a012d0f6e8f0432f49f242a11
