@@ -119,4 +119,3 @@ export default function LeadershipPipelinePage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

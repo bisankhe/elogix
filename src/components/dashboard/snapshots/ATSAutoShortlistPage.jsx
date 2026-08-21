@@ -15,7 +15,6 @@ async function callAI(prompt, sys) {
     if (r.ok) { const d = await r.json(); return d.content?.map(c => c.text).join('') || '' }
   } catch {}
   return null
-}
 
 const JOB_POSITIONS = [
   { id: 'j1', title: 'Senior React Developer', dept: 'Technology', minAge: 22, maxAge: 45, minExp: 4, openings: 2 },
@@ -40,7 +39,6 @@ function weightedScore(c, w) {
   const ex = c.exam.score || 0
   const vi = c.video.score || 0
   return Math.round(cv * w.cv / 100 + ex * w.exam / 100 + vi * w.video / 100)
-}
 
 const rankColor = { Gold: '#f59e0b', Silver: '#94a3b8', Bronze: '#b45309', Reject: '#ef4444' }
 const rankBg    = { Gold: '#fef9c3', Silver: '#f1f5f9', Bronze: '#fff7ed', Reject: '#fef2f2' }
@@ -68,7 +66,6 @@ export default function ATSAutoShortlistPage() {
     const remaining = 100 - val
     const each = Math.floor(remaining / others.length)
     setWeights(w => ({ ...w, [key]: val, [others[0]]: each, [others[1]]: remaining - each }))
-  }
 
   const sorted = [...ALL_CANDIDATES].map(c => ({ ...c, composite: weightedScore(c, weights) })).sort((a, b) => b.composite - a.composite)
   const eligible   = sorted.filter(c => c.ageOK && c.composite > 0)
@@ -85,17 +82,14 @@ export default function ATSAutoShortlistPage() {
     )
     setAiRanking(resp || 'AI analysis: Candidates ranked by composite score. Top candidates show strong alignment across all three evaluation dimensions.')
     setRanking(false)
-  }
 
   const sendInterviewInvites = async (candidates) => {
     for (const c of candidates) {
       setInviteSent(s => ({ ...s, [c.id]: 'sending' }))
       await new Promise(r => setTimeout(r, 400))
       setInviteSent(s => ({ ...s, [c.id]: 'sent' }))
-    }
     const typeLabel = interviewType === 'Physical' ? 'in-person physical' : 'virtual'
     notify(`✅ ${interviewType} interview invites sent to ${candidates.length} candidates via Email + WhatsApp! Date: ${interviewDate || 'TBD'} at ${interviewTime}`)
-  }
 
   // Candidate row component
   const CandidateRow = ({ c, pos, showInvite = false }) => {
@@ -167,7 +161,6 @@ export default function ATSAutoShortlistPage() {
         </div>
       </div>
     )
-  }
 
   return (
     <div style={{ fontFamily: 'system-ui,sans-serif' }}>
@@ -424,4 +417,3 @@ export default function ATSAutoShortlistPage() {
       )}
     </div>
   )
-}

@@ -1,7 +1,7 @@
 // FILE: WeekendPolicyPage.jsx - Weekend Policy (Luxury HRIS)
 // Day-type rules, hyper-localized workweek, Nepal Labour Act 2074
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Field, ExcelModal, PageHeader, AIImpact, Drawer, LuxCard, ContextMenu } from './DeptSetupShared.jsx'
 
 const G = 'linear-gradient(135deg,#7c2d12 0%,#ea580c 60%,#f97316 100%)'
@@ -71,7 +71,6 @@ function DayGrid({workDays,weekendDays,halfDays=[],onToggle}) {
               borderRadius:10,padding:'8px 4px',textAlign:'center',cursor:onToggle?'pointer':'default',
               background: isHalf?'#fef3c7': isWork?'#dbeafe': isWeekend?'#fee2e2':'#f8fafc',
               border:`2px solid ${isHalf?'#fbbf24':isWork?'#3b82f6':isWeekend?'#ef4444':'#e2e8f0'}`,
-              transition:'all .15s ease',
             }}>
             <div style={{fontSize:10,fontWeight:700,color:isHalf?'#92400e':isWork?'#1d4ed8':isWeekend?'#dc2626':'#94a3b8'}}>{DAY_SHORT[i]}</div>
             <div style={{fontSize:8,color:'#94a3b8',marginTop:2}}>{isHalf?'Half':isWork?'Work':isWeekend?'Off':'Off'}</div>
@@ -80,7 +79,6 @@ function DayGrid({workDays,weekendDays,halfDays=[],onToggle}) {
       })}
     </div>
   )
-}
 
 function AddPolicyModal({onClose,onSave}) {
   const [f,setF] = useState({name:'',nepali:'',code:'',country:'Nepal',region:'',
@@ -91,7 +89,6 @@ function AddPolicyModal({onClose,onSave}) {
     const inWeekend = f.weekend_days.includes(i)
     if(inWork) setF(p=>({...p,work_days:p.work_days.filter(d=>d!==i),weekend_days:[...p.weekend_days,i]}))
     else       setF(p=>({...p,work_days:[...p.work_days,i],weekend_days:p.weekend_days.filter(d=>d!==i)}))
-  }
   const s=k=>v=>setF(p=>({...p,[k]:v}))
   return (
     <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.65)',zIndex:5000,display:'flex',alignItems:'center',justifyContent:'center',padding:16}} onClick={onClose}>
@@ -131,11 +128,28 @@ function AddPolicyModal({onClose,onSave}) {
           </div>
         </div>
       </div>
-    </div>
+    </d
+
+iv>
   )
-}
+
+
+// ── Tenant context ────────────────────────────────────────────
+function useCompanyCtx() {
+  const auth   = (() => { try { return JSON.parse(localStorage.getItem('elogix_auth')||'{}') } catch { return {} } })()
+  const regCos = (() => { try { return JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}') } catch { return {} } })()
+  const slug   = auth.company?.slug || auth.user?.company || 'demo'
+  return {
+    company_id:   auth.company?.id || slug,
+    company_name: auth.company?.name || regCos[slug]?.name || 'Your Company',
+    company_slug: slug,
+    plan:         auth.company?.plan || 'trial',
+    currency:     auth.company?.currency || 'NPR',
+    token:        localStorage.getItem('elogix_token') || auth.token || '',
 
 export default function WeekendPolicyPage() {
+  const ctx = useCompanyCtx()  // Tenant scope
+
   const [policies, setPolicies] = useState(POLICIES_INIT)
   const [selected, setSelected] = useState(null)
   const [showAdd, setShowAdd] = useState(false)
@@ -276,4 +290,3 @@ export default function WeekendPolicyPage() {
       ]}/>
     </div>
   )
-}

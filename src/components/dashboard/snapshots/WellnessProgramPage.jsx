@@ -94,4 +94,3 @@ export default function WellnessProgramPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

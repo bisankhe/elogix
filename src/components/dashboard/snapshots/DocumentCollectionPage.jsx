@@ -64,12 +64,10 @@ const EMPLOYEES = [
 const DOC_STATUS_CFG = {
   approved:{c:'#10b981',icon:'✓'}, processing:{c:'#3b82f6',icon:'⟳'},
   flagged:{c:'#ef4444',icon:'!'}, not_uploaded:{c:'#94a3b8',icon:'-'},
-}
 const OVERALL_CFG = {
   mostly_complete:{c:'#10b981',bg:'#f0fdf4',label:'Mostly Complete'},
   in_progress:    {c:'#f59e0b',bg:'#fffbeb',label:'In Progress'},
   not_started:    {c:'#ef4444',bg:'#fef2f2',label:'Not Started'},
-}
 
 const CTX = [
   {icon:'👁',label:'View All Documents',     key:'view'},
@@ -190,4 +188,3 @@ export default function DocumentCollectionPage() {
       ]}/>
     </div>
   )
-}

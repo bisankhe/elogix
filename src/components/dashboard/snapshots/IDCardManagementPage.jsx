@@ -73,4 +73,3 @@ export default function IDCardManagementPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

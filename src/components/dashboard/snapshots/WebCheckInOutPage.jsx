@@ -32,7 +32,6 @@ export default function WebCheckInOutPage() {
   const formatTime = (s) => {
     const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60
     return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`
-  }
 
   const filtered = log.filter(l=>!search||l.employee.toLowerCase().includes(search.toLowerCase()))
   const inProgressCount = log.filter(l=>l.status==='in_progress').length
@@ -122,4 +121,3 @@ export default function WebCheckInOutPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

@@ -28,7 +28,6 @@ const SYNC_CFG = {
   matched:{c:'#10b981',bg:'#f0fdf4',icon:'✅',label:'Synced'},
   conflict:{c:'#ef4444',bg:'#fef2f2',icon:'⚠',label:'Conflict'},
   exception:{c:'#f59e0b',bg:'#fffbeb',icon:'🔍',label:'Exception'},
-}
 
 export default function LeaveAttendanceSyncPage() {
   const [feed, setFeed] = useState(SYNC_FEED)
@@ -97,4 +96,3 @@ export default function LeaveAttendanceSyncPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

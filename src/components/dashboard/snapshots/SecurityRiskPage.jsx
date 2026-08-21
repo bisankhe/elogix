@@ -88,4 +88,3 @@ export default function SecurityRiskPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

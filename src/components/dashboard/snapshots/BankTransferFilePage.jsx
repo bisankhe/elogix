@@ -105,4 +105,3 @@ export default function BankTransferFilePage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

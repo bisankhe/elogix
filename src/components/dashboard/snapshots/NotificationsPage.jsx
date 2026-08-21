@@ -122,7 +122,6 @@ const typeConfig = {
   critical: { bg: '#fef2f2', border: '#fecaca', dot: '#ef4444', label: 'Critical', pillColor: 'red'    },
   warning:  { bg: '#fffbeb', border: '#fde68a', dot: '#f59e0b', label: 'Warning',  pillColor: 'yellow' },
   info:     { bg: '#eff6ff', border: '#bfdbfe', dot: '#3b82f6', label: 'Info',     pillColor: 'blue'   },
-}
 
 // ── Notification Item ────────────────────────────────────────
 function NotifItem({ notif, onAction, onRead, expanded, onExpand }) {
@@ -213,7 +212,6 @@ function NotifItem({ notif, onAction, onRead, expanded, onExpand }) {
       </div>
     </div>
   )
-}
 
 // ── Main Component ───────────────────────────────────────────
 export default function NotificationsPage() {
@@ -386,4 +384,3 @@ export default function NotificationsPage() {
       </div>
     </div>
   )
-}

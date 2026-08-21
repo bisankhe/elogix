@@ -11,14 +11,12 @@ const DEMOTIONS = [
   { id:'d1', employee:'Dipak Rai', from_title:'Team Lead', to_title:'Senior Developer', dept:'Information Technology',
     effective_date:'2025-04-01', old_salary:110000, new_salary:110000, salary_changed:false,
     legal_basis:'restructuring', employee_consent:true, consent_date:'2025-03-25',
-    rationale:'Department restructuring reduced number of Team Lead positions. Employee agreed to IC role retaining same compensation, per mutual consent - no salary reduction (LA2074 compliant).',
     pip_history:[],
     approved_by:'Rajesh Sharma (CTO)', hr_legal_review:true, status:'completed',
     impact_links:['Employee Timeline','Employment History'] },
   { id:'d2', employee:'Sunil Magar', from_title:'Branch Manager', to_title:'Senior Officer', dept:'Operations',
     effective_date:'2025-08-01', old_salary:95000, new_salary:95000, salary_changed:false,
     legal_basis:'disciplinary_alternative', employee_consent:false, consent_date:null,
-    rationale:'Alternative to termination following documented performance issues (2 PIPs over 6 months). Salary retained per LA2074 - demotion in title/responsibility only, no compensation reduction without consent.',
     pip_history:[{date:'2025-02-01',outcome:'not_met'},{date:'2025-05-01',outcome:'not_met'}],
     approved_by:'Pending - HR Legal Review', hr_legal_review:false, status:'pending_legal_review',
     impact_links:['Disciplinary Records','Employee Timeline'] },
@@ -144,4 +142,3 @@ export default function DemotionHistoryPage() {
       {showExcel&&<ExcelModal title="Demotion History" columns={['Employee','From Title','To Title','Legal Basis','Consent','Salary Changed','Legal Review','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

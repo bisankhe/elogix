@@ -1,7 +1,7 @@
 // FILE: VendorPerformancePage.jsx - Vendor Performance Scorecards
 // Weighted KPIs: Quality 40%, Delivery 25%, Cost 20%, Service 15%
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Field, ExcelModal, PageHeader, AIImpact, Drawer, SearchBar, LuxCard, ContextMenu } from './DeptSetupShared.jsx'
 
 const G = 'linear-gradient(135deg,#312e81 0%,#4f46e5 60%,#818cf8 100%)'
@@ -18,8 +18,6 @@ const SCORECARDS = [
     },
     overall_score:93, overall_risk:'low', trend:'improving',
     sla_compliance:96, incidents:0, response_time_hrs:1.2,
-    renewal_recommendation:'Renew with expanded scope',
-    ai_summary:'Excellent performer across all 4 KPI dimensions. Eligible for Preferred Tier extension.',
     last_review:'2025-06-01', next_review:'2025-12-01',
     impact_links:['SLA Contract','Vendor Billing','Clearance'] },
   { id:'sc2', vendor_code:'VND-002', vendor_name:'CleanPro Services Nepal',
@@ -32,8 +30,6 @@ const SCORECARDS = [
     },
     overall_score:87, overall_risk:'low', trend:'stable',
     sla_compliance:88, incidents:2, response_time_hrs:3.5,
-    renewal_recommendation:'Renew with service improvement clause',
-    ai_summary:'Good performance. Service responsiveness below target. Address complaint resolution.',
     last_review:'2025-06-01', next_review:'2025-12-01',
     impact_links:['SLA Contract','Vendor Billing'] },
   { id:'sc3', vendor_code:'VND-003', vendor_name:'TechStaff Solutions Pvt.',
@@ -46,8 +42,6 @@ const SCORECARDS = [
     },
     overall_score:73, overall_risk:'high', trend:'declining',
     sla_compliance:74, incidents:4, response_time_hrs:6.5,
-    renewal_recommendation:'Performance review required before renewal',
-    ai_summary:'ALERT: Cost KPI at 61% due to billing rate discrepancy. Quality slipping. Formal warning recommended.',
     last_review:'2025-06-01', next_review:'2025-08-01',
     impact_links:['Compliance Alert','Vendor Billing','SLA Contract','Clearance'] },
   { id:'sc4', vendor_code:'VND-004', vendor_name:'SalaryExpert Payroll Nepal',
@@ -60,8 +54,6 @@ const SCORECARDS = [
     },
     overall_score:99, overall_risk:'low', trend:'stable',
     sla_compliance:99, incidents:0, response_time_hrs:0.5,
-    renewal_recommendation:'Renew long-term (3+ years)',
-    ai_summary:'Near-perfect scorecard. Market-best payroll accuracy. Strategic long-term partner.',
     last_review:'2025-06-01', next_review:'2025-12-01',
     impact_links:['SLA Contract','Finance','Vendor Billing'] },
 ]
@@ -75,10 +67,28 @@ const CTX = [
   {icon:'🔄',label:'Schedule Review',         key:'review'},
   {icon:'📋',label:'View Agreement',          key:'agreement'},
   {icon:'🔗',label:'Impact Analysis',         key:'impact'},
-  {icon:'📤',label:'Export Scorecard',        key:'export'},
+  {icon:'📤',label:'Export Scorecard',        key:'export'}
+
+port'},
 ]
 
+
+// ── Tenant context ────────────────────────────────────────────
+function useCompanyCtx() {
+  const auth   = (() => { try { return JSON.parse(localStorage.getItem('elogix_auth')||'{}') } catch { return {} } })()
+  const regCos = (() => { try { return JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}') } catch { return {} } })()
+  const slug   = auth.company?.slug || auth.user?.company || 'demo'
+  return {
+    company_id:   auth.company?.id || slug,
+    company_name: auth.company?.name || regCos[slug]?.name || 'Your Company',
+    company_slug: slug,
+    plan:         auth.company?.plan || 'trial',
+    currency:     auth.company?.currency || 'NPR',
+    token:        localStorage.getItem('elogix_token') || auth.token || '',
+
 export default function VendorPerformancePage() {
+  const ctx = useCompanyCtx()  // Tenant scope
+
   const [cards, setCards]     = useState(SCORECARDS)
   const [search, setSearch]   = useState('')
   const [filterRisk, setFilterRisk] = useState('all')
@@ -201,4 +211,3 @@ export default function VendorPerformancePage() {
       ]}/>
     </div>
   )
-}

@@ -274,4 +274,3 @@ export default function CareerPortalPage() {
       {showExcel&&<ExcelModal title="Career Portal" columns={['Job ID','Title','Department','Location','Type','Remote','Salary','Experience','Posted','Deadline','Applicants']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

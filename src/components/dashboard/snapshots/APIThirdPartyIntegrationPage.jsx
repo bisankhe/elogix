@@ -92,4 +92,3 @@ export default function APIThirdPartyIntegrationPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

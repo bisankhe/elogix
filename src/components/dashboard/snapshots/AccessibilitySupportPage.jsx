@@ -110,4 +110,3 @@ export default function AccessibilitySupportPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

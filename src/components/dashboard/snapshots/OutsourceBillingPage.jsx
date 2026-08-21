@@ -10,7 +10,6 @@ const MOCK_INVOICES = [
    workers:45, days:26, rate_per_day:6923, amount_npr:225000,
    timesheet_approved:true, attendance_verified:true,
    status:'pending_approval', discrepancy:false, discrepancy_amt:0,
-   ai_validation:'All timesheets match. 45 workers x 26 days x NPR 6,923 = NPR 225,007. Minor rounding difference of NPR 7 acceptable.',
    icon:'🔐', color:'#ef4444',
    impact_links:[{icon:'💰',module:'Finance AP',desc:'Pending CFO approval'},{icon:'📅',module:'Attendance',desc:'Timesheet cross-matched'},{icon:'⚖',module:'SLA',desc:'Within contract value'}],
   },
@@ -19,7 +18,6 @@ const MOCK_INVOICES = [
    workers:18, days:26, rate_per_day:3077, amount_npr:72000,
    timesheet_approved:true, attendance_verified:true,
    status:'approved', discrepancy:false, discrepancy_amt:0,
-   ai_validation:'Invoice validated. 18 workers x 26 days x NPR 3,077 = NPR 72,006. Accepted within tolerance.',
    icon:'🧹', color:'#10b981',
    impact_links:[{icon:'💰',module:'Finance AP',desc:'Approved - processing'},{icon:'📅',module:'Attendance',desc:'Verified 91% attendance'}],
   },
@@ -28,7 +26,6 @@ const MOCK_INVOICES = [
    workers:12, days:26, rate_per_day:8654, amount_npr:195000,
    timesheet_approved:false, attendance_verified:true,
    status:'disputed', discrepancy:true, discrepancy_amt:15000,
-   ai_validation:'DISCREPANCY DETECTED: Invoice NPR 195,000 but timesheet data shows NPR 180,000. 1 worker billed for extra 13 days not in attendance records. Reject partial payment.',
    icon:'💻', color:'#3b82f6',
    impact_links:[{icon:'⚠',module:'Billing Dispute',desc:'NPR 15K over-billing detected'},{icon:'📅',module:'Attendance',desc:'Timesheet mismatch found'}],
   },
@@ -37,7 +34,6 @@ const MOCK_INVOICES = [
    workers:45, days:25, rate_per_day:6923, amount_npr:216200,
    timesheet_approved:true, attendance_verified:true,
    status:'paid', discrepancy:false, discrepancy_amt:0,
-   ai_validation:'Invoice paid. All records matched.',
    icon:'🔐', color:'#ef4444',
    impact_links:[{icon:'💰',module:'Finance',desc:'Payment completed'},{icon:'📊',module:'Audit Trail',desc:'Records stored'}],
   },
@@ -48,7 +44,6 @@ const STATUS_CFG = {
   approved:         {bg:'#eff6ff',color:'#1d4ed8',border:'#bfdbfe',label:'Approved'},
   paid:             {bg:'#f0fdf4',color:'#15803d',border:'#bbf7d0',label:'Paid'},
   disputed:         {bg:'#fef2f2',color:'#dc2626',border:'#fecaca',label:'Disputed'},
-}
 
 const CONTEXT_ACTIONS = [
   {icon:'👁', label:'View Invoice',          key:'view'},
@@ -240,4 +235,3 @@ export default function OutsourceBillingPage() {
         ]}/>
     </div>
   )
-}

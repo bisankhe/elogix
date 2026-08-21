@@ -25,7 +25,6 @@ const STATUS_CFG = {
   error:   { color:'#dc2626', bg:'#fef2f2', label:'❌ Error'  },
   pending: { color:'#d97706', bg:'#fffbeb', label:'⏳ Pending' },
   timeout: { color:'#dc2626', bg:'#fef2f2', label:'⏰ Timeout' },
-}
 
 export default function BiometricAttendancePage() {
   const { currentPersona } = useApp()
@@ -51,7 +50,6 @@ export default function BiometricAttendancePage() {
   const notify = (m, type='ok') => {
     setMsg(m); setMsgType(type)
     setTimeout(() => setMsg(''), 4000)
-  }
   const sf = (k, v) => setForm(p => ({...p, [k]: v}))
 
   // ── Fetch devices from API ──────────────────────────────────
@@ -64,7 +62,6 @@ export default function BiometricAttendancePage() {
       if (res.ok) {
         const d = await res.json()
         setDevices(d.data?.devices || d.devices || [])
-      }
     } catch {
       // Dev fallback
       setDevices([
@@ -98,7 +95,6 @@ export default function BiometricAttendancePage() {
       if (res.ok) {
         const d = await res.json()
         setPunches(d.data?.punches || d.punches || [])
-      }
     } catch {
       setPunches([
         { id:'p1', employee_id:'ELX-HIMA-0001', punch_time:'2083-04-20 09:02',
@@ -111,7 +107,6 @@ export default function BiometricAttendancePage() {
           punch_type:'IN',  source:'gps',      device_id:'dev-3',
           latitude:27.7172, longitude:85.3240 },
       ])
-    }
   }, [punchDate])
 
   useEffect(() => { loadDevices() }, [loadDevices])
@@ -133,7 +128,6 @@ export default function BiometricAttendancePage() {
     } catch {
       notify(`❌ ${dev.device_name}: Cannot reach device`, 'err')
     } finally { setTesting(p => ({...p, [dev.id]: false})) }
-  }
 
   // ── Sync device ─────────────────────────────────────────────
   const syncDevice = async (dev) => {
@@ -151,13 +145,11 @@ export default function BiometricAttendancePage() {
            last_sync_at:new Date().toLocaleString()} : dv))
     } catch { notify(`⚠️ Sync failed for ${dev.device_name}`, 'err') }
     finally { setSyncing(p => ({...p, [dev.id]: false})) }
-  }
 
   // ── Add / Update device ─────────────────────────────────────
   const saveDevice = async () => {
     if (!form.device_name || !form.device_type) {
       notify('Device name and type are required', 'err'); return
-    }
     try {
       const url    = editDev ? `/api/v1/biometric/devices/${editDev.id}` : '/api/v1/biometric/devices'
       const method = editDev ? 'PATCH' : 'POST'
@@ -183,8 +175,6 @@ export default function BiometricAttendancePage() {
       setDevices(p => [...p, newDev])
       notify(`✅ ${form.device_name} added`)
       setShowAdd(false)
-    }
-  }
 
   const selType = DEVICE_TYPES.find(t => t.id === form.device_type)
 
@@ -537,4 +527,3 @@ export default function BiometricAttendancePage() {
       </div>
     </div>
   )
-}

@@ -1,7 +1,7 @@
 // FILE: VendorListingPage.jsx - Vendor Listing & Marketplace
 // App-store-style vendor directory, AI-search, tier-based marketplace
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Field, ExcelModal, PageHeader, AIImpact, Drawer, SearchBar, Badge, LuxCard, ContextMenu } from './DeptSetupShared.jsx'
 
 const G = 'linear-gradient(135deg,#0c4a6e 0%,#0284c7 60%,#38bdf8 100%)'
@@ -78,7 +78,6 @@ const TIER_CFG = {
   approved:{c:'#0369a1',bg:'#eff6ff',icon:'✓'},
   standard:{c:'#64748b',bg:'#f8fafc',icon:'.'},
   watch:{c:'#ef4444',bg:'#fef2f2',icon:'⚠'},
-}
 const CTX_ACTIONS = [
   {icon:'👁',label:'View Vendor Profile',key:'view'},
   {icon:'📝',label:'Request Proposal (RFP)',key:'rfp'},
@@ -87,10 +86,28 @@ const CTX_ACTIONS = [
   {icon:'⭐',label:'Rate This Vendor',key:'rate'},
   {icon:'🔗',label:'Impact Analysis',key:'impact'},
   {icon:'📤',label:'Export Profile',key:'export'},
-  {icon:'⚠',label:'Delist Vendor',key:'delist',danger:true},
+  {icon:'⚠',label:'Delist Vendor',key:'delist',danger
+
+:true},
 ]
 
+
+// ── Tenant context ────────────────────────────────────────────
+function useCompanyCtx() {
+  const auth   = (() => { try { return JSON.parse(localStorage.getItem('elogix_auth')||'{}') } catch { return {} } })()
+  const regCos = (() => { try { return JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}') } catch { return {} } })()
+  const slug   = auth.company?.slug || auth.user?.company || 'demo'
+  return {
+    company_id:   auth.company?.id || slug,
+    company_name: auth.company?.name || regCos[slug]?.name || 'Your Company',
+    company_slug: slug,
+    plan:         auth.company?.plan || 'trial',
+    currency:     auth.company?.currency || 'NPR',
+    token:        localStorage.getItem('elogix_token') || auth.token || '',
+
 export default function VendorListingPage() {
+  const ctx = useCompanyCtx()  // Tenant scope
+
   const [vendors, setVendors] = useState(VENDORS)
   const [search, setSearch] = useState('')
   const [filterCat, setFilterCat] = useState('all')
@@ -332,4 +349,3 @@ export default function VendorListingPage() {
       ]}/>
     </div>
   )
-}

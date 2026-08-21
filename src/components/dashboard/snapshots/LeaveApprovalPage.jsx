@@ -110,4 +110,3 @@ export default function LeaveApprovalPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

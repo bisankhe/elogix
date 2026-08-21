@@ -44,13 +44,11 @@ const STATUS_CFG = {
   pending_documents:    {c:'#f59e0b',bg:'#fffbeb',b:'#fde68a',icon:'⏳',label:'Pending Docs'},
   pending_vendor_check: {c:'#ef4444',bg:'#fef2f2',b:'#fecaca',icon:'⚠',label:'Vendor Check'},
   draft:                {c:'#94a3b8',bg:'#f8fafc',b:'#e2e8f0',icon:'📝',label:'Draft'},
-}
 
 const EMP_CLASS_LABELS = {
   regular:'Regular (Full-time, open-ended)', time_bound:'Time-Bound (Fixed duration)',
   work_based:'Work-Based (Project/deliverable)', casual:'Casual (≤7 days/month)',
   part_time:'Part-Time (≤35 hrs/week)', vendor_supplied:'Vendor-Supplied (Outsourced)',
-}
 
 const CTX = [
   {icon:'👁',label:'View Enrollment',       key:'view'},
@@ -80,18 +78,15 @@ function EnrollmentForm({ onClose, onSave }) {
     s('vendor_search')(q)
     if (q.length < 2) { setVendorResults([]); return }
     setVendorResults(VENDOR_DIRECTORY.filter(v=>v.name.toLowerCase().includes(q.toLowerCase())))
-  }
 
   const pickVendor = (v) => {
     setSelectedVendor(v)
     setForm(p=>({...p, vendor_id:v.id, vendor_search:v.name, vendor_contact:v.contact}))
     setVendorResults([])
-  }
 
   const checkCoreWork = (svc) => {
     s('service_category')(svc)
     setCoreWorkWarning(!NON_CORE_SERVICES.includes(svc) && svc !== '')
-  }
 
   return (
     <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.65)',zIndex:5000,display:'flex',alignItems:'center',justifyContent:'center',padding:16}} onClick={onClose}>
@@ -268,7 +263,6 @@ function EnrollmentForm({ onClose, onSave }) {
       )}
     </div>
   )
-}
 
 export default function EmployeeEnrollmentPage() {
   const [enrollments, setEnrollments] = useState(ENROLLMENTS)
@@ -413,4 +407,3 @@ export default function EmployeeEnrollmentPage() {
       }/>
     </div>
   )
-}

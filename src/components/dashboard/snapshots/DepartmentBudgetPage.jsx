@@ -77,4 +77,3 @@ export default function DepartmentBudgetPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

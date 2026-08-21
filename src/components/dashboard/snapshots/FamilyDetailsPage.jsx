@@ -105,4 +105,3 @@ export default function FamilyDetailsPage() {
       {showExcel&&<ExcelModal title="Family Details" columns={['Name','Relationship','Date of Birth','Occupation','Dependent','Benefits Enrolled']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

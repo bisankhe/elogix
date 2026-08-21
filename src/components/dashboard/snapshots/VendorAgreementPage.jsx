@@ -1,7 +1,7 @@
 // FILE: VendorAgreementPage.jsx - Vendor Agreement Management
 // CLM with smart-contract alerts, e-signature, version control
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Field, ExcelModal, PageHeader, AIImpact, Drawer, SearchBar, Badge, LuxCard, ContextMenu } from './DeptSetupShared.jsx'
 
 const G = 'linear-gradient(135deg,#7c2d12 0%,#c2410c 60%,#f97316 100%)'
@@ -64,7 +64,6 @@ const STATUS_CFG = {
   expired:       {c:'#ef4444',bg:'#fef2f2',b:'#fecaca',label:'Expired',icon:'❌'},
   draft:         {c:'#64748b',bg:'#f8fafc',b:'#e2e8f0',label:'Draft',icon:'📝'},
   terminated:    {c:'#dc2626',bg:'#fef2f2',b:'#fca5a5',label:'Terminated',icon:'🚫'},
-}
 const CTX_ACTIONS = [
   {icon:'👁',label:'View Agreement',key:'view'},
   {icon:'✏',label:'Create Amendment',key:'amend'},
@@ -74,10 +73,28 @@ const CTX_ACTIONS = [
   {icon:'📊',label:'SLA Performance',key:'sla'},
   {icon:'🔗',label:'Impact Analysis',key:'impact'},
   {icon:'📤',label:'Export',key:'export'},
-  {icon:'🚫',label:'Terminate Agreement',key:'terminate',danger:true},
+  {icon:'🚫',label:'Terminate Agreement',key:'terminate',danger
+
+:true},
 ]
 
+
+// ── Tenant context ────────────────────────────────────────────
+function useCompanyCtx() {
+  const auth   = (() => { try { return JSON.parse(localStorage.getItem('elogix_auth')||'{}') } catch { return {} } })()
+  const regCos = (() => { try { return JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}') } catch { return {} } })()
+  const slug   = auth.company?.slug || auth.user?.company || 'demo'
+  return {
+    company_id:   auth.company?.id || slug,
+    company_name: auth.company?.name || regCos[slug]?.name || 'Your Company',
+    company_slug: slug,
+    plan:         auth.company?.plan || 'trial',
+    currency:     auth.company?.currency || 'NPR',
+    token:        localStorage.getItem('elogix_token') || auth.token || '',
+
 export default function VendorAgreementPage() {
+  const ctx = useCompanyCtx()  // Tenant scope
+
   const [agreements, setAgreements] = useState(AGREEMENTS)
   const [selected, setSelected] = useState(null)
   const [search, setSearch] = useState('')
@@ -283,4 +300,3 @@ export default function VendorAgreementPage() {
       ]}/>
     </div>
   )
-}

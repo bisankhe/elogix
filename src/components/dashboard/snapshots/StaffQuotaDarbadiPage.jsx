@@ -12,7 +12,6 @@ const STATUS_CFG = {
   vacant:   { c:'#ef4444', bg:'#fef2f2', b:'#fecaca', label:'Vacant'   },
   onhold:   { c:'#f59e0b', bg:'#fffbeb', b:'#fde68a', label:'On Hold'  },
   planned:  { c:'#8b5cf6', bg:'#f5f3ff', b:'#c4b5fd', label:'Planned'  },
-}
 
 const CTX = [
   {icon:'👁',label:'View Position Details',     key:'view'},
@@ -229,4 +228,3 @@ export default function StaffQuotaDarbadiPage() {
       ]}/>
     </div>
   )
-}

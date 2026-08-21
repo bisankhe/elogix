@@ -39,7 +39,6 @@ export default function MinutesOfMeetingPage() {
   const addToList = (field, val, clearField) => {
     if (!val.trim()) return
     setForm(p=>({...p,[field]:[...p[field],val.trim()],[clearField]:''}))
-  }
 
   const submitMOM = () => {
     if (!form.title||!form.date||!form.chair) { notify('⚠️ Title, Date and Chair are required'); return }
@@ -47,23 +46,19 @@ export default function MinutesOfMeetingPage() {
       id:'MOM'+String(meetings.length+1).padStart(3,'0'),
       ...form, status:'Draft',
       actions: form.actions.length > 0 ? form.actions : []
-    }
     setMeetings(prev=>[newMOM,...prev])
     setShowForm(false)
     setForm(BLANK)
     notify('✅ MoM saved!')
-  }
 
   const toggleRecording = () => {
     setRecording(r=>!r)
     if (!recording) notify('🎙 Recording started... (voice transcription active)')
     else notify('⏹ Recording stopped. Transcript added to notes.')
-  }
 
   const finalize = (id) => {
     setMeetings(prev=>prev.map(m=>m.id!==id?m:{...m,status:'Finalized'}))
     notify('✅ MoM finalized and shared with attendees')
-  }
 
   const filtered = meetings.filter(m => !search || m.title.toLowerCase().includes(search.toLowerCase()))
 
@@ -262,4 +257,3 @@ export default function MinutesOfMeetingPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

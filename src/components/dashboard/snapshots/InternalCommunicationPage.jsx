@@ -89,4 +89,3 @@ export default function InternalCommunicationPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

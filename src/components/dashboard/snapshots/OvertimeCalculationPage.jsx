@@ -91,4 +91,3 @@ export default function OvertimeCalculationPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

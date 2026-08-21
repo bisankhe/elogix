@@ -12,15 +12,12 @@ const A = '#7c3aed'
 const EMPLOYEE_WORKLOAD = [
   { id:'w1', employee:'Bikash Rai', dept:'IT', planned_hrs:48, actual_hrs:58, utilization_pct:121,
     overtime_hrs:10, vacation_hrs_used:0, sick_hrs_used:0, burnout_risk:'high',
-    burnout_note:'Logged 10hrs OT this week alongside zero time off in 8 weeks - classic overload signature.',
     tasks_assigned:14, tasks_completed:9, impact_links:['Overtime Calculation','Wellbeing Program'] },
   { id:'w2', employee:'Maya Pradhan', dept:'Finance', planned_hrs:48, actual_hrs:46, utilization_pct:96,
     overtime_hrs:0, vacation_hrs_used:8, sick_hrs_used:0, burnout_risk:'low',
-    burnout_note:'Healthy utilization within planned capacity.',
     tasks_assigned:9, tasks_completed:9, impact_links:[] },
   { id:'w3', employee:'Ramesh KC', dept:'Sales', planned_hrs:48, actual_hrs:28, utilization_pct:58,
     overtime_hrs:0, vacation_hrs_used:0, sick_hrs_used:16, burnout_risk:'low',
-    burnout_note:'Below planned capacity - likely due to sick leave; review for task reassignment if pattern continues.',
     tasks_assigned:6, tasks_completed:3, impact_links:['Leave Balance'] },
 ]
 
@@ -110,4 +107,3 @@ export default function WorkloadAnalysisEmployeewisePage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

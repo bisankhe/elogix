@@ -39,7 +39,6 @@ const STATUS_CFG = {
   in_progress: {c:'#3b82f6',bg:'#eff6ff',icon:'🔄',label:'In Progress'},
   not_started: {c:'#ef4444',bg:'#fef2f2',icon:'⏰',label:'Not Started'},
   failed:      {c:'#f59e0b',bg:'#fffbeb',icon:'❌',label:'Failed'},
-}
 
 const SAMPLE_QS = [
   {no:1,type:'MCQ',q:'Which React hook is used to avoid re-running heavy computations on every render?',options:['useEffect','useMemo','useCallback','useRef'],answer:'useMemo',marks:10},
@@ -81,7 +80,6 @@ export default function ATSWrittenTestPage() {
         notified_via:Object.entries(form.channels).filter(([,v])=>v).map(([k])=>k.charAt(0).toUpperCase()+k.slice(1)),
         questions:SAMPLE_QS.length, correct:null, pass_mark:70, sections:[],
         ai_note:'AI-generated test based on JD. Notification sent via '+Object.entries(form.channels).filter(([,v])=>v).map(([k])=>k).join(', ')+'.'
-      }
       setTests(prev=>[newTest,...prev])
       setGenerating(false)
       setShowCreate(false)
@@ -89,7 +87,6 @@ export default function ATSWrittenTestPage() {
       notify(`✅ Written test AT-${newTest.test_no.split('-')[2]} created & sent to ${form.candidate} via ${channels}`)
       setForm({candidate:'',position:'',dept:'IT',deadline:'',channels:{email:true,whatsapp:true,viber:false}})
     },2000)
-  }
 
   const passedCount = tests.filter(t=>t.status==='passed'||t.score>=t.pass_mark).length
   const avgScore    = Math.round(tests.filter(t=>t.score).reduce((s,t)=>s+t.score,0)/tests.filter(t=>t.score).length)
@@ -288,4 +285,3 @@ export default function ATSWrittenTestPage() {
       )}
     </div>
   )
-}

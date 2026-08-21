@@ -20,7 +20,6 @@ const TYPE_CFG = {
   salary_change:{c:'#f59e0b',icon:'💰',label:'Salary Change'},
   manager_change:{c:'#ec4899',icon:'👔',label:'Manager Change'},
   confirmation:{c:'#06b6d4',icon:'✅',label:'Confirmed Permanent'},
-}
 
 export default function EmploymentHistoryPage() {
   const [history] = useState(HISTORY)
@@ -114,4 +113,3 @@ export default function EmploymentHistoryPage() {
       {showExcel&&<ExcelModal title="Employment History" columns={['Date','Event Type','Title','Department','Manager','Salary NPR','Note']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

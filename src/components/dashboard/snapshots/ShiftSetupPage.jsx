@@ -1,7 +1,7 @@
 // FILE: ShiftSetupPage.jsx - Shift Setup (Luxury HRIS)
 // Drag-and-drop shift planner, templates, conflict detection, Nepal Labour Act 2074
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Field, ExcelModal, PageHeader, AIImpact, Drawer, SearchBar, Badge, LuxCard, ContextMenu } from './DeptSetupShared.jsx'
 
 const G = 'linear-gradient(135deg,#0369a1 0%,#0ea5e9 60%,#06b6d4 100%)'
@@ -12,38 +12,31 @@ const SHIFT_TYPES = [
    type:'day',color:'#3b82f6',icon:'☀',
    dept_count:12,emp_count:324,ot_threshold:8,grace_min:15,
    allowance_npr:0,night_premium_pct:0,weekend_ot_multiplier:1.5,
-   description:'Standard office hours. Most departments.',
    impact_links:[{m:'Leave Management'},{m:'Payroll'},{m:'Attendance'},{m:'OT Calculation'}]},
   {id:'s2',code:'MORN',name:'Morning Shift',nepali:'बिहान सिफ्ट',start:'06:00',end:'14:00',hours:8,break_min:30,
    type:'morning',color:'#f59e0b',icon:'🌅',
    dept_count:4,emp_count:87,ot_threshold:8,grace_min:10,
    allowance_npr:500,night_premium_pct:0,weekend_ot_multiplier:1.5,
-   description:'Early shift for operations & security.',
    impact_links:[{m:'Payroll'},{m:'Allowances'},{m:'Attendance'}]},
   {id:'s3',code:'EVE',name:'Evening Shift',nepali:'साँझ सिफ्ट',start:'14:00',end:'22:00',hours:8,break_min:30,
    type:'evening',color:'#8b5cf6',icon:'🌆',
    dept_count:3,emp_count:45,ot_threshold:8,grace_min:10,
    allowance_npr:800,night_premium_pct:0,weekend_ot_multiplier:1.5,
-   description:'Evening operations and customer support.',
    impact_links:[{m:'Payroll'},{m:'Evening Allowance'},{m:'Attendance'}]},
   {id:'s4',code:'NIGHT',name:'Night Shift',nepali:'रात सिफ्ट',start:'22:00',end:'06:00',hours:8,break_min:30,
    type:'night',color:'#1e40af',icon:'🌙',
    dept_count:2,emp_count:34,ot_threshold:8,grace_min:15,
    allowance_npr:1500,night_premium_pct:25,weekend_ot_multiplier:2.0,
-   description:'Night shift for security and data center.',
-   la_note:'Labour Act 2074 Section 32: Night shift premium mandatory.',
    impact_links:[{m:'Night Allowance'},{m:'Payroll'},{m:'Labour Act 2074'},{m:'Attendance'}]},
   {id:'s5',code:'ROT',name:'Rotational Shift',nepali:'घुमाउने सिफ्ट',start:'Variable',end:'Variable',hours:8,break_min:30,
    type:'rotational',color:'#10b981',icon:'🔄',
    dept_count:2,emp_count:28,ot_threshold:8,grace_min:15,
    allowance_npr:1000,night_premium_pct:15,weekend_ot_multiplier:1.5,
-   description:'Weekly rotation: Morning -> Evening -> Night.',
    impact_links:[{m:'Roster Planning'},{m:'Payroll'},{m:'Attendance'}]},
   {id:'s6',code:'FLEX',name:'Flexible Shift',nepali:'लचिलो सिफ्ट',start:'Core: 10:00',end:'Core: 16:00',hours:8,break_min:60,
    type:'flexible',color:'#06b6d4',icon:'⏰',
    dept_count:5,emp_count:112,ot_threshold:8,grace_min:0,
    allowance_npr:0,night_premium_pct:0,weekend_ot_multiplier:1.5,
-   description:'Core hours 10:00-16:00. Start/end flexible.',
    impact_links:[{m:'Attendance'},{m:'Payroll'},{m:'Remote Work Policy'}]},
 ]
 
@@ -96,11 +89,28 @@ function AddShiftModal({onClose,onSave}) {
           </div>
         </div>
       </div>
-    </div>
+    </d
+
+iv>
   )
-}
+
+
+// ── Tenant context ────────────────────────────────────────────
+function useCompanyCtx() {
+  const auth   = (() => { try { return JSON.parse(localStorage.getItem('elogix_auth')||'{}') } catch { return {} } })()
+  const regCos = (() => { try { return JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}') } catch { return {} } })()
+  const slug   = auth.company?.slug || auth.user?.company || 'demo'
+  return {
+    company_id:   auth.company?.id || slug,
+    company_name: auth.company?.name || regCos[slug]?.name || 'Your Company',
+    company_slug: slug,
+    plan:         auth.company?.plan || 'trial',
+    currency:     auth.company?.currency || 'NPR',
+    token:        localStorage.getItem('elogix_token') || auth.token || '',
 
 export default function ShiftSetupPage() {
+  const ctx = useCompanyCtx()  // Tenant scope
+
   const [shifts, setShifts] = useState(SHIFT_TYPES)
   const [view, setView] = useState('cards')
   const [selected, setSelected] = useState(null)
@@ -267,4 +277,3 @@ export default function ShiftSetupPage() {
       ]}/>
     </div>
   )
-}

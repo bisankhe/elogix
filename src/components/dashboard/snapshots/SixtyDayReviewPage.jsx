@@ -39,7 +39,6 @@ function KPIBar({label,score}) {
       </div>
     </div>
   )
-}
 
 export default function SixtyDayReviewPage() {
   const [reviews, setReviews] = useState(REVIEWS)
@@ -151,4 +150,3 @@ export default function SixtyDayReviewPage() {
       {showExcel&&<ExcelModal title="60 Days Review" columns={['Employee','Position','Department','Review Date','Avg KPI Score','Attendance %','PIP Triggered','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

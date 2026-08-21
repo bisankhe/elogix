@@ -82,4 +82,3 @@ export default function LateReportingPage() {
       {showExcel&&<ExcelModal title="Late Reporting" columns={['Employee','Emp ID','Dept','Shift Start','Login Time','Late Minutes','Violations This Month','Half Day Deducted']} onClose={()=>setShowExcel(false)} onImport={()=>{}}/>}
     </div>
   )
-}

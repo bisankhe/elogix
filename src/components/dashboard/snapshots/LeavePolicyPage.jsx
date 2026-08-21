@@ -149,4 +149,3 @@ export default function LeavePolicyPage() {
       {showExcel&&<ExcelModal title="Leave Policies" columns={['Policy Name','Applies To','Min Notice Days','Max Consecutive Days','Doc Required After','Blackout Dates','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

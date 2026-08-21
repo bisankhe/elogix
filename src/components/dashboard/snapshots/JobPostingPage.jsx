@@ -49,7 +49,6 @@ const STATUS_CFG = {
   draft:  {c:'#f59e0b',bg:'#fffbeb',b:'#fde68a',icon:'✏',label:'Draft'},
   closed: {c:'#64748b',bg:'#f8fafc',b:'#e2e8f0',icon:'🔒',label:'Closed'},
   paused: {c:'#ef4444',bg:'#fef2f2',b:'#fecaca',icon:'⏸',label:'Paused'},
-}
 const CTX = [
   {icon:'👁',label:'Preview Posting',        key:'preview'},
   {icon:'📢',label:'Distribute to All Boards',key:'distribute'},
@@ -91,7 +90,6 @@ export default function JobPostingPage() {
       setAiJD(`**Senior Software Developer - eLogix HRMS**\n\nWe are seeking a talented Senior Software Developer to join our growing IT team at Kathmandu HQ.\n\n**Responsibilities:**\n- Design and develop scalable backend systems using Python/Flask and React\n- Lead code reviews and mentor junior developers\n- Collaborate with HR stakeholders to deliver digital solutions\n\n**Requirements:**\n- 5+ years software development experience\n- Strong proficiency in React, Python, PostgreSQL\n- Bachelor's degree in Computer Science or related field\n\n**Salary:** NPR 80,000 - 130,000 per month\n\n*eLogix HRMS is an equal opportunity employer. We do not discriminate on the basis of religion, sex, caste, race, or ethnicity.*`)
       setGenerating(false)
     },1500)
-  }
 
   return (
     <div onClick={()=>setCtx(null)}>
@@ -272,4 +270,3 @@ export default function JobPostingPage() {
       ]}/>
     </div>
   )
-}

@@ -14,16 +14,12 @@ const CAPTURES = [
     facial_status:'verified', fingerprint_status:'verified', liveness_check:'passed',
     consent_given:true, consent_date:'2025-06-12', capture_date:'2025-06-13',
     id_match_score:97.8, device:'Mobile App (Android)', synced_to_attendance:true,
-    status:'completed',
-    ai_note:'High-confidence match (97.8%). Liveness check passed — blink + smile detected. No spoofing flags.',
     impact_links:['Joining Checklist','Attendance Setup','Employee Profile'] },
   { id:'bc2', employee_id:'EMP-2081-0141', name:'Sunita Rai', position:'Senior Software Developer',
     nationality:'Nepali', capture_type:'facial',
     facial_status:'pending', fingerprint_status:'not_required', liveness_check:'pending',
     consent_given:true, consent_date:'2025-06-16', capture_date:null,
     id_match_score:null, device:null, synced_to_attendance:false,
-    status:'pending_capture',
-    ai_note:'Consent recorded. Awaiting biometric capture session — webcam-based facial scan scheduled for joining day.',
     impact_links:['Joining Checklist'] },
   { id:'bc3', employee_id:'EMP-2081-0098', name:'John Mark Williams', position:'Technical Consultant (Foreign National)',
     nationality:'British', capture_type:'facial+fingerprint+document',
@@ -31,15 +27,12 @@ const CAPTURES = [
     consent_given:true, consent_date:'2025-05-20', capture_date:'2025-05-22',
     id_match_score:99.1, device:'Office Kiosk', synced_to_attendance:true,
     status:'completed', work_permit_biometric:true, dofe_registered:true,
-    ai_note:'Foreign national — DoFE/Immigration biometric profiling completed per mandatory requirement. Work permit linked.',
     impact_links:['Joining Checklist','Work Permit Compliance','Attendance Setup'] },
   { id:'bc4', employee_id:'EMP-2081-0143', name:'Hari Adhikari', position:'HR Business Partner',
     nationality:'Nepali', capture_type:'facial',
     facial_status:'failed', fingerprint_status:'not_required', liveness_check:'failed',
     consent_given:true, consent_date:'2025-06-14', capture_date:'2025-06-15',
     id_match_score:42.3, device:'Mobile App (iOS)', synced_to_attendance:false,
-    status:'retry_required',
-    ai_note:'LOW CONFIDENCE (42.3%) — possible poor lighting or angle. Liveness check failed. Retry capture required.',
     impact_links:['Joining Checklist'] },
 ]
 
@@ -48,7 +41,6 @@ const STATUS_CFG = {
   pending_capture:  {c:'#f59e0b', bg:'#fffbeb', b:'#fde68a', icon:'📷', label:'Pending Capture'},
   retry_required:   {c:'#ef4444', bg:'#fef2f2', b:'#fecaca', icon:'🔄', label:'Retry Required'},
   consent_declined: {c:'#94a3b8', bg:'#f8fafc', b:'#e2e8f0', icon:'🚫', label:'Consent Declined'},
-}
 
 const CHECK_CFG = {verified:'#10b981', passed:'#10b981', pending:'#f59e0b', failed:'#ef4444', not_required:'#94a3b8'}
 
@@ -92,7 +84,6 @@ export default function BiometricCapturePage() {
         return p+10
       })
     }, 200)
-  }
 
   return (
     <div onClick={()=>setCtx(null)}>
@@ -238,4 +229,3 @@ export default function BiometricCapturePage() {
       ]}/>
     </div>
   )
-}

@@ -18,7 +18,6 @@ const NINE_BOX = [
 const BOX_LABELS = {
   rows:['High Potential','Medium Potential','Developing Potential'],
   cols:['Needs Improvement','Meets Expectations','Exceeds Expectations'],
-}
 
 const HIPO_PIPELINE = [
   { id:'h1', employee:'Anjali Sharma', current_role:'Sales Executive', readiness_score:82, target_role:'Sales Manager',
@@ -104,4 +103,3 @@ export default function LeadershipDevelopmentPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

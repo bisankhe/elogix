@@ -133,4 +133,3 @@ export default function CompensationAnalyticsPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

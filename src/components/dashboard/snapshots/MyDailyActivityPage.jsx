@@ -24,4 +24,3 @@ export default function MyDailyActivityPage(){
       </div>
     </div>
   )
-}

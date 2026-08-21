@@ -73,4 +73,3 @@ export default function TeamAttendancePage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

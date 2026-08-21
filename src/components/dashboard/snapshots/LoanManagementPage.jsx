@@ -21,7 +21,6 @@ const LOANS = [
   { id:'l3', employee:'Sunil Magar', loan_type:'Housing Advance', principal_npr:200000, interest_pct:6,
     tenure_months:24, emi_npr:8870, paid_installments:2, remaining_balance_npr:182260,
     basic_salary_npr:48000, max_eligible_npr:144000, status:'exceeds_cap',
-    flag_note:'Principal (NPR 200,000) exceeds the 3-month-basic eligibility cap (NPR 144,000) - requires HR exception approval.',
     impact_links:['Compliance Setup'] },
 ]
 
@@ -131,4 +130,3 @@ export default function LoanManagementPage() {
       {showExcel&&<ExcelModal title="Loan Management" columns={['Employee','Loan Type','Principal','Interest %','Tenure','EMI','Remaining Balance','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

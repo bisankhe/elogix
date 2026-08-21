@@ -76,4 +76,3 @@ export default function QRBarcodeTrackingPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

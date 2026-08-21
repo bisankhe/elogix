@@ -104,7 +104,6 @@ function AddVendorModal({onClose,onSave}) {
       </div>
     </div>
   )
-}
 
 export default function VendorOutsourceMappingPage() {
   const { navTo } = useApp()
@@ -338,7 +337,6 @@ export default function VendorOutsourceMappingPage() {
                     </div>
                   </div>
                 ))
-              }
               <button style={{width:'100%',padding:12,borderRadius:10,border:'none',background:G,color:'#fff',fontSize:12,fontWeight:700,cursor:'pointer',marginTop:8}}>
                 + Add Worker to Roster
               </button>
@@ -360,4 +358,3 @@ export default function VendorOutsourceMappingPage() {
       ]}/>
     </div>
   )
-}

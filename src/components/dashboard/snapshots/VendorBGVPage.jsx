@@ -22,7 +22,6 @@ const BGV_RECORDS = [
     },
     overall_risk:'low', ai_score:94, blockchain_hash:'0x8f3a...e21c',
     next_renewal:'2026-01-10', expiry_alert:false,
-    notes:'All checks cleared. Recommended for Preferred tier.',
     impact_links:['Vendor Profile','Agreement','SLA','Billing'] },
   { id:'b2', vendor_code:'REC-003', vendor_name:'Executive Hunt Nepal', vendor_type:'Executive Search',
     initiated_date:'2025-03-05', completed_date:'2025-03-14', status:'cleared_with_flags',
@@ -38,7 +37,6 @@ const BGV_RECORDS = [
     },
     overall_risk:'medium', ai_score:78, blockchain_hash:'0x3d1b...f90a',
     next_renewal:'2026-03-05', expiry_alert:false,
-    notes:'Financial flag noted but resolved. Monitor for next renewal.',
     impact_links:['Vendor Profile','Compliance Alert'] },
   { id:'b3', vendor_code:'REC-004', vendor_name:'QuickHire Outsource Pvt.', vendor_type:'Outsource Staffing',
     initiated_date:'2025-04-01', completed_date:null, status:'in_progress',
@@ -54,7 +52,6 @@ const BGV_RECORDS = [
     },
     overall_risk:'high', ai_score:42, blockchain_hash:null,
     next_renewal:'2026-04-01', expiry_alert:false,
-    notes:'Tax dues outstanding. Criminal check pending. Do NOT engage until cleared.',
     impact_links:['Compliance Alert','Labour Act 2074','Vendor Profile'] },
 ]
 
@@ -64,19 +61,16 @@ const STATUS_CFG = {
   in_progress:         {c:'#3b82f6',bg:'#eff6ff',b:'#bfdbfe',label:'In Progress',icon:'🔄'},
   failed:              {c:'#ef4444',bg:'#fef2f2',b:'#fecaca',label:'Failed',icon:'❌'},
   expired:             {c:'#94a3b8',bg:'#f8fafc',b:'#e2e8f0',label:'Expired',icon:'⏰'},
-}
 const CHECK_STATUS_CFG = {
   passed:      {c:'#10b981',icon:'✓'},
   flagged:     {c:'#f59e0b',icon:'!'},
   failed:      {c:'#ef4444',icon:'✗'},
   in_progress: {c:'#3b82f6',icon:'...'},
   pending:     {c:'#94a3b8',icon:'-'},
-}
 const CHECK_LABELS = {
   identity:'Identity','criminal':'Criminal','financial':'Financial',
   litigation:'Litigation','license':'DOL License','director_bg':'Director BG',
   tax:'Tax Status','reference':'References',
-}
 
 const CTX_ACTIONS = [
   {icon:'👁',label:'View Full BGV Report',   key:'view'},
@@ -248,4 +242,3 @@ export default function VendorBGVPage() {
       {showExcel && <ExcelModal title="Vendor BGV Records" columns={['Vendor Code','Vendor Name','Initiated Date','Status','Identity','Criminal','Financial','Litigation','License','Tax','AI Score']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

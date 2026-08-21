@@ -49,7 +49,6 @@ const TRIGGER_CFG = {
   ready:     {c:'#3b82f6',bg:'#eff6ff',label:'Ready to Provision'},
   blocked:   {c:'#ef4444',bg:'#fef2f2',label:'Blocked — NDA/Contract Pending'},
   completed: {c:'#10b981',bg:'#f0fdf4',label:'All Accounts Active'},
-}
 const EST_COLOR = {Complete:'#10b981','In Progress':'#f59e0b',Pending:'#94a3b8'}
 
 const BLANK = {name:'',phone:'',email:'',dept:'',position:'',type:'New Hire',joined:'',employment_type:'Permanent'}
@@ -81,7 +80,6 @@ export default function AccountCreationPage() {
               trigger_status: pct===100?'completed':'ready'}
     }))
     notify('Account provisioned!')
-  }
 
   // ── Enrollment helpers ───────────────────────────────────────
   const filteredEnroll = enrolled.filter(e => !search || e.name.toLowerCase().includes(search.toLowerCase()))
@@ -95,7 +93,6 @@ export default function AccountCreationPage() {
     setShowForm(false)
     setForm(BLANK)
     notify(`✅ ${form.name} enrolled! IT provisioning triggered.`)
-  }
 
   return (
     <div onClick={()=>setCtx(null)} style={{fontFamily:'system-ui,sans-serif'}}>
@@ -303,4 +300,3 @@ export default function AccountCreationPage() {
         }}/>}
     </div>
   )
-}

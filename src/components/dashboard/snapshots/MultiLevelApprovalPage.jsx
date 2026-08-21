@@ -78,4 +78,3 @@ export default function MultiLevelApprovalPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

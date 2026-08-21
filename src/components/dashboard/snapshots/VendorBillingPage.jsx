@@ -2,7 +2,7 @@
 // Vendor Billing - Auto rate enforcement, TDS compliance, Nepal IRD
 // 3-way match: Contract > Attendance > Bill
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Field, ExcelModal, PageHeader, AIImpact, Drawer, SearchBar, Badge, LuxCard, ContextMenu } from './DeptSetupShared.jsx'
 
 const G = 'linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#1e40af 100%)'
@@ -54,7 +54,6 @@ const STATUS_CFG = {
   disputed:        {c:'#ef4444',bg:'#fef2f2',b:'#fecaca',icon:'⚠',label:'Disputed'},
   paid:            {c:'#10b981',bg:'#f0fdf4',b:'#bbf7d0',icon:'💰',label:'Paid'},
   rejected:        {c:'#dc2626',bg:'#fef2f2',b:'#fca5a5',icon:'❌',label:'Rejected'},
-}
 
 const CTX = [
   {icon:'👁',label:'View Bill Details',      key:'view'},
@@ -64,10 +63,28 @@ const CTX = [
   {icon:'📋',label:'View SLA Contract',       key:'contract'},
   {icon:'📊',label:'3-Way Match Report',      key:'match'},
   {icon:'🔗',label:'Impact Analysis',         key:'impact'},
-  {icon:'📤',label:'Export to Excel',         key:'export'},
+  {icon:'📤',label:'Export to Excel',         key:'export'}
+
+port'},
 ]
 
+
+// ── Tenant context ────────────────────────────────────────────
+function useCompanyCtx() {
+  const auth   = (() => { try { return JSON.parse(localStorage.getItem('elogix_auth')||'{}') } catch { return {} } })()
+  const regCos = (() => { try { return JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}') } catch { return {} } })()
+  const slug   = auth.company?.slug || auth.user?.company || 'demo'
+  return {
+    company_id:   auth.company?.id || slug,
+    company_name: auth.company?.name || regCos[slug]?.name || 'Your Company',
+    company_slug: slug,
+    plan:         auth.company?.plan || 'trial',
+    currency:     auth.company?.currency || 'NPR',
+    token:        localStorage.getItem('elogix_token') || auth.token || '',
+
 export default function VendorBillingPage() {
+  const ctx = useCompanyCtx()  // Tenant scope
+
   const [bills, setBills] = useState(BILLS)
   const [msg, setMsg] = useState('')
   const notify = m => { setMsg(m); setTimeout(()=>setMsg(''),3000) }
@@ -247,4 +264,3 @@ export default function VendorBillingPage() {
       ]}/>
     </div>
   )
-}

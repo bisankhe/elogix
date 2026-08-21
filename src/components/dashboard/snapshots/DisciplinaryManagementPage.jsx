@@ -14,7 +14,6 @@ const A = '#4338ca'
 const STATUS_CFG = {
   notice_issued:{c:'#f59e0b',label:'Notice Issued -- Awaiting Defense'},investigating:{c:'#7c3aed',label:'Investigating'},
   action_decided:{c:'#0284c7',label:'Action Decided'},closed:{c:'#10b981',label:'Closed'},
-}
 
 const CASES = [
   { id:'d1', employee:'Hari Thapa', misconduct:'Repeated unauthorized absence', policy_violated:'Attendance Policy 4.2', status:'notice_issued',
@@ -111,4 +110,3 @@ export default function DisciplinaryManagementPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

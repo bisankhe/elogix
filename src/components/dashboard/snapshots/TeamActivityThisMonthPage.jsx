@@ -73,4 +73,3 @@ export default function TeamActivityThisMonthPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

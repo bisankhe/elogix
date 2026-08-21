@@ -66,4 +66,3 @@ export default function OrganogramDepartmentPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

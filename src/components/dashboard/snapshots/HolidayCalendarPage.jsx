@@ -1,7 +1,7 @@
 // FILE: HolidayCalendarPage.jsx - Holiday Calendar (Luxury HRIS)
 // Global Holiday Matrix: Nepal + regional + floating holidays
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Field, ExcelModal, PageHeader, AIImpact, SearchBar, LuxCard, ContextMenu } from './DeptSetupShared.jsx'
 
 const G = 'linear-gradient(135deg,#065f46 0%,#10b981 60%,#34d399 100%)'
@@ -49,10 +49,28 @@ const CTX_ACTIONS = [
   {icon:'💰',label:'Payroll Impact',key:'payroll'},
   {icon:'🔗',label:'Impact Analysis',key:'impact'},
   {icon:'📤',label:'Export',key:'export'},
-  {icon:'🗑',label:'Remove Holiday',key:'remove',danger:true},
+  {icon:'🗑',label:'Remove Holiday',key:'remove',danger
+
+:true},
 ]
 
+
+// ── Tenant context ────────────────────────────────────────────
+function useCompanyCtx() {
+  const auth   = (() => { try { return JSON.parse(localStorage.getItem('elogix_auth')||'{}') } catch { return {} } })()
+  const regCos = (() => { try { return JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}') } catch { return {} } })()
+  const slug   = auth.company?.slug || auth.user?.company || 'demo'
+  return {
+    company_id:   auth.company?.id || slug,
+    company_name: auth.company?.name || regCos[slug]?.name || 'Your Company',
+    company_slug: slug,
+    plan:         auth.company?.plan || 'trial',
+    currency:     auth.company?.currency || 'NPR',
+    token:        localStorage.getItem('elogix_token') || auth.token || '',
+
 export default function HolidayCalendarPage() {
+  const ctx = useCompanyCtx()  // Tenant scope
+
   const [holidays, setHolidays] = useState(HOLIDAYS_2081)
   const [view, setView] = useState('matrix')
   const [filterType, setFilterType] = useState('all')
@@ -172,7 +190,6 @@ export default function HolidayCalendarPage() {
                         </div>
                       </div>
                     ))
-                  }
                 </div>
               </div>
             )
@@ -269,4 +286,3 @@ export default function HolidayCalendarPage() {
       {showExcel && <ExcelModal title="Holiday Calendar" columns={['Name','Nepali Name','Date BS','Date AD','Type','Category','Region','Paid (Y/N)','Optional (Y/N)']} onClose={()=>setShowExcel(false)} onImport={f=>alert('Importing: '+f.name)}/>}
     </div>
   )
-}

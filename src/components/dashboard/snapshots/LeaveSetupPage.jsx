@@ -148,4 +148,3 @@ export default function LeaveSetupPage() {
       {showExcel&&<ExcelModal title="Leave Setup - Approval Hierarchies" columns={['Hierarchy Name','Applies To','Levels','Escalation Days','Active']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

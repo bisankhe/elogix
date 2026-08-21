@@ -85,4 +85,3 @@ export default function WorkforceAnalyticsPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

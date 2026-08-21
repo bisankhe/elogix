@@ -101,4 +101,3 @@ export default function MenuManagementPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

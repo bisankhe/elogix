@@ -22,13 +22,11 @@ const CRITICAL_ROLES = [
     flag_note:'No succession plan in place -- critical role with zero ready candidates and an incumbent eligible for retirement.' },
   { id:'cr3', role:'Sales Director', incumbent:'Anjali Sharma', retirement_eligible:false, flight_risk:'high',
     candidates:[{employee:'Ramesh KC',readiness:'ready_3plus_yr',skill_match_pct:58}],
-    flag_note:'Incumbent flagged high flight-risk; only candidate is 3+ years from readiness -- urgent gap.',
     impact_links:['HiPo Employees'] },
 ]
 
 const READINESS_CFG = {
   ready_now:{c:'#10b981',label:'Ready Now'},ready_1_2yr:{c:'#f59e0b',label:'Ready in 1-2 Yrs'},ready_3plus_yr:{c:'#ef4444',label:'Ready in 3+ Yrs'},
-}
 
 export default function SuccessorIdentificationPage() {
   const [search, setSearch] = useState('')
@@ -131,4 +129,3 @@ export default function SuccessorIdentificationPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

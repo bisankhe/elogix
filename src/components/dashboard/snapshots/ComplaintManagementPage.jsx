@@ -102,4 +102,3 @@ export default function ComplaintManagementPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

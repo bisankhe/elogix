@@ -86,9 +86,7 @@ function PayrollAccessGuard({ persona, children }) {
         <Pill color="red">🔒 Payroll — Restricted Access</Pill>
       </div>
     )
-  }
   return children
-}
 
 // ── Main Component ───────────────────────────────────────────
 export default function PayrollSnapshot() {
@@ -99,9 +97,7 @@ export default function PayrollSnapshot() {
     if (compact) {
       if (val >= 1000000) return `${cc.symbol}${(val / 1000000).toFixed(1)}M`
       if (val >= 1000)    return `${cc.symbol}${(val / 1000).toFixed(0)}K`
-    }
     return `${cc.symbol}${val.toLocaleString()}`
-  }
 
   return (
     <div>
@@ -472,4 +468,3 @@ export default function PayrollSnapshot() {
       </PayrollAccessGuard>
     </div>
   )
-}

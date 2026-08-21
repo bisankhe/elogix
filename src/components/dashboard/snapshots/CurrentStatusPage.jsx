@@ -96,4 +96,3 @@ export default function CurrentStatusPage() {
       {showExcel&&<ExcelModal title="Current Status" columns={['Department','Branch','Quota','Filled','Vacant','On Hold','Fill Rate %']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

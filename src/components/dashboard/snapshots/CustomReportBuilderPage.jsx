@@ -90,4 +90,3 @@ export default function CustomReportBuilderPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

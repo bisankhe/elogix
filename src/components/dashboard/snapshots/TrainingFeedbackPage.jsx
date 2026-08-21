@@ -15,7 +15,6 @@ const FEEDBACK_RESPONSES = [
     application_answer:'I\'ll use the VPC peering setup to fix our staging environment access issue this week.',
     submitted_at:'2025-06-22', status:'positive', impact_links:['Course Management'] },
   { id:'f2', employee:'Bikash Rai', course:'CI/CD Pipeline Mastery', csat:2,
-    application_answer:'Honestly not sure -- the pacing was too fast and skipped over the actual deployment steps.',
     submitted_at:'2025-06-21', status:'negative', flag_note:'Auto-escalated to L&D Lead: CSAT below 3 threshold.', impact_links:['Course Management'] },
 ]
 
@@ -93,4 +92,3 @@ export default function TrainingFeedbackPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

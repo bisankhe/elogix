@@ -44,7 +44,6 @@ const STATUS_CFG = {
   shortlisted:{c:'#10b981',bg:'#f0fdf4',b:'#bbf7d0',label:'Shortlisted',icon:'✅'},
   review:     {c:'#f59e0b',bg:'#fffbeb',b:'#fde68a',label:'Review',     icon:'👁'},
   rejected:   {c:'#ef4444',bg:'#fef2f2',b:'#fecaca',label:'Rejected',   icon:'❌'},
-}
 const CTX = [
   {icon:'👁',label:'View Full CV',         key:'view'},
   {icon:'✅',label:'Shortlist Candidate',  key:'shortlist'},
@@ -160,4 +159,3 @@ export default function ResumeScreeningPage() {
       {showExcel&&<ExcelModal title="Resume Screening" columns={['App Code','Name','Position','AI Match%','Skills Match%','Experience Match%','Education Match%','Fraud Risk%','Status','Source','Applied Date']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

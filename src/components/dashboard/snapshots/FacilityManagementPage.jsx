@@ -69,4 +69,3 @@ export default function FacilityManagementPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

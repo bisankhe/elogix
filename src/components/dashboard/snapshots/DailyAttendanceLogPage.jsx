@@ -77,9 +77,7 @@ function genEmployees(n=80) {
       present,
       late: present && !isNight && li1h>=9,
     })
-  }
   return rows
-}
 
 const INIT_ROWS = genEmployees(80)
 const inp = {padding:'7px 10px',borderRadius:8,border:'1.5px solid #e2e8f0',fontSize:10,
@@ -139,7 +137,6 @@ export default function DailyAttendanceLogPage() {
     const [ah,am] = a.split(':').map(Number)
     const [bh,bm] = b.split(':').map(Number)
     return Math.max(0,((bh*60+bm)-(ah*60+am))/60)
-  }
 
   const handleSave = () => {
     if (!form.name||!form.empId) { notify('⚠️ Name and Employee ID required'); return }
@@ -159,17 +156,14 @@ export default function DailyAttendanceLogPage() {
       totalBreaks:tb.toFixed(2), netHrs:net.toFixed(2),
       isNightDuty:isNight, present:true,
       late: !isNight && form.login1>='09:00',
-    }
     if (editSl!==null) {
       setRows(p=>p.map(r=>r.sl===editSl?entry:r))
       notify('✅ Record updated — Night duty synced to allowance register')
     } else {
       setRows(p=>[...p,entry])
       notify('✅ Attendance added' + (isNight?' · 🌙 Night duty allowance queued for payroll':''))
-    }
     setShowAdd(false); setEditSl(null)
     setForm({name:'',empId:'',designation:'',dept:'',shift:'Day',status:'Permanent',login1:'',logout1:'',login2:'',logout2:'',lunchIn:'',lunchOut:'',brk1in:'',brk1out:'',brk2in:'',brk2out:''})
-  }
 
   const handleEdit = r => {
     setForm({name:r.name,empId:r.empId,designation:r.designation||'',dept:r.dept,shift:r.shift,status:r.status,
@@ -180,7 +174,6 @@ export default function DailyAttendanceLogPage() {
       brk2in:r.brk2in==='—'?'':r.brk2in,brk2out:r.brk2out==='—'?'':r.brk2out,
     })
     setEditSl(r.sl); setShowAdd(true)
-  }
 
   const exportCSV = () => {
     const h=['Sl.No','Emp ID','Name','Designation','Department','Shift','Login1','Logout1','Total1','Login2','Logout2','Total2','Hrs Worked','Lunch-In','Lunch-Out','Total3','Brk-In1','Brk-Out1','Total4','Brk-In2','Brk-Out2','Total5','Total Breaks','Net Hrs','Night Duty','Status']
@@ -189,7 +182,6 @@ export default function DailyAttendanceLogPage() {
     const blob=new Blob([r.join('\n')],{type:'text/csv'})
     const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`DailyAttendance_${date}.csv`;a.click()
     notify('📤 Exported to CSV')
-  }
 
   const SC = {Permanent:'#1d4ed8',Contract:'#d97706',Probation:'#7c3aed','Part-Time':'#0891b2',Intern:'#059669',Outsource:'#dc2626'}
 
@@ -487,4 +479,3 @@ export default function DailyAttendanceLogPage() {
       )}
     </div>
   )
-}

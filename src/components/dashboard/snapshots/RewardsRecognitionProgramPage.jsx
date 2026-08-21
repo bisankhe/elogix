@@ -17,7 +17,6 @@ const REWARD_REQUESTS = [
     impact_links:[] },
   { id:'rw3', employee:'Anjali Sharma', type:'Spot Bonus', amount_npr:35000, reason:'Saved a NPR 2M renewal at risk of churning.',
     requested_by:'Dipesh Bhattarai (Director)', approval_tier:'Director (Tier 3)', status:'pending', budget_used_pct:62,
-    flag_note:'Exceeds Tier 1/2 budget limit - requires Director sign-off per multi-tier matrix.',
     impact_links:['Bonus Processing'] },
 ]
 
@@ -104,4 +103,3 @@ export default function RewardsRecognitionProgramPage() {
       {showExcel&&<ExcelModal title="Reward Program" columns={['Employee','Type','Amount NPR','Reason','Approval Tier','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

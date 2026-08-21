@@ -128,4 +128,3 @@ export default function TrainingReportsLDPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

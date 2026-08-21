@@ -15,7 +15,6 @@ async function callAI(prompt, sys) {
     if (r.ok) { const d = await r.json(); return d.content?.map(c => c.text).join('') || '' }
   } catch {}
   return null
-}
 
 const AI_QUESTIONS = [
   { id: 1, q: 'Tell me about yourself and your most significant professional achievement in the last 2 years.', category: 'General', duration: 120, keywords: ['achievement','impact','results','led','built','improved'] },
@@ -69,11 +68,9 @@ function LiveVideoInterview({ candidate, onComplete, onExit }) {
         setMicLevel(Math.min(100, avg * 2))
         setSpeaking(avg > 20)
         requestAnimationFrame(tick)
-      }
       tick()
     } catch (e) {
       setCamError(true)
-    }
   }, [])
 
   const stopCamera = useCallback(() => {
@@ -107,14 +104,12 @@ function LiveVideoInterview({ candidate, onComplete, onExit }) {
     await startCamera()
     setPhase('briefing')
     setTimeout(() => startQuestion(0), 3000)
-  }
 
   const startQuestion = (qi) => {
     setQIdx(qi)
     setPhase('question')
     setRemaining(AI_QUESTIONS[qi].duration)
     setSpeaking(false)
-  }
 
   const handleNextQuestion = async () => {
     clearInterval(timerRef.current)
@@ -125,8 +120,6 @@ function LiveVideoInterview({ candidate, onComplete, onExit }) {
       setTimeout(() => startQuestion(qIdx + 1), 2000)
     } else {
       await finishInterview()
-    }
-  }
 
   const finishInterview = async () => {
     clearInterval(timerRef.current)
@@ -151,13 +144,10 @@ Return JSON only: {overall, confidence, clarity, eyeContact, voice, pace, sentim
         recommendation: 'Recommend for next round',
         strengths: ['Clear technical knowledge', 'Structured answers', 'Good eye contact'],
         improvements: ['Could be more concise', 'Add more specific metrics'],
-      }
-    }
     aiResult.eyeWarnings = eyeWarnings
     setResults(aiResult)
     setAnalyzing(false)
     onComplete && onComplete(aiResult)
-  }
 
   const mm = String(Math.floor(remaining / 60)).padStart(2, '0')
   const ss = String(remaining % 60).padStart(2, '0')
@@ -183,7 +173,6 @@ Return JSON only: {overall, confidence, clarity, eyeContact, voice, pace, sentim
         </div>
       </div>
     )
-  }
 
   // ── BRIEFING ─────────────────────────────────────────────
   if (phase === 'briefing') {
@@ -200,7 +189,6 @@ Return JSON only: {overall, confidence, clarity, eyeContact, voice, pace, sentim
         </div>
       </div>
     )
-  }
 
   // ── THINKING (between questions) ─────────────────────────
   if (phase === 'thinking') {
@@ -213,7 +201,6 @@ Return JSON only: {overall, confidence, clarity, eyeContact, voice, pace, sentim
         </div>
       </div>
     )
-  }
 
   // ── RESULTS ───────────────────────────────────────────────
   if (phase === 'done') {
@@ -283,7 +270,6 @@ Return JSON only: {overall, confidence, clarity, eyeContact, voice, pace, sentim
         </div>
       </div>
     )
-  }
 
   // ── LIVE QUESTION UI ──────────────────────────────────────
   return (
@@ -365,7 +351,6 @@ Return JSON only: {overall, confidence, clarity, eyeContact, voice, pace, sentim
       </div>
     </div>
   )
-}
 
 // ── MAIN COMPONENT ────────────────────────────────────────────
 export default function ATSVideoInterviewPage() {
@@ -383,7 +368,6 @@ export default function ATSVideoInterviewPage() {
     return <LiveVideoInterview candidate={selCandidate || { role: 'Software Developer' }}
       onComplete={(r) => { notify('✅ Interview complete! AI analysis saved.'); setView('dashboard') }}
       onExit={() => setView('dashboard')} />
-  }
 
   return (
     <div style={{ fontFamily: 'system-ui,sans-serif' }}>
@@ -567,4 +551,3 @@ export default function ATSVideoInterviewPage() {
       </div>
     </div>
   )
-}

@@ -81,4 +81,3 @@ export default function VendorBillingReportPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

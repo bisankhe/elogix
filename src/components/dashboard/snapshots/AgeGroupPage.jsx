@@ -39,7 +39,6 @@ export default function AgeGroupPage() {
         <text x={cx} y={cy+10} textAnchor="middle" fontSize={8} fill="#64748b">employees</text>
       </svg>
     )
-  }
 
   return (
     <div style={{fontFamily:'system-ui,sans-serif'}}>
@@ -128,4 +127,3 @@ export default function AgeGroupPage() {
       )}
     </div>
   )
-}

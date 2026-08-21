@@ -13,7 +13,6 @@ export const THEMES = {
   team:   { gradient:'linear-gradient(135deg,#10b981,#059669)', accent:'#10b981', light:'#f0fdf4' },
   cost:   { gradient:'linear-gradient(135deg,#f97316,#ea580c)', accent:'#f97316', light:'#fff7ed' },
   work:   { gradient:'linear-gradient(135deg,#8b5cf6,#7c3aed)', accent:'#8b5cf6', light:'#f5f3ff' },
-}
 
 // -- Audio hook ------------------------------------------------
 export function useVoice(onResult) {
@@ -41,7 +40,6 @@ export function useVoice(onResult) {
   }, [])
 
   return { active, start, stop }
-}
 
 // -- Luxury Field with voice + focus ring ----------------------
 export function Field({ label, value, onChange, type = 'text', options,
@@ -58,7 +56,6 @@ export function Field({ label, value, onChange, type = 'text', options,
     boxShadow: focused ? `0 0 0 3px ${accent}18` : 'none',
     transition: 'all .2s',
     color: '#1e293b',
-  }
 
   return (
     <div style={{ marginBottom: 16, gridColumn: `span ${cols}` }}>
@@ -111,7 +108,6 @@ export function Field({ label, value, onChange, type = 'text', options,
       {hint && <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 4 }}>{hint}</div>}
     </div>
   )
-}
 
 // -- Right-click Context Menu ----------------------------------
 export function ContextMenu({ x, y, item, impactLinks, actions, onAction, onClose }) {
@@ -156,7 +152,6 @@ export function ContextMenu({ x, y, item, impactLinks, actions, onAction, onClos
       </div>
     </div>
   )
-}
 
 // -- Excel Upload Modal ----------------------------------------
 export function ExcelModal({ title, columns, onClose, onImport, module }) {
@@ -188,7 +183,6 @@ export function ExcelModal({ title, columns, onClose, onImport, module }) {
         a.click()
         URL.revokeObjectURL(url)
         return
-      }
     } catch {}
 
     // Fallback: generate CSV template in-browser
@@ -199,7 +193,6 @@ export function ExcelModal({ title, columns, onClose, onImport, module }) {
     a.download = `elogix_${moduleName}_template.csv`
     a.click()
     URL.revokeObjectURL(url)
-  }
 
   // ── File upload — sends to backend API ────────────────────
   const handleImport = async () => {
@@ -220,7 +213,6 @@ export function ExcelModal({ title, columns, onClose, onImport, module }) {
         onImport?.(file, data)   // notify parent with file + parsed result
       } else {
         setError(data.error || data.message || 'Upload failed. Please check your file format.')
-      }
     } catch (err) {
       // Backend unavailable — parse CSV in-browser as fallback
       const text  = await file.text().catch(() => '')
@@ -230,8 +222,6 @@ export function ExcelModal({ title, columns, onClose, onImport, module }) {
       onImport?.(file, { rows, offline: true })
     } finally {
       setUploading(false)
-    }
-  }
 
   const resetFile = () => { setFile(null); setResult(null); setError('') }
 
@@ -359,7 +349,6 @@ export function ExcelModal({ title, columns, onClose, onImport, module }) {
       </div>
     </div>
   )
-}
 export function PageHeader({ icon, title, breadcrumb, gradient, stats, onAdd, onExcel, addLabel }) {
   return (
     <div style={{ background: gradient, borderRadius: 20, padding: '24px 28px',
@@ -420,7 +409,6 @@ export function PageHeader({ icon, title, breadcrumb, gradient, stats, onAdd, on
       </div>
     </div>
   )
-}
 
 // -- Luxury stat card (mini) -----------------------------------
 export function MiniStat({ icon, label, value, color }) {
@@ -432,7 +420,6 @@ export function MiniStat({ icon, label, value, color }) {
       <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600, marginTop: 1 }}>{label}</div>
     </div>
   )
-}
 
 // -- AI Impact Alert box ---------------------------------------
 export function AIImpact({ lines, color }) {
@@ -451,7 +438,6 @@ export function AIImpact({ lines, color }) {
       ))}
     </div>
   )
-}
 
 // -- Detail Slide-in Drawer ------------------------------------
 export function Drawer({ item, gradient, onClose, rows, children }) {
@@ -512,7 +498,6 @@ export function Drawer({ item, gradient, onClose, rows, children }) {
       </div>
     </div>
   )
-}
 
 // -- Search + filter toolbar -----------------------------------
 export function SearchBar({ value, onChange, placeholder, extra }) {
@@ -532,7 +517,6 @@ export function SearchBar({ value, onChange, placeholder, extra }) {
       {extra}
     </div>
   )
-}
 
 // -- Status badge ----------------------------------------------
 export function Badge({ status }) {
@@ -541,7 +525,6 @@ export function Badge({ status }) {
     inactive: { bg: '#f8fafc', color: '#64748b', border: '#e2e8f0', dot: '#94a3b8' },
     draft:    { bg: '#fffbeb', color: '#b45309', border: '#fde68a', dot: '#f59e0b' },
     archived: { bg: '#fef2f2', color: '#dc2626', border: '#fecaca', dot: '#ef4444' },
-  }
   const c = cfg[status] || cfg.active
   return (
     <span style={{ background: c.bg, color: c.color, border: `1px solid ${c.border}`,
@@ -551,7 +534,6 @@ export function Badge({ status }) {
       {status?.charAt(0).toUpperCase() + status?.slice(1)}
     </span>
   )
-}
 
 // -- luxury Card wrapper ---------------------------------------
 export function LuxCard({ children, onClick, onContextMenu, color = '#6366f1',
@@ -574,4 +556,3 @@ export function LuxCard({ children, onClick, onContextMenu, color = '#6366f1',
       {children}
     </div>
   )
-}

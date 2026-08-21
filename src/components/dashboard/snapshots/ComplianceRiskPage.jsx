@@ -69,4 +69,3 @@ export default function ComplianceRiskPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

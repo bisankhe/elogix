@@ -67,7 +67,6 @@ function CandidateCard({ c, onSelect, selected }) {
       )}
     </div>
   )
-}
 
 export default function ATSCandidatePipelinePage() {
   const { navTo } = useApp()
@@ -92,7 +91,6 @@ export default function ATSCandidatePipelinePage() {
     setSelected(p => p?.id===cid ? {...p,stage:newStage} : p)
     setBulkMsg(`✅ Candidate moved to ${STAGES.find(s=>s.id===newStage)?.label}. Auto-email & WhatsApp notification sent.`)
     setTimeout(()=>setBulkMsg(''),3000)
-  }
 
   const sendBulkComm = async (type) => {
     setSending(true)
@@ -100,7 +98,6 @@ export default function ATSCandidatePipelinePage() {
     setSending(false)
     setBulkMsg(`✅ ${type} sent to ${filtered.length} candidates via Email + WhatsApp + SMS`)
     setTimeout(()=>setBulkMsg(''),3000)
-  }
 
   const totalByStage = (stageId) => filtered.filter(c=>c.stage===stageId).length
 
@@ -236,4 +233,3 @@ export default function ATSCandidatePipelinePage() {
       )}
     </div>
   )
-}

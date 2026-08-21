@@ -31,7 +31,6 @@ const POST_ICON = {
   promotion:'🎊', announcement:'📢', team_photo:'📸', company_video:'🎥',
   new_training:'📚', internal_job:'💼', idea:'💡', csr_activity:'❤️',
   event:'🎉', wellness_challenge:'💪', policy_update:'📋',
-}
 const DEMO_POSTS = [
   { id:'p1', post_type:'birthday', subject_name:'Hari Thapa', title:'🎂 Happy Birthday, Hari Thapa!', body:'Today is Hari\'s birthday. Send them a celebration message!', reaction_count:14, comment_count:5, created_at:'2 hours ago', i_reacted:false },
   { id:'p2', post_type:'kudos', author_name:'Gita Maharjan', subject_name:'Sunil Magar', title:'👏 Kudos to Sunil Magar!', body:'"Sunil went above and beyond helping our client presentation. True team player!" - Gita Maharjan 💛', reaction_count:28, comment_count:7, created_at:'4 hours ago', i_reacted:true, my_reaction:'celebrate' },
@@ -76,7 +75,6 @@ function FeedPost({ post, onReact }){
     if (reacted && myReaction === rk) { setReacted(false); setMyReaction(null); setRxCount(c=>c-1) }
     else { if (!reacted) setRxCount(c=>c+1); setReacted(true); setMyReaction(rk) }
     setShowReactions(false)
-  }
 
   const icon = POST_ICON[post.post_type] || '📌'
   return(
@@ -151,7 +149,6 @@ function FeedPost({ post, onReact }){
       )}
     </div>
   )
-}
 
 function PostComposer(){
   const [text, setText] = useState('')
@@ -173,7 +170,6 @@ function PostComposer(){
       </div>
     </div>
   )
-}
 
 export default function EmployeeSocialFeedPage(){
   const [tab, setTab] = useState('feed')
@@ -443,4 +439,3 @@ export default function EmployeeSocialFeedPage(){
       )}
     </div>
   )
-}

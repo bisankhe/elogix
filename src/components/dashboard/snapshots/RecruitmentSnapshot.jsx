@@ -72,7 +72,6 @@ const stageColor = {
   Interview: 'yellow',
   Offered:   'purple',
   Joined:    'green',
-}
 
 const aiInsights = [
   { color: '#3b82f6', label: 'Time-to-Hire Improving',    text: 'Average time-to-hire reduced from 24 to 17 days — 29% improvement YTD. Streamlined interview process is key driver.' },
@@ -105,7 +104,6 @@ function FunnelStage({ stage, value, total, fill, convRate }) {
       </div>
     </div>
   )
-}
 
 // ── Main Component ───────────────────────────────────────────
 export default function RecruitmentSnapshot() {
@@ -115,7 +113,6 @@ export default function RecruitmentSnapshot() {
   const fmt = (val) => {
     if (val >= 1000) return `${cc.symbol}${(val / 1000).toFixed(1)}K`
     return `${cc.symbol}${val}`
-  }
 
   return (
     <div>
@@ -508,4 +505,3 @@ export default function RecruitmentSnapshot() {
       )}
     </div>
   )
-}

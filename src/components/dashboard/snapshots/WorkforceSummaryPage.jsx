@@ -83,4 +83,3 @@ export default function WorkforceSummaryPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

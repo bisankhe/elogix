@@ -69,4 +69,3 @@ export default function AnnualHRBudgetPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

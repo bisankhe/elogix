@@ -136,7 +136,6 @@ export default function DeptSetupPage() {
               </button>
             ))}
           </div>
-        }
       />
 
       <div style={{background:'#eef2ff',border:'1px solid #c7d2fe',borderRadius:10,
@@ -272,7 +271,6 @@ export default function DeptSetupPage() {
       </Drawer>
     </div>
   )
-}
 
 function AddDeptModal({ T, onClose, onSave }) {
   const [f, setF] = useState({code:'',name:'',short:'',type:'Technical',bu:'',head:'',hrbp:'',cost_center:'',work_location:'Kathmandu HQ',budget_npr:'',description:''})
@@ -325,4 +323,3 @@ function AddDeptModal({ T, onClose, onSave }) {
       </div>
     </div>
   )
-}

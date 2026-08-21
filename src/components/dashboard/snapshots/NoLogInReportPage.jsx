@@ -20,7 +20,6 @@ const STATUS_CFG = {
   on_leave:      {c:'#10b981', bg:'#f0fdf4', icon:'🏖️', label:'On Approved Leave — No Alert'},
   logged_in_late:{c:'#f59e0b', bg:'#fffbeb', icon:'⏰', label:'Logged In Late'},
   pending:       {c:'#94a3b8', bg:'#f8fafc', icon:'⏳', label:'Monitoring...'},
-}
 
 export default function NoLogInReportPage() {
   const [alerts, setAlerts] = useState(ALERTS)
@@ -100,4 +99,3 @@ export default function NoLogInReportPage() {
       {showExcel&&<ExcelModal title="No Login Report" columns={['Employee','Emp ID','Dept','Shift Start','Alert Triggered','Status','Payroll Deduction','Channels']} onClose={()=>setShowExcel(false)} onImport={()=>{}}/>}
     </div>
   )
-}

@@ -91,4 +91,3 @@ export default function HiPoEmployeesPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

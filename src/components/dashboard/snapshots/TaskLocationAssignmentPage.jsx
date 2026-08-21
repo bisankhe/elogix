@@ -142,4 +142,3 @@ export default function TaskLocationAssignmentPage() {
       {showExcel&&<ExcelModal title="Task & Location Assignments" columns={['Employee','Task','Location','Assigned By','Date','Start Time','End Time','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

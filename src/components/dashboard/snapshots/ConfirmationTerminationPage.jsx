@@ -34,7 +34,6 @@ const DECISION_CFG = {
   extended:  {c:'#f59e0b',bg:'#fffbeb',icon:'⏸',label:'Probation Extended'},
   terminated:{c:'#ef4444',bg:'#fef2f2',icon:'🚫',label:'Terminated'},
   pending:   {c:'#94a3b8',bg:'#f8fafc',icon:'⏳',label:'Decision Pending'},
-}
 
 export default function ConfirmationTerminationPage() {
   const [decisions, setDecisions] = useState(DECISIONS)
@@ -172,4 +171,3 @@ export default function ConfirmationTerminationPage() {
       {showExcel&&<ExcelModal title="Confirmation or Termination" columns={['Employee','Position','Department','Join Date','Probation End','Decision','Decided Date','Decided By','Competency Score']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

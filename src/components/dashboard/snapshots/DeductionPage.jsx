@@ -102,4 +102,3 @@ export default function DeductionPage() {
       {showExcel&&<ExcelModal title="Deductions" columns={['Name','Code','Timing','Value/Formula','Mandatory']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

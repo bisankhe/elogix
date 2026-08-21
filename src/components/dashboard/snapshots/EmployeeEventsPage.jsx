@@ -80,4 +80,3 @@ export default function EmployeeEventsPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

@@ -17,7 +17,6 @@ async function callAI(prompt) {
     if (r.ok) { const d = await r.json(); return d.content?.map(c => c.text).join('') || '' }
   } catch {}
   return null
-}
 
 const INTERVIEWERS = [
   { id:'i1', name:'Bikash Shrestha',   title:'CTO',                  dept:'Technology',  rating:4.9, panels:28, available:true,  avatar:'BS', skills:['Technical','Architecture','System Design'] },
@@ -58,7 +57,6 @@ function ScoreField({ label, value, onChange, color = '#1e40af' }) {
       </div>
     </div>
   )
-}
 
 export default function ATSInterviewPanelPage() {
   const { navigate } = useApp()
@@ -86,20 +84,17 @@ export default function ATSInterviewPanelPage() {
     await new Promise(r => setTimeout(r, 1800))
     setSending(false)
     notify(`✅ Invites sent to ${panel.interviewers.length} interviewers + candidate via Email & WhatsApp! Calendar events created in Google Calendar.`)
-  }
 
   const generateQuestions = async () => {
     setGenLoading(true)
     const q = await callAI(`Generate 5 targeted interview questions for a ${scheduleForm.role || selPanel?.role} ${scheduleForm.type || 'Technical Panel'} interview. Include: technical depth, behavioral STAR, situational, leadership, and culture fit. Format as numbered list.`)
     setAiQuestions(q || '1. Walk me through your most complex technical project...\n2. Describe a time you led through ambiguity...\n3. How do you handle critical feedback from peers?\n4. What is your approach to stakeholder management?\n5. Where do you see your biggest area of professional growth?')
     setGenLoading(false)
-  }
 
   const panelAvgScore = (panel) => {
     const scores = Object.values(panel.scores)
     if (!scores.length) return null
     return Math.round(scores.reduce((s, sc) => s + sc.total, 0) / scores.length)
-  }
 
   return (
     <div style={{ fontFamily: 'system-ui,sans-serif' }}>
@@ -464,4 +459,3 @@ export default function ATSInterviewPanelPage() {
       )}
     </div>
   )
-}

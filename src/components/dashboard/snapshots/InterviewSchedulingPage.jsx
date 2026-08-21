@@ -40,7 +40,6 @@ const STATUS_CFG = {
   pending_candidate: {c:'#f59e0b',bg:'#fffbeb',icon:'⏳'},
   completed:         {c:'#64748b',bg:'#f8fafc', icon:'✓'},
   cancelled:         {c:'#ef4444',bg:'#fef2f2',icon:'❌'},
-}
 
 export default function InterviewSchedulingPage() {
   const [interviews, setInterviews] = useState(INTERVIEWS)
@@ -63,7 +62,6 @@ export default function InterviewSchedulingPage() {
 
   const togglePanel = (id) => {
     setForm(p=>({...p,panel_internal:p.panel_internal.includes(id)?p.panel_internal.filter(x=>x!==id):[...p.panel_internal,id]}))
-  }
 
   const confirmed  = interviews.filter(i=>i.status==='confirmed').length
   const pending    = interviews.filter(i=>i.status==='pending_candidate').length
@@ -71,7 +69,6 @@ export default function InterviewSchedulingPage() {
 
   const bookSlot = (day, hour) => {
     alert(`Slot ${hour} on ${day} selected. Self-scheduling link will be sent to candidate.`)
-  }
 
   return (
     <div onClick={()=>setCtx(null)}>
@@ -270,4 +267,3 @@ export default function InterviewSchedulingPage() {
       {showExcel&&<ExcelModal title="Interview Schedule" columns={['Candidate','Position','Round','Date','Time','Duration','Mode','Panel','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

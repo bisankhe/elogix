@@ -24,30 +24,25 @@ const CAL_CFG = {
   present:{c:'#10b981',bg:'#f0fdf4'}, missed:{c:'#ef4444',bg:'#fef2f2'},
   pending:{c:'#f59e0b',bg:'#fffbeb'}, absent:{c:'#dc2626',bg:'#fee2e2'},
   weekend:{c:'#cbd5e1',bg:'#f8fafc'},
-}
 
 const REQUESTS = [
   { id:'rg1', employee:'Sunita Rai', dept:'HR', date:'2025-06-18', status_type:'Absent > Present',
     original_status:'Absent', requested_status:'Present (On-Duty)', reason:'Field work / client visit',
-    comment:'Visited 3 clients in Lalitpur for the SSF enrollment drive - calendar event attached, no office punch.',
     evidence_uploaded:true, calendar_match:true, manager:'Priya Adhikari',
     weekly_hours_after:42, overlap_conflict:false,
     status:'pending', submitted_at:'2025-06-19 09:00 AM',
     impact_links:['Employee Movement','Task & Location Assignment'] },
   { id:'rg2', employee:'Bikash Rai', dept:'IT', date:'2025-06-16', status_type:'Half-Day > Full-Day',
     original_status:'Half-Day', requested_status:'Full-Day', reason:'System malfunction',
-    comment:'Biometric device at IT Helpdesk was down from 1 PM to close - I was on-site the full shift.',
     evidence_uploaded:false, calendar_match:false, manager:'Bikash Shrestha',
     weekly_hours_after:46, overlap_conflict:false,
     status:'approved', submitted_at:'2025-06-17 08:30 AM', approved_at:'2025-06-17 11:15 AM',
     impact_links:['Employee Movement'] },
   { id:'rg3', employee:'Anjali Sharma', dept:'Sales', date:'2025-06-14', status_type:'Leave Without Pay > Sanctioned Leave',
     original_status:'LWP', requested_status:'Sanctioned Sick Leave', reason:'Medical emergency',
-    comment:'Hospitalized for 1 day, family submitted notice late. Medical certificate attached.',
     evidence_uploaded:true, calendar_match:false, manager:'Dipak Tamang',
     weekly_hours_after:48, overlap_conflict:false,
     status:'rejected', submitted_at:'2025-06-15 10:00 AM', rejected_at:'2025-06-15 02:00 PM',
-    rejection_reason:'Medical certificate date does not match the requested absence date - please resubmit with correct documentation.',
     impact_links:[] },
 ]
 
@@ -55,7 +50,6 @@ const STATUS_CFG = {
   pending:{c:'#f59e0b',bg:'#fffbeb',icon:'⏳',label:'Pending Approval'},
   approved:{c:'#10b981',bg:'#f0fdf4',icon:'✅',label:'Approved'},
   rejected:{c:'#ef4444',bg:'#fef2f2',icon:'🚫',label:'Rejected'},
-}
 
 export default function AttendanceRegularizationPage() {
   const [requests, setRequests] = useState(REQUESTS)
@@ -304,4 +298,3 @@ export default function AttendanceRegularizationPage() {
       {showExcel&&<ExcelModal title="Attendance Regularization" columns={['Employee','Department','Date','Type','Original Status','Requested Status','Reason','Status','Manager']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

@@ -72,4 +72,3 @@ export default function DEITrainingPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

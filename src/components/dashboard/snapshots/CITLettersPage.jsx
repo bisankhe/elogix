@@ -34,7 +34,6 @@ const STATUS_CFG = {
   draft:{c:'#94a3b8',bg:'#f8fafc',icon:'📝',label:'Draft'},
   submitted:{c:'#3b82f6',bg:'#eff6ff',icon:'📤',label:'Submitted'},
   acknowledged:{c:'#10b981',bg:'#f0fdf4',icon:'✅',label:'Acknowledged'},
-}
 
 export default function CITLettersPage() {
   const [letters, setLetters] = useState(LETTERS)
@@ -133,4 +132,3 @@ export default function CITLettersPage() {
       {showExcel&&<ExcelModal title="CIT Letters" columns={['Subject','Type','Employee','CIT Account','Reference No','Amount NPR','Date Sent','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

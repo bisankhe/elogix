@@ -101,4 +101,3 @@ export default function AccessControlPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

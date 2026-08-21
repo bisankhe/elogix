@@ -17,7 +17,6 @@ const JD_NATURE_TEMPLATES = {
   Corporate:{icon:'🏢',metric:'Strategic Initiative Completion',example:'Launch 2 of 3 planned initiatives'},
   Manufacturing:{icon:'🏭',metric:'Units Produced / Defect Rate',example:'Produce 5,000 units, defect rate <1%'},
   Banking:{icon:'🏦',metric:'Portfolio Growth / NPA Ratio',example:'Grow deposit portfolio by 8%'},
-}
 
 const DEPT_ANNUAL_TARGETS = [
   { id:'da1', department:'Sales & Marketing', jd_nature:'Sales', fiscal_year:'2082/83 BS', annual_target:'NPR 24M new business',
@@ -178,4 +177,3 @@ export default function GoalAssignmentPage() {
       {showExcel&&<ExcelModal title="Goal Assignment" columns={['Department','JD Nature','Annual Target','Team','Share %','Team Target','Cascade Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

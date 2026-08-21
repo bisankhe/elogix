@@ -89,4 +89,3 @@ export default function TeamActivityThisYearPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

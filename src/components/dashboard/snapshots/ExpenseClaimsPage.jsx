@@ -96,4 +96,3 @@ export default function ExpenseClaimsPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

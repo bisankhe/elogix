@@ -10,14 +10,11 @@ const A = '#c2410c'
 
 const PIPS = [
   { id:'p1', employee:'Bikash Rai', dept:'IT', start_date:'2025-06-15', duration_days:60, end_date:'2025-08-14',
-    reason:'Sprint commitments missed 2 consecutive quarters; communication gaps with stakeholders.',
     appraisal_history:['Q1: Below Standard','Q2: Below Standard'],
     milestones:[
       {goal:'Complete 90% of sprint commitments for 4 consecutive sprints',progress_pct:50,target_date:'2025-07-15'},
       {goal:'Weekly stakeholder update sent every Friday without exception',progress_pct:75,target_date:'2025-08-14'},
     ],
-    linked_training:'Agile Project Management - LMS Course #4521',
-    checkin_frequency:'Weekly with direct manager',
     explanation_period_status:'completed', explanation_note:'Employee submitted written explanation citing unstaffed dependencies; HR reviewed and proceeded with coaching PIP rather than termination.',
     status:'active', impact_links:['Performance Appraisal','Workload Analysis','Training Records'] },
 ]
@@ -136,4 +133,3 @@ export default function PIPPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

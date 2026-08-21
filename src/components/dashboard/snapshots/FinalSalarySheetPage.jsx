@@ -43,11 +43,9 @@ function calcTax(taxableIncome, isCouple, isFemale) {
     breakdown.push({ label: slab.label, amount: chunk, rate: slab.rate, tax })
     totalTax += tax
     remaining -= chunk
-  }
   // Female 10% rebate (Nepal Income Tax Act)
   const femaleCredit = isFemale ? totalTax * 0.10 : 0
   return { totalTax, femaleCredit, netTax: totalTax - femaleCredit, breakdown }
-}
 
 function calcSSF(basicSalary) {
   const pf          = basicSalary * SSF_RATES.PF
@@ -56,7 +54,6 @@ function calcSSF(basicSalary) {
   const total       = pf + gratuity + insurance
   const employer    = basicSalary * SSF_EMPLOYER_RATE
   return { pf, gratuity, insurance, total, employer }
-}
 
 function calcEmployee(emp) {
   const {
@@ -115,8 +112,6 @@ function calcEmployee(emp) {
     totalTax, femaleCredit, netTax, monthlyTax,
     breakdown,
     netSalary,
-  }
-}
 
 const MOCK_EMPLOYEES = [
   { id:'e1', empCode:'AAAA', name:'Ram Thapa',   doj:'2079-04-01', designation:'E2', isBOD:false,
@@ -146,7 +141,6 @@ const INIT_SIGS = {
   prepared:{ name:'',designation:'',date:today,signed:false },
   verified: { name:'',designation:'',date:today,signed:false },
   approved: { name:'',designation:'',date:today,signed:false },
-}
 
 const inp = { padding:'7px 10px',borderRadius:8,border:'1.5px solid #e2e8f0',
   fontSize:10,outline:'none',fontFamily:'inherit',width:'100%',boxSizing:'border-box' }
@@ -197,9 +191,7 @@ export default function FinalSalarySheetPage() {
     } else {
       setEmployees(p=>[...p,{...editEmp,id:`e${Date.now()}`}])
       notify('✅ Employee added to salary sheet')
-    }
     setShowAdd(false); setEditEmp(null)
-  }
 
   const SigBox = ({role}) => {
     const s = sigs[role]
@@ -231,7 +223,6 @@ export default function FinalSalarySheetPage() {
         )}
       </div>
     )
-  }
 
   // Column groups for the scrollable table
   const COL_GROUPS = [
@@ -610,15 +601,12 @@ export default function FinalSalarySheetPage() {
       )}
     </div>
   )
-}
 
 // ── td helper ─────────────────────────────────────────────────
 function td(bg, mono=false) {
   return {
     padding:'6px 8px', textAlign:'right', borderBottom:'1px solid #f1f5f9',
     background:bg||'transparent', ...(mono?{fontFamily:'monospace',textAlign:'center'}:{})
-  }
-}
 
 // ── Employee Detail Panel ─────────────────────────────────────
 function DetailView({emp,calc}) {
@@ -689,4 +677,3 @@ function DetailView({emp,calc}) {
       </div>
     </div>
   )
-}

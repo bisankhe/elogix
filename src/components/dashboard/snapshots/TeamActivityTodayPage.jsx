@@ -73,4 +73,3 @@ export default function TeamActivityTodayPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

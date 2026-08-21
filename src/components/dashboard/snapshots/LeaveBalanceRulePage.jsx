@@ -159,4 +159,3 @@ export default function LeaveBalanceRulePage() {
       {showExcel&&<ExcelModal title="Leave Balance Rules" columns={['Leave Type','Accrual Method','Annual Grant','Max Carry Forward','Encashable Above','Pro-Rated','Negative Balance Allowed']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

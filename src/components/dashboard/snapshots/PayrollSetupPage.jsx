@@ -133,4 +133,3 @@ export default function PayrollSetupPage() {
       {showExcel&&<ExcelModal title="Pay Groups" columns={['Pay Group Name','Employee Count','Pay Frequency','Salary Structure','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

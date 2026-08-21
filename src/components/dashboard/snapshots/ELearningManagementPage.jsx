@@ -157,4 +157,3 @@ export default function ELearningManagementPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

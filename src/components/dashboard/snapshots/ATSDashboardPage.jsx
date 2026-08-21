@@ -79,13 +79,11 @@ export default function ATSDashboardPage() {
       if(nextStage==='panel')   alert(`Panel interview scheduled. Notification sent to all panel members.`)
       return {...c, stage:nextStage}
     }))
-  }
 
   const sendOffer = (cid) => {
     setCandidates(prev=>prev.map(c=>c.id===cid?{...c,stage:'offer'}:c))
     const c = candidates.find(x=>x.id===cid)
     if(c) alert(`Offer letter emailed to ${c.name} at ${c.email}`)
-  }
 
   return (
     <div onClick={()=>setCtx(null)}>
@@ -240,4 +238,3 @@ export default function ATSDashboardPage() {
       {showExcel&&<ExcelModal title="ATS Candidates" columns={['Name','Email','Phone','Position','Stage','AI Score','Written %','Video %','Overall %','Experience','Education']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

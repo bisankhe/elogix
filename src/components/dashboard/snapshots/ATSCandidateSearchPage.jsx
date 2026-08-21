@@ -15,7 +15,6 @@ async function callAI(prompt, sys) {
     if (r.ok) { const d = await r.json(); return d.content?.map(c => c.text).join('') || '' }
   } catch {}
   return null
-}
 
 const CANDIDATE_DB = [
   { id:'c001', name:'Gita Maharjan',    email:'gita@mail.com',   phone:'+977-9801001001', age:30, location:'Kathmandu', current_role:'React Developer',      company:'Tech Solutions',  exp:6.5, skills:['React','Node.js','PostgreSQL','AWS','Docker','TypeScript'], cv_score:92, status:'Active', last_seen:'2 days ago',   source:'LinkedIn',   salary:95000, duplicate:false },
@@ -63,7 +62,6 @@ export default function ATSCandidateSearchPage() {
     } catch {
       ranked = CANDIDATE_DB.filter(c => !c.duplicate).map(c => c.id)
       setAiExplain('AI semantic ranking applied based on skills, experience, and role relevance.')
-    }
     const results = ranked.map(id => CANDIDATE_DB.find(c => c.id === id)).filter(Boolean)
     const remaining = CANDIDATE_DB.filter(c => !c.duplicate && !ranked.includes(c.id))
     setAiResults([...results, ...remaining])
@@ -310,4 +308,3 @@ export default function ATSCandidateSearchPage() {
       )}
     </div>
   )
-}

@@ -85,4 +85,3 @@ export default function BudgetForecastingPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

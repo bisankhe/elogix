@@ -94,4 +94,3 @@ export default function OvertimePayrollPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

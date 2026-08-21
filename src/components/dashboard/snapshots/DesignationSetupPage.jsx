@@ -1,7 +1,6 @@
-// FILE: DesignationSetupPage.jsx
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 // Page 1: Designation Setup - luxury, AI JD generator, SAP right-click, voice, Excel
 
-import { useState } from 'react'
 import {
   Field, ContextMenu, ExcelModal, PageHeader,
   AIImpact, Drawer, SearchBar, Badge, LuxCard
@@ -11,7 +10,6 @@ const T = {
   gradient: 'linear-gradient(135deg,#6366f1 0%,#a855f7 100%)',
   accent:   '#6366f1',
   light:    '#eef2ff',
-}
 
 const JOB_FAMILIES = [
   {id:'jf-it',   name:'Information Technology', icon:'💻', color:'#3b82f6'},
@@ -28,54 +26,40 @@ const GRADE_MAP = {
   L4:'Level 4 - Lead',   L5:'Level 5 - Principal',
   M1:'Manager L1', M2:'Senior Manager', M3:'Director',
   E1:'VP / Executive', E2:'C-Suite',
-}
 
-const MOCK_DESIGNATIONS = [
   {id:'d1', job_code:'IT-SE-L3',   title:'Senior Software Engineer',   title_nepali:'वरिष्ठ सफ्टवेयर इन्जिनियर',
    family:'jf-it',  grade:'L3', experience:3,  is_managerial:false, status:'active',
    skills:['React','Python','PostgreSQL','Docker'],
-   education:'B.E./B.Tech Computer Science or equivalent',
-   jd_summary:'Lead frontend/backend development, mentor junior engineers, participate in architecture decisions.',
    positions_count:4, filled_count:3, headcount_budget:4,
    impact_links:[{icon:'💰',module:'Payroll Band',desc:'L3 salary band NPR 45-75K'},{icon:'🎯',module:'Performance KPIs',desc:'Eng-specific KPI template'},{icon:'📋',module:'JD Library',desc:'Official JD published'}],
   },
   {id:'d2', job_code:'IT-TL-L4',   title:'Tech Lead',                  title_nepali:'प्राविधिक प्रमुख',
    family:'jf-it',  grade:'L4', experience:5,  is_managerial:false, status:'active',
    skills:['System Architecture','React','Leadership','Agile'],
-   education:'B.E. Computer Science + 5yr experience',
-   jd_summary:'Own technical direction for a squad, conduct code reviews, drive sprint planning.',
    positions_count:2, filled_count:2, headcount_budget:2,
    impact_links:[{icon:'💰',module:'Payroll Band',desc:'L4 band NPR 75-120K'},{icon:'🗂',module:'Org Chart',desc:'Reports to Eng Manager'}],
   },
   {id:'d3', job_code:'IT-EM-M1',   title:'Engineering Manager',        title_nepali:'इन्जिनियरिङ प्रबन्धक',
    family:'jf-it',  grade:'M1', experience:7,  is_managerial:true,  status:'active',
    skills:['Team Management','Agile','Budget Planning','Technical Strategy'],
-   education:'B.E. + MBA or equivalent 7yr experience',
-   jd_summary:'Lead 6-10 engineers, own delivery, hiring, performance management, and stakeholder reporting.',
    positions_count:2, filled_count:2, headcount_budget:3,
    impact_links:[{icon:'💰',module:'Payroll Band',desc:'M1 band NPR 80-150K'},{icon:'✅',module:'Approvals',desc:'Leave/expense approver'},{icon:'🎯',module:'Performance',desc:'Manager-tier KPI template'}],
   },
   {id:'d4', job_code:'HR-HRBP-M1', title:'HR Business Partner',        title_nepali:'मानव संसाधन व्यापार साझेदार',
    family:'jf-hr',  grade:'M1', experience:5,  is_managerial:true,  status:'active',
    skills:['Labour Law Nepal','HRBP','OD','Talent Management'],
-   education:'BBA/MBA HR + SHRM certification preferred',
-   jd_summary:'Partner with business units on people strategy, manage ER cases, drive talent initiatives.',
    positions_count:3, filled_count:3, headcount_budget:4,
    impact_links:[{icon:'📋',module:'HR Policies',desc:'Enforces all 44 policies'},{icon:'⚖',module:'Labour Law',desc:'Nepal Labour Act 2074 compliance'}],
   },
   {id:'d5', job_code:'FIN-CA-L3',  title:'Chartered Accountant',       title_nepali:'चार्टर्ड एकाउन्टेन्ट',
    family:'jf-fin', grade:'L3', experience:3,  is_managerial:false, status:'active',
    skills:['ICAN','Tally ERP','IRD Tax','SSF/PF'],
-   education:'ICAN / ICAI qualified CA',
-   jd_summary:'Handle month-end close, tax filings, payroll verification, SSF/PF compliance.',
    positions_count:2, filled_count:2, headcount_budget:2,
    impact_links:[{icon:'💰',module:'Payroll',desc:'Approves all payroll runs'},{icon:'⚖',module:'IRD Filing',desc:'Tax submission authority'}],
   },
   {id:'d6', job_code:'EXEC-CTO-E1',title:'Chief Technology Officer',   title_nepali:'प्रमुख प्रविधि अधिकृत',
    family:'jf-exec',grade:'E1', experience:12, is_managerial:true,  status:'active',
    skills:['Technology Strategy','Cloud','AI/ML','Executive Leadership'],
-   education:'M.S./PhD + 12+ years leadership experience',
-   jd_summary:'Own company-wide technology vision, manage VP-level reports, drive product architecture.',
    positions_count:1, filled_count:1, headcount_budget:1,
    impact_links:[{icon:'💰',module:'Executive Comp',desc:'E1 band NPR 450K-800K'},{icon:'🏛',module:'Board Reports',desc:'Tech metrics to board'}],
   },
@@ -84,7 +68,6 @@ const MOCK_DESIGNATIONS = [
 const GRADE_COLORS = {
   L1:'#94a3b8', L2:'#64748b', L3:'#3b82f6', L4:'#8b5cf6', L5:'#6d28d9',
   M1:'#f59e0b', M2:'#ef4444', M3:'#dc2626', E1:'#0ea5e9', E2:'#0369a1',
-}
 
 const CONTEXT_ACTIONS = [
   {icon:'👁',  label:'View Designation',     key:'view'},
@@ -129,7 +112,6 @@ function AIJDModal({ desig, onClose }) {
       })
       setLoading(false)
     }, 1800)
-  }
 
   return (
     <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.65)',zIndex:8000,
@@ -156,7 +138,6 @@ function AIJDModal({ desig, onClose }) {
               </div>
               <button onClick={generate}
                 style={{padding:'14px 36px',borderRadius:12,border:'none',
-                  background:'linear-gradient(135deg,#4f46e5,#7c3aed)',
                   color:'#fff',fontSize:14,fontWeight:700,cursor:'pointer',
                   boxShadow:'0 8px 24px rgba(79,70,229,.35)'}}>
                 Generate JD Now
@@ -226,7 +207,6 @@ function AIJDModal({ desig, onClose }) {
       </div>
     </div>
   )
-}
 
 // Add Designation Modal
 function AddDesigModal({ onClose, onSave }) {
@@ -298,10 +278,118 @@ function AddDesigModal({ onClose, onSave }) {
       </div>
     </div>
   )
-}
+
+
+import React, { useState, useEffect, useRef, useCallback } from 'react'
+
+// ── Tenant-scoped data hook ─────────────────────────────────
+function useTenantData(resourceKey) {
+  const getAuth = () => {
+    try { return JSON.parse(localStorage.getItem('elogix_auth') || '{}') } catch { return {} }
+  const getCompanyId = () => {
+    const auth = getAuth()
+    return auth.company?.id || auth.company?.slug || auth.user?.company || 'demo'
+  const getToken = () => {
+    return localStorage.getItem('elogix_token') || getAuth().token || ''
+  const storageKey = () => `elogix_${resourceKey}_${getCompanyId()}`
+
+  const [items,   setItems]   = React.useState([])
+  const [loading, setLoading] = React.useState(true)
+  const [company, setCompany] = React.useState(null)
+
+  React.useEffect(() => {
+    // Load company info
+    const auth = getAuth()
+    const regCos = JSON.parse(localStorage.getItem('elogix_registered_companies') || '{}')
+    const slug = auth.company?.slug || auth.user?.company || 'demo'
+    setCompany({
+      id: auth.company?.id || slug,
+      name: auth.company?.name || regCos[slug]?.name || 'Your Company',
+      slug, plan: auth.company?.plan || 'trial',
+      country: auth.company?.country || 'Nepal',
+      currency: auth.company?.currency || 'NPR',
+      business_type: auth.company?.business_type || 'custom',
+    })
+    // Load data from API then localStorage fallback
+    const load = async () => {
+      try {
+        const token = getToken()
+        if (token) {
+          const res = await fetch(`/api/v1/${resourceKey}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          })
+          if (res.ok) {
+            const d = await res.json()
+            const data = d.data || d[resourceKey] || d.items || []
+            setItems(Array.isArray(data) ? data : [])
+            localStorage.setItem(storageKey(), JSON.stringify(data))
+            setLoading(false); return
+      } catch {}
+      // Fallback: tenant-keyed localStorage
+      const stored = JSON.parse(localStorage.getItem(storageKey()) || '[]')
+      setItems(stored)
+      setLoading(false)
+    load()
+  }, [])
+
+  const saveItems = (newItems) => {
+    setItems(newItems)
+    localStorage.setItem(storageKey(), JSON.stringify(newItems))
+    // Try API save
+    const token = getToken()
+    if (token) {
+      fetch(`/api/v1/${resourceKey}/bulk`, {
+        method: 'PUT',
+        headers: { 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
+        body: JSON.stringify(newItems)
+      }).catch(() => {})
+
+  const addItem = (item) => {
+    const newItem = { ...item, id: item.id || `${resourceKey}-${Date.now()}`,
+                     company_id: getCompanyId() }
+    const updated = [...items, newItem]
+    saveItems(updated)
+    // POST to API
+    const token = getToken()
+    if (token) {
+      fetch(`/api/v1/${resourceKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
+        body: JSON.stringify(newItem)
+      }).catch(() => {})
+    return newItem
+
+  const updateItem = (id, updates) => {
+    const updated = items.map(i => i.id === id ? { ...i, ...updates } : i)
+    saveItems(updated)
+
+  const deleteItem = (id) => {
+    const updated = items.filter(i => i.id !== id)
+    saveItems(updated)
+
+  return { items, loading, company, addItem, updateItem, deleteItem, setItems: saveItems }
+
+
+// ── Tenant context ────────────────────────────────────────────
+function useCompanyCtx() {
+  const auth   = (() => { try { return JSON.parse(localStorage.getItem('elogix_auth')||'{}') } catch { return {} } })()
+  const regCos = (() => { try { return JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}') } catch { return {} } })()
+  const slug   = auth.company?.slug || auth.user?.company || 'demo'
+  return {
+    company_id:   auth.company?.id || slug,
+    company_name: auth.company?.name || regCos[slug]?.name || 'Your Company',
+    company_slug: slug,
+    plan:         auth.company?.plan || 'trial',
+    currency:     auth.company?.currency || 'NPR',
+    token:        localStorage.getItem('elogix_token') || auth.token || '',
 
 export default function DesignationSetupPage() {
-  const [designations, setDesignations] = useState(MOCK_DESIGNATIONS)
+  const ctx = useCompanyCtx()
+  // ── Tenant context: only this company's data is shown ────────
+  const companyName = company?.name || 'Your Company'
+  const companySlug = company?.slug || ''
+
+  const { items: designations, loading, company, addItem: addDesignation, updateItem, deleteItem } = useTenantData('designations')
   const [search,       setSearch]       = useState('')
   const [familyFilter, setFamilyFilter] = useState('all')
   const [gradeFilter,  setGradeFilter]  = useState('all')
@@ -322,7 +410,6 @@ export default function DesignationSetupPage() {
     'IC Track (L1-L5)': ['L1','L2','L3','L4','L5'],
     'Mgmt (M1-M3)':     ['M1','M2','M3'],
     'Executive (E1-E2)':['E1','E2'],
-  }
 
   return (
     <div onClick={()=>setCtx(null)}>
@@ -355,7 +442,6 @@ export default function DesignationSetupPage() {
               {Object.keys(GRADE_COLORS).map(g=><option key={g} value={g}>{g}</option>)}
             </select>
           </div>
-        }
       />
 
       {/* Grade Matrix quick view */}
@@ -465,7 +551,6 @@ export default function DesignationSetupPage() {
                 <button
                   onClick={e=>{e.stopPropagation();setAiJdFor(d)}}
                   style={{padding:'5px 12px',borderRadius:8,border:'none',flexShrink:0,
-                    background:'linear-gradient(135deg,#4f46e5,#7c3aed)',
                     color:'#fff',fontSize:10,fontWeight:700,cursor:'pointer'}}>
                   🤖 AI JD
                 </button>
@@ -542,4 +627,3 @@ export default function DesignationSetupPage() {
       </Drawer>
     </div>
   )
-}

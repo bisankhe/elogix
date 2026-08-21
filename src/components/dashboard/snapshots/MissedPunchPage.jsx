@@ -28,7 +28,6 @@ export default function MissedPunchPage() {
   const approveReq = (id, action) => {
     setRequests(prev=>prev.map(r=>r.id!==id?r:{...r,status:action==='approve'?'approved':'rejected',approved_date:new Date().toISOString().split('T')[0]}))
     notify(action==='approve'?'✅ Missed punch approved — attendance updated':'❌ Missed punch request rejected')
-  }
 
   return (
     <div onClick={()=>setCtx(null)} style={{fontFamily:'system-ui,sans-serif'}}>
@@ -116,4 +115,3 @@ export default function MissedPunchPage() {
       {showExcel&&<ExcelModal title="Missed Punch" columns={['Employee','Emp ID','Date','Punch Type','Expected','Actual','Reason','Status']} onClose={()=>setShowExcel(false)} onImport={()=>{}}/>}
     </div>
   )
-}

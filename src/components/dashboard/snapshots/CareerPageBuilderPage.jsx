@@ -58,7 +58,6 @@ export default function CareerPageBuilderPage() {
       ;[copy[idx],copy[newIdx]] = [copy[newIdx],copy[idx]]
       return copy.map((b,i)=>({...b,order:i+1}))
     })
-  }
 
   return (
     <div onClick={()=>setCtx(null)}>
@@ -163,4 +162,3 @@ export default function CareerPageBuilderPage() {
       {showExcel&&<ExcelModal title="Career Page Blocks" columns={['Block Type','Order','Status','Config']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

@@ -78,11 +78,9 @@ export default function ImplementHRPolicyPage() {
       if (base?.steps?.ack) return 88
       if (base?.steps?.read) return 60
       return 20
-    }
     const total  = Object.keys(polReaders).length
     const signed = Object.values(polReaders).filter(r=>r.signedAt).length
     return total > 0 ? Math.round(signed/total*100) : 0
-  }
 
   const getDeptBreakdown = (polId) => {
     return DEPTS.map(dept => {
@@ -90,13 +88,11 @@ export default function ImplementHRPolicyPage() {
       const seed = (polId.charCodeAt(polId.length-1) + dept.charCodeAt(0)) % 10
       return { dept, ack:Math.min(100,50+(seed*5)), total:deptEmps.length }
     })
-  }
 
   const toggleStep = (polId, stepId, done) => {
     const updated = implRecords.map(p => p.id===polId ? { ...p, steps:{ ...p.steps, [stepId]:done } } : p)
     setImplRecords(updated)
     localStorage.setItem(IMPL_KEY, JSON.stringify(updated))
-  }
 
   const scheduleTraining = (pol) => {
     setSchedMsg(`✅ Training session scheduled for "${pol.title}" — invitations sent to all department heads via Email + Calendar.`)
@@ -107,14 +103,12 @@ export default function ImplementHRPolicyPage() {
       notifs.unshift({ id:`TR-${Date.now()}`, cat:'FYI', icon:'🎓', title:`Policy Training Scheduled: ${pol.title}`, body:`All departments · Next 7 days · HR to facilitate`, time:'Just now', unread:true })
       localStorage.setItem('elogix_hris_notifications', JSON.stringify(notifs.slice(0,100)))
     } catch {}
-  }
 
   const pctCol = pct => pct>=90?'#10b981':pct>=70?'#f59e0b':'#ef4444'
 
   const totals = {
     implemented: implRecords.filter(p=>getAckPct(p.id)>=80).length,
     gap:         implRecords.filter(p=>p.mandatory&&getAckPct(p.id)<80).length,
-  }
 
   const W = ({children,title}) => (
     <div style={{background:'#fff',borderRadius:14,padding:18,border:'1px solid #e2e8f0',boxShadow:'0 2px 8px rgba(0,0,0,.04)'}}>
@@ -248,4 +242,3 @@ export default function ImplementHRPolicyPage() {
       </div>
     </div>
   )
-}

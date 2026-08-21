@@ -136,4 +136,3 @@ export default function LeaveEncashmentPage() {
       {showExcel&&<ExcelModal title="Leave Encashment Batch" columns={['Employee','Leave Type','Days','Gross NPR','Tax NPR','Net NPR','Type','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

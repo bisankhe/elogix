@@ -93,4 +93,3 @@ export default function EffectivenessOfTrainingPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

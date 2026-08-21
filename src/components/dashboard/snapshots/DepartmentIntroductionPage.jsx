@@ -67,7 +67,6 @@ HR Team`,
     to_whom: 'Each Team Member',
     via: 'Email + Calendar Invite',
   },
-}
 
 const INTROS = [
   { id:'di1', employee:'Gita Maharjan', position:'Cloud Architect', dept:'Information Technology',
@@ -84,7 +83,6 @@ const INTROS = [
     ],
     hod_intro_status:'Completed', hod_intro_date:'2081-03-22', hod_intro_time:'09:30 AM',
     team_announcement_sent:true, team_announcement_date:'2081-03-21',
-    org_position:'Reports to CTO · Peer to 4 Senior Engineers · Manages 0 direct reports',
   },
   { id:'di2', employee:'Maya Pradhan', position:'Finance Manager', dept:'Finance & Accounts',
     email:'maya@company.com', phone:'+977-9802222222', joining_date:'2081-03-01',
@@ -98,7 +96,6 @@ const INTROS = [
     ],
     hod_intro_status:'Completed', hod_intro_date:'2081-03-01', hod_intro_time:'09:00 AM',
     team_announcement_sent:true, team_announcement_date:'2081-02-28',
-    org_position:'Reports to CFO · Manages team of 5',
   },
 ]
 
@@ -125,12 +122,10 @@ export default function DepartmentIntroductionPage() {
       team_members:i.team_members.map(m=>m.id!==memberId?m:{...m,status:'Completed'})
     }))
     notify('✅ Meeting marked complete')
-  }
 
   const sendAnnouncement = (introId, templateKey) => {
     const intro = intros.find(i=>i.id===introId)
     setShowMsgPreview({intro, templateKey})
-  }
 
   const confirmSend = () => {
     if (!showMsgPreview) return
@@ -139,10 +134,8 @@ export default function DepartmentIntroductionPage() {
       setIntros(prev=>prev.map(i=>i.id!==intro.id?i:{...i,team_announcement_sent:true,team_announcement_date:new Date().toISOString().split('T')[0]}))
     } else if (templateKey==='hod_intro_to_employee') {
       setIntros(prev=>prev.map(i=>i.id!==intro.id?i:{...i,hod_intro_status:'Scheduled'}))
-    }
     notify('✅ Message sent!')
     setShowMsgPreview(null)
-  }
 
   const saveSchedule = () => {
     if (!showSchedule || !scheduleForm.date) { notify('⚠️ Date required'); return }
@@ -155,7 +148,6 @@ export default function DepartmentIntroductionPage() {
     }))
     setShowSchedule(null); setScheduleForm({date:'',time:'',notes:''})
     notify('✅ Meeting scheduled!')
-  }
 
   const STATUS_C = {Completed:'#10b981',Scheduled:'#3b82f6',Pending:'#94a3b8',Cancelled:'#ef4444'}
 
@@ -352,7 +344,6 @@ export default function DepartmentIntroductionPage() {
             .replace(/\[Team Member Name\]/g,'Team Member')
             .replace(/\[Calendar Link\]/g,'[Calendar Link]')
             .replace(/\[Location\/Floor\]/g,'Office Floor 3')
-        }
         return (
           <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:16}} onClick={()=>setShowMsgPreview(null)}>
             <div style={{background:'#fff',borderRadius:18,padding:0,width:560,maxWidth:'95vw',maxHeight:'90vh',overflowY:'auto'}} onClick={e=>e.stopPropagation()}>
@@ -388,4 +379,3 @@ export default function DepartmentIntroductionPage() {
         onImport={(f,result)=>{notify(`✅ Imported from ${f.name}`);setShowExcel(false)}}/>}
     </div>
   )
-}

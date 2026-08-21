@@ -1,16 +1,13 @@
-// FILE: BusinessUnitPage.jsx - Luxury Business Unit / Division Setup
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 
-import { useState } from 'react'
 
 const THEME = { gradient:'linear-gradient(135deg,#f59e0b 0%,#ef4444 100%)' }
 
-const MOCK_UNITS = [
   { id:'bu-001', code:'BU-TECH', name:'Technology & Products Division', short:'Tech Division',
     type:'Business Unit', head:'Bikram Shrestha (CTO)', parent:null, branch:'Kathmandu HQ',
     employees:420, budget_npr:45000000, cost_center:'CC-BU-TECH',
     revenue_contribution:62, profit_margin:38, status:'active', icon:'💻', color:'#3b82f6',
     departments:['IT','Engineering','QA','Product Management','R&D'],
-    description:'Technology, software development, and product management.',
     impact_links:['Payroll','IT Access','Performance','Headcount Plan','Budget'],
   },
   { id:'bu-002', code:'BU-COMM', name:'Commercial & Revenue Division', short:'Commercial',
@@ -18,7 +15,6 @@ const MOCK_UNITS = [
     employees:210, budget_npr:28000000, cost_center:'CC-BU-COMM',
     revenue_contribution:28, profit_margin:22, status:'active', icon:'📈', color:'#10b981',
     departments:['Sales','Marketing','Business Development','Customer Success'],
-    description:'Sales, marketing and revenue generation.',
     impact_links:['Payroll','Sales Targets','CRM Integration','Commission'],
   },
   { id:'bu-003', code:'BU-OPS', name:'Operations & Support Division', short:'Operations',
@@ -26,7 +22,6 @@ const MOCK_UNITS = [
     employees:180, budget_npr:18000000, cost_center:'CC-BU-OPS',
     revenue_contribution:10, profit_margin:15, status:'active', icon:'Settings', color:'#8b5cf6',
     departments:['Operations','Admin','Facilities','Procurement','Security','Fire & Safety'],
-    description:'Operational support and shared services.',
     impact_links:['Payroll','Asset Management','Vendor Management'],
   },
   { id:'bu-004', code:'BU-CORP', name:'Corporate Functions', short:'Corporate',
@@ -34,7 +29,6 @@ const MOCK_UNITS = [
     employees:440, budget_npr:35000000, cost_center:'CC-BU-CORP',
     revenue_contribution:0, profit_margin:0, status:'active', icon:'🎯', color:'#0ea5e9',
     departments:['HR','Finance','Legal','Risk','Strategy','PMO','Board Affairs'],
-    description:'Group-level corporate functions and governance.',
     impact_links:['All Payroll','Compliance','Board Reporting','Group Consolidation'],
   },
 ]
@@ -72,7 +66,6 @@ function ContextMenu({ x, y, item, onClose, onAction }) {
       ))}
     </div>
   )
-}
 
 function LuxInput({ label, value, onChange, type='text', options, required }) {
   const [focused, setFocused] = useState(false)
@@ -92,10 +85,8 @@ function LuxInput({ label, value, onChange, type='text', options, required }) {
           </select>
         : <input type={type} value={value} onChange={e=>onChange(e.target.value)}
             onFocus={()=>setFocused(true)} onBlur={()=>setFocused(false)} style={style}/>
-      }
     </div>
   )
-}
 
 function AddUnitModal({ onClose, onSave }) {
   const [form, setForm] = useState({ code:'', name:'', short:'', type:'Business Unit', head:'', branch:'Kathmandu HQ', cost_center:'', budget_npr:0, description:'' })
@@ -148,9 +139,117 @@ function AddUnitModal({ onClose, onSave }) {
       </div>
     </div>
   )
-}
+
+
+import React, { useState, useEffect, useRef, useCallback } from 'react'
+
+// ── Tenant-scoped data hook ─────────────────────────────────
+function useTenantData(resourceKey) {
+  const getAuth = () => {
+    try { return JSON.parse(localStorage.getItem('elogix_auth') || '{}') } catch { return {} }
+  const getCompanyId = () => {
+    const auth = getAuth()
+    return auth.company?.id || auth.company?.slug || auth.user?.company || 'demo'
+  const getToken = () => {
+    return localStorage.getItem('elogix_token') || getAuth().token || ''
+  const storageKey = () => `elogix_${resourceKey}_${getCompanyId()}`
+
+  const [items,   setItems]   = React.useState([])
+  const [loading, setLoading] = React.useState(true)
+  const [company, setCompany] = React.useState(null)
+
+  React.useEffect(() => {
+    // Load company info
+    const auth = getAuth()
+    const regCos = JSON.parse(localStorage.getItem('elogix_registered_companies') || '{}')
+    const slug = auth.company?.slug || auth.user?.company || 'demo'
+    setCompany({
+      id: auth.company?.id || slug,
+      name: auth.company?.name || regCos[slug]?.name || 'Your Company',
+      slug, plan: auth.company?.plan || 'trial',
+      country: auth.company?.country || 'Nepal',
+      currency: auth.company?.currency || 'NPR',
+      business_type: auth.company?.business_type || 'custom',
+    })
+    // Load data from API then localStorage fallback
+    const load = async () => {
+      try {
+        const token = getToken()
+        if (token) {
+          const res = await fetch(`/api/v1/${resourceKey}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          })
+          if (res.ok) {
+            const d = await res.json()
+            const data = d.data || d[resourceKey] || d.items || []
+            setItems(Array.isArray(data) ? data : [])
+            localStorage.setItem(storageKey(), JSON.stringify(data))
+            setLoading(false); return
+      } catch {}
+      // Fallback: tenant-keyed localStorage
+      const stored = JSON.parse(localStorage.getItem(storageKey()) || '[]')
+      setItems(stored)
+      setLoading(false)
+    load()
+  }, [])
+
+  const saveItems = (newItems) => {
+    setItems(newItems)
+    localStorage.setItem(storageKey(), JSON.stringify(newItems))
+    // Try API save
+    const token = getToken()
+    if (token) {
+      fetch(`/api/v1/${resourceKey}/bulk`, {
+        method: 'PUT',
+        headers: { 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
+        body: JSON.stringify(newItems)
+      }).catch(() => {})
+
+  const addItem = (item) => {
+    const newItem = { ...item, id: item.id || `${resourceKey}-${Date.now()}`,
+                     company_id: getCompanyId() }
+    const updated = [...items, newItem]
+    saveItems(updated)
+    // POST to API
+    const token = getToken()
+    if (token) {
+      fetch(`/api/v1/${resourceKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
+        body: JSON.stringify(newItem)
+      }).catch(() => {})
+    return newItem
+
+  const updateItem = (id, updates) => {
+    const updated = items.map(i => i.id === id ? { ...i, ...updates } : i)
+    saveItems(updated)
+
+  const deleteItem = (id) => {
+    const updated = items.filter(i => i.id !== id)
+    saveItems(updated)
+
+  return { items, loading, company, addItem, updateItem, deleteItem, setItems: saveItems }
+
+
+// ── Tenant context ────────────────────────────────────────────
+function useCompanyCtx() {
+  const auth   = (() => { try { return JSON.parse(localStorage.getItem('elogix_auth')||'{}') } catch { return {} } })()
+  const regCos = (() => { try { return JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}') } catch { return {} } })()
+  const slug   = auth.company?.slug || auth.user?.company || 'demo'
+  return {
+    company_id:   auth.company?.id || slug,
+    company_name: auth.company?.name || regCos[slug]?.name || 'Your Company',
+    company_slug: slug,
+    plan:         auth.company?.plan || 'trial',
+    currency:     auth.company?.currency || 'NPR',
+    token:        localStorage.getItem('elogix_token') || auth.token || '',
 
 export default function BusinessUnitPage() {
+  const ctx = useCompanyCtx()
+  // ── Tenant context: only this company's data is shown ────────
+  const companyName = company?.name || 'Your Company'
+  const companySlug = company?.slug || ''
+
   const [units,       setUnits]       = useState(MOCK_UNITS)
   const [contextMenu, setContextMenu] = useState(null)
   const [showAdd,     setShowAdd]     = useState(false)
@@ -331,4 +430,3 @@ export default function BusinessUnitPage() {
       )}
     </div>
   )
-}

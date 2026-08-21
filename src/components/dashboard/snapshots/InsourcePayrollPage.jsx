@@ -81,4 +81,3 @@ export default function InsourcePayrollPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

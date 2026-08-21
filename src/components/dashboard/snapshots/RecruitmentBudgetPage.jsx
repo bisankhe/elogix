@@ -68,4 +68,3 @@ export default function RecruitmentBudgetPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

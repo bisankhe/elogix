@@ -1,7 +1,7 @@
 // FILE: GroupCompanyPage.jsx
 // Luxury Group Company management - SAP-style with Excel upload, audio, right-click context
 
-import { useState, useRef, useCallback } from 'react'
+import React, { useState, useRef, useCallback, useEffect } from 'react'
 import { useApp } from '../../../context/AppContext.jsx'
 
 // -- Shared luxury UI atoms ------------------------------------
@@ -15,42 +15,82 @@ const THEME = {
   muted:    '#94a3b8',
   border:   '#e2e8f0',
   glass:    'rgba(255,255,255,0.95)',
-}
 
-const MOCK_GROUPS = [
-  {
-    id:'grp-001', code:'NHG', name:'eLogix Group Holdings Pvt. Ltd.',
-    short_name:'eLogix Group', type:'Holding Company', status:'active',
-    incorporated:'2018-04-12', country:'Nepal', currency:'NPR',
-    pan:'609875000', companies_count:4, employees_total:1690,
-    revenue_npr:450000000, logo:'🏛️',
-    description:'Parent holding entity of eLogix Group across Nepal, India, UK operations.',
-    contact_email:'group@elogixgroup.com', website:'www.elogixgroup.com',
-    impact_links:['Company Profile','Legal Documents','Tax Compliance','Org Chart','HR Policies'],
-  },
-  {
-    id:'grp-002', code:'NIT', name:'eLogix IT Solutions Pvt. Ltd.',
-    short_name:'eLogix IT', type:'Subsidiary', status:'active',
-    incorporated:'2020-06-15', country:'Nepal', currency:'NPR',
-    pan:'609875432', companies_count:1, employees_total:1250,
-    revenue_npr:280000000, logo:'💻',
-    description:'Primary technology and SaaS operations entity.',
-    contact_email:'info@elogix.com.np', website:'www.elogix.com.np',
-    impact_links:['Company Profile','Payroll','Employment Contracts','Branch Setup'],
-  },
-  {
-    id:'grp-003', code:'NIN', name:'eLogix India Pvt. Ltd.',
-    short_name:'eLogix India', type:'Subsidiary', status:'active',
-    incorporated:'2021-04-01', country:'India', currency:'INR',
-    pan:'AABCN1234F', companies_count:1, employees_total:420,
-    revenue_npr:95000000, logo:'🏬',
-    description:'India operations - GST and EPFO registered entity.',
-    contact_email:'info@elogixindia.com', website:'www.elogixindia.com',
-    impact_links:['Company Profile','GST Filing','EPFO Compliance','Payroll India'],
-  },
-]
 
-// -- Context Menu ----------------------------------------------
+// ── Shared tenant data hook ─────────────────────────────────
+function useTenantCompany() {
+  const [company, setCompany] = React.useState(null)
+  const [loading, setLoading] = React.useState(true)
+
+  React.useEffect(() => {
+    const load = async () => {
+      // 1. Try real API
+      try {
+        const token = localStorage.getItem('elogix_token') ||
+          JSON.parse(localStorage.getItem('elogix_auth')||'{}').token
+        if (token) {
+          const res = await fetch('/api/v1/companies/me', {
+            headers: { Authorization: `Bearer ${token}` }
+          })
+          if (res.ok) {
+            const d = await res.json()
+            setCompany(d.data || d.company || d)
+            setLoading(false)
+            return
+      } catch {}
+      // 2. Fallback: localStorage auth
+      try {
+        const auth = JSON.parse(localStorage.getItem('elogix_auth')||'{}')
+        const regCos = JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}')
+        const co = auth.company || {}
+        const slug = co.slug || auth.user?.company || 'demo'
+        const regData = regCos[slug] || {}
+        setCompany({
+          id:            co.id || `c_${slug}`,
+          name:          co.name || regData.name || 'Your Company',
+          slug,
+          plan:          co.plan || regData.plan || 'trial',
+          status:        co.status || 'active',
+          business_type: co.business_type || regData.business_type || 'custom',
+          country:       co.country || regData.country || 'Nepal',
+          currency:      co.currency || regData.currency || 'NPR',
+          admin_email:   co.admin_email || regData.admin_email || auth.user?.email || '',
+          modules:       co.modules || regData.modules || [],
+          created_at:    co.created_at || regData.created_at || '',
+          // Profile fields (empty until filled in setup)
+          legal_name: '', short_name: '', pan_number: '', vat_number: '',
+          ocr_number: '', ssf_code: '', industry: regData.business_type?.replace(/_/g,' ') || '',
+          phone: regData.phone || '', email: regData.admin_email || co.admin_email || '',
+          province:'', district:'', municipality:'', registered_address:'', website:'',
+        })
+      } catch {}
+      setLoading(false)
+    load()
+  }, [])
+
+  const saveTenantCompany = async (updates) => {
+    // Merge updates into localStorage
+    try {
+      const auth = JSON.parse(localStorage.getItem('elogix_auth')||'{}')
+      auth.company = { ...(auth.company||{}), ...updates }
+      localStorage.setItem('elogix_auth', JSON.stringify(auth))
+      setCompany(p => ({...p, ...updates}))
+    } catch {}
+    // Try API
+    try {
+      const token = localStorage.getItem('elogix_token') ||
+        JSON.parse(localStorage.getItem('elogix_auth')||'{}').token
+      if (token) {
+        await fetch('/api/v1/companies/me', {
+          method: 'PATCH',
+          headers: { 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
+          body: JSON.stringify(updates)
+        })
+    } catch {}
+
+  return { company, loading, saveTenantCompany }
+
+
 function ContextMenu({ x, y, item, onClose, onAction }) {
   const actions = [
     { icon:'👁️', label:'View Details',       key:'view'     },
@@ -93,7 +133,6 @@ function ContextMenu({ x, y, item, onClose, onAction }) {
       ))}
     </div>
   )
-}
 
 // -- Excel Upload Panel ----------------------------------------
 function ExcelUploadPanel({ onClose, onUpload }) {
@@ -108,7 +147,6 @@ function ExcelUploadPanel({ onClose, onUpload }) {
   const handleFile = (f) => {
     setFile(f)
     setPreview({ name: f.name, size: (f.size/1024).toFixed(1)+'KB', rows: Math.floor(Math.random()*10)+2 })
-  }
 
   return (
     <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)',
@@ -202,7 +240,6 @@ function ExcelUploadPanel({ onClose, onUpload }) {
       </div>
     </div>
   )
-}
 
 // -- Audio Input Hook ------------------------------------------
 function useAudioInput(onTranscript) {
@@ -213,7 +250,6 @@ function useAudioInput(onTranscript) {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
       alert('Speech recognition not supported. Use Chrome browser.')
       return
-    }
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition
     const r = new SR()
     r.lang = 'en-US'; r.continuous = false; r.interimResults = false
@@ -231,7 +267,6 @@ function useAudioInput(onTranscript) {
   }, [])
 
   return { listening, start, stop }
-}
 
 // -- Luxury Field ----------------------------------------------
 function LuxField({ label, value, onChange, type='text', options, required, hint, fieldKey }) {
@@ -242,9 +277,7 @@ function LuxField({ label, value, onChange, type='text', options, required, hint
     width:'100%', padding:'10px 80px 10px 12px', borderRadius:10,
     border: `1.5px solid ${focused ? '#667eea' : '#e2e8f0'}`,
     fontSize:13, outline:'none', boxSizing:'border-box', background:'#fff',
-    transition:'border-color .2s',
     boxShadow: focused ? '0 0 0 3px rgba(102,126,234,0.1)' : 'none',
-  }
 
   return (
     <div style={{ marginBottom:14 }}>
@@ -285,13 +318,11 @@ function LuxField({ label, value, onChange, type='text', options, required, hint
       {hint && <div style={{ fontSize:10, color:'#94a3b8', marginTop:3 }}>{hint}</div>}
     </div>
   )
-}
 
 // -- Group Company Card ----------------------------------------
 function GroupCard({ group, onContextMenu, onClick }) {
   const typeColor = {
     'Holding Company': '#667eea', 'Subsidiary': '#10b981', 'Associate': '#f59e0b'
-  }
   const c = typeColor[group.type] || '#64748b'
 
   return (
@@ -366,7 +397,6 @@ function GroupCard({ group, onContextMenu, onClick }) {
       </div>
     </div>
   )
-}
 
 // -- Add Group Modal -------------------------------------------
 function AddGroupModal({ onClose, onSave }) {
@@ -440,7 +470,6 @@ function AddGroupModal({ onClose, onSave }) {
       </div>
     </div>
   )
-}
 
 // -- Main Page -------------------------------------------------
 export default function GroupCompanyPage() {
@@ -460,7 +489,6 @@ export default function GroupCompanyPage() {
     if (action === 'view')   setSelected(item)
     if (action === 'export') alert(`Exporting ${item.name} to Excel...`)
     if (action === 'sync')   alert(`Syncing ${item.name} data...`)
-  }
 
   const closeContextMenu = () => setContextMenu(null)
 
@@ -623,4 +651,3 @@ export default function GroupCompanyPage() {
       )}
     </div>
   )
-}

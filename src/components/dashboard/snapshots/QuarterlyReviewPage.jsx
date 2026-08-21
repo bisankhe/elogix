@@ -116,4 +116,3 @@ export default function QuarterlyReviewPage() {
       {showExcel&&<ExcelModal title="Quarterly Workforce Review" columns={['Department','Branch','Quota','Planned','Budget NPR','Priority','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

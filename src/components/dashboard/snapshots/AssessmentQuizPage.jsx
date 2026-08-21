@@ -34,7 +34,6 @@ export default function AssessmentQuizPage() {
   const handleSubmit = () => {
     const correct = QUIZ_QUESTIONS.filter(q=>answers[q.id]===q.correct).length
     setSubmitted({ scorePct: Math.round(correct/QUIZ_QUESTIONS.length*100), correct, total: QUIZ_QUESTIONS.length })
-  }
 
   return (
     <div onClick={()=>setCtx(null)}>
@@ -130,4 +129,3 @@ export default function AssessmentQuizPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

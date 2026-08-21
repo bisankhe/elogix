@@ -10,7 +10,6 @@ const A = '#1e40af'
 
 const PERSONA_DATA = {
   executive: {
-    label:'Executive View',
     kpis:[
       {icon:'⏱',label:'Avg Time-to-Hire',    value:'18 days',  trend:'+2',  trendUp:false, color:'#ef4444'},
       {icon:'💰',label:'Cost-per-Hire',        value:'NPR 45K',  trend:'-8%', trendUp:true,  color:'#10b981'},
@@ -19,7 +18,6 @@ const PERSONA_DATA = {
     ]
   },
   hr_manager: {
-    label:'HR Manager View',
     kpis:[
       {icon:'📋',label:'Active Requisitions',  value:'24',       trend:'+3',  trendUp:false, color:'#f59e0b'},
       {icon:'👤',label:'Candidates in Pipeline',value:'312',     trend:'+47', trendUp:true,  color:'#3b82f6'},
@@ -28,7 +26,6 @@ const PERSONA_DATA = {
     ]
   },
   recruiter: {
-    label:'Recruiter View',
     kpis:[
       {icon:'🔥',label:'Open Roles Assigned',  value:'8',        trend:'+1',  trendUp:false, color:'#ef4444'},
       {icon:'📬',label:'CVs to Review Today',  value:'43',       trend:'+12', trendUp:false, color:'#f59e0b'},
@@ -36,7 +33,6 @@ const PERSONA_DATA = {
       {icon:'⏰',label:'SLA at Risk',           value:'3 roles',  trend:'',    trendUp:false, color:'#ef4444'},
     ]
   },
-}
 
 const PIPELINE_STAGES = [
   {stage:'Applied',      count:312, color:'#3b82f6', icon:'📬'},
@@ -253,4 +249,3 @@ export default function RecruitmentDashboardPage() {
       {showExcel&&<ExcelModal title="Recruitment Dashboard" columns={['Req ID','Role','Dept','Applied','Screened','Stage','SLA Days','Hired']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

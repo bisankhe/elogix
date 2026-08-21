@@ -1,7 +1,7 @@
 // FILE: VendorInvoicePage.jsx - Vendor Invoice Management
 // OCR upload, 3-way match, approval workflow, IRD tax compliance
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Field, ExcelModal, PageHeader, AIImpact, Drawer, SearchBar, Badge, ContextMenu } from './DeptSetupShared.jsx'
 
 const G = 'linear-gradient(135deg,#064e3b 0%,#047857 60%,#10b981 100%)'
@@ -16,7 +16,6 @@ const INVOICES = [
     status:'approved', ai_validation:'Pass', ai_fraud_risk:5,
     approval_chain:[{role:'HR Manager',status:'approved',by:'Priya Adhikari',date:'2025-07-02'},{role:'Finance',status:'approved',by:'Sanjay Karki',date:'2025-07-03'}],
     payment_date:'2025-07-04', payment_ref:'NABIL-TXN-20250704',
-    ai_note:'All 3 checks match. OCR extracted correctly. TDS certificate generated.',
     impact_links:['Vendor Billing','SLA Contract','Finance','Clearance'] },
   { id:'i2', inv_no:'INV-CP-2025-06', vendor_code:'VND-002', vendor_name:'CleanPro Services Nepal',
     service:'Housekeeping', period:'Jun 2025',
@@ -26,7 +25,6 @@ const INVOICES = [
     status:'pending_ap',ai_validation:'Partial', ai_fraud_risk:22,
     approval_chain:[{role:'HR Manager',status:'approved',by:'Priya Adhikari',date:'2025-07-04'},{role:'Finance',status:'pending',by:null,date:null}],
     payment_date:null, payment_ref:null,
-    ai_note:'Pending Finance approval. Invoice amount matches PO. Minor formatting issue on invoice.',
     impact_links:['Vendor Billing','Finance'] },
   { id:'i3', inv_no:'INV-TS-2025-06', vendor_code:'VND-003', vendor_name:'TechStaff Solutions Pvt.',
     service:'IT Support Staff', period:'Jun 2025',
@@ -36,7 +34,6 @@ const INVOICES = [
     status:'disputed',ai_validation:'Fail', ai_fraud_risk:71,
     approval_chain:[{role:'HR Manager',status:'flagged',by:'Priya Adhikari',date:'2025-07-03'},{role:'Finance',status:'pending',by:null,date:null}],
     payment_date:null, payment_ref:null,
-    ai_note:'MISMATCH: Invoice rate NPR 847/day vs PO rate NPR 820/day. Overbilled by NPR 8,424. DO NOT APPROVE.',
     impact_links:['Dispute','Vendor Billing','Contract Alert','Finance'] },
   { id:'i4', inv_no:'INV-SE-2025-06', vendor_code:'VND-004', vendor_name:'SalaryExpert Payroll Nepal',
     service:'Payroll Processing', period:'Jun 2025',
@@ -46,7 +43,6 @@ const INVOICES = [
     status:'paid',ai_validation:'Pass', ai_fraud_risk:3,
     approval_chain:[{role:'HR Manager',status:'approved',by:'Priya Adhikari',date:'2025-06-28'},{role:'Finance',status:'paid',by:'Sanjay Karki',date:'2025-06-30'}],
     payment_date:'2025-06-30', payment_ref:'NABIL-TXN-20250630',
-    ai_note:'Perfect match. Retainer invoice. Paid within SLA window.',
     impact_links:['Payroll','Finance'] },
 ]
 
@@ -55,7 +51,6 @@ const STATUS_CFG = {
   approved:   {c:'#3b82f6',bg:'#eff6ff',b:'#bfdbfe',icon:'✅',label:'Approved'},
   disputed:   {c:'#ef4444',bg:'#fef2f2',b:'#fecaca',icon:'⚠',label:'Disputed'},
   paid:       {c:'#10b981',bg:'#f0fdf4',b:'#bbf7d0',icon:'💰',label:'Paid'},
-}
 const CTX = [
   {icon:'👁',label:'View Invoice',          key:'view'},
   {icon:'🔍',label:'OCR Re-scan',           key:'ocr'},
@@ -64,10 +59,28 @@ const CTX = [
   {icon:'💰',label:'Process Payment',        key:'pay'},
   {icon:'🧾',label:'Generate TDS Certificate',key:'tds'},
   {icon:'🔗',label:'Impact Analysis',        key:'impact'},
-  {icon:'📤',label:'Export',                 key:'export'},
+  {icon:'📤',label:'Export',                 key:'export'}
+
+port'},
 ]
 
+
+// ── Tenant context ────────────────────────────────────────────
+function useCompanyCtx() {
+  const auth   = (() => { try { return JSON.parse(localStorage.getItem('elogix_auth')||'{}') } catch { return {} } })()
+  const regCos = (() => { try { return JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}') } catch { return {} } })()
+  const slug   = auth.company?.slug || auth.user?.company || 'demo'
+  return {
+    company_id:   auth.company?.id || slug,
+    company_name: auth.company?.name || regCos[slug]?.name || 'Your Company',
+    company_slug: slug,
+    plan:         auth.company?.plan || 'trial',
+    currency:     auth.company?.currency || 'NPR',
+    token:        localStorage.getItem('elogix_token') || auth.token || '',
+
 export default function VendorInvoicePage() {
+  const ctx = useCompanyCtx()  // Tenant scope
+
   const [invoices, setInvoices] = useState(INVOICES)
   const [search,   setSearch]   = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
@@ -258,4 +271,3 @@ export default function VendorInvoicePage() {
       ]}/>
     </div>
   )
-}

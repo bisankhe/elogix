@@ -102,4 +102,3 @@ export default function HRTicketingSystemPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

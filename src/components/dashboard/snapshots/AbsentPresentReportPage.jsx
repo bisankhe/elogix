@@ -26,7 +26,6 @@ const CODE_STYLE = {
   ND:  { bg:'#1e1b4b', text:'#c7d2fe', border:'#4338ca', dot:'#818cf8',  label:'Night Duty'      },
   OT:  { bg:'#fffbeb', text:'#78350f', border:'#fcd34d', dot:'#d97706',  label:'Overtime'        },
   WFH: { bg:'#f0f9ff', text:'#075985', border:'#7dd3fc', dot:'#0ea5e9',  label:'Work From Home'  },
-}
 
 const DEPTS = ['All','Management','Human Resources','Finance','IT','Sales','Operations']
 
@@ -56,7 +55,6 @@ function genRows(month, year, dept) {
         if (code==='P') presentCount++
         else if (code==='A') absentCount++
         else leaveCount++
-      }
       // login/logout times (only present days)
       const hasLog = code==='P'
       const loginH  = hasLog ? (8 + Math.floor(Math.random()*2)) : null
@@ -68,12 +66,10 @@ function genRows(month, year, dept) {
         login:  hasLog ? `${pad2(loginH)}:${pad2(loginM)}`  : null,
         logout: hasLog ? `${pad2(logoutH)}:${pad2(logoutM)}` : null,
       })
-    }
     const workingDays = daysInMonth - woffCount
     const pct = workingDays > 0 ? Math.round(presentCount/workingDays*100) : 0
     return { sn:idx+1, empId, name, desig, dept:deptName, days, presentCount, absentCount, leaveCount, woffCount, pct }
   })
-}
 
 const inp = {padding:'7px 10px',borderRadius:8,border:'1.5px solid #e2e8f0',
   fontSize:10,outline:'none',fontFamily:'inherit',width:'100%',boxSizing:'border-box',background:'#fff'}
@@ -100,7 +96,6 @@ const DayCell = ({ day, showTime }) => {
       </div>
     </td>
   )
-}
 
 export default function AbsentPresentReportPage() {
   const today = new Date()
@@ -127,7 +122,6 @@ export default function AbsentPresentReportPage() {
     const dow=new Date(year,month-1,d).getDay()
     const dayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
     dayHeaders.push({d,day:dayNames[dow],isWeekend:dow===0||dow===6})
-  }
 
   // Summary stats
   const totalP = rows.reduce((s,r)=>s+r.presentCount,0)
@@ -164,7 +158,6 @@ export default function AbsentPresentReportPage() {
         )}
       </div>
     )
-  }
 
   return (
     <div style={{fontFamily:'system-ui,sans-serif',minHeight:'100vh',background:'#f0fdf4'}}>
@@ -414,4 +407,3 @@ export default function AbsentPresentReportPage() {
       )}
     </div>
   )
-}

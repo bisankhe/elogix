@@ -28,7 +28,6 @@ const PAIRINGS = [
 const STATUS_CFG = {
   active:{c:'#10b981',bg:'#f0fdf4',icon:'✅',label:'Active'},
   pending_response:{c:'#f59e0b',bg:'#fffbeb',icon:'⏳',label:'Awaiting Buddy Response'},
-}
 
 export default function BuddyAssignmentPage() {
   const [pairings, setPairings] = useState(PAIRINGS)
@@ -151,4 +150,3 @@ export default function BuddyAssignmentPage() {
       {showExcel&&<ExcelModal title="Buddy Assignment" columns={['New Hire','Department','Buddy','Buddy Role','Match Score','Status','Coffee Chat Date']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

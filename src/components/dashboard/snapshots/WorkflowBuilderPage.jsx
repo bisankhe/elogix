@@ -98,4 +98,3 @@ export default function WorkflowBuilderPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

@@ -15,7 +15,6 @@ const VACANCIES = [
     applications:47, shortlisted:8, interviewed:4, status:'active',
     priority:'high', source_of_hire:null, jrf_no:'JRF-2025-001',
     la_advertised:true, moless_posted:true, ai_score:82,
-    ai_note:'47 applicants. Top match: 3 candidates from IT background. On track for Jul 31 close.',
     impact_links:['Manpower Requisition','Job Posting','ATS Dashboard','Headcount Planning']
   },
   { id:'v2', req_id:'JRF-2025-002', title:'HR Business Partner',
@@ -25,7 +24,6 @@ const VACANCIES = [
     applications:22, shortlisted:5, interviewed:2, status:'active',
     priority:'medium', source_of_hire:null, jrf_no:'JRF-2025-002',
     la_advertised:true, moless_posted:true, ai_score:74,
-    ai_note:'Behind schedule. Only 2 interviews completed. Recommend expanding sourcing channels.',
     impact_links:['Manpower Requisition','ATS Dashboard']
   },
   { id:'v3', req_id:'JRF-2025-003', title:'Finance Manager',
@@ -35,7 +33,6 @@ const VACANCIES = [
     applications:18, shortlisted:4, interviewed:3, status:'overdue',
     priority:'critical', source_of_hire:null, jrf_no:'JRF-2025-003',
     la_advertised:true, moless_posted:true, ai_score:45,
-    ai_note:'OVERDUE by 34 days. Salary band may be below market. Recommend revision.',
     impact_links:['Manpower Requisition','ATS Dashboard','Headcount Planning','Finance']
   },
   { id:'v4', req_id:'JRF-2025-004', title:'Customer Service Representative',
@@ -45,7 +42,6 @@ const VACANCIES = [
     applications:63, shortlisted:12, interviewed:0, status:'active',
     priority:'medium', source_of_hire:null, jrf_no:'JRF-2025-004',
     la_advertised:true, moless_posted:false, ai_score:61,
-    ai_note:'High volume. MoLESS portal posting pending. Start shortlisting immediately.',
     impact_links:['Job Posting','ATS Dashboard']
   },
   { id:'v5', req_id:'JRF-2025-005', title:'Cloud Architect',
@@ -55,7 +51,6 @@ const VACANCIES = [
     applications:5, shortlisted:0, interviewed:0, status:'new',
     priority:'high', source_of_hire:null, jrf_no:'JRF-2025-005',
     la_advertised:false, moless_posted:false, ai_score:30,
-    ai_note:'NEW. Job posting not live yet. Advertise immediately per Nepal LA2074 Section 11.',
     impact_links:['Job Posting','Expansion Planning','ATS Dashboard']
   },
 ]
@@ -66,13 +61,11 @@ const STATUS_CFG = {
   overdue:  {c:'#ef4444',bg:'#fef2f2',b:'#fecaca',icon:'⏰',label:'Overdue'},
   filled:   {c:'#10b981',bg:'#f0fdf4',b:'#bbf7d0',icon:'✅',label:'Filled'},
   onhold:   {c:'#f59e0b',bg:'#fffbeb',b:'#fde68a',icon:'⏸',label:'On Hold'},
-}
 const PRIORITY_CFG = {
   critical:{c:'#dc2626',bg:'#fef2f2'},
   high:    {c:'#f59e0b',bg:'#fffbeb'},
   medium:  {c:'#3b82f6',bg:'#eff6ff'},
   low:     {c:'#64748b',bg:'#f8fafc'},
-}
 const CTX = [
   {icon:'👁',label:'View Vacancy Detail',     key:'view'},
   {icon:'📋',label:'View JRF',                key:'jrf'},
@@ -248,7 +241,6 @@ export default function VacancyManagementPage() {
                     applications:0,shortlisted:0,interviewed:0,status:'new',
                     priority:form.priority,source_of_hire:null,jrf_no:form.jrf||'JRF-NEW',
                     la_advertised:false,moless_posted:false,ai_score:0,
-                    ai_note:'Newly created. Post to MoLESS and newspaper immediately.',
                     impact_links:['Job Posting','ATS Dashboard','Manpower Requisition']
                   }])
                   setShowAdd(false)
@@ -276,4 +268,3 @@ export default function VacancyManagementPage() {
       ]}/>
     </div>
   )
-}

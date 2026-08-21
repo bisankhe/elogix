@@ -82,4 +82,3 @@ export default function StationeryInventoryPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

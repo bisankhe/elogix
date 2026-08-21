@@ -81,4 +81,3 @@ export default function ApprovalMatrixPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

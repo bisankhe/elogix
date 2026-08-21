@@ -75,7 +75,6 @@ function StatCard({ icon, label, value, sub, color, trend }) {
       {sub && <div style={{ fontSize:9, color:'#94a3b8' }}>{sub}</div>}
     </div>
   )
-}
 
 export default function ATSCommandCenterPage() {
   const [msg, setMsg] = useState('')
@@ -102,7 +101,6 @@ export default function ATSCommandCenterPage() {
     await new Promise(r=>setTimeout(r,1500))
     setAiSummary(`📊 Today's Recruitment Intelligence:\n\n✅ Strong: Senior SW Engineer pipeline is healthy — 6 candidates at panel stage, 1 offer accepted.\n\n⚠️ Action needed: Finance Manager vacancy has 0 hires in 8 days. Top candidate Priya Sharma (88% AI match) is at risk — recommend immediate offer.\n\n🎯 AI Recommendation: Schedule batch video interviews for 14 HR Business Partner candidates to accelerate pipeline.\n\n📈 Trend: LinkedIn converting at 2.3x better than Indeed for technical roles. Recommend increasing LinkedIn ad spend by 40% for DevOps & Product roles.\n\n💰 Cost Efficiency: Current cost-per-hire is NPR 13,800 vs industry benchmark NPR 18,500 — excellent performance.`)
     setLoadingAI(false)
-  }
 
   const G2 = (from,to)=>`linear-gradient(135deg,${from},${to})`
 
@@ -411,4 +409,3 @@ export default function ATSCommandCenterPage() {
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
-}

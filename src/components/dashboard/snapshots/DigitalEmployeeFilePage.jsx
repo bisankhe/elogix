@@ -28,7 +28,6 @@ const FILE_DATA = {
     {action:'Downloaded',document:'Employment Contract',by:'Gita Maharjan',date:'2025-06-19 09:15'},
     {action:'Uploaded',document:'NDA_Signed.pdf',by:'HR Admin',date:'2025-06-18 16:40'},
   ],
-}
 
 export default function DigitalEmployeeFilePage() {
   const [tab, setTab] = useState('Personal Info')
@@ -129,4 +128,3 @@ export default function DigitalEmployeeFilePage() {
       {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={['Document Management']} actions={[{icon:'👁',label:'View',key:'view'}]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

@@ -14,7 +14,6 @@ async function callAI(prompt, sys, max=1200) {
     if (r.ok) { const d=await r.json(); return d.content?.map(c=>c.text).join('')||'' }
   } catch {}
   return null
-}
 
 const AI_TOOLS = [
   { id:'email',     icon:'📧', label:'AI Email Writer',         color:'#1e40af', bg:'#eff6ff', desc:'Write professional recruitment emails for any stage' },
@@ -79,17 +78,14 @@ export default function ATSAIToolsPage() {
     } else if (selTool==='summary') {
       sys = 'Extract and structure information from CVs into a professional candidate profile summary.'
       prompt = `Summarise this CV into a structured candidate profile:\n\n${cvText}\n\nReturn: Name, Contact, Current Role, Total Experience, Education, Top 8 Skills, Key Achievements (3 bullets), Career Summary (2 sentences), Suitability Assessment.`
-    }
 
     const result = await callAI(prompt, sys, 1500)
     setOutput(result || 'AI generation complete. Please check the output above.')
     setLoading(false)
-  }
 
   const copyOutput = () => {
     navigator.clipboard?.writeText(output).then(() => { setCopied(true); setTimeout(()=>setCopied(false),2000) })
     notify('Copied to clipboard!')
-  }
 
   const tool = AI_TOOLS.find(t => t.id===selTool)
 
@@ -291,4 +287,3 @@ export default function ATSAIToolsPage() {
       </div>
     </div>
   )
-}

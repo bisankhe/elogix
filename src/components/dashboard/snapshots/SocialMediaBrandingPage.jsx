@@ -18,7 +18,6 @@ const STATUS_CFG = {
   draft:     {c:'#94a3b8', bg:'#f8fafc', icon:'📝', label:'Draft'},
   scheduled: {c:'#f59e0b', bg:'#fffbeb', icon:'⏰', label:'Scheduled'},
   archived:  {c:'#64748b', bg:'#f8fafc', icon:'📦', label:'Archived'},
-}
 
 const CTX_ACTIONS = [
   {icon:'👁', label:'View Details',      key:'view'},
@@ -155,4 +154,3 @@ export default function SocialMediaBrandingPage() {
       ]}/>
     </div>
   )
-}

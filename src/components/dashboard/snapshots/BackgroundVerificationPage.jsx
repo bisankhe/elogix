@@ -29,7 +29,6 @@ const STATUS_CFG = {
   flag:        {c:'#f59e0b',bg:'#fffbeb',b:'#fde68a',icon:'⚠️',label:'Flag Raised'},
   failed:      {c:'#ef4444',bg:'#fef2f2',b:'#fecaca',icon:'❌',label:'Failed'},
   pending:     {c:'#94a3b8',bg:'#f8fafc',b:'#e2e8f0',icon:'⏳',label:'Pending'},
-}
 const CHECK_STATUS_COLOR = {clear:'#10b981',in_progress:'#3b82f6',flag:'#f59e0b',failed:'#ef4444',pending:'#94a3b8'}
 
 export default function BackgroundVerificationPage() {
@@ -173,7 +172,6 @@ export default function BackgroundVerificationPage() {
                     completed_date:null,agency:form.agency,
                     checks:form.checks.reduce((acc,c)=>({...acc,[c.replace(/ /g,'_')]:'pending'}),{}),
                     notes:'BGV initiated. Checks in progress.',impact_links:['Offer Management']
-                  }
                   setRecords(p=>[...p,newRec])
                   notify('✅ BGV initiated for '+form.candidate+' via '+form.agency)
                   setShowAdd(false)
@@ -196,4 +194,3 @@ export default function BackgroundVerificationPage() {
       ]}/>
     </div>
   )
-}

@@ -8,4 +8,3 @@ export default function StoredTasksPage(){
       <div style={{background:'#fff',borderRadius:16,padding:20,border:'1px solid #e2e8f0',textAlign:'center',color:'#94a3b8'}}><div style={{fontSize:32,marginBottom:8}}>📋</div><div style={{fontSize:11}}>No tasks stored yet. Use Quick Actions or your module pages to create and assign tasks.</div></div>
     </div>
   )
-}

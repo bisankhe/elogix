@@ -94,4 +94,3 @@ export default function AppreciationProgramPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

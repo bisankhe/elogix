@@ -105,4 +105,3 @@ export default function RecognitionProgramPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

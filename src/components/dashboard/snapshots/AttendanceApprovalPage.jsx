@@ -25,7 +25,6 @@ const TYPE_CFG = {
   missed_punch:{c:'#ef4444',bg:'#fef2f2',icon:'🕐',label:'Missed Punch'},
   overtime:{c:'#f59e0b',bg:'#fffbeb',icon:'⏱',label:'Overtime'},
   regularization:{c:'#7c3aed',bg:'#f5f3ff',icon:'📆',label:'Regularization'},
-}
 const STATUS_CFG = {pending:{c:'#f59e0b',label:'Pending'},approved:{c:'#10b981',label:'Approved'},rejected:{c:'#ef4444',label:'Rejected'}}
 
 export default function AttendanceApprovalPage() {
@@ -124,4 +123,3 @@ export default function AttendanceApprovalPage() {
       {showExcel&&<ExcelModal title="Attendance Approval Queue" columns={['Employee','Department','Type','Detail','Date','Impact Hours','Manager','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

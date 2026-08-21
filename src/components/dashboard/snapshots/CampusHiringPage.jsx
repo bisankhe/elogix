@@ -191,4 +191,3 @@ export default function CampusHiringPage() {
       {showExcel&&<ExcelModal title="Campus Hiring" columns={['University','Tier','Alumni Hired','Avg Performance','Retention %','Students Registered']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

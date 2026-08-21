@@ -10,31 +10,26 @@ const A = '#7e22ce'
 const EVP_PILLARS = [
   { id:'p1', name:'Total Rewards', nepali:'समग्र पुरस्कार', icon:'💰', color:'#10b981',
     weight:30, employee_rating:4.3, market_benchmark:4.0,
-    description:'Competitive salary, festival bonus, SSF, health insurance, performance incentives.',
     data_sources:['Salary Survey 2025','Retention Exit Interviews','Pulse Survey Q2'],
     status:'strong', last_updated:'2025-06-01',
     impact_links:['Career Page','Recruitment Campaign','Job Posting'] },
   { id:'p2', name:'Career Growth', nepali:'क्यारियर विकास', icon:'📈', color:'#3b82f6',
     weight:25, employee_rating:3.8, market_benchmark:4.1,
-    description:'Clear promotion paths, internal mobility, skill certifications, mentorship programs.',
     data_sources:['Performance Review Data','L&D Completion Rates','Internal Mobility Stats'],
     status:'needs_work', last_updated:'2025-05-28',
     impact_links:['Career Page','Culture Showcase'] },
   { id:'p3', name:'Culture & Belonging', nepali:'संस्कृति र अपनत्व', icon:'🤝', color:'#f59e0b',
     weight:20, employee_rating:4.5, market_benchmark:3.9,
-    description:'Inclusive workplace, transparent leadership, work-life balance, flexible hours.',
     data_sources:['Engagement Survey','eNPS Score','DEI Metrics'],
     status:'strong', last_updated:'2025-06-10',
     impact_links:['Culture Showcase','Employee Testimonial','Social Media Branding'] },
   { id:'p4', name:'Purpose & Impact', nepali:'उद्देश्य र प्रभाव', icon:'🎯', color:'#8b5cf6',
     weight:15, employee_rating:4.0, market_benchmark:3.7,
-    description:'Meaningful work, company mission alignment, CSR initiatives, ESG commitment.',
     data_sources:['Mission Alignment Survey','CSR Participation'],
     status:'strong', last_updated:'2025-05-15',
     impact_links:['Culture Showcase','Social Media Branding'] },
   { id:'p5', name:'Workplace Flexibility', nepali:'कार्यस्थल लचिलोपन', icon:'🏠', color:'#06b6d4',
     weight:10, employee_rating:3.5, market_benchmark:4.3,
-    description:'Hybrid/remote options, flexible hours, results-based work arrangements.',
     data_sources:['Remote Work Survey','Attrition Exit Data'],
     status:'critical', last_updated:'2025-06-05',
     impact_links:['Career Page','Recruitment Campaign'] },
@@ -44,7 +39,6 @@ const STATUS_CFG = {
   strong:     {c:'#10b981', bg:'#f0fdf4', label:'Strong - Above Market'},
   needs_work: {c:'#f59e0b', bg:'#fffbeb', label:'Needs Improvement'},
   critical:   {c:'#ef4444', bg:'#fef2f2', label:'Critical Gap'},
-}
 
 const CTX = [
   {icon:'👁',label:'View Full Pillar',      key:'view'},
@@ -78,7 +72,6 @@ export default function EVPManagementPage() {
       setAiMsg(`"At eLogix HRMS, ${pillar.name.toLowerCase()} isn't just a policy - it's backed by data. ${pillar.employee_rating}/5 employee satisfaction, validated through our latest pulse survey. ${pillar.description} This is the ${pillar.name.toLowerCase()} we live, not just promise."`)
       setGenerating(false)
     },1200)
-  }
 
   return (
     <div onClick={()=>setCtx(null)}>
@@ -182,4 +175,3 @@ export default function EVPManagementPage() {
       ]}/>
     </div>
   )
-}

@@ -72,57 +72,27 @@ const ALL_MODULES = [
 // ── BUSINESS TYPE TEMPLATES ────────────────────────────────────
 const BUSINESS_TYPES = [
   {
-    id:'recruitment_agency',
-    label:'Recruitment Agency',
-    icon:'🎯',
-    color:'#e11d48',
-    bg:'#fff1f2',
-    desc:'Manpower agencies, placement firms, headhunters',
     modules: ['ats','job_portal','interview','candidate_pool','jd_library','outsource',
               'onboarding','documents','employee','self_service','ai_chatbot','ai_letters',
               'integrations','reports','helpdesk'],
   },
   {
-    id:'bank_finance',
-    label:'Bank / Finance',
-    icon:'🏦',
-    color:'#0369a1',
-    bg:'#eff6ff',
-    desc:'Banks, insurance, NBFCs, cooperatives',
     modules: ['employee','org_setup','attendance','leave','payroll','self_service','documents',
               'performance','goals','training','skill_matrix','career_pathing','finance',
               'compliance','tax','loan','expense','reports','ai_bi','audit_log','permissions',
               'sso','multi_branch','announcements','helpdesk','exit','org_chart','roster'],
   },
   {
-    id:'hospital_health',
-    label:'Hospital / Healthcare',
-    icon:'🏥',
-    color:'#059669',
-    bg:'#f0fdf4',
-    desc:'Hospitals, clinics, diagnostic centers, pharma',
     modules: ['employee','org_setup','attendance','leave','payroll','self_service','documents',
               'roster','overtime','training','compliance','reports','helpdesk','exit',
               'announcements','org_chart','performance','loan','expense','ai_chatbot'],
   },
   {
-    id:'ngo_ingo',
-    label:'NGO / INGO / Donor',
-    icon:'🌱',
-    color:'#d97706',
-    bg:'#fffbeb',
-    desc:'Non-profits, INGOs, development organizations',
     modules: ['employee','org_setup','attendance','leave','payroll','self_service','documents',
               'compliance','reports','training','performance','helpdesk','announcements',
               'exit','org_chart','ai_chatbot','ai_letters','expense'],
   },
   {
-    id:'it_software',
-    label:'IT / Software Company',
-    icon:'💻',
-    color:'#7c3aed',
-    bg:'#f5f3ff',
-    desc:'Software, SaaS, IT services, startups',
     modules: ['employee','org_setup','attendance','leave','payroll','self_service','documents',
               'ats','job_portal','interview','onboarding','jd_library','candidate_pool',
               'performance','goals','360_feedback','training','skill_matrix','career_pathing',
@@ -130,56 +100,26 @@ const BUSINESS_TYPES = [
               'announcements','exit','org_chart','permissions'],
   },
   {
-    id:'manufacturing',
-    label:'Manufacturing / Factory',
-    icon:'🏭',
-    color:'#64748b',
-    bg:'#f8fafc',
-    desc:'Factories, production units, industrial companies',
     modules: ['employee','org_setup','attendance','leave','payroll','self_service','documents',
               'roster','overtime','training','compliance','tax','loan','reports','helpdesk',
               'exit','announcements','org_chart','performance','expense','biometric'],
   },
   {
-    id:'hotel_hospitality',
-    label:'Hotel / Hospitality',
-    icon:'🏨',
-    color:'#c2410c',
-    bg:'#fff7ed',
-    desc:'Hotels, restaurants, tourism, travel agencies',
     modules: ['employee','org_setup','attendance','leave','payroll','self_service','documents',
               'roster','overtime','training','compliance','reports','helpdesk','exit',
               'announcements','org_chart','biometric','expense'],
   },
   {
-    id:'school_university',
-    label:'Education / University',
-    icon:'🎓',
-    color:'#0891b2',
-    bg:'#f0f9ff',
-    desc:'Schools, colleges, universities, training institutes',
     modules: ['employee','org_setup','attendance','leave','payroll','self_service','documents',
               'performance','training','compliance','reports','helpdesk','exit','announcements',
               'org_chart','ai_chatbot','ai_letters'],
   },
   {
-    id:'government',
-    label:'Government / Public Sector',
-    icon:'🏛️',
-    color:'#374151',
-    bg:'#f9fafb',
-    desc:'Government offices, public enterprises, municipalities',
     modules: ['employee','org_setup','attendance','leave','payroll','self_service','documents',
               'compliance','tax','reports','audit_log','helpdesk','exit','announcements',
               'org_chart','permissions','multi_branch'],
   },
   {
-    id:'custom',
-    label:'Custom / Other',
-    icon:'⚙️',
-    color:'#6b7280',
-    bg:'#f3f4f6',
-    desc:'Any other business type — configure manually',
     modules: ['employee','attendance','leave','payroll','self_service'],
   },
 ]
@@ -235,13 +175,11 @@ export default function TenantModulePermissionPage() {
       s.has(modId) ? s.delete(modId) : s.add(modId)
       return { ...prev, [selTenant]: s }
     })
-  }
 
   const applyTemplate = (bt) => {
     setTenantModules(prev => ({ ...prev, [selTenant]: new Set(bt.modules) }))
     notify(`✅ ${bt.label} template applied — ${bt.modules.length} modules enabled`)
     setShowBizType(false)
-  }
 
   const enableAll  = () => { setTenantModules(p => ({ ...p, [selTenant]: new Set(ALL_MODULES.map(m=>m.id)) })); notify('✅ All modules enabled') }
   const disableAll = () => { setTenantModules(p => ({ ...p, [selTenant]: new Set(['employee','self_service']) })); notify('⚠️ All modules disabled (Core HR only)') }
@@ -490,4 +428,3 @@ export default function TenantModulePermissionPage() {
       </div>
     </div>
   )
-}

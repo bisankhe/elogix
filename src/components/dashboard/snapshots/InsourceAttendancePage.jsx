@@ -2,7 +2,7 @@
 // Direct/permanent employees: full statutory counter suite (night duty, holidays,
 // OT, breaks), centralized biometric+GPS+web capture, full payroll-native control
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Field, ExcelModal, PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
 
 const G = 'linear-gradient(135deg,#052e16 0%,#15803d 60%,#86efac 100%)'
@@ -35,9 +35,25 @@ const INSOURCE_LOG = [
     impact_links:[] },
 ]
 
-const METHOD_ICONS = {biometric:'👆',gps:'📍',web:'💻',qr:'📱',manual:'✏'}
+const METHOD_ICONS = {biometric:'👆',gps:'📍',web:'💻',qr:'📱',manual:'📝',face:'🧑',rfid:'💳'}
+// ── Tenant context ────────────────────────────────────────────
+function useCompanyCtx() {
+  const auth    = (() => { try { return JSON.parse(localStorage.getItem('elogix_auth')||'{}') } catch { return {} } })()
+  const regCos  = (() => { try { return JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}') } catch { return {} } })()
+  const slug    = auth.company?.slug || auth.user?.company || 'demo'
+  return {
+    company_id:   auth.company?.id || slug,
+    company_name: auth.company?.name || regCos[slug]?.name || 'Your Company',
+    company_slug: slug,
+    plan:         auth.company?.plan || 'trial',
+    currency:     auth.company?.currency || 'NPR',
+    country:      auth.company?.country || 'Nepal',
+    token:        localStorage.getItem('elogix_token') || auth.token || '',
+
 
 export default function InsourceAttendancePage() {
+  const ctx = useCompanyCtx()  // Tenant scope
+
   const [logs, setLogs] = useState(INSOURCE_LOG)
   const [search, setSearch] = useState('')
   const [filterDept, setFilterDept] = useState('all')
@@ -139,4 +155,3 @@ export default function InsourceAttendancePage() {
       {showExcel&&<ExcelModal title="Insource Attendance" columns={['Employee','Department','Date','Login','Logout','Total Hours','Break Min','Overtime Hrs','Night Duty','Holiday Worked']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

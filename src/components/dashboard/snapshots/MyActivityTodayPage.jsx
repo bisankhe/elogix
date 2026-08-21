@@ -13,7 +13,6 @@ const A = '#7c3aed'
 
 const MODULE_ICONS = {
   attendance:'⏰', leave:'🏖', payroll:'💰', training:'🎓', document:'📂', signature:'✍', goal:'🎯', feedback:'💬', helpdesk:'🎫', login:'🔓',
-}
 
 const TODAY_ACTIVITY = [
   { id:'a1', time:'09:02 AM', module:'login', action:'Logged in via Web Portal' },
@@ -70,4 +69,3 @@ export default function MyActivityTodayPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

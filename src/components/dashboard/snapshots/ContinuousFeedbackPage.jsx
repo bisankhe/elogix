@@ -18,7 +18,6 @@ const TYPE_CFG = {
   praise:{c:'#10b981',bg:'#f0fdf4',icon:'👏',label:'Praise'},
   checkin:{c:'#0284c7',bg:'#eff6ff',icon:'💬',label:'1:1 Check-In'},
   constructive:{c:'#f59e0b',bg:'#fffbeb',icon:'🛠',label:'Constructive'},
-}
 
 export default function ContinuousFeedbackPage() {
   const [feed, setFeed] = useState(FEEDBACK_FEED)
@@ -98,4 +97,3 @@ export default function ContinuousFeedbackPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

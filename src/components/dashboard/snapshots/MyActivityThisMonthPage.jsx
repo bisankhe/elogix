@@ -77,4 +77,3 @@ export default function MyActivityThisMonthPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

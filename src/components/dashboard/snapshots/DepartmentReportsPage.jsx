@@ -18,7 +18,6 @@ const DEPT_DATA = {
   'Finance': { headcount:7, gender_pct:43, avg_age:35, budget_npr:450000, actual_npr:210000 },
   'Operations': { headcount:31, gender_pct:29, avg_age:33, budget_npr:1100000, actual_npr:1180000,
     flag_note:'Actual payroll exceeds budget -- review headcount overage.' },
-}
 
 export default function DepartmentReportsPage() {
   const [selected, setSelected] = useState('IT')
@@ -80,4 +79,3 @@ export default function DepartmentReportsPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

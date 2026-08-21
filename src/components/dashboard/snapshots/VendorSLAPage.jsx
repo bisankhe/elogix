@@ -20,7 +20,6 @@ const SLAS = [
     ],
     breaches:[], penalties_npr:0, bonuses_npr:25000,
     last_review:'2025-06-01', next_review:'2025-09-01',
-    ai_insight:'Excellent performance. Exceeds on 4/5 KPIs. Recommend bonus payment of NPR 25,000.',
     trend:'improving', breach_count:0,
     impact_links:['Vendor Profile','Agreement','Billing','BGV'] },
   { id:'s2', contract_code:'AGR-2025-003', vendor_code:'VND-005', vendor_name:'QuickHire Outsource Pvt.',
@@ -39,7 +38,6 @@ const SLAS = [
     ],
     penalties_npr:45000, bonuses_npr:0,
     last_review:'2025-06-01', next_review:'2025-07-01',
-    ai_insight:'CRITICAL: SSF non-compliance triggers Nepal LA2074 Section 64 co-liability. Immediate action required. Consider termination.',
     trend:'declining', breach_count:2,
     impact_links:['Compliance Alert','Labour Act 2074','Agreement','Legal'] },
   { id:'s3', contract_code:'AGR-2024-004', vendor_code:'VND-004', vendor_name:'SalaryExpert Payroll Nepal',
@@ -53,7 +51,6 @@ const SLAS = [
     ],
     breaches:[], penalties_npr:0, bonuses_npr:15000,
     last_review:'2025-06-01', next_review:'2025-09-01',
-    ai_insight:'Near-perfect performance. Market-best error rate. Eligible for preferred long-term partnership.',
     trend:'stable', breach_count:0,
     impact_links:['Billing','Agreement','Vendor Profile'] },
 ]
@@ -63,7 +60,6 @@ const SCORE_CFG = {
   good:      {c:'#3b82f6',bg:'#eff6ff',label:'Good'},
   average:   {c:'#f59e0b',bg:'#fffbeb',label:'Average'},
   critical:  {c:'#ef4444',bg:'#fef2f2',label:'Critical Breach'},
-}
 const TREND_ICONS = {improving:'📈',stable:'➡',declining:'📉'}
 const CTX_ACTIONS = [
   {icon:'👁',label:'View Full SLA Report',key:'view'},
@@ -298,4 +294,3 @@ export default function VendorSLAPage() {
       ]}/>
     </div>
   )
-}

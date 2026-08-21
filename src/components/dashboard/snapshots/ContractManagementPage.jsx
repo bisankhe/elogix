@@ -35,7 +35,6 @@ const STATUS_CFG = {
   expiring_soon: {c:'#f59e0b',bg:'#fffbeb',icon:'⏰',label:'Expiring Soon'},
   draft:         {c:'#94a3b8',bg:'#f8fafc',icon:'📝',label:'Draft'},
   expired:       {c:'#ef4444',bg:'#fef2f2',icon:'🚫',label:'Expired'},
-}
 
 export default function ContractManagementPage() {
   const [contracts, setContracts] = useState(CONTRACTS)
@@ -174,4 +173,3 @@ export default function ContractManagementPage() {
       {showExcel&&<ExcelModal title="Contracts" columns={['Employee','Position','Type','Start Date','End Date','Salary NPR','Status','e-Sign Status','Compliance Score']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

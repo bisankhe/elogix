@@ -66,13 +66,11 @@ const statusColor = {
   WFH:     'blue',
   Absent:  'red',
   Field:   'cyan',
-}
 
 const OVERTIME_LABEL_MAP = {
   allowed:  { label: 'OT allowed',  color: '#10b981' },
   exceeded: { label: 'OT exceeded', color: '#ef4444' },
   none:     { label: 'No OT',       color: '#94a3b8' },
-}
 
 export default function AttendanceSnapshot() {
   const { t } = useApp()
@@ -318,4 +316,3 @@ export default function AttendanceSnapshot() {
       )}
     </div>
   )
-}

@@ -100,4 +100,3 @@ export default function GeoAttendancePage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

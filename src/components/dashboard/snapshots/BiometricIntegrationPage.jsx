@@ -154,4 +154,3 @@ export default function BiometricIntegrationPage() {
       {showExcel&&<ExcelModal title="Biometric Devices" columns={['Device Name','Type','Model','Branch','Status','Enrolled Users','IP Address']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

@@ -132,4 +132,3 @@ export default function SalaryStructurePage() {
       {showExcel&&<ExcelModal title="Salary Structures" columns={['Structure Name','Applies To','Basic %','Gross NPR','Net NPR','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

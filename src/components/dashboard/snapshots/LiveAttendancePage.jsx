@@ -23,7 +23,6 @@ const STATUS_CFG = {
   field_duty:{c:'#3b82f6',bg:'#eff6ff',icon:'📍',label:'Field Duty'},
   absent:{c:'#94a3b8',bg:'#f8fafc',icon:'⚪',label:'Absent'},
   missed_checkout:{c:'#ef4444',bg:'#fef2f2',icon:'⚠',label:'Missed Checkout'},
-}
 const METHOD_ICONS = {biometric:'👆',gps:'📍',web:'💻',qr:'📱'}
 
 export default function LiveAttendancePage() {
@@ -48,7 +47,6 @@ export default function LiveAttendancePage() {
     on_break: feed.filter(e=>e.status==='on_break').length,
     field_duty: feed.filter(e=>e.status==='field_duty').length,
     absent: feed.filter(e=>e.status==='absent').length,
-  }
   const anomalies = feed.filter(e=>e.status==='missed_checkout').length
 
   return (
@@ -117,4 +115,3 @@ export default function LiveAttendancePage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

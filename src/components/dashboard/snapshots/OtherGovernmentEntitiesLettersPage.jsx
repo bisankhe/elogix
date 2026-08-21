@@ -18,23 +18,18 @@ const ENTITIES = [
 const LETTERS = [
   { id:'o1', entity:'ocr', subject:'Annual Transaction Return Filing - FY 2024-25',
     submitted_date:'2025-06-05', status:'submitted', reference_no:'OCR-ATR-99201',
-    notes:'Statutory annual filing per Companies Act 2063 - financial records + board resolutions attached.',
     impact_links:[] },
   { id:'o2', entity:'nrb', subject:'Foreign Equity Inflow Approval Request',
     submitted_date:'2025-06-18', status:'under_review', reference_no:'NRB-FDI-33810',
-    notes:'USD 250,000 equity investment from parent company - requires NRB approval before fund repatriation eligibility.',
     impact_links:[] },
   { id:'o3', entity:'doi', subject:'Industrial License Renewal - IT Service Category',
     submitted_date:null, status:'drafting', reference_no:null,
-    notes:'License expires 2025-08-01 - renewal application in preparation.',
     impact_links:[] },
   { id:'o4', entity:'immigration', subject:'Work Permit Sponsorship Letter - Expat Hire',
     submitted_date:'2025-06-12', status:'submitted', reference_no:'IMM-WP-77234',
-    notes:'Supporting letter for visa category change, linked to DoLOS work permit approval.',
     impact_links:['Employee Profile'] },
   { id:'o5', entity:'municipal', subject:'Business Operation Permit Renewal - KTM HQ',
     submitted_date:null, status:'pending', reference_no:null,
-    notes:'Annual ward-level operation permit renewal due 2025-07-01.',
     impact_links:[] },
 ]
 
@@ -43,7 +38,6 @@ const STATUS_CFG = {
   under_review:{c:'#3b82f6',bg:'#eff6ff',icon:'🔍',label:'Under Review'},
   drafting:{c:'#f59e0b',bg:'#fffbeb',icon:'✏',label:'Drafting'},
   pending:{c:'#94a3b8',bg:'#f8fafc',icon:'⏳',label:'Pending'},
-}
 
 export default function OtherGovernmentEntitiesLettersPage() {
   const [letters, setLetters] = useState(LETTERS)
@@ -156,4 +150,3 @@ export default function OtherGovernmentEntitiesLettersPage() {
       {showExcel&&<ExcelModal title="Other Government Entities Letters" columns={['Subject','Entity','Submitted Date','Reference No','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

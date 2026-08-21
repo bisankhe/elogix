@@ -77,4 +77,3 @@ export default function PayrollBudgetPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

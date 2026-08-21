@@ -16,24 +16,19 @@ const PROGRESSIVE_STEPS = [
 
 const RECORDS_INIT = [
   { id:'dr1', employee:'Sunil Magar', emp_id:'EMP-0042', position:'Sales Officer',
-    infraction:'Frequent late arrival without prior permission (7 occurrences in 30 days)',
     action_type:'warning', incident_date:'2025-04-15', issued_date:'2025-04-18',
-    investigated_by:'Priya Adhikari (HR Manager)',
     show_cause_issued:true, employee_statement:'Acknowledged. Cited transportation issues and committed to improvement.',
     employee_signed:true, witness:'Dipak Tamang (Sales Head)', status:'closed',
     confidentiality:'hr_manager_only', deduction_days:0, withhold_months:0,
     impact_links:['Employee Timeline'] },
   { id:'dr2', employee:'Ram Bahadur Thapa', emp_id:'EMP-0067', position:'Driver',
-    infraction:'Unauthorized use of company vehicle for personal purposes on 3 occasions',
     action_type:'salary_deduction', incident_date:'2025-06-02', issued_date:'2025-06-10',
     investigated_by:'Priya Adhikari (HR Manager)', deduction_days:1,
     show_cause_issued:true, employee_statement:'Disputed — claims verbal permission was given by prior supervisor (unverifiable).',
     employee_signed:false, witness:'Security Guard (CCTV evidence)', status:'under_review', withhold_months:0,
     confidentiality:'hr_manager_only', impact_links:['Employee Timeline'] },
   { id:'dr3', employee:'Dipendra Yadav', emp_id:'EMP-0091', position:'Junior Accountant',
-    infraction:'Embezzlement in petty cash handling — confirmed by Finance audit. Total: NPR 22,000.',
     action_type:'dismissal', incident_date:'2025-05-20', issued_date:'2025-05-28',
-    investigated_by:'Sanjay Karki (CFO) + Priya Adhikari (HR)',
     show_cause_issued:true, employee_statement:'No statement provided — employee did not respond within 7-day notice period.',
     employee_signed:false, witness:'Sanjay Karki (CFO)', status:'closed', withhold_months:0, deduction_days:0,
     confidentiality:'executive_only', impact_links:['Employee Timeline','Full & Final Settlement'] },
@@ -43,7 +38,6 @@ const STATUS_CFG = {
   closed:       {c:'#10b981',bg:'#f0fdf4',label:'Closed'},
   under_review: {c:'#f59e0b',bg:'#fffbeb',label:'Under Review'},
   appealed:     {c:'#3b82f6',bg:'#eff6ff',label:'Appealed'},
-}
 
 export default function DisciplinaryRecordsPage() {
   const [records, setRecords] = useState(RECORDS_INIT)
@@ -82,7 +76,6 @@ export default function DisciplinaryRecordsPage() {
   const submitRecord = () => {
     if (!form.employee||!form.incident_date||!form.infraction) {
       notify('⚠️ Employee, incident date and infraction required'); return
-    }
     setRecords(prev=>[...prev,{
       id:'dr'+Date.now(),...form,
       deduction_days:parseInt(form.deduction_days)||1,
@@ -93,7 +86,6 @@ export default function DisciplinaryRecordsPage() {
     notify('✅ Disciplinary record created for '+form.employee+' — routed to HR Admin')
     setShowAdd(false)
     setForm({employee:'',emp_id:'',position:'',action_type:'warning',incident_date:'',issued_date:'',infraction:'',investigated_by:'',employee_statement:'',witness:'',deduction_days:'1',withhold_months:'12',confidentiality:'hr_manager_only'})
-  }
 
   return (
     <div onClick={()=>setCtx(null)} style={{fontFamily:'system-ui,sans-serif'}}>
@@ -334,4 +326,3 @@ export default function DisciplinaryRecordsPage() {
       {showExcel&&<ExcelModal title="Disciplinary Records" columns={['Employee','Emp ID','Position','Action Type','Incident Date','Issued Date','Status','Signed']} onClose={()=>setShowExcel(false)} onImport={()=>{}}/>}
     </div>
   )
-}

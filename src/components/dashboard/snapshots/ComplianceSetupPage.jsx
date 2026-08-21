@@ -124,4 +124,3 @@ export default function ComplianceSetupPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

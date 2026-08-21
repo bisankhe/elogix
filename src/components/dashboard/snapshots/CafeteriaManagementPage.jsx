@@ -68,4 +68,3 @@ export default function CafeteriaManagementPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

@@ -103,4 +103,3 @@ export default function ConflictResolutionPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

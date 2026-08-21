@@ -116,4 +116,3 @@ export default function ExpansionPlanPage() {
       {showExcel&&<ExcelModal title="Expansion Planning" columns={['Department','Branch','Quota','Planned','Budget NPR','Priority','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

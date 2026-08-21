@@ -13,7 +13,6 @@ const A = '#0891b2'
 const HEATMAP_DAYS = ['Mon','Tue','Wed','Thu','Fri']
 const HEATMAP_DATA = {
   'Sales & Marketing':[8,9,7,8,5],'IT':[6,7,9,8,4],'Finance':[7,8,8,9,6],'Customer Service':[5,6,7,6,4],
-}
 
 const TRAINING_ROI = [
   {course:'Agile Project Management',pre_score:3.1,post_score:3.9,participants:8},
@@ -32,7 +31,6 @@ function heatColor(val) {
   if (val>=6) return '#65a30d'
   if (val>=4) return '#eab308'
   return '#dc2626'
-}
 
 export default function ProductivityAnalyticsPage() {
   const [search, setSearch] = useState('')
@@ -124,4 +122,3 @@ export default function ProductivityAnalyticsPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

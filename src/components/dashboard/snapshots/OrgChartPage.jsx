@@ -11,7 +11,7 @@
 //          - Historical snapshots
 // ============================================================
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useApp } from '../../../context/AppContext.jsx'
 
 // ── Full org data (extended from Position Management) ─────────
@@ -26,7 +26,6 @@ const ORG_NODES = [
     attrition:'low', risk_score:8, succession:true, direct_reports:5,
     managerial:true, location:'Kathmandu HQ',
     skills:['Strategy','Leadership','P&L','Board Relations'],
-    ai_insight:'Strong tenure. Low flight risk. Succession plan active.',
   },
   // ── C-Suite ─────────────────────────────────────────────────
   {
@@ -38,7 +37,6 @@ const ORG_NODES = [
     attrition:'low', risk_score:12, succession:true, direct_reports:4,
     managerial:true, location:'Kathmandu HQ',
     skills:['Architecture','Cloud','AI/ML','Team Building'],
-    ai_insight:'High performer. Key technical decision maker. Ensure retention package is competitive.',
   },
   {
     id:'cfo', code:'POS-FIN-CFO', title:'Chief Financial Officer', grade:'E1',
@@ -49,7 +47,6 @@ const ORG_NODES = [
     attrition:'low', risk_score:15, succession:false, direct_reports:3,
     managerial:true, location:'Kathmandu HQ',
     skills:['Financial Planning','Tax','Compliance','ERP'],
-    ai_insight:'Solid performer. No succession plan in place — recommend developing Finance Manager as backup.',
   },
   {
     id:'coo', code:'POS-OPS-COO', title:'Chief Operating Officer', grade:'E1',
@@ -60,7 +57,6 @@ const ORG_NODES = [
     attrition:'medium', risk_score:38, succession:false, direct_reports:4,
     managerial:true, location:'Kathmandu HQ',
     skills:['Process Optimization','Supply Chain','Agile','P&L'],
-    ai_insight:'Risk score elevated. Recent market activity shows similar profiles being recruited externally.',
   },
   {
     id:'hrd', code:'POS-HR-DIR', title:'HR Director', grade:'M3',
@@ -71,7 +67,6 @@ const ORG_NODES = [
     attrition:'low', risk_score:18, succession:true, direct_reports:5,
     managerial:true, location:'Kathmandu HQ',
     skills:['Labour Law','HRBP','OD','Compliance'],
-    ai_insight:'Excellent retention. Strong succession pipeline. Leads 5 HRBPs across business units.',
   },
   {
     id:'cmdo', code:'POS-MKT-CMO', title:'Chief Marketing Officer', grade:'E1',
@@ -82,7 +77,6 @@ const ORG_NODES = [
     attrition:'low', risk_score:null, succession:false, direct_reports:0,
     managerial:true, location:'Kathmandu HQ',
     skills:['Brand Strategy','Digital Marketing','Growth'],
-    ai_insight:'Position vacant 47 days. Recommend external search. 3 internal candidates identified by AI.',
   },
   // ── IT Department ───────────────────────────────────────────
   {
@@ -94,7 +88,6 @@ const ORG_NODES = [
     attrition:'medium', risk_score:45, succession:false, direct_reports:8,
     managerial:true, location:'Kathmandu HQ',
     skills:['React','TypeScript','Team Lead','Agile'],
-    ai_insight:'Span of control at 8 — approaching maximum. Consider promoting a Tech Lead. Attrition risk elevated.',
   },
   {
     id:'em_be', code:'POS-IT-EM-002', title:'Engineering Manager (BE)', grade:'M1',
@@ -105,7 +98,6 @@ const ORG_NODES = [
     attrition:'low', risk_score:22, succession:true, direct_reports:6,
     managerial:true, location:'Kathmandu HQ',
     skills:['Python','PostgreSQL','Flask','Docker'],
-    ai_insight:'Strong performer with clear succession. API team well-structured.',
   },
   {
     id:'tl', code:'POS-IT-TL-001', title:'Tech Lead', grade:'L4',
@@ -116,7 +108,6 @@ const ORG_NODES = [
     attrition:'medium', risk_score:55, succession:false, direct_reports:0,
     managerial:false, location:'Kathmandu HQ',
     skills:['React','Architecture','Mentoring'],
-    ai_insight:'Key technical contributor. 55% flight risk — consider promotion to Manager track.',
   },
   {
     id:'se1', code:'POS-IT-SE-001', title:'Senior Engineer', grade:'L3',
@@ -127,7 +118,6 @@ const ORG_NODES = [
     attrition:'low', risk_score:18, succession:false, direct_reports:0,
     managerial:false, location:'Remote',
     skills:['Python','FastAPI','PostgreSQL'],
-    ai_insight:'Solid performer. Remote-first — ensure engagement.',
   },
   {
     id:'se_vacant', code:'POS-IT-SE-002', title:'Senior Engineer', grade:'L3',
@@ -138,7 +128,6 @@ const ORG_NODES = [
     attrition:'low', risk_score:null, succession:false, direct_reports:0,
     managerial:false, location:'Kathmandu HQ',
     skills:['Backend Development'],
-    ai_insight:'Vacancy open 23 days. 4 candidates in pipeline — 1 at final interview stage.',
   },
   // ── HR Department ───────────────────────────────────────────
   {
@@ -150,7 +139,6 @@ const ORG_NODES = [
     attrition:'high', risk_score:72, succession:false, direct_reports:0,
     managerial:true, location:'Kathmandu HQ',
     skills:['HRBP','Labour Law','Talent Dev','Nepal Law'],
-    ai_insight:'HIGH RISK: 72% attrition probability. LinkedIn activity increased 300% last 30 days. Initiate retention conversation immediately.',
   },
   {
     id:'recruiter', code:'POS-HR-REC-001', title:'Senior Recruiter', grade:'L3',
@@ -161,7 +149,6 @@ const ORG_NODES = [
     attrition:'low', risk_score:12, succession:false, direct_reports:0,
     managerial:false, location:'Kathmandu HQ',
     skills:['Talent Acquisition','ATS','Interviewing'],
-    ai_insight:'High performer. Avg time-to-hire: 22 days (industry avg: 35). Excellent quality of hire score.',
   },
   // ── Finance Department ──────────────────────────────────────
   {
@@ -173,7 +160,6 @@ const ORG_NODES = [
     attrition:'low', risk_score:15, succession:false, direct_reports:3,
     managerial:true, location:'Kathmandu HQ',
     skills:['ICAN','Tally','Tax Compliance','Payroll'],
-    ai_insight:'Reliable finance anchor. No succession plan — recommend identifying successor.',
   },
   // ── Operations ──────────────────────────────────────────────
   {
@@ -185,7 +171,6 @@ const ORG_NODES = [
     attrition:'medium', risk_score:48, succession:false, direct_reports:3,
     managerial:false, location:'Hybrid',
     skills:['PMP','Agile','Budget Mgmt','Stakeholder Mgmt'],
-    ai_insight:'Cross-functional role. Dotted-line to CTO for tech projects. Monitor workload — dual reporting can cause burnout.',
   },
 ]
 
@@ -197,20 +182,17 @@ const DEPT_COLORS = {
   'Human Resources':      '#8b5cf6',
   'Sales & Marketing':    '#f59e0b',
   'Operations':           '#ef4444',
-}
 
 const RISK_CFG = {
   low:     { color:'#10b981', bg:'#f0fdf4', label:'Low'    },
   medium:  { color:'#f59e0b', bg:'#fffbeb', label:'Medium' },
   high:    { color:'#ef4444', bg:'#fef2f2', label:'High'   },
   critical:{ color:'#dc2626', bg:'#fef2f2', label:'Critical'},
-}
 
 const STATUS_CFG = {
   filled:  { border:'#10b981', bg:'#fff',    icon:'👤' },
   vacant:  { border:'#f59e0b', bg:'#fffbeb', icon:'○'  },
   frozen:  { border:'#94a3b8', bg:'#f8fafc', icon:'❄️' },
-}
 
 // ── AI Suggestions ────────────────────────────────────────────
 const AI_SUGGESTIONS = [
@@ -225,26 +207,17 @@ const AI_SUGGESTIONS = [
 
 const AI_RESPONSES = {
   'Show all high attrition risk positions': {
-    filter:'high_risk',
-    message:'Found 3 positions with elevated attrition risk. Priya Rai (HRBP — 72% risk) requires immediate retention action. Ram Bista (Tech Lead — 55% risk) is recommended for promotion. Roshan Thapa (Eng Mgr FE — 45% risk) is approaching span-of-control limit.',
     highlight:['hrbp_it','tl','em_fe'],
   },
   'Who reports to the CTO?': {
-    filter:'cto_reports',
-    message:'4 positions report directly to Bikram Shrestha (CTO): Engineering Manager (FE), Engineering Manager (BE), and 2 additional positions. Project Manager (Dev Poudel) has a dotted-line reporting to CTO as well.',
     highlight:['em_fe','em_be','pm','hrbp_it'],
   },
   'Show vacant positions only': {
-    filter:'vacant',
-    message:'2 positions are currently vacant: CMO (vacant 47 days — external search recommended) and Senior Engineer L3 (vacant 23 days — candidate in final interview).',
     highlight:['cmdo','se_vacant'],
   },
   'Which managers have span > 6?': {
-    filter:'high_span',
-    message:'Roshan Thapa (Eng Manager FE) has 8 direct reports — at maximum recommended span. Consider promoting Ram Bista (Tech Lead) to reduce load.',
     highlight:['em_fe'],
   },
-}
 
 // ── Pill component ────────────────────────────────────────────
 function Pill({ children, color='blue' }) {
@@ -256,7 +229,6 @@ function Pill({ children, color='blue' }) {
     gray:  {bg:'#f1f5f9',text:'#475569',border:'#e2e8f0'},
     purple:{bg:'#f5f3ff',text:'#6d28d9',border:'#ddd6fe'},
     orange:{bg:'#fff7ed',text:'#c2410c',border:'#fed7aa'},
-  }
   const c = m[color]||m.blue
   return (
     <span style={{background:c.bg,color:c.text,border:`1px solid ${c.border}`,
@@ -265,7 +237,6 @@ function Pill({ children, color='blue' }) {
       {children}
     </span>
   )
-}
 
 // ── Single Org Node Card ──────────────────────────────────────
 function OrgNode({ node, isHighlighted, isSelected, overlay, onSelect, children }) {
@@ -431,7 +402,6 @@ function OrgNode({ node, isHighlighted, isSelected, overlay, onSelect, children 
       )}
     </div>
   )
-}
 
 // ── Node Detail Panel ─────────────────────────────────────────
 function NodeDetailPanel({ node, onClose }) {
@@ -443,7 +413,6 @@ function NodeDetailPanel({ node, onClose }) {
       border:'1px solid #e2e8f0',borderRadius:14,
       boxShadow:'0 4px 20px rgba(0,0,0,.1)',
       display:'flex',flexDirection:'column',
-      overflow:'hidden',
       position:'sticky',top:0,maxHeight:'80vh',
     }}>
       {/* Header */}
@@ -452,7 +421,6 @@ function NodeDetailPanel({ node, onClose }) {
         flexShrink:0}}>
         <div style={{display:'flex',alignItems:'center',gap:10}}>
           <div style={{width:44,height:44,borderRadius:12,
-            background:'rgba(255,255,255,.2)',
             display:'flex',alignItems:'center',justifyContent:'center',
             fontSize:16,fontWeight:800,color:'#fff',flexShrink:0}}>
             {node.status==='vacant'?'○':node.initials}
@@ -576,16 +544,13 @@ function NodeDetailPanel({ node, onClose }) {
       </div>
     </div>
   )
-}
 
 // ── AI Assistant Panel ────────────────────────────────────────
 function AIAssistantPanel({ onQuery, onClose }) {
   const [input,    setInput]    = useState('')
   const [messages, setMessages] = useState([
     {
-      role:'ai',
       text:'Hi! I can help you navigate the org chart. Try asking:\n• "Show all high attrition risk positions"\n• "Who reports to the CTO?"\n• "Show vacant positions only"'
-    }
   ])
   const [loading, setLoading] = useState(false)
 
@@ -604,7 +569,6 @@ function AIAssistantPanel({ onQuery, onClose }) {
       if (resp) onQuery(resp)
       setLoading(false)
     }, 900)
-  }
 
   return (
     <div style={{width:280,flexShrink:0,background:'#fff',
@@ -697,10 +661,25 @@ function AIAssistantPanel({ onQuery, onClose }) {
       </div>
     </div>
   )
-}
 
-// ── Main Org Chart Page ───────────────────────────────────────
+// ── Main Org Chart Page ─────────────────────────────
+// ── Tenant context ────────────────────────────────────────────
+function useCompanyCtx() {
+  const auth    = (() => { try { return JSON.parse(localStorage.getItem('elogix_auth')||'{}') } catch { return {} } })()
+  const regCos  = (() => { try { return JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}') } catch { return {} } })()
+  const slug    = auth.company?.slug || auth.user?.company || 'demo'
+  return {
+    company_id:   auth.company?.id || slug,
+    company_name: auth.company?.name || regCos[slug]?.name || 'Your Company',
+    company_slug: slug,
+    plan:         auth.company?.plan || 'trial',
+    currency:     auth.company?.currency || 'NPR',
+    country:      auth.company?.country || 'Nepal',
+    token:        localStorage.getItem('elogix_token') || auth.token || '',
+
 export default function OrgChartPage() {
+  const ctx = useCompanyCtx()  // Tenant scope
+
   const [searchQ, setSearchQ] = useState('')
   const [msg, setMsg] = useState('')
   const notify = (m) => { setMsg(m); setTimeout(()=>setMsg(''),3000) }
@@ -745,7 +724,6 @@ export default function OrgChartPage() {
       const handleSelect = (n) => {
         setSelectedNode(isSel ? null : n)
         setShowDetail(!isSel)
-      }
 
       const toggle = (e) => {
         e.stopPropagation()
@@ -755,7 +733,6 @@ export default function OrgChartPage() {
           else next.add(node.id)
           return next
         })
-      }
 
       return (
         <div key={node.id} style={{display:'flex',flexDirection:'column',alignItems:'center'}}>
@@ -785,21 +762,18 @@ export default function OrgChartPage() {
         </div>
       )
     })
-  }
 
   const handleAIQuery = (resp) => {
     setHighlighted(resp.highlight || [])
     if (resp.filter === 'vacant') setOverlay('vacancy')
     if (resp.filter === 'high_risk') setOverlay('attrition')
     if (resp.filter === 'high_span') setOverlay('span')
-  }
 
   const resetAll = () => {
     setHighlighted([])
     setOverlay('none')
     setSelectedNode(null)
     setShowDetail(false)
-  }
 
   const rootNodes = buildTree(null, visibleNodes)
 
@@ -807,7 +781,6 @@ export default function OrgChartPage() {
   const handleSelect = (n) => {
     setSelectedNode(prev => prev?.id === n?.id ? null : n)
     if (n) setShowDetail(true)
-  }
 
   return (
     <div>
@@ -975,8 +948,6 @@ export default function OrgChartPage() {
           <div style={{
             transform:`scale(${zoom/100})`,
             transformOrigin:'top center',
-            transition:'transform .2s',
-            display:'flex',
             flexDirection:'column',
             alignItems:'center',
             gap:0,
@@ -1080,7 +1051,6 @@ export default function OrgChartPage() {
         gridTemplateColumns:'repeat(4,1fr)',gap:10}}>
         {[
           {
-            title:'Span of Control',
             items: ORG_NODES.filter(n=>n.direct_reports>0&&n.status==='filled')
               .map(n=>({
                 name:n.incumbent,
@@ -1090,7 +1060,6 @@ export default function OrgChartPage() {
               })),
           },
           {
-            title:'Department Headcount',
             items: Object.entries(
               ORG_NODES.filter(n=>n.status==='filled').reduce((acc,n)=>{
                 acc[n.dept]=(acc[n.dept]||0)+1; return acc
@@ -1100,7 +1069,6 @@ export default function OrgChartPage() {
                 color:DEPT_COLORS[dept]||'#64748b',
                 label:`${count} filled`
               }))
-          }
         ].map((section,si)=>(
           <div key={si}
             style={{background:'#fff',border:'1px solid #e2e8f0',
@@ -1133,4 +1101,3 @@ export default function OrgChartPage() {
       </div>
     </div>
   )
-}

@@ -25,7 +25,6 @@ function classifyRole(id='', label='') {
   if (i.includes('department')||i.includes('head')||l.includes('head')) return 'department_head'
   if (i.includes('finance')) return 'finance'
   return 'manager'
-}
 
 // ── LANGUAGE DETECTION ────────────────────────────────────────
 function detectLang(text='') {
@@ -37,7 +36,6 @@ function detectLang(text='') {
   if (/\b(le|la|les|est|pas)\b/.test(lo)) return 'fr'
   if (/\b(el|la|los|por)\b/.test(lo)) return 'es'
   return 'en'
-}
 
 // ── CLAUDE API ────────────────────────────────────────────────
 const VITE_KEY = import.meta?.env?.VITE_ANTHROPIC_API_KEY || ''
@@ -53,16 +51,13 @@ async function callClaude(messages, system) {
   if (VITE_KEY?.startsWith('sk-ant')) {
     try {
       const r = await fetch('https://api.anthropic.com/v1/messages', {
-        method:'POST',
         headers:{'Content-Type':'application/json','x-api-key':VITE_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-only-beta':'true'},
         body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:4096, system, messages }),
       })
       const d = await r.json()
       if (r.ok && d?.content?.[0]?.text) return { text:d.content[0].text, ok:true }
     } catch {}
-  }
   return { text:null, ok:false }
-}
 
 function buildSystem(lang, roleLevel, persona) {
   const l = { en:'English', ne:'Nepali', hi:'Hindi', de:'German', fr:'French', es:'Spanish', zh:'Chinese' }[lang]||'English'
@@ -80,13 +75,11 @@ ${role}
 Company data: 312 employees | Payroll NPR 4.8M/mo | Attrition 8.2% | 11 open positions | Engineering 34% flight risk | SSF compliance 100% | Nepal Labour Act 2074 compliant.
 Give ACTUAL reports — never describe what you would do. Use tables, headers, bullet points.
 End every strategic report with "Decision Required:" listing what ${persona||'Management'} must decide.`
-}
 
 function stripMd(t='') {
   return t.replace(/#{1,6}\s/g,'').replace(/\*\*(.+?)\*\*/gs,'$1').replace(/\*(.+?)\*/gs,'$1')
     .replace(/`+(.+?)`+/gs,'$1').replace(/\[(.+?)\]\(.+?\)/g,'$1').replace(/^[-*+] /gm,'')
     .replace(/^\d+\. /gm,'').replace(/\n{2,}/g,'. ').replace(/\n/g,' ').trim().slice(0,480)
-}
 
 const LANGS = { en:'en-US', ne:'ne-NP', hi:'hi-IN', de:'de-DE', fr:'fr-FR', es:'es-ES', zh:'zh-CN' }
 function speak(text, lang, onEnd) {
@@ -99,7 +92,6 @@ function speak(text, lang, onEnd) {
   if (m) u.voice = m
   u.onend = ()=>onEnd?.(); u.onerror = ()=>onEnd?.()
   setTimeout(()=>window.speechSynthesis.speak(u), 50)
-}
 
 // ── BUILT-IN BI REPORT ENGINE ─────────────────────────────────
 function generateBIReport(text, lang, roleLevel) {
@@ -169,7 +161,6 @@ Estimated financial exposure: **NPR 3.2M**. Intervention cost: NPR 3.8L. ROI of 
 
 ---
 *eLogix HRMS AI Predictive Engine · ${now} · Confidential*`
-  }
 
   if (lo.match(/\b(report|strategic|monthly|hr report|business intelligence|bi|summary|overview)\b/)) {
     return `# ${isCEO?'Board-Level HR Strategic Intelligence Report':'Monthly HR Management Report'}
@@ -230,7 +221,6 @@ Workforce at 312, attrition at 8.2% (below 12% industry avg). Engineering flight
 
 ---
 *eLogix HRMS AI Business Intelligence · ${now} · ${isCEO?'Board Confidential':'Management Internal'}*`
-  }
 
   if (lo.match(/\b(mom|minutes|meeting|baitak|karyabibaran)\b/)) {
     return `# Minutes of Meeting (MOM)
@@ -295,7 +285,6 @@ Workforce at 312, attrition at 8.2% (below 12% industry avg). Engineering flight
 
 ---
 *eLogix HRMS AI · ${now} · Please review and approve within 48 hours*`
-  }
 
   if (lo.match(/\b(powerpoint|ppt|presentation|slides)\b/)) {
     const topic = lo.includes('attrition')?'Workforce Attrition: Risk & Mitigation':lo.includes('digital')?'HR Digital Transformation':lo.includes('compensation')?'Compensation Strategy':'HR Strategic Improvement Plan'
@@ -366,7 +355,6 @@ ${now} | HR Department | eLogix HRMS AI
 
 ---
 *eLogix HRMS AI · ${now} · Ready for PowerPoint build*`
-  }
 
   if (lo.match(/\b(compensation|salary|pay|benchmark|increment|raise)\b/)) {
     return `# Compensation Strategy & Benchmarking Report
@@ -415,7 +403,6 @@ Current compensation structure has a **critical gap in Engineering** (18% below 
 
 ---
 *eLogix HRMS AI · ${now}*`
-  }
 
   // Default menu
   const hasKey = !!(VITE_KEY?.startsWith('sk-ant'))
@@ -455,7 +442,6 @@ Current compensation structure has a **critical gap in Engineering** (18% below 
 - Nepal Labour Act 2074: ✅ Fully compliant
 
 ${hasKey?'':'_Add VITE_ANTHROPIC_API_KEY to .env for unlimited Claude AI on any topic_'}`
-}
 
 // ── KPI CARDS DATA ─────────────────────────────────────────────
 const KPI_CARDS = [
@@ -521,7 +507,6 @@ function Bubble({ msg, onSpeak, speakingId }) {
       {isUser && <div style={{ width:34,height:34,borderRadius:10,background:'#f1f5f9',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,flexShrink:0 }}>👤</div>}
     </div>
   )
-}
 
 // ── MAIN COMPONENT ─────────────────────────────────────────────
 export default function AIBusinessIntelligencePage() {
@@ -569,7 +554,6 @@ export default function AIBusinessIntelligencePage() {
       const newHistory = [...history, { role:'user', content }]
       const { text, ok } = await callClaude(newHistory, buildSystem(lang, roleLevel, currentPersona?.label||persona))
       if (ok && text) { aiText = text; setHistory([...newHistory, { role:'assistant', content:text }]) }
-    }
     if (!aiText) aiText = generateBIReport(content, lang, roleLevel)
 
     setLoading(false)
@@ -584,7 +568,6 @@ export default function AIBusinessIntelligencePage() {
     if (speaking) { window.speechSynthesis?.cancel(); setSpeaking(false); setSpeakingId(null); return }
     const l = detectLang(msg.content); setSpeaking(true); setSpeakingId(msg.id)
     speak(stripMd(msg.content), l, ()=>{ setSpeaking(false); setSpeakingId(null) })
-  }
 
   return (
     <div style={{ fontFamily:'system-ui,sans-serif', minHeight:'100vh', background:'#f0f7ff', paddingBottom:24 }}>
@@ -860,4 +843,3 @@ export default function AIBusinessIntelligencePage() {
       </div>
     </div>
   )
-}

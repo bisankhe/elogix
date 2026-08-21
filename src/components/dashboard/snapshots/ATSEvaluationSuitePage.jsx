@@ -20,7 +20,6 @@ async function callAI(prompt, sys, max=2000) {
     if (r.ok) { const d=await r.json(); return d.content?.map(c=>c.text).join('')||'' }
   } catch {}
   return null
-}
 
 const CANDIDATES=[
   {id:'c1',name:'Gita Maharjan', role:'Senior React Dev',age:30,source:'LinkedIn',cv_score:92,avatar:'GM',email:'gita@mail.com'},
@@ -48,7 +47,6 @@ const W_CONDUCT={
   c3:{submitted_at:'11:08 AM',time_taken:'68m 45s',tab_switches:0,face_pct:98,device:'Chrome 121/Win10',ip:'192.168.2.10',flags:[]},
   c4:{submitted_at:'11:27 AM',time_taken:'87m 03s',tab_switches:1,face_pct:91,device:'Safari 17/macOS',ip:'192.168.3.5',flags:['Tab exit 11:20']},
   c5:{submitted_at:'11:30 AM',time_taken:'90m 00s',tab_switches:4,face_pct:77,device:'Chrome 121/Win10',ip:'10.0.0.99',flags:['Multiple tab exits','Face absent 9x']},
-}
 
 const W_ANSWERS={
   c1:{w1:1,w2:3,w3:1,w4:0,w5:2,
@@ -76,7 +74,6 @@ const W_ANSWERS={
     w7:{code:'function useDebounce(v,d){\n  setTimeout(()=>v,d);\n  return v;\n}',ai_score:3,ai_feedback:'Incorrect. No React state. setTimeout has no effect on return. Lacks hook knowledge.'},
     w8:{text:'Use microservices and cloud. Queue system. Database.',ai_score:2,ai_feedback:'Critically insufficient. Under 10 words of substance.'},
     w9:{text:'I fixed a bug that made things slow. My team was happy.',ai_score:2,ai_feedback:'Far too brief. No context, approach, or outcome.'}},
-}
 
 const V_QUESTIONS=[
   {id:'v1',category:'General',  duration:120,keywords:['led','built','impact','result','improved','architected'],q:'Walk me through your most impactful project. What was the challenge, your role, and the measurable outcome?'},
@@ -92,7 +89,6 @@ const V_CONDUCT={
   c3:{completed:'2081-08-23 10:21 AM',duration:'30m 02s',face_pct:96,eye_warnings:0,audio:'Excellent',net_drops:0},
   c4:{completed:'2081-08-22 07:45 PM',duration:'22m 33s',face_pct:82,eye_warnings:5,audio:'Fair',net_drops:2},
   c5:{completed:'2081-08-24 11:05 AM',duration:'18m 44s',face_pct:71,eye_warnings:8,audio:'Poor',net_drops:3},
-}
 
 const V_ANSWERS={
   c1:[
@@ -130,7 +126,6 @@ const V_ANSWERS={
     {qId:'v4',overall:20,grade:'F',confidence:18,clarity:22,kw_hit:[],ai_notes:'No structure or example.',transcript:'I learn fast. YouTube mostly.'},
     {qId:'v5',overall:10,grade:'F',confidence:8, clarity:12,kw_hit:[],ai_notes:'Entirely inappropriate for professional interview.',transcript:'I need a job and this one looks good.'},
   ],
-}
 
 const COMPETENCIES=[
   {id:'pc1',label:'Technical Knowledge',   weight:30,desc:'Depth of role-specific knowledge, architecture thinking'},
@@ -155,14 +150,12 @@ const P_SCORES={
       i2:{pc1:90,pc2:88,pc3:86,pc4:90,pc5:84,pc6:88,pc7:90,notes:'Extremely mature. Culture fit excellent. Recommend without reservation.',rec:'Strong Hire'},
       i3:{pc1:92,pc2:86,pc3:90,pc4:94,pc5:80,pc6:92,pc7:86,notes:'Principal-level thinking. K8s and system design breadth impressive.',rec:'Strong Hire'},
       conducted:'2081-08-26 02:00 PM',format:'In-Person'},
-}
 
 const DAYS=['Mon','Tue','Wed','Thu','Fri']
 const IV_AVAIL={
   BS:{Mon:['10:00','11:00','14:00'],Tue:['09:00','15:00'],Wed:['10:00','11:00','16:00'],Thu:['09:00','14:00'],Fri:['10:00']},
   MP:{Mon:['09:00','10:00','14:00'],Tue:['10:00','11:00','14:00'],Wed:['09:00','15:00'],Thu:['10:00','14:00'],Fri:['09:00','10:00']},
   AG:{Mon:['11:00','14:00'],Tue:['09:00','10:00','15:00'],Wed:['11:00','14:00'],Thu:['10:00','11:00'],Fri:['11:00']},
-}
 const SCHED_PANELS=[
   {id:'sp1',candidate:'Gita Maharjan', date:'Mon 2081-09-02',time:'10:00 AM',type:'Physical',  interviewers:['BS','MP','AG'],platform:'In-Person',  status:'Confirmed', invitesSent:true},
   {id:'sp2',candidate:'Anil KC',       date:'Mon 2081-09-02',time:'02:00 PM',type:'Physical',  interviewers:['BS','AG'],    platform:'In-Person',  status:'Pending',   invitesSent:true},
@@ -179,13 +172,11 @@ function calcW(cid){
   const tot=mcq+cod+ess
   const grade=tot>=90?'A+':tot>=80?'A':tot>=70?'B+':tot>=60?'B':tot>=50?'C':tot>=40?'D':'F'
   return{mcq,coding:cod,essay:ess,total:tot,grade,passed:tot>=65}
-}
 function calcV(cid){
   const a=V_ANSWERS[cid]; if(!a) return null
   const avg=Math.round(a.reduce((s,v)=>s+v.overall,0)/a.length)
   const grade=avg>=90?'A+':avg>=80?'A':avg>=70?'B+':avg>=60?'B':avg>=50?'C':avg>=40?'D':'F'
   return{avg,grade,passed:avg>=60,answers:a}
-}
 function calcP(cid){
   const sc=P_SCORES[cid]; if(!sc) return null
   const ivs=[sc.i1,sc.i2,sc.i3].filter(Boolean)
@@ -199,7 +190,6 @@ function calcP(cid){
   const recs=ivs.map(p=>p.rec)
   const decision=recs.every(r=>r==='Strong Hire')?'Strong Hire':recs.filter(r=>r.includes('Hire')).length>=2?'Hire':recs.filter(r=>r==='No Hire').length>=2?'No Hire':'Hold'
   return{compAvg,pct,grade,decision,passed:pct>=60}
-}
 function calcOverall(cid){
   const cv=CANDIDATES.find(c=>c.id===cid)?.cv_score||0
   const w=calcW(cid),v=calcV(cid),p=calcP(cid)
@@ -207,7 +197,6 @@ function calcOverall(cid){
   const grade=composite>=90?'A+':composite>=80?'A':composite>=70?'B+':composite>=60?'B':composite>=50?'C':'F'
   return{cv,written:w?.total||null,video:v?.avg||null,physical:p?.pct||null,composite,grade,w,v,p,
     recommend:composite>=75?'Select':composite>=60?'Consider':'Reject'}
-}
 
 // ── UI ATOMS ─────────────────────────────────────────────────
 const typeStyle={MCQ:{c:'#3b82f6',bg:'#eff6ff'},CODING:{c:'#7c3aed',bg:'#f5f3ff'},ESSAY:{c:'#10b981',bg:'#f0fdf4'}}
@@ -226,7 +215,6 @@ function SBar({label,val,max=100,color='#3b82f6',weight}){
       <div style={{width:Math.round(val/max*100)+'%',height:'100%',background:color,borderRadius:3,transition:'width .4s'}}/>
     </div>
   </div>)
-}
 function CPill({c,sel,onClick}){return <button onClick={onClick} style={{padding:'6px 12px',borderRadius:9,border:`2px solid ${sel?'#1e40af':'#e2e8f0'}`,background:sel?'#eff6ff':'#fff',color:sel?'#1e40af':'#334155',fontSize:9,fontWeight:sel?800:400,cursor:'pointer',display:'flex',gap:6,alignItems:'center'}}>
   <div style={{width:20,height:20,borderRadius:'50%',background:sel?'#1e40af':'#f1f5f9',color:sel?'#fff':'#64748b',display:'flex',alignItems:'center',justifyContent:'center',fontSize:8,fontWeight:800}}>{c.avatar}</div>
   {c.name.split(' ')[0]}
@@ -241,7 +229,6 @@ function VideoPlayer({candidate,qIdx,answer,question}){
   const toggle=()=>{
     if(playing){clearInterval(tiRef.current);setPlaying(false)}
     else{setPlaying(true);tiRef.current=setInterval(()=>setProgress(p=>{if(p>=100){clearInterval(tiRef.current);setPlaying(false);return 100}return p+0.5}),60)}
-  }
   useEffect(()=>{setPlaying(false);setProgress(0);clearInterval(tiRef.current)},[qIdx])
   const cs=catStyle[question?.category]||catStyle.General
   return(
@@ -281,7 +268,6 @@ function VideoPlayer({candidate,qIdx,answer,question}){
       </div>}
     </div>
   )
-}
 
 // ── SCHEDULER ────────────────────────────────────────────────
 function Scheduler({notify}){
@@ -306,7 +292,6 @@ function Scheduler({notify}){
     setBooked(b=>[...b,{id:'b'+Date.now(),candidate:schedCand.name,date:`${selDay} 2081-09-0${DAYS.indexOf(selDay)+2}`,time:selTime,type:schedType,interviewers:selPanel,platform:schedType==='Physical'?'In-Person':'Google Meet',status:'Confirmed',invitesSent:true}])
     setBooking(false);setSelDay(null);setSelTime(null)
     notify(`Interview scheduled for ${schedCand.name} on ${selDay} ${selTime}! Email+WhatsApp+Calendar sent to all ${selPanel.length} interviewers and candidate.`)
-  }
   const allSched=[...SCHED_PANELS,...booked]
   return(<div>
     <div style={{background:'linear-gradient(135deg,#059669,#0891b2)',borderRadius:12,padding:'12px 16px',marginBottom:14,color:'#fff'}}>
@@ -431,7 +416,6 @@ function Scheduler({notify}){
       </div>
     </div>}
   </div>)
-}
 
 // ── MAIN COMPONENT ───────────────────────────────────────────
 export default function ATSEvaluationSuitePage(){
@@ -459,7 +443,6 @@ export default function ATSEvaluationSuitePage(){
     const txt=await callAI(prompt)
     setLetters(l=>({...l,[key]:txt||`Dear ${cand.name},\n\n${type==='offer'?'We are pleased to offer you...':'Thank you for your application...'}`}))
     setGenState(s=>({...s,[key]:false}))
-  }
 
   const TABS=[['written','Written Test'],['video','Video Interview'],['physical','Physical Interview'],['overall','Overall & Final'],['schedule','Auto Scheduler']]
 
@@ -837,7 +820,6 @@ export default function ATSEvaluationSuitePage(){
                       {o2.recommend==='Select'
                         ?<button onClick={e=>{e.stopPropagation();genLetter(cand,'offer')}} disabled={!!genState[cand.id]} style={{padding:'4px 7px',borderRadius:6,border:'none',background:genState[cand.id]?'#e2e8f0':'#059669',color:genState[cand.id]?'#94a3b8':'#fff',fontSize:8,cursor:genState[cand.id]?'default':'pointer',width:'100%'}}>{genState[cand.id]?'...':'Offer Letter'}</button>
                         :<button onClick={e=>{e.stopPropagation();genLetter(cand,'reject')}} disabled={!!genState[cand.id+'_r']} style={{padding:'4px 7px',borderRadius:6,border:'none',background:genState[cand.id+'_r']?'#e2e8f0':'#ef4444',color:genState[cand.id+'_r']?'#94a3b8':'#fff',fontSize:8,cursor:genState[cand.id+'_r']?'default':'pointer',width:'100%'}}>{genState[cand.id+'_r']?'...':'Rejection'}</button>
-                      }
                     </div>
                   </div>
                 )
@@ -888,7 +870,6 @@ export default function ATSEvaluationSuitePage(){
               {oRes.recommend==='Select'
                 ?<button onClick={()=>genLetter(selCand,'offer')} disabled={!!genState[selCand.id]} style={{padding:'11px',borderRadius:10,border:'none',background:genState[selCand.id]?'#e2e8f0':'linear-gradient(135deg,#059669,#1e40af)',color:genState[selCand.id]?'#94a3b8':'#fff',fontSize:10,fontWeight:900,cursor:genState[selCand.id]?'default':'pointer'}}>{genState[selCand.id]?'Generating...':'Generate Offer Letter'}</button>
                 :<button onClick={()=>genLetter(selCand,'reject')} disabled={!!genState[selCand.id+'_r']} style={{padding:'11px',borderRadius:10,border:'none',background:genState[selCand.id+'_r']?'#e2e8f0':'#ef4444',color:genState[selCand.id+'_r']?'#94a3b8':'#fff',fontSize:10,fontWeight:900,cursor:genState[selCand.id+'_r']?'default':'pointer'}}>{genState[selCand.id+'_r']?'Generating...':'Generate Rejection'}</button>
-              }
               <button onClick={()=>notify('Full evaluation PDF exported!')} style={{padding:'11px',borderRadius:10,border:'1px solid #e2e8f0',background:'#fff',color:'#374151',fontSize:10,fontWeight:700,cursor:'pointer'}}>Export PDF Report</button>
               <button onClick={()=>notify(`All ${CANDIDATES.length} decisions finalized! HR notified.`)} style={{padding:'11px',borderRadius:10,border:'none',background:'linear-gradient(135deg,#0f172a,#1e3a5f)',color:'#fff',fontSize:10,fontWeight:900,cursor:'pointer'}}>Finalize All Decisions</button>
             </div>
@@ -901,4 +882,3 @@ export default function ATSEvaluationSuitePage(){
       </div>
     </div>
   )
-}

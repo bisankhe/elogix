@@ -97,4 +97,3 @@ export default function AttendanceAnalyticsPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

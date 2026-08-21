@@ -38,7 +38,6 @@ const ALL_EVENTS = {
     {id:'ev14',date:'2024-01-15',type:'hire',title:'Joined as Sales Officer',dept:'Sales',approver:'Dipak Tamang',notes:'Experienced hire. NPR 38,000/mo.',visible_to:'all'},
     {id:'ev15',date:'2025-04-18',type:'disciplinary',title:'Written Warning Issued',dept:'Sales',approver:'Priya Adhikari (HR)',notes:'Frequent late arrival — 7 occurrences.',visible_to:'hr_only'},
   ],
-}
 
 const TYPE_CFG = {
   hire:         {c:'#10b981',icon:'🎉',label:'Hired'},
@@ -48,7 +47,6 @@ const TYPE_CFG = {
   confirmation: {c:'#3b82f6',icon:'✅',label:'Confirmation'},
   salary_change:{c:'#84cc16',icon:'💰',label:'Salary Change'},
   disciplinary: {c:'#dc2626',icon:'⚠️', label:'Disciplinary'},
-}
 
 // Simulate mode: 'ess' = employee self-service (own only), 'hr' = HR/manager (all employees)
 export default function EmployeeTimelinePage() {
@@ -199,4 +197,3 @@ export default function EmployeeTimelinePage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

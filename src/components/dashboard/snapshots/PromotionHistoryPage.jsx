@@ -11,19 +11,16 @@ const PROMOTIONS = [
   { id:'p1', employee:'Bikash Shrestha', from_title:'IT Lead', to_title:'Senior IT Lead', dept:'Information Technology',
     effective_date:'2025-06-01', old_salary:120000, new_salary:150000,
     competencies:[{name:'Technical Leadership',score:5},{name:'Team Management',score:5},{name:'Strategic Thinking',score:4}],
-    rationale:'Consistently exceeded KPIs for 3 consecutive quarters. Led successful cloud migration project. Strong mentor to junior engineers.',
     approved_by:'Rajesh Sharma (CTO)', digital_signoff:true, status:'completed', ai_bias_check:'passed',
     impact_links:['Employee Timeline','Employment History','Org Chart'] },
   { id:'p2', employee:'Anita Gurung', from_title:'Developer', to_title:'Senior Developer', dept:'Information Technology',
     effective_date:'2025-07-01', old_salary:75000, new_salary:95000,
     competencies:[{name:'Code Quality',score:5},{name:'Problem Solving',score:4},{name:'Collaboration',score:5}],
-    rationale:'Top performer in Q1-Q2 2025 reviews. Successfully led 2 major feature releases with zero production incidents.',
     approved_by:'Bikash Shrestha (Senior IT Lead)', digital_signoff:false, status:'pending_approval', ai_bias_check:'passed',
     impact_links:['Employee Timeline'] },
   { id:'p3', employee:'Sandeep Tamang', from_title:'Junior Accountant', to_title:'Accountant', dept:'Finance & Accounts',
     effective_date:'2025-05-15', old_salary:40000, new_salary:52000,
     competencies:[{name:'Accuracy',score:5},{name:'Reporting',score:4},{name:'Compliance Knowledge',score:5}],
-    rationale:'Completed CA Articleship. Demonstrated strong ownership of monthly close process.',
     approved_by:'Sanjay Karki (CFO)', digital_signoff:true, status:'completed', ai_bias_check:'passed',
     impact_links:['Employee Timeline','Employment History'] },
 ]
@@ -31,7 +28,6 @@ const PROMOTIONS = [
 const STATUS_CFG = {
   completed:{c:'#10b981',bg:'#f0fdf4',icon:'✅',label:'Completed'},
   pending_approval:{c:'#f59e0b',bg:'#fffbeb',icon:'⏳',label:'Pending Approval'},
-}
 
 export default function PromotionHistoryPage() {
   const [promotions, setPromotions] = useState(PROMOTIONS)
@@ -171,4 +167,3 @@ export default function PromotionHistoryPage() {
       {showExcel&&<ExcelModal title="Promotion History" columns={['Employee','From Title','To Title','Department','Effective Date','Old Salary','New Salary','Approved By','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

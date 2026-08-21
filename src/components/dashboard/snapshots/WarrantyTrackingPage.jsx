@@ -74,4 +74,3 @@ export default function WarrantyTrackingPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

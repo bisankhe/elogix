@@ -33,7 +33,6 @@ const DEFAULT_CONFIG = {
   pf_rate_pct: 10,
   notice_period_days: 30,
   auto_confirmation_reminder_days: 30,
-}
 
 export default function EmploymentTypePage() {
   const { navTo } = useApp()
@@ -56,7 +55,6 @@ export default function EmploymentTypePage() {
     if (e) { e.stopPropagation(); e.preventDefault() }
     setConfigItem(item)
     setShowConfig(true)
-  }
 
   return (
     <div onClick={()=>setCtx(null)} style={{fontFamily:'system-ui,sans-serif'}}>
@@ -341,4 +339,3 @@ export default function EmploymentTypePage() {
       {showExcel&&<ExcelModal title="Employment Type" columns={['Type Code','Name','LA Section','Count','Benefits','Written Contract','CBA Eligible']} onClose={()=>setShowExcel(false)} onImport={f=>notify('Importing: '+f.name)}/>}
     </div>
   )
-}

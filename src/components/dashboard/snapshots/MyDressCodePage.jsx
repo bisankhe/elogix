@@ -8,4 +8,3 @@ export default function MyDressCodePage(){
       <div style={{background:'#fff',borderRadius:16,padding:20,border:'1px solid #e2e8f0'}}><div style={{fontSize:12,fontWeight:800,marginBottom:12}}>Company Dress Code</div><div style={{display:'flex',flexDirection:'column',gap:8}}>{[{day:'Mon–Thu',dress:'Business formal / Business casual',icon:'👔'},{day:'Friday',dress:'Smart casual (no shorts, no flip-flops)',icon:'👕'},{day:'Client meetings',dress:'Full business formal required',icon:'🤝'},{day:'Field visits',dress:'Company uniform / branded polo',icon:'🦺'}].map((d,i)=><div key={i} style={{display:'flex',gap:12,padding:'10px',background:'#f8fafc',borderRadius:10}}><span style={{fontSize:18}}>{d.icon}</span><div><div style={{fontSize:10,fontWeight:700}}>{d.day}</div><div style={{fontSize:9,color:'#64748b'}}>{d.dress}</div></div></div>)}</div></div>
     </div>
   )
-}

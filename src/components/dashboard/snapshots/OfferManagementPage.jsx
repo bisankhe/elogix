@@ -66,7 +66,6 @@ const STATUS_CFG = {
   negotiating:       {c:'#f59e0b',bg:'#fffbeb',b:'#fde68a',icon:'🤝',label:'Negotiating'},
   signed:            {c:'#10b981',bg:'#f0fdf4',b:'#bbf7d0',icon:'✅',label:'Signed'},
   declined:          {c:'#ef4444',bg:'#fef2f2',b:'#fecaca',icon:'❌',label:'Declined'},
-}
 
 const ROLE_VIEWS = [
   {id:'recruiter',  label:'Recruiter / TA', icon:'👤'},
@@ -104,23 +103,19 @@ export default function OfferManagementPage() {
       if(pendingIdx>=0){
         chain[pendingIdx]={...chain[pendingIdx],status:'approved',date:new Date().toISOString().split('T')[0]}
         if(pendingIdx+1<chain.length) chain[pendingIdx+1]={...chain[pendingIdx+1],status:'pending'}
-      }
       const allApproved = chain.every(s=>s.status==='approved')
       return {...o,approval_chain:chain,status:allApproved?'pending_candidate':o.status}
     }))
     notify('✅ Offer approved — next approver notified')
     setNoteModal(null)
-  }
 
   const sendToCandidate = (offer) => {
     setOffers(prev=>prev.map(o=>o.id===offer.id?{...o,status:'pending_candidate',offer_date:new Date().toISOString().split('T')[0]}:o))
     notify('📧 Offer sent to '+offer.candidate+' via Email + WhatsApp + Portal')
-  }
 
   const signOffer = (offerId) => {
     setOffers(prev=>prev.map(o=>o.id===offerId?{...o,status:'signed',digital_signed:true,signed_date:new Date().toISOString().split('T')[0]}:o))
     notify('✅ Offer digitally signed! Employee joining triggered.')
-  }
 
   const pendingCount = offers.filter(o=>!['signed','declined'].includes(o.status)).length
   const signedCount  = offers.filter(o=>o.status==='signed').length
@@ -363,4 +358,3 @@ export default function OfferManagementPage() {
       ]}/>
     </div>
   )
-}

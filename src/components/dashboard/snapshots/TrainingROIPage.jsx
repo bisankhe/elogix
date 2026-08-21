@@ -25,7 +25,6 @@ function calcROI(r) {
   const netBenefit = totalBenefit - totalCost
   const roiPct = Math.round(netBenefit/totalCost*100)
   return { totalCost, totalBenefit, netBenefit, roiPct }
-}
 
 export default function TrainingROIPage() {
   const [search, setSearch] = useState('')
@@ -124,4 +123,3 @@ export default function TrainingROIPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

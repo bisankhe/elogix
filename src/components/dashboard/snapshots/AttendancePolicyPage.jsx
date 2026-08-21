@@ -145,4 +145,3 @@ export default function AttendancePolicyPage() {
       {showExcel&&<ExcelModal title="Attendance Policies" columns={['Name','Applies To','Grace Period','Full Day Hrs','OT Daily Cap','OT Rate','Mandatory Break','Weekly Off']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

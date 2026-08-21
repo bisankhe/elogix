@@ -53,7 +53,6 @@ export default function ATSPreJoiningPage() {
     await new Promise(r=>setTimeout(r,1500))
     setPayrollLoading(false)
     notify(`Payroll record created for ${selJoiner.name}! NPR ${selJoiner.salary.toLocaleString()}/month. Synced to HRMS payroll module.`)
-  }
 
   return (
     <div style={{ fontFamily:'system-ui,sans-serif' }}>
@@ -233,4 +232,3 @@ export default function ATSPreJoiningPage() {
       )}
     </div>
   )
-}

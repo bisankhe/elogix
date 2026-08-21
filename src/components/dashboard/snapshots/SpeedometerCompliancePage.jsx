@@ -16,7 +16,6 @@ function Gauge({ value, max, label, unit, zones }) {
   const polarToCartesian = (r, deg) => {
     const rad = (deg - 180) * Math.PI / 180
     return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)]
-  }
   let cumulativeStart = 0
   const arcs = zones.map((z, i) => {
     const startDeg = cumulativeStart * 180, endDeg = z.upTo * 180
@@ -39,13 +38,11 @@ function Gauge({ value, max, label, unit, zones }) {
       <div style={{fontSize:9,color:'#94a3b8',marginTop:2}}>{label}</div>
     </div>
   )
-}
 
 const COMPLIANCE_METRICS = {
   audit_pass:{value:97,max:100,label:'Statutory Audit Pass Rate',unit:'%',zones:[{upTo:0.95,color:'#ef4444'},{upTo:0.99,color:'#f59e0b'},{upTo:1,color:'#10b981'}]},
   training_completion:{value:91,max:100,label:'Mandatory Training Completion',unit:'%',zones:[{upTo:0.80,color:'#ef4444'},{upTo:0.95,color:'#f59e0b'},{upTo:1,color:'#10b981'}]},
   policy_ack:{value:96,max:100,label:'Policy Acknowledgment Rate',unit:'%',zones:[{upTo:0.90,color:'#ef4444'},{upTo:0.95,color:'#f59e0b'},{upTo:1,color:'#10b981'}]},
-}
 
 const CERT_EXPIRY = [
   {item:'SSF Registration',status:'current'},{item:'Annual Labour Audit FY 2024/25',status:'due_soon',due:'mid-January'},
@@ -106,4 +103,3 @@ export default function SpeedometerCompliancePage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

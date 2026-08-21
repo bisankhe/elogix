@@ -26,7 +26,6 @@ const PARTICIPATION_LIST = [
 const STATUS_CFG = {
   not_started:{c:'#94a3b8',bg:'#f8fafc',label:'Not Started'},in_progress:{c:'#0284c7',bg:'#eff6ff',label:'In Progress'},
   completed:{c:'#10b981',bg:'#f0fdf4',label:'Completed'},overdue:{c:'#ef4444',bg:'#fef2f2',label:'Overdue'},
-}
 const TAG_CFG = {Compliance:'#ef4444','Skill Development':'#0284c7',Leadership:'#7c3aed'}
 
 export default function TrainingParticipationListPage() {
@@ -140,4 +139,3 @@ export default function TrainingParticipationListPage() {
       {showExcel&&<ExcelModal title="Training Participation" columns={['Employee','Role','Department','Course','Tag','Start Date','Status','Progress %']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

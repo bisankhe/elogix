@@ -90,4 +90,3 @@ export default function ITInventoryPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

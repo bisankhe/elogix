@@ -98,4 +98,3 @@ export default function CITInformationPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

@@ -23,7 +23,6 @@ const INTERVIEWS = [
 
 const SENTIMENT_CFG = {
   positive:{c:'#10b981',label:'Positive'}, mixed:{c:'#f59e0b',label:'Mixed'}, negative:{c:'#ef4444',label:'Negative'},
-}
 const STATUS_CFG = {completed:{c:'#10b981',bg:'#f0fdf4',icon:'✅',label:'Completed'},scheduled:{c:'#94a3b8',bg:'#f8fafc',icon:'📅',label:'Scheduled'}}
 
 const AGGREGATE_TRENDS = [
@@ -215,4 +214,3 @@ export default function ExitInterviewPage() {
       {showExcel&&<ExcelModal title="Exit Interviews" columns={['Employee','Position','Interview Date','Conducted By','Sentiment','Sentiment Score','Rehire Eligible','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

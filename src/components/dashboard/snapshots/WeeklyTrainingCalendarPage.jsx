@@ -16,7 +16,6 @@ const WEEK_SESSIONS = {
   'Mon-9-11 AM':{course:'Sprint Retrospective Facilitation',prerequisites:['Agile Fundamentals'],registered:true},
   'Wed-2-4 PM':{course:'Cloud Architecture - Module 3',prerequisites:['AWS Fundamentals','Module 1-2'],registered:false},
   'Fri-11 AM-1 PM':{course:'Manager Coaching Workshop',prerequisites:[],registered:false},
-}
 
 const MICROLEARNING = [
   {title:'5-min: Giving Constructive Feedback',duration:'5 min',slotted:false},
@@ -118,4 +117,3 @@ export default function WeeklyTrainingCalendarPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

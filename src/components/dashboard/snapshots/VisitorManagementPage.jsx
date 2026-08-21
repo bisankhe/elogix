@@ -87,4 +87,3 @@ export default function VisitorManagementPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

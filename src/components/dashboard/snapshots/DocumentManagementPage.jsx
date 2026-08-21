@@ -66,7 +66,6 @@ export default function DocumentManagementPage() {
     if (search) {
       const s = search.toLowerCase()
       return d.name.toLowerCase().includes(s)||d.employee.toLowerCase().includes(s)||d.tags.some(t=>t.toLowerCase().includes(s))
-    }
     return true
   })
 
@@ -178,4 +177,3 @@ export default function DocumentManagementPage() {
       {showExcel&&<ExcelModal title="Document Management" columns={['File Name','Employee','Category','Tags','Uploaded Date','Size','Access Level','Retention Until']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

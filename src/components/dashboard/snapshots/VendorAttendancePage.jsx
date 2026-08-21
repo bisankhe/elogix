@@ -1,7 +1,7 @@
 // FILE: VendorAttendancePage.jsx - Vendor Employee Attendance
 // Geo-fenced check-in, biometric sync, timesheet auto-generation, ghost detection
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Field, ExcelModal, PageHeader, AIImpact, SearchBar, Badge, ContextMenu } from './DeptSetupShared.jsx'
 
 const G = 'linear-gradient(135deg,#042f2e 0%,#0d9488 60%,#5eead4 100%)'
@@ -58,7 +58,6 @@ const STATUS_CFG = {
   half_day:{c:'#f59e0b',bg:'#fffbeb',icon:'⏰'},
   on_leave:{c:'#3b82f6',bg:'#eff6ff',icon:'🏖'},
   holiday: {c:'#8b5cf6',bg:'#f5f3ff',icon:'🎉'},
-}
 const CTX_ACTIONS = [
   {icon:'✅',label:'Verify Attendance',     key:'verify'},
   {icon:'✏',label:'Manual Correction',      key:'edit'},
@@ -69,9 +68,27 @@ const CTX_ACTIONS = [
   {icon:'📤',label:'Export Attendance',     key:'export'},
 ]
 
-const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun']
+const MONTHS = ['Jan','Feb','Mar','Apr','Ma
+
+y','Jun']
+
+
+// ── Tenant context ────────────────────────────────────────────
+function useCompanyCtx() {
+  const auth   = (() => { try { return JSON.parse(localStorage.getItem('elogix_auth')||'{}') } catch { return {} } })()
+  const regCos = (() => { try { return JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}') } catch { return {} } })()
+  const slug   = auth.company?.slug || auth.user?.company || 'demo'
+  return {
+    company_id:   auth.company?.id || slug,
+    company_name: auth.company?.name || regCos[slug]?.name || 'Your Company',
+    company_slug: slug,
+    plan:         auth.company?.plan || 'trial',
+    currency:     auth.company?.currency || 'NPR',
+    token:        localStorage.getItem('elogix_token') || auth.token || '',
 
 export default function VendorAttendancePage() {
+  const ctx = useCompanyCtx()  // Tenant scope
+
   const [records, setRecords] = useState(ATTENDANCE)
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
@@ -333,4 +350,3 @@ export default function VendorAttendancePage() {
       {showExcel && <ExcelModal title="Vendor Attendance" columns={['VE-ID','Name','Vendor','Date','Check-In','Check-Out','Hours Worked','OT Hours','Status','Biometric','GPS Verified','Ghost Risk']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

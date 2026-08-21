@@ -18,19 +18,15 @@ const LETTER_TYPES = [
 const LETTERS = [
   { id:'l1', type:'foreign_work_permit', employee:'James Mitchell (Expat)', subject:'Work Permit Renewal - Senior Consultant',
     submitted_date:'2025-06-15', status:'submitted', reference_no:'DOL-2025-WP-4471', deadline:null,
-    notes:'Local skill-gap advertisement published per Section 22 requirement prior to filing.',
     impact_links:['Employee Profile','Foreign Hire Compliance'] },
   { id:'l2', type:'mass_retrenchment', employee:'N/A (Department-wide: 8 staff)', subject:'30-Day Advance Retrenchment Notice - Customer Service Restructuring',
     submitted_date:'2025-06-10', status:'submitted', reference_no:'DOL-2025-RT-1182', deadline:'2025-07-10',
-    notes:'Compensation calculated at 1 month salary per year of service, proportionate for <1yr.',
     impact_links:['Confirmation or Termination','Full & Final Settlement'] },
   { id:'l3', type:'outsourcing_report', employee:'N/A (Vendor: SecureGuard Pvt Ltd)', subject:'Vendor Non-Payment Notice - Security Staff Wages',
     submitted_date:null, status:'drafting', reference_no:null, deadline:'2025-06-30',
-    notes:'Vendor failed to disburse Q2 wages to 6 outsourced security guards - main employer co-liability notice required.',
     impact_links:['Vendor Profile','Vendor Billing'] },
   { id:'l4', type:'annual_audit', employee:'N/A (Company-wide)', subject:'FY 2024-25 Annual Labour Compliance Report',
     submitted_date:null, status:'pending', reference_no:null, deadline:'2025-08-15',
-    notes:'Required: workplace safety compliance, headcount report, contract register (10+ employee threshold met).',
     impact_links:[] },
 ]
 
@@ -38,7 +34,6 @@ const STATUS_CFG = {
   submitted:{c:'#10b981',bg:'#f0fdf4',icon:'✅',label:'Submitted'},
   drafting:{c:'#f59e0b',bg:'#fffbeb',icon:'✏',label:'Drafting'},
   pending:{c:'#94a3b8',bg:'#f8fafc',icon:'⏳',label:'Pending'},
-}
 
 export default function LabourDepartmentLettersPage() {
   const [letters, setLetters] = useState(LETTERS)
@@ -139,4 +134,3 @@ export default function LabourDepartmentLettersPage() {
       {showExcel&&<ExcelModal title="Labour Department Letters" columns={['Subject','Type','Employee/Dept','Submitted Date','Reference No','Deadline','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

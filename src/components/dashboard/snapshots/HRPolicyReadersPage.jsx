@@ -52,10 +52,8 @@ function seedDemoData(polId, existingReaders) {
       name:     emp.name, dept:emp.dept,
       readAt:   n>3 ? new Date(Date.now()-n*86400000*3).toISOString() : null,
       signedAt: n>5 ? new Date(Date.now()-n*86400000*2).toISOString() : null,
-    }
     return m
   }, {})
-}
 
 export default function HRPolicyReadersPage() {
   const { navTo } = useApp()
@@ -95,12 +93,10 @@ export default function HRPolicyReadersPage() {
       notifs.unshift({ id:`REM-${Date.now()}`, cat:'Action Required', icon:'📋', title:`Policy Reminder Sent: ${emp?.name} — "${pol?.title}"`, body:`Email + WhatsApp + Dashboard notification sent · Please read and sign within 7 days`, time:'Just now', unread:true })
       localStorage.setItem('elogix_hris_notifications', JSON.stringify(notifs.slice(0,100)))
     } catch {}
-  }
 
   const sendBulkReminder = () => {
     const rd = getReaders(selectedPol?.id)
     empFiltered.filter(e=>!rd[e.id]?.signedAt).forEach(e=>sendReminder(e.id,selectedPol?.id))
-  }
 
   const pctCol = pct => pct>=90?'#10b981':pct>=70?'#f59e0b':'#ef4444'
 
@@ -342,4 +338,3 @@ export default function HRPolicyReadersPage() {
       )}
     </div>
   )
-}

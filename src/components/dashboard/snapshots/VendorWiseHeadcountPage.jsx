@@ -82,4 +82,3 @@ export default function VendorWiseHeadcountPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

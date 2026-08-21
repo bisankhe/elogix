@@ -69,4 +69,3 @@ export default function SOPForDepartmentPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

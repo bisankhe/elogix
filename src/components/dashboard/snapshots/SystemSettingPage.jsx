@@ -48,4 +48,3 @@ export default function SystemSettingPage(){
       {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={[]} actions={[{icon:'⚙',label:'Edit Setting',key:'view'}]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

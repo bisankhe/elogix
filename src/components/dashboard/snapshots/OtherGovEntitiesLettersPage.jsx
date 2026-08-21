@@ -40,7 +40,6 @@ const STATUS_CFG = {
   submitted:{c:'#3b82f6',bg:'#eff6ff',icon:'📤',label:'Submitted'},
   under_review:{c:'#f59e0b',bg:'#fffbeb',icon:'⏳',label:'Under Review'},
   acknowledged:{c:'#10b981',bg:'#f0fdf4',icon:'✅',label:'Acknowledged'},
-}
 
 export default function OtherGovEntitiesLettersPage() {
   const [letters, setLetters] = useState(LETTERS)
@@ -155,4 +154,3 @@ export default function OtherGovEntitiesLettersPage() {
       {showExcel&&<ExcelModal title="Other Government Entity Letters" columns={['Entity Type','Subject','Reference No','Date Sent','Deadline','Status','Response Received']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

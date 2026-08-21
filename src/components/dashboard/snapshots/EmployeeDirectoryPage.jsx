@@ -59,7 +59,6 @@ export default function EmployeeDirectoryPage() {
     if (search) {
       const s = search.toLowerCase()
       return e.name.toLowerCase().includes(s)||e.position.toLowerCase().includes(s)||e.skills.some(sk=>sk.toLowerCase().includes(s))
-    }
     return true
   })
 
@@ -157,4 +156,3 @@ export default function EmployeeDirectoryPage() {
       {showExcel&&<ExcelModal title="Employee Directory" columns={['Code','Name','Position','Department','Branch','Manager','Email','Phone','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

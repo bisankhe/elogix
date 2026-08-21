@@ -14,12 +14,10 @@ const GOAL_TYPE_CFG = {
   KPI:{c:'#0284c7',icon:'📊',label:'KPI'},
   OKR:{c:'#c2410c',icon:'🚀',label:'OKR'},
   Assignment:{c:'#15803d',icon:'📐',label:'Goal Assignment'},
-}
 const STATUS_CFG = {
   on_track:{c:'#10b981',bg:'#f0fdf4',label:'On Track'},
   at_risk:{c:'#f59e0b',bg:'#fffbeb',label:'At Risk'},
   off_track:{c:'#ef4444',bg:'#fef2f2',label:'Off Track'},
-}
 
 const UNIFIED_GOALS = [
   { id:'g1', type:'KRA', title:'Revenue Generation & Client Retention', owner:'Sunil Magar (Sales Manager)',
@@ -30,14 +28,12 @@ const UNIFIED_GOALS = [
     impact_links:['KPI Management'] },
   { id:'g3', type:'OKR', title:'Modernize Internal Engineering Tooling', owner:'Bikash Rai (Eng Lead)',
     progress_pct:40, status:'at_risk', last_checkin:'2025-06-10', audit_entries:6,
-    flag_note:'No check-in logged in 11 days - overdue for the weekly cadence.',
     impact_links:['OKR Management','Workload Analysis'] },
   { id:'g4', type:'Assignment', title:'IT Annual Target - 99.5% Uptime, 4 Releases', owner:'IT Department',
     progress_pct:55, status:'on_track', last_checkin:'2025-06-19', audit_entries:22,
     impact_links:['Goal Assignment'] },
   { id:'g5', type:'KPI', title:'Compliance Audit Pass Rate', owner:'Priya Adhikari (HR Manager)',
     progress_pct:87, status:'off_track', last_checkin:'2025-06-05', audit_entries:4,
-    flag_note:'Below 90% target for 2 consecutive review cycles - escalation recommended.',
     impact_links:['Tax & Compliance'] },
 ]
 
@@ -135,4 +131,3 @@ export default function GoalTrackingPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

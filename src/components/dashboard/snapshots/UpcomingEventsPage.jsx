@@ -14,7 +14,6 @@ const TYPE_META = {
   social:     {color:'#f97316',bg:'#fff7ed',icon:'🎊'},
   birthday:   {color:'#ec4899',bg:'#fdf4ff',icon:'🎂'},
   anniversary:{color:'#10b981',bg:'#f0fdf4',icon:'🥂'},
-}
 
 const UPCOMING = [
   { id:1,  days:0,  date:'Today',   title:'Payroll Lock — July 2081',          type:'payroll',     time:'6:00 PM',   dept:'Finance',    priority:'high',   desc:'Monthly attendance lock before payroll run' },
@@ -118,4 +117,3 @@ export default function UpcomingEventsPage() {
       </div>
     </div>
   )
-}

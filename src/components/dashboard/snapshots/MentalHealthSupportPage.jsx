@@ -95,4 +95,3 @@ export default function MentalHealthSupportPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

@@ -121,7 +121,6 @@ function AppraisalGauge({ pct, total, completed }) {
       </div>
     </div>
   )
-}
 
 // ── Main Component ───────────────────────────────────────────
 export default function PerformanceSnapshot() {
@@ -508,4 +507,3 @@ export default function PerformanceSnapshot() {
       )}
     </div>
   )
-}

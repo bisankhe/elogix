@@ -179,4 +179,3 @@ export default function LeaveReportsPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

@@ -42,7 +42,6 @@ const STATUS_CFG = {
   issued:{c:'#10b981',bg:'#f0fdf4',icon:'✅',label:'Issued'},
   pending_request:{c:'#94a3b8',bg:'#f8fafc',icon:'⏳',label:'Awaiting Request'},
   drafting:{c:'#f59e0b',bg:'#fffbeb',icon:'✏',label:'Drafting'},
-}
 
 export default function ExperienceLetterPage() {
   const [letters, setLetters] = useState(LETTERS)
@@ -193,4 +192,3 @@ export default function ExperienceLetterPage() {
       {showExcel&&<ExcelModal title="Experience Letters" columns={['Employee','Position','Department','Join Date','LWD','Tenure','Requested Date','Issued Date','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

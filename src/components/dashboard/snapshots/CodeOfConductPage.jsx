@@ -68,4 +68,3 @@ export default function CodeOfConductPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

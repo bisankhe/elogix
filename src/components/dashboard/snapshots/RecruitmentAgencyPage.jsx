@@ -68,12 +68,10 @@ const TIER_CFG = {
   approved:  { c:'#0369a1', bg:'#eff6ff', b:'#bae6fd', icon:'✓' },
   standard:  { c:'#64748b', bg:'#f8fafc', b:'#e2e8f0', icon:'-' },
   watch:     { c:'#ef4444', bg:'#fef2f2', b:'#fecaca', icon:'⚠' },
-}
 const RISK_CFG = {
   low:    { c:'#10b981', bg:'#f0fdf4', b:'#bbf7d0' },
   medium: { c:'#f59e0b', bg:'#fffbeb', b:'#fde68a' },
   high:   { c:'#ef4444', bg:'#fef2f2', b:'#fecaca' },
-}
 
 const CTX_ACTIONS = [
   {icon:'👁', label:'View Full Profile',       key:'view'},
@@ -134,7 +132,6 @@ function AddAgencyModal({ onClose, onSave }) {
       </div>
     </div>
   )
-}
 
 export default function RecruitmentAgencyPage() {
   const [agencies, setAgencies] = useState(AGENCIES)
@@ -349,4 +346,3 @@ export default function RecruitmentAgencyPage() {
       ]}/>
     </div>
   )
-}

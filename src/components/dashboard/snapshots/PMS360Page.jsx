@@ -28,7 +28,6 @@ const FEEDBACK_HUB = {
     {about:'Bikash Rai',role:'Peer',status:'pending',due_date:'2025-06-25'},
     {about:'Maya Pradhan',role:'Skip-level',status:'submitted',due_date:'2025-06-20'},
   ],
-}
 
 const IDP_ITEMS = [
   {gap:'Strategic Thinking (scored 5-7, lowest competency)',action:'Enroll in "Strategic Planning for Managers" LMS course',progress_pct:30,target_date:'2025-09-30'},
@@ -60,7 +59,6 @@ export default function PMS360Page() {
     const r = (value/10)*radius
     const angle = i*angleStep - Math.PI/2
     return [center+r*Math.cos(angle), center+r*Math.sin(angle)]
-  }
   const selfPoints = COMPETENCIES.map((c,i)=>toPoint(c.self,i)).map(p=>p.join(',')).join(' ')
   const managerPoints = COMPETENCIES.map((c,i)=>toPoint(c.manager,i)).map(p=>p.join(',')).join(' ')
 
@@ -211,4 +209,3 @@ export default function PMS360Page() {
       {showExcel&&<ExcelModal title="360 Degree PMS" columns={['Employee','Competency','Self Score','Peer Score','Manager Score','Report Score']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

@@ -27,7 +27,6 @@ const OT_STATUS = {
   approved:   {c:'#059669',bg:'#f0fdf4',b:'#bbf7d0',icon:'✅',l:'Approved'},
   rejected:   {c:'#dc2626',bg:'#fef2f2',b:'#fecaca',icon:'❌',l:'Rejected'},
   paid:       {c:'#7c3aed',bg:'#f5f3ff',b:'#ddd6fe',icon:'💰',l:'Paid'},
-}
 
 const pad2 = n=>String(n).padStart(2,'0')
 const rand = a=>a[Math.floor(Math.random()*a.length)]
@@ -80,9 +79,7 @@ function genOTRows(n=65) {
       approvedBy:  ['approved','paid'].includes(status)?rand(APPROVE_ROLES):'—',
       remarks:     status==='rejected'?'Not pre-approved':'—',
     })
-  }
   return rows
-}
 
 const ALL_OT = genOTRows(65)
 const inp = {padding:'7px 10px',borderRadius:8,border:'1.5px solid #e2e8f0',fontSize:10,
@@ -148,22 +145,18 @@ export default function OvertimeLogPage() {
   const bulkProcess = () => {
     setRows(p=>p.map(r=>bulkSel.includes(r.sl)&&r.status==='pending'?{...r,status:'processing',processedBy:'Supervisor'}:r))
     notify(`🔄 ${bulkSel.length} OT records sent for approval`); setBulkSel([])
-  }
   const bulkApprove = () => {
     setRows(p=>p.map(r=>bulkSel.includes(r.sl)&&r.status==='processing'?{...r,status:'approved',approvedBy:'HR Manager'}:r))
     notify(`✅ ${bulkSel.length} OT records approved`); setBulkSel([])
-  }
   const doApprove = (sl,action,by,remarks='') => {
     setRows(p=>p.map(r=>r.sl===sl?{...r,status:action,approvedBy:by,remarks}:r))
     notify(action==='approved'?`✅ OT approved by ${by}`:`❌ OT rejected by ${by}`)
     setShowApprove(null)
-  }
 
   const calcHrs = (a,b) => {
     if (!a||!b) return 0
     const [ah,am]=a.split(':').map(Number),[bh,bm]=b.split(':').map(Number)
     return Math.max(0,((bh*60+bm)-(ah*60+am))/60)
-  }
   const handleSave = () => {
     if (!form.name||!form.empId){notify('⚠️ Name and Employee ID required');return}
     const reg = calcHrs(form.login1,form.logout1)+calcHrs(form.login2,form.logout2)
@@ -178,17 +171,14 @@ export default function OvertimeLogPage() {
       hourlyRate:hr, otPay:pay, totalPay:pay, isNight,
       status: editSl!==null ? rows.find(r=>r.sl===editSl)?.status||'pending' : 'pending',
       processedBy:'—', approvedBy:'—',
-    }
     if (editSl!==null) {
       setRows(p=>p.map(r=>r.sl===editSl?entry:r))
       notify('✅ OT record updated')
     } else {
       setRows(p=>[...p,entry])
       notify('✅ OT added — status: Pending' + (isNight?' 🌙 Night OT queued for allowance':''))
-    }
     setShowAdd(false); setEditSl(null)
     setForm({name:'',empId:'',designation:'',dept:'',shift:'Day',login1:'',logout1:'',login2:'',logout2:'',otStart:'',otEnd:'',otType:'Weekday OT',otRate:'1.5×',remarks:'',baseSalary:''})
-  }
 
   const exportCSV = () => {
     const h=['Sl','EmpID','Name','Designation','Dept','Shift','Login1','Logout1','Login2','Logout2','Reg Hrs','OT Start','OT End','OT Hrs','OT Type','OT Rate','Hr Rate','OT Pay NPR','Status','Processed By','Approved By','Night OT','Remarks']
@@ -197,7 +187,6 @@ export default function OvertimeLogPage() {
     const blob=new Blob([r.join('\n')],{type:'text/csv'})
     const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`OT_Log_${dateFrom}.csv`;a.click()
     notify('📤 Exported to CSV')
-  }
 
   return (
     <div style={{fontFamily:'system-ui,sans-serif',height:'100vh',display:'flex',flexDirection:'column',background:'#fff7f7'}}>
@@ -555,4 +544,3 @@ export default function OvertimeLogPage() {
       )}
     </div>
   )
-}

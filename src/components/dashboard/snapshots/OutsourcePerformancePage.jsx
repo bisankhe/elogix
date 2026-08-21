@@ -16,7 +16,6 @@ const MOCK_VENDORS = [
       turnover:      {score:8,  target:15, met:true,  label:'Worker Turnover',  unit:'%', desc:'Annual turnover rate (lower=better)'},
     },
     months_history:[{m:'Apr',s:88},{m:'May',s:90},{m:'Jun',s:91}],
-    recommendation:'Renew contract. Top performer. Consider expanding to Pokhara branch.',
     risk:'low', icon:'🔐', color:'#ef4444',
     impact_links:[{icon:'📋',module:'Contract Renewal',desc:'Recommended to renew Dec 2026'},{icon:'💰',module:'Billing',desc:'Zero disputes in 6 months'}],
   },
@@ -31,7 +30,6 @@ const MOCK_VENDORS = [
       turnover:      {score:12, target:15, met:true,  label:'Worker Turnover',  unit:'%', desc:'Annual rate'},
     },
     months_history:[{m:'Apr',s:80},{m:'May',s:82},{m:'Jun',s:84}],
-    recommendation:'Good performance. Address 2 unfilled positions before renewal discussion.',
     risk:'low', icon:'🧹', color:'#10b981',
     impact_links:[{icon:'⚠',module:'Vacancy',desc:'2 positions unfilled since March'}],
   },
@@ -46,7 +44,6 @@ const MOCK_VENDORS = [
       turnover:      {score:22, target:15, met:false, label:'Worker Turnover',  unit:'%', desc:'High turnover concern'},
     },
     months_history:[{m:'Apr',s:78},{m:'May',s:75},{m:'Jun',s:72}],
-    recommendation:'Performance improving. Issue formal warning for SLA breaches. Require action plan within 30 days.',
     risk:'high', icon:'💻', color:'#3b82f6',
     impact_links:[{icon:'⚠',module:'SLA Breach',desc:'Multiple KPI misses'},{icon:'💰',module:'Billing Dispute',desc:'NPR 15K pending resolution'}],
   },
@@ -61,7 +58,6 @@ const MOCK_VENDORS = [
       turnover:      {score:35, target:20, met:false, label:'Worker Turnover',  unit:'%', desc:'Critically high turnover'},
     },
     months_history:[{m:'Apr',s:68},{m:'May',s:65},{m:'Jun',s:62}],
-    recommendation:'CRITICAL: Non-compliance with Labour Act 2074 (insurance not paid). Issue termination notice if not resolved within 15 days.',
     risk:'critical', icon:'🍽', color:'#f59e0b',
     impact_links:[{icon:'⚠',module:'Co-Liability',desc:'Main employer risk if workers unpaid'},{icon:'⚖',module:'Labour Act',desc:'Mandatory to report to Labour Office'}],
   },
@@ -69,7 +65,6 @@ const MOCK_VENDORS = [
 
 const RISK_COLORS = {
   low:'#10b981', medium:'#f59e0b', high:'#ef4444', critical:'#dc2626'
-}
 
 const CONTEXT_ACTIONS = [
   {icon:'👁', label:'View Scorecard',       key:'view'},
@@ -230,4 +225,3 @@ export default function OutsourcePerformancePage() {
         onClose={()=>setShowExcel(false)} onImport={f=>alert('Importing: '+f.name)} />}
     </div>
   )
-}

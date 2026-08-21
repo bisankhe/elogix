@@ -50,9 +50,7 @@ async function callAI(prompt, system, json=false) {
       const t = d?.content?.[0]?.text||''
       return json?JSON.parse(t.replace(/```json|```/g,'').trim()):t
     } catch {}
-  }
   return json?null:'AI generation unavailable. Please add your Anthropic API key.'
-}
 
 async function generateDeptFlow(dept) {
   const sys = `You are a business process expert. Return ONLY valid JSON, no markdown, no preamble.`
@@ -75,7 +73,6 @@ Return JSON with this exact structure:
     {"from":"n1","to":"n2"},
     ...
   ]
-}
 
 Node types: "start", "end", "process", "decision" (h:56), "io", "document", "ai"
 - Start at y:30, each subsequent node y += 70-80
@@ -91,7 +88,6 @@ Node types: "start", "end", "process", "decision" (h:56), "io", "document", "ai"
 Return ONLY the JSON object.`
 
   return await callAI(prompt, sys, true)
-}
 
 async function generateDeptAndTasks(deptName, deptDesc) {
   const sys = `You are a business process expert. Return ONLY valid JSON.`
@@ -107,11 +103,9 @@ Return JSON:
     {"id": "dept_taskname", "icon": "emoji", "label": "Task Name"},
     ...5-8 tasks...
   ]
-}
 
 Return ONLY the JSON.`
   return await callAI(prompt, sys, true)
-}
 
 // ── SVG ENGINE ────────────────────────────────────────────────
 function getC(n){return{cx:n.x+n.w/2,cy:n.y+n.h/2}}
@@ -128,7 +122,6 @@ function SvgNode({n,color,sel,onSel,editMode,onEdit}){
   if(n.type==='document'){const wH=7,p=`M${n.x},${n.y} L${n.x+n.w},${n.y} L${n.x+n.w},${n.y+n.h-wH} Q${n.x+n.w*.75},${n.y+n.h+wH} ${n.x+n.w/2},${n.y+n.h-wH} Q${n.x+n.w*.25},${n.y+n.h-wH*2.5} ${n.x},${n.y+n.h-wH} Z`;return(<g style={{cursor:'pointer',filter:glow}} onClick={click}><path d={p} fill={hl?'#fce7f3':'#fdf4ff'} stroke="#c084fc" strokeWidth={hl?2:1}/><text x={cx} y={n.sub?lY:cy-3} textAnchor="middle" dominantBaseline="central" style={{fontSize:10,fontWeight:600,fill:'#6b21a8'}}>{n.label}</text>{n.sub&&<text x={cx} y={sY-3} textAnchor="middle" style={{fontSize:9,fill:'#7e22ce'}}>{n.sub}</text>}{editBadge}</g>)}
   if(n.type==='ai')return(<g style={{cursor:'pointer',filter:glow}} onClick={click}><rect x={n.x} y={n.y} width={n.w} height={n.h} rx={6} fill={hl?'#ede9fe':'#f5f3ff'} stroke="#8b5cf6" strokeWidth={hl?2:1} strokeDasharray="4 2"/><rect x={n.x+n.w-28} y={n.y-7} width={24} height={14} rx={7} fill="#8b5cf6"/><text x={n.x+n.w-16} y={n.y} textAnchor="middle" dominantBaseline="central" style={{fontSize:8,fontWeight:700,fill:'#fff'}}>AI</text><text x={cx} y={n.sub?lY:cy} textAnchor="middle" dominantBaseline="central" style={{fontSize:10,fontWeight:600,fill:'#4c1d95'}}>{n.label}</text>{n.sub&&<text x={cx} y={sY} textAnchor="middle" style={{fontSize:9,fill:'#6d28d9'}}>{n.sub}</text>}{editBadge}</g>)
   return(<g style={{cursor:'pointer',filter:glow}} onClick={click}><rect x={n.x} y={n.y} width={n.w} height={n.h} rx={5} fill={hl?'#dbeafe':'#f8fafc'} stroke={hl?color:'#cbd5e1'} strokeWidth={hl?2:1}/><text x={cx} y={n.sub?lY:cy} textAnchor="middle" dominantBaseline="central" style={{fontSize:10,fontWeight:600,fill:hl?'#1e40af':'#1e293b'}}>{n.label}</text>{n.sub&&<text x={cx} y={sY} textAnchor="middle" style={{fontSize:9,fill:'#64748b'}}>{n.sub}</text>}{editBadge}</g>)
-}
 
 function SvgEdge({e,nodeMap,color}){
   const fn=nodeMap[e.from],tn=nodeMap[e.to];if(!fn||!tn)return null
@@ -139,7 +132,6 @@ function SvgEdge({e,nodeMap,color}){
   else d=`M${f.x},${f.y} L${t.x},${t.y}`
   const mx=(f.x+t.x)/2,my=(f.y+t.y)/2
   return(<g><path d={d} fill="none" stroke={color} strokeWidth={1.5} opacity={0.65} markerEnd="url(#pfah)"/>{e.label&&<text x={mx+5} y={my-3} textAnchor="middle" style={{fontSize:9,fontWeight:700,fill:color}}>{e.label}</text>}</g>)
-}
 
 function FlowChart({flow,color,selNode,onSelNode,editMode,onEditNode}){
   const nm={};flow.nodes.forEach(n=>{nm[n.id]=n})
@@ -161,7 +153,6 @@ function FlowChart({flow,color,selNode,onSelNode,editMode,onEditNode}){
       {flow.nodes.map(n=><SvgNode key={n.id} n={n} color={color} sel={selNode} onSel={onSelNode} editMode={editMode} onEdit={onEditNode}/>)}
     </svg>
   )
-}
 
 function Legend(){
   const items=[{s:'oval',fill:'#1e293b',stroke:'#3b82f6',label:'Start/End'},{s:'rect',fill:'#f8fafc',stroke:'#94a3b8',label:'Process'},{s:'diamond',fill:'#fffbeb',stroke:'#f59e0b',label:'Decision'},{s:'para',fill:'#eff6ff',stroke:'#60a5fa',label:'I/O'},{s:'doc',fill:'#fdf4ff',stroke:'#c084fc',label:'Document'},{s:'dash',fill:'#f5f3ff',stroke:'#8b5cf6',label:'AI Step'}]
@@ -181,7 +172,6 @@ function Legend(){
       </span>
     ))}
   </div>)
-}
 
 // ── NODE EDIT MODAL ───────────────────────────────────────────
 function EditNodeModal({node,onSave,onClose}){
@@ -213,7 +203,6 @@ function EditNodeModal({node,onSave,onClose}){
       </div>
     </div>
   )
-}
 
 // ── ADD DEPT MODAL ────────────────────────────────────────────
 function AddDeptModal({onAdd,onClose}){
@@ -238,7 +227,6 @@ function AddDeptModal({onAdd,onClose}){
       isCustom: true,
     })
     onClose()
-  }
 
   return(
     <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.55)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center'}} onClick={onClose}>
@@ -263,7 +251,6 @@ function AddDeptModal({onAdd,onClose}){
       </div>
     </div>
   )
-}
 
 // ── ADD TASK MODAL ────────────────────────────────────────────
 function AddTaskModal({dept,onAdd,onClose}){
@@ -279,7 +266,6 @@ function AddTaskModal({dept,onAdd,onClose}){
     if(!flow){setErr('AI generation failed.');return}
     onAdd({taskLabel:name.trim(),flow})
     onClose()
-  }
 
   return(
     <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.55)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center'}} onClick={onClose}>
@@ -300,7 +286,6 @@ function AddTaskModal({dept,onAdd,onClose}){
       </div>
     </div>
   )
-}
 
 // ── MAIN COMPONENT ────────────────────────────────────────────
 // ── AI Flow generator (stub — replace with real Anthropic API call) ──
@@ -313,7 +298,6 @@ async function generateTaskFlow(dept, taskLabel) {
     { id:'s3', label:'HR Approval',          type:'process', role:'HR Manager', time:'1 day'  },
     { id:'s4', label:'Final Confirmation',   type:'end',     role:'System',     time:'Auto'   },
   ]
-}
 
 export default function ProcessFlowPage(){
   const{persona}=useApp()
@@ -353,7 +337,6 @@ export default function ProcessFlowPage(){
         notify('✅ AI flowchart ready for '+firstTask.label)
       } else {
         notify('⚠️ AI generation unavailable — browse existing flows below')
-      }
     }, 1200)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -373,7 +356,6 @@ export default function ProcessFlowPage(){
       const m=await import('./ProcessFlowData.js')
       if(m.TASK_FLOWS?.[taskId]) setBuiltinFlows(p=>({...p,[taskId]:m.TASK_FLOWS[taskId]}))
     }catch{}
-  }
 
   // Get the active flow for a task (edited > custom > builtin)
   const getFlow=(taskId)=>editedFlows[taskId]||customFlows[taskId]||builtinFlows[taskId]||null
@@ -382,7 +364,6 @@ export default function ProcessFlowPage(){
   const selectTask=async(task)=>{
     setSelTask(task);setSelNode(null);setEditMode(false)
     loadFlow(task.id)
-  }
 
   // Edit node save
   const saveEditedNode=(updatedNode)=>{
@@ -395,7 +376,6 @@ export default function ProcessFlowPage(){
     localStorage.setItem('elogix_pf_edited_flows',JSON.stringify(updated))
     setEditNode(null)
     notify('✅ Node updated and saved!')
-  }
 
   // AI-generate a task flow on the fly
   const aiGenerateTaskFlow=async(task)=>{
@@ -408,7 +388,6 @@ export default function ProcessFlowPage(){
     localStorage.setItem('elogix_pf_custom_flows',JSON.stringify(updated))
     setBuiltinFlows(p=>({...p,[task.id]:flow}))
     notify('✅ AI flowchart generated!')
-  }
 
   // Add new department
   const addDept=(d)=>{
@@ -418,7 +397,6 @@ export default function ProcessFlowPage(){
     localStorage.setItem('elogix_pf_custom_depts',JSON.stringify(customs))
     setSelDept(d);setSelTask(null)
     notify(`✅ "${d.name2}" department added with ${d.tasks.length} tasks!`,3000)
-  }
 
   // Add new task to existing dept
   const addTask=({taskLabel,flow})=>{
@@ -434,7 +412,6 @@ export default function ProcessFlowPage(){
     localStorage.setItem('elogix_pf_custom_flows',JSON.stringify(updatedFlows))
     setSelDept(updatedDepts.find(d=>d.id===selDept.id))
     notify(`✅ Task "${taskLabel}" added with AI flowchart!`)
-  }
 
   const resetFlow=()=>{
     if(!selTask)return
@@ -442,7 +419,6 @@ export default function ProcessFlowPage(){
     setEditedFlows(updated)
     localStorage.setItem('elogix_pf_edited_flows',JSON.stringify(updated))
     notify('✅ Reverted to original flow.')
-  }
 
   // Groups for sidebar
   const groups={}
@@ -652,4 +628,3 @@ export default function ProcessFlowPage(){
       </div>
     </div>
   )
-}

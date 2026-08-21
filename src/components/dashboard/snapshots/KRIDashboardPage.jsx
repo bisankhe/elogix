@@ -90,4 +90,3 @@ export default function KRIDashboardPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

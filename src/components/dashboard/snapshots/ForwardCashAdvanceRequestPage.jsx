@@ -91,4 +91,3 @@ export default function ForwardCashAdvanceRequestPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

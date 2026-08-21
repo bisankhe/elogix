@@ -29,7 +29,6 @@ const STATUS_CFG = {
   assigned:{c:'#10b981',bg:'#f0fdf4',icon:'✅',label:'Assigned'},
   in_repair:{c:'#f59e0b',bg:'#fffbeb',icon:'🔧',label:'In Repair'},
   returned:{c:'#94a3b8',bg:'#f8fafc',icon:'↩',label:'Returned'},
-}
 const ITEM_ICONS = {Laptop:'💻',Monitor:'🖥','Access Card':'🪪',Phone:'📱',Chair:'🪑',Headset:'🎧'}
 
 export default function EmployeeAssetsPage() {
@@ -128,4 +127,3 @@ export default function EmployeeAssetsPage() {
       {showExcel&&<ExcelModal title="Employee Assets" columns={['Employee','Item','Model','Serial','Issue Date','Value NPR','Status','Custody Signed']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

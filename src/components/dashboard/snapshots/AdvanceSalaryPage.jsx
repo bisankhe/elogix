@@ -15,7 +15,6 @@ const ADVANCES = [
     impact_links:['Automated Payroll'] },
   { id:'as2', employee:'Ramesh KC', expected_net_npr:35000, requested_npr:22000, max_allowed_npr:17500,
     reason:'Personal - rent due', disbursed_date:null, deduction_pay_period:null, status:'rejected',
-    rejection_reason:'Requested amount exceeds the 50% cap of expected net pay (NPR 17,500 max).',
     impact_links:[] },
   { id:'as3', employee:'Bikash Rai', expected_net_npr:52000, requested_npr:15000, max_allowed_npr:26000,
     reason:'Emergency travel', disbursed_date:null, deduction_pay_period:'2025-07', status:'pending',
@@ -118,4 +117,3 @@ export default function AdvanceSalaryPage() {
       {showExcel&&<ExcelModal title="Advance Salary" columns={['Employee','Expected Net Pay','Requested','Max Allowed (50%)','Reason','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

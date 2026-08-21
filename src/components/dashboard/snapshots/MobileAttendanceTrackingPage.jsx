@@ -130,4 +130,3 @@ export default function MobileAttendanceTrackingPage() {
       {showExcel&&<ExcelModal title="Mobile Attendance Devices" columns={['Employee','Device Model','OS','App Version','Last Sync','Offline Pending','Biometric Enrolled','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

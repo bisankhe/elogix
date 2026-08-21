@@ -14,7 +14,6 @@ const MODULE_TYPE_CFG = {
   technical: {c:'#3b82f6',icon:'💻',label:'Technical'},
   oneOnOne:  {c:'#10b981',icon:'👥',label:'1:1 Meeting'},
   safety:    {c:'#f59e0b',icon:'🦺',label:'Safety (LA2074 S.68)'},
-}
 
 const PROGRAMS = [
   { id:'op1', employee:'Gita Maharjan', position:'Cloud Architect', timezone:'Asia/Kathmandu (GMT+5:45)',
@@ -65,8 +64,6 @@ export default function OrientationProgramPage() {
       setActiveProgram(prev=>{
         return {...prev, schedule, overall_pct:Math.round(schedule.filter(m=>m.status==='completed').length/schedule.length*100)}
       })
-    }
-  }
 
   const groupedByDay = activeProgram?.schedule.reduce((acc,m)=>{(acc[m.day]=acc[m.day]||[]).push(m);return acc},{}) || {}
 
@@ -156,4 +153,3 @@ export default function OrientationProgramPage() {
       {showExcel&&<ExcelModal title="Orientation Program" columns={['Employee','Day','Time','Module','Type','Duration (min)','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

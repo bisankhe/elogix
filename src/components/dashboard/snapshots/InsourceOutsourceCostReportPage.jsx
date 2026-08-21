@@ -84,4 +84,3 @@ export default function InsourceOutsourceCostReportPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

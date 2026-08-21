@@ -73,4 +73,3 @@ export default function EarlyDeparturePage() {
       {showExcel&&<ExcelModal title="Early Departure" columns={['Employee','Emp ID','Dept','Shift End','Logout Time','Early Minutes','Violations This Month','Deduction']} onClose={()=>setShowExcel(false)} onImport={()=>{}}/>}
     </div>
   )
-}

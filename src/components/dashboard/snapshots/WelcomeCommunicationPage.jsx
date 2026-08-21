@@ -112,7 +112,6 @@ Please carry your ID card at all times.
 HR Team`,
     channel: 'Email',
   },
-}
 
 const COMMUNICATIONS = [
   { id:'wc1', employee:'Gita Maharjan', type:'insource', position:'Cloud Architect', dept:'IT', phone:'+977-9801111111', email:'gita@company.com',
@@ -168,7 +167,6 @@ export default function WelcomeCommunicationPage() {
       sequence:c.sequence.map(s=>s.step!==stepName?s:{...s,sent:true,date:new Date().toISOString().split('T')[0]})
     }))
     notify(`✅ "${stepName}" sent!`)
-  }
 
   const previewMsg = (comm, step) => {
     const tpl = MSG_TEMPLATES[step.step]
@@ -185,9 +183,7 @@ export default function WelcomeCommunicationPage() {
         .replace(/\[Company Name\]/g, 'Future Company Nepal')
         .replace(/\[Location\]/g, 'Head Office, Kathmandu')
         .replace(/\[Time\]/g, '09:00')
-    }
     setShowPreview({comm, step, template:filled})
-  }
 
   const totalSent  = comms.reduce((s,c)=>s+c.sequence.filter(x=>x.sent).length,0)
   const totalSteps = comms.reduce((s,c)=>s+c.sequence.length,0)
@@ -202,7 +198,6 @@ export default function WelcomeCommunicationPage() {
     setShowCreate(false)
     setNewComm({employee:'',email:'',phone:'',position:'',dept:'',type:'insource',joining_date:'',manager:'',vendor:''})
     notify(`✅ Welcome sequence created for ${newComm.employee}`)
-  }
 
   return (
     <div onClick={()=>setCtx(null)} style={{fontFamily:'system-ui,sans-serif'}}>
@@ -377,4 +372,3 @@ export default function WelcomeCommunicationPage() {
       {showExcel&&<ExcelModal title="Welcome Communications" columns={['Employee','Email','Phone','Department','Position','Joining Date','Type','Manager']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{notify(`✅ Imported from ${f.name}`);setShowExcel(false)}}/>}
     </div>
   )
-}

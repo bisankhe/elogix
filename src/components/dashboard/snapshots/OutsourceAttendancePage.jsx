@@ -256,4 +256,3 @@ export default function OutsourceAttendancePage() {
         onClose={()=>setShowExcel(false)} onImport={f=>alert('Importing: '+f.name)} />}
     </div>
   )
-}

@@ -12,11 +12,9 @@ const A = '#c2410c'
 
 const REQUESTS = [
   { id:'r1', employee:'Hari Thapa', skill_gap:'Cloud Architecture (gap of 4)', proposed_course:'AWS Solutions Architect',
-    justification:'Will let our team reduce reliance on the external AWS consultant for Module 3 infrastructure work.',
     approval_chain:[{role:'Manager',status:'approved'},{role:'Dept Head',status:'approved'},{role:'L&D / Budget',status:'pending'}],
     estimated_cost_npr:45000, impact_links:['Skill Gap Analysis','Course Management'] },
   { id:'r2', employee:'Bikash Rai', skill_gap:'Leadership (gap of 4)', proposed_course:'New Manager Leadership Bootcamp',
-    justification:'Preparing for the Senior Engineer track; addresses the 360 feedback blind spot directly.',
     approval_chain:[{role:'Manager',status:'approved'},{role:'Dept Head',status:'pending'},{role:'L&D / Budget',status:'not_started'}],
     estimated_cost_npr:28000, impact_links:['360 Degree Feedback'] },
 ]
@@ -122,4 +120,3 @@ export default function TrainingRequestPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

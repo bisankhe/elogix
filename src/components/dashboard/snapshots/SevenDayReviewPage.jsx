@@ -39,7 +39,6 @@ const STATUS_CFG = {
   not_started:{c:'#94a3b8',bg:'#f8fafc',icon:'⏳',label:'Not Started'},
   in_progress:{c:'#f59e0b',bg:'#fffbeb',icon:'🔄',label:'In Progress'},
   completed:  {c:'#10b981',bg:'#f0fdf4',icon:'✅',label:'Completed'},
-}
 
 export default function SevenDayReviewPage() {
   const [reviews, setReviews] = useState(REVIEWS)
@@ -62,7 +61,6 @@ export default function SevenDayReviewPage() {
       const anyDone = Object.values(checklist).some(Boolean)
       return {...r, checklist, status: allDone?'completed':anyDone?'in_progress':'not_started'}
     }))
-  }
 
   return (
     <div onClick={()=>setCtx(null)}>
@@ -143,4 +141,3 @@ export default function SevenDayReviewPage() {
       ]}/>
     </div>
   )
-}

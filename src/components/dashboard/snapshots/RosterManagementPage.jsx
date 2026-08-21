@@ -31,7 +31,6 @@ const SHIFTS = {
   Half:    { label:'Half Day', short:'HLF', color:'#06b6d4', bg:'#ecfeff', hours:'9:00–13:00',  hrs:4 },
   Off:     { label:'Day Off',  short:'OFF', color:'#94a3b8', bg:'#f8fafc', hours:'Rest day',    hrs:0 },
   Holiday: { label:'Holiday',  short:'HOL', color:'#ef4444', bg:'#fef2f2', hours:'Public holiday',hrs:0 },
-}
 const SHIFT_KEYS  = Object.keys(SHIFTS)
 const DAYS_SHORT  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
 const MONTHS      = ['January','February','March','April','May','June','July','August','September','October','November','December']
@@ -53,7 +52,6 @@ function makeRoster(defaultShift, pattern) {
     const dow = (i + 1) % 7
     return (dow===0||dow===6) ? 'Off' : (defaultShift||'General')
   })
-}
 
 const BASE_EMPLOYEES = [
   { id:'e1',  name:'Bikash Shrestha', dept:'Engineering', email:'bikash@co.com',  phone:'+977-9801234567', supervisor:'Rajesh KC',  avatar:'BS', default_shift:'General', roster:makeRoster('General') },
@@ -80,7 +78,6 @@ function sendNotification({ type, employee, message, channels, supervisor }) {
   } catch {}
   console.log('[eLogix Roster Notif]', type, message, channels.join(', '))
   return notif
-}
 
 // ── SHIFT CELL — outside component to prevent remount ─────────
 function ShiftCell({ shift, dayIdx, empId, canEdit, onChange, isToday, isChanged }) {
@@ -93,7 +90,6 @@ function ShiftCell({ shift, dayIdx, empId, canEdit, onChange, isToday, isChanged
         ) : <span style={{ color:'#e2e8f0', fontSize:10 }}>—</span>}
       </td>
     )
-  }
   return (
     <td style={{ padding:'2px', textAlign:'center', position:'relative' }}>
       {isToday && <div style={{ position:'absolute', top:0, left:0, right:0, height:2, background:'#ef4444', zIndex:1, borderRadius:1 }}/>}
@@ -105,7 +101,6 @@ function ShiftCell({ shift, dayIdx, empId, canEdit, onChange, isToday, isChanged
       </select>
     </td>
   )
-}
 
 // ── MAIN COMPONENT ─────────────────────────────────────────────
 export default function RosterManagementPage() {
@@ -124,7 +119,6 @@ export default function RosterManagementPage() {
     if (!canEditAny) return false
     if (canEditAll)  return true
     return myDept ? emp.dept === myDept : true
-  }
 
   // ── STATE ──────────────────────────────────────────────────
   const [view,         setView]        = useState('weekly')
@@ -157,7 +151,6 @@ export default function RosterManagementPage() {
   useEffect(() => {
     const handler = (e) => {
       if (unsaved) { e.preventDefault(); e.returnValue = '' }
-    }
     window.addEventListener('beforeunload', handler)
     return () => window.removeEventListener('beforeunload', handler)
   }, [unsaved])
@@ -166,7 +159,6 @@ export default function RosterManagementPage() {
   const getDayIdx = (date) => {
     const start = new Date(yw, mw, 1)
     return Math.max(0, Math.floor((date - start) / 86400000))
-  }
   const weekDates = useMemo(() => {
     const d = new Date(today)
     d.setDate(d.getDate() - d.getDay() + 1 + weekOffset * 7)
@@ -202,7 +194,6 @@ export default function RosterManagementPage() {
         sendNotification({ type:'shift_change', employee:emp,
           message:`Your duty on ${dateStr} changed: ${oldShift||'Blank'} → ${newShift||'Removed'} (${newShift?SHIFTS[newShift]?.hours:''})`,
           channels:['email','whatsapp','viber','dashboard'], supervisor:emp.supervisor })
-      }
       return updated
     })
     setUnsaved(true)
@@ -213,7 +204,6 @@ export default function RosterManagementPage() {
     setSaving(true)
     try {
       await fetch('/api/v1/attendance/roster/save', {
-        method:'POST',
         headers:{'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('elogix_access_token')||''}`},
         body: JSON.stringify({ employees, savedAt:new Date().toISOString(), savedBy:personaId }),
         signal: AbortSignal.timeout(6000),
@@ -225,7 +215,6 @@ export default function RosterManagementPage() {
     setUnsaved(false)
     setSaveMsg('✅ Roster saved!')
     setTimeout(() => setSaveMsg(''), 3000)
-  }
 
   // ── DISCARD ────────────────────────────────────────────────
   const handleDiscard = () => {
@@ -234,7 +223,6 @@ export default function RosterManagementPage() {
     setShowDiscardWarn(false)
     setSaveMsg('🗑 Changes discarded')
     setTimeout(() => setSaveMsg(''), 2500)
-  }
 
   // ── AUTO-ROSTER ────────────────────────────────────────────
   const autoGenerate = (scope) => {
@@ -244,7 +232,6 @@ export default function RosterManagementPage() {
       evening:  ['Evening','Evening','Evening','Evening','Evening','Off','Off'],
       night:    ['Night','Night','Night','Off','Off','Night','Night'],
       rotating: ['Morning','Evening','General','Night','Morning','Off','Off'],
-    }
     const pat = patterns[autoPattern] || patterns.balanced
     setEmployees(prev => prev.map(emp => {
       if (!canEditEmployee(emp)) return emp
@@ -260,7 +247,6 @@ export default function RosterManagementPage() {
     }))
     setUnsaved(true)
     setSaveMsg('⚠️ Auto-roster applied — click Save to keep changes')
-  }
 
   // ── BULK / ROW HELPERS ──────────────────────────────────────
   const toggleSelect = (id) =>
@@ -270,7 +256,6 @@ export default function RosterManagementPage() {
     const ids = filtered.filter(e=>canEditEmployee(e)).map(e=>e.id)
     const allSel = ids.every(id=>selectedEmps.has(id))
     setSelectedEmps(allSel ? new Set() : new Set(ids))
-  }
 
   const applyBulkShift = (shift, scope) => {
     if (!shift) return
@@ -285,7 +270,6 @@ export default function RosterManagementPage() {
     }))
     setUnsaved(true)
     setSaveMsg(`✅ ${shift} applied to ${selectedEmps.size} employee${selectedEmps.size!==1?'s':''}`)
-  }
 
   const applyRowShift = (empId, shift, scope) => {
     if (!shift) return
@@ -298,7 +282,6 @@ export default function RosterManagementPage() {
       return {...emp, roster:nr}
     }))
     setUnsaved(true)
-  }
 
   // ── PUBLISH ────────────────────────────────────────────────
   const publishRoster = async () => {
@@ -316,7 +299,6 @@ export default function RosterManagementPage() {
     })
     try {
       await fetch('/api/v1/attendance/roster/publish', {
-        method:'POST',
         headers:{'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('elogix_access_token')||''}`},
         body: JSON.stringify({ employees, weekOffset }),
         signal: AbortSignal.timeout(6000),
@@ -325,7 +307,6 @@ export default function RosterManagementPage() {
     localStorage.setItem('elogix_published_roster', JSON.stringify({ published_at:new Date().toISOString(), week_offset:weekOffset, employees }))
     setPublishing(false); setPublished(true)
     setTimeout(() => setPublished(false), 3000)
-  }
 
   // ── PRINT ──────────────────────────────────────────────────
   const handlePrint = () => {
@@ -386,7 +367,6 @@ tr:nth-child(even) td{background:#f8fafc}
     const w = window.open('','_blank','width=1000,height=700')
     w.document.write(html)
     w.document.close()
-  }
 
   // ── RENDERS ────────────────────────────────────────────────
   const renderWeekly = () => (
@@ -546,7 +526,6 @@ tr:nth-child(even) td{background:#f8fafc}
         })()}
       </div>
     )
-  }
 
   const renderMonthly = () => {
     const yr = new Date(yw, mw+monthOffset).getFullYear()
@@ -635,7 +614,6 @@ tr:nth-child(even) td{background:#f8fafc}
         </div>
       </div>
     )
-  }
 
   // ── NOTIFICATION HISTORY ───────────────────────────────────
   const allNotifs = useMemo(()=>{
@@ -648,7 +626,6 @@ tr:nth-child(even) td{background:#f8fafc}
     if (canEditAll)  return { bg:'#f0fdf4', color:'#15803d', icon:'✅', text:`Edit mode: Full access — you can edit all departments (${currentPersona?.label||'HR/Admin'})` }
     if (canEditDept) return { bg:'#eff6ff', color:'#1e40af', icon:'🏢', text:`Edit mode: Department scope — you can only edit ${myDept||'your department'} employees (${currentPersona?.label||'Dept Head'})` }
     return { bg:'#f8fafc', color:'#64748b', icon:'👁️', text:`View only — your role (${currentPersona?.label||'Employee'}) does not have roster edit permission. Contact HR or your supervisor.` }
-  }
   const banner = roleBanner()
 
   return (
@@ -909,10 +886,8 @@ tr:nth-child(even) td{background:#f8fafc}
                   </div>
                 </div>
               ))
-            }
           </div>
         </div>
       )}
     </div>
   )
-}

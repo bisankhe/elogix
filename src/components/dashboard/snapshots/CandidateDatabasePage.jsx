@@ -55,7 +55,6 @@ const TALENT_POOL = [
 const STAGE_COLOR = {
   'In Process':'#3b82f6','Panel Interview':'#7c3aed','Video Interview':'#f59e0b',
   'Offer Sent':'#10b981','Applied':'#64748b','Talent Pool':'#94a3b8',
-}
 
 const CTX = [
   {icon:'👁',label:'View Full Profile',     key:'view'},
@@ -103,7 +102,6 @@ export default function CandidateDatabasePage() {
       c.current_role.toLowerCase().includes(aiQuery.toLowerCase())
     ).sort((a,b)=>b.ai_score-a.ai_score)
     setAiResults(matches.slice(0,5))
-  }
 
   return (
     <div onClick={()=>setCtx(null)}>
@@ -346,4 +344,3 @@ export default function CandidateDatabasePage() {
       ]}/>
     </div>
   )
-}

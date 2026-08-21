@@ -123,4 +123,3 @@ export default function PerformanceReportsPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

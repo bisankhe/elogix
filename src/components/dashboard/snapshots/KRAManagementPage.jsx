@@ -158,4 +158,3 @@ export default function KRAManagementPage() {
       {showExcel&&<ExcelModal title="KRA Management" columns={['KRA Title','Designation','Weightage %','JD Match %','Cascade Level','Quarter Target %','Progress %','Review Cadence']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

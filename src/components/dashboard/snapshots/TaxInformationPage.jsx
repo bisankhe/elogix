@@ -123,4 +123,3 @@ export default function TaxInformationPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

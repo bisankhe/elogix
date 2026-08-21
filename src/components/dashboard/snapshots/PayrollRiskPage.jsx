@@ -78,4 +78,3 @@ export default function PayrollRiskPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

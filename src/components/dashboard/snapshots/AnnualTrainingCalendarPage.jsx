@@ -121,4 +121,3 @@ export default function AnnualTrainingCalendarPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

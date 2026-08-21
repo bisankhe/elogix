@@ -21,7 +21,6 @@ const CODE_STYLE = {
   ND:  {bg:'#1e1b4b',text:'#c7d2fe',border:'#4338ca',dot:'#818cf8',label:'Night Duty'},
   OT:  {bg:'#fffbeb',text:'#78350f',border:'#fcd34d',dot:'#d97706',label:'Overtime'},
   WFH: {bg:'#f0f9ff',text:'#075985',border:'#7dd3fc',dot:'#0ea5e9',label:'Work From Home'},
-}
 
 const DEPTS = ['All','Management','HR','Finance','IT','Sales','Operations','Procurement']
 const pad2  = n => String(n).padStart(2,'0')
@@ -57,7 +56,6 @@ function genRows(month, year) {
         else if (code==='A') absent++
         else if (code==='ND') { nd++; present++ }
         else leave++
-      }
       const hasLog = code==='P'||code==='ND'||code==='WFH'
       const loginH  = hasLog ? 8+Math.floor(Math.random()*2) : null
       const loginM  = hasLog ? Math.floor(Math.random()*30)  : null
@@ -68,20 +66,17 @@ function genRows(month, year) {
         login:  hasLog ? `${pad2(loginH)}:${pad2(loginM)}`   : null,
         logout: hasLog ? `${pad2(logoutH)}:${pad2(logoutM)}` : null,
       })
-    }
     const workingDays = daysInMonth - woff
     const lopDays  = absent
     const lopAmt   = Math.round(salary / workingDays * lopDays)
     const netSalary= salary - lopAmt
     return { sn:idx+1, empId, name, desig, dept, salary, days, present, absent, leave, nd, woff, workingDays, lopDays, lopAmt, netSalary }
   })
-}
 
 const inp = {
   padding:'7px 10px', borderRadius:8, border:'1.5px solid #e2e8f0',
   fontSize:10, outline:'none', fontFamily:'inherit',
   width:'100%', boxSizing:'border-box', background:'#fff'
-}
 
 const DayCell = ({ day }) => {
   const s = CODE_STYLE[day.code] || CODE_STYLE.P
@@ -102,14 +97,12 @@ const DayCell = ({ day }) => {
       </div>
     </td>
   )
-}
 
 const today = new Date()
 const INIT_SIGS = {
   prepared:{ name:'',designation:'',date:today.toISOString().split('T')[0],signed:false },
   verified: { name:'',designation:'',date:today.toISOString().split('T')[0],signed:false },
   approved: { name:'',designation:'',date:today.toISOString().split('T')[0],signed:false },
-}
 
 export default function MonthlyAttendancePage() {
   const [month,    setMonth]    = useState(today.getMonth()+1)
@@ -130,7 +123,6 @@ export default function MonthlyAttendancePage() {
   for (let d=1; d<=daysInMonth; d++) {
     const dow = new Date(year, month-1, d).getDay()
     dayHdrs.push({ d, day:['Su','Mo','Tu','We','Th','Fr','Sa'][dow], isWeekend:dow===0||dow===6 })
-  }
 
   const SigBox = ({ role }) => {
     const s = sigs[role]
@@ -138,7 +130,6 @@ export default function MonthlyAttendancePage() {
       prepared: '✍️ Prepared By',
       verified: '✅ Verified By',
       approved: '🏛 Approved By',
-    }
     return (
       <div style={{flex:1,border:`2px solid ${s.signed?'#bae6fd':'#e2e8f0'}`,borderRadius:12,
         padding:'14px',background:s.signed?'#f0f9ff':'#fff',minWidth:160}}>
@@ -166,7 +157,6 @@ export default function MonthlyAttendancePage() {
         )}
       </div>
     )
-  }
 
   return (
     <div style={{fontFamily:'system-ui,sans-serif',minHeight:'100vh',background:'#f0f7ff'}}>
@@ -412,7 +402,6 @@ export default function MonthlyAttendancePage() {
                   prepared: '✍️ Prepared By (HR Officer / Admin)',
                   verified: '✅ Verified By (Head of Department / HR Manager)',
                   approved: '🏛 Approved By (HR Director / General Manager)',
-                }
                 return (
                   <div key={role} style={{marginBottom:20,padding:'16px',borderRadius:12,
                     border:`2px solid ${sig.signed?'#bae6fd':'#e2e8f0'}`,
@@ -488,4 +477,3 @@ export default function MonthlyAttendancePage() {
       )}
     </div>
   )
-}

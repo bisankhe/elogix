@@ -84,4 +84,3 @@ export default function HelpdeskTicketPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

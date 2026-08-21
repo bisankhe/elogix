@@ -26,7 +26,6 @@ const CLEARANCES = [
     },
     outstanding_amount:0, penalty_deducted:0, final_payment:0,
     labour_office_report:true, la2074_compliant:true,
-    ai_note:'All clearance items completed. Nepal LA2074 obligations fully met. Safe to close.',
     impact_links:['Vendor Billing','Vendor Invoice','Labour Act 2074'] },
   { id:'cl2', clearance_no:'CLR-2025-002', vendor_code:'VND-003', vendor_name:'TechStaff Solutions Pvt.',
     service:'IT Support Staff', contract_end:'2025-12-31',
@@ -46,7 +45,6 @@ const CLEARANCES = [
     },
     outstanding_amount:8424, penalty_deducted:8424, final_payment:0,
     labour_office_report:false, la2074_compliant:false,
-    ai_note:'BILLING DISPUTE PENDING. Overpayment of NPR 8,424 to be recovered before final clearance. Labour Office report required.',
     impact_links:['Dispute Alert','Labour Act 2074','Finance','HR Manager'] },
   { id:'cl3', clearance_no:'CLR-2025-003', vendor_code:'VND-OPT', vendor_name:'DrivePro Transport Services',
     service:'Driver & Transport', contract_end:'2025-06-30',
@@ -66,7 +64,6 @@ const CLEARANCES = [
     },
     outstanding_amount:0, penalty_deducted:0, final_payment:0,
     labour_office_report:false, la2074_compliant:false,
-    ai_note:'Contract ending Jun 30. Clearance not yet initiated. Initiate now to meet 7-day clearance window.',
     impact_links:['Labour Act 2074','Vendor Billing','HR Manager'] },
 ]
 
@@ -74,7 +71,6 @@ const STATUS_CFG = {
   pending:     {c:'#f59e0b',bg:'#fffbeb',b:'#fde68a',icon:'⏳',label:'Pending'},
   in_progress: {c:'#3b82f6',bg:'#eff6ff',b:'#bfdbfe',icon:'🔄',label:'In Progress'},
   completed:   {c:'#10b981',bg:'#f0fdf4',b:'#bbf7d0',icon:'✅',label:'Completed'},
-}
 
 const CHECKLIST_LABELS = {
   final_invoice_cleared:    'Final Invoice Cleared',
@@ -87,7 +83,6 @@ const CHECKLIST_LABELS = {
   nda_confirmed:            'NDA Compliance Confirmed',
   labour_office_reported:   'Labour Office Report Filed (LA2074)',
   no_discrimination_cert:   'No-Discrimination Certificate Issued',
-}
 
 const CTX = [
   {icon:'✅',label:'Complete Checklist Item', key:'complete'},
@@ -126,7 +121,6 @@ export default function VendorClearancePage() {
       const allDone = Object.values(newChecklist).every(v=>v.done)
       return {...c, checklist:newChecklist, status:allDone?'completed':c.status==='pending'?'in_progress':c.status, completed_on:allDone?new Date().toISOString().split('T')[0]:null}
     }))
-  }
 
   return (
     <div onClick={()=>setCtx(null)}>
@@ -201,7 +195,6 @@ export default function VendorClearancePage() {
                   <div key={key} onClick={()=>toggleCheck(cl.id,key)}
                     style={{display:'flex',gap:8,alignItems:'center',padding:'6px 8px',cursor:'pointer',borderRadius:8,
                       background:item.done?'#f0fdf4':'transparent',
-                      border:'1px solid transparent',
                       borderColor:item.done?'#bbf7d0':'transparent'}}>
                     <div style={{width:18,height:18,borderRadius:4,border:`2px solid ${item.done?'#10b981':'#d1d5db'}`,background:item.done?'#10b981':'#fff',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,fontSize:10,color:'#fff',fontWeight:700}}>{item.done?'✓':''}</div>
                     <div style={{flex:1,minWidth:0}}>
@@ -291,4 +284,3 @@ export default function VendorClearancePage() {
       {showExcel&&<ExcelModal title="Vendor Clearances" columns={['Clearance No','Vendor','Service','Workers','Contract End','Status','Final Invoice','Wages Cleared','SSF Cleared','Assets Returned','Labour Office Report']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

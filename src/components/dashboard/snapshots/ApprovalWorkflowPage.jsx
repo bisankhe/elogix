@@ -82,4 +82,3 @@ export default function ApprovalWorkflowPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

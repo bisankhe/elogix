@@ -91,4 +91,3 @@ export default function TravelManagementPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

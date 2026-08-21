@@ -161,4 +161,3 @@ export default function LeaveRequestPage() {
       {showExcel&&<ExcelModal title="My Leave Requests" columns={['Leave Type','Start Date','End Date','Days','Reason','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
-}

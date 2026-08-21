@@ -24,7 +24,6 @@ const catColors={
   'AI Alert':P,
   'FYI':'#10b981',
   'System':'#64748b',
-}
 
 const typeIcons={leave:'🌴',payroll:'💰',contract:'📄',perf:'🎯',attrition:'⚠️',insight:'📊',birthday:'🎂',anniv:'🥂',recruit:'👤',system:'⚙️',security:'🔒'}
 
@@ -138,4 +137,3 @@ export default function SmartNotificationsPage(){
       </div>
     </div>
   )
-}

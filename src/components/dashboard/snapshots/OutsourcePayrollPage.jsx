@@ -79,4 +79,3 @@ export default function OutsourcePayrollPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

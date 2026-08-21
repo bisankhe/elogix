@@ -36,7 +36,6 @@ const CAT_CFG = {
   RCP:{ icon:'💰', color:'#10b981' }, SCP:{ icon:'🛡️', color:'#ef4444' },
   ECA:{ icon:'📅', color:'#f59e0b' }, LWS:{ icon:'🏖️', color:'#06b6d4' },
   WRT:{ icon:'💻', color:'#f97316' }, LDP:{ icon:'🎓', color:'#a855f7' },
-}
 
 const STATUS_CFG = {
   draft:            { bg:'#fef9c3', color:'#854d0e', label:'Draft'            },
@@ -44,7 +43,6 @@ const STATUS_CFG = {
   approved:         { bg:'#dcfce7', color:'#15803d', label:'Approved'         },
   rejected:         { bg:'#fee2e2', color:'#dc2626', label:'Rejected'         },
   published:        { bg:'#d1fae5', color:'#065f46', label:'🟢 Published'     },
-}
 
 export default function PublishHRPolicyPage() {
   const { navTo } = useApp()
@@ -61,7 +59,6 @@ export default function PublishHRPolicyPage() {
     setDrafts(updated)
     localStorage.setItem(DRAFT_KEY, JSON.stringify(updated))
     if (selected?.id===id) setSelected(s=>({...s,...patch}))
-  }
 
   const approve = () => updateDraft(selected.id, { status:'approved', approvedAt:new Date().toISOString() })
 
@@ -69,7 +66,6 @@ export default function PublishHRPolicyPage() {
     if (!rejectNote.trim()) { alert('Please enter a rejection reason.'); return }
     updateDraft(selected.id, { status:'rejected', rejectionNote:rejectNote, rejectedAt:new Date().toISOString() })
     setShowReject(false); setRejectNote('')
-  }
 
   const publish = async (draft) => {
     setPublishing(true)
@@ -115,7 +111,6 @@ export default function PublishHRPolicyPage() {
     setPublishing(false)
     setMsg(`✅ "${draft.title}" published successfully! All ${EMPLOYEES.length} employees notified via Email · WhatsApp · Viber · Dashboard.`)
     setTimeout(() => setMsg(''), 5000)
-  }
 
   const filtered = useMemo(() => drafts.filter(d => filterStatus==='all' || d.status===filterStatus), [drafts, filterStatus])
   const pending  = drafts.filter(d=>d.status==='pending_approval').length
@@ -305,4 +300,3 @@ export default function PublishHRPolicyPage() {
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
-}

@@ -1,7 +1,6 @@
-// FILE: GradeLevelPage.jsx
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 // Page 2: Grade & Level - luxury matrix, salary bands, AI benchmarking
 
-import { useState } from 'react'
 import {
   Field, ContextMenu, ExcelModal, PageHeader,
   AIImpact, Drawer, SearchBar, Badge, LuxCard
@@ -11,9 +10,7 @@ const T = {
   gradient: 'linear-gradient(135deg,#0ea5e9 0%,#8b5cf6 100%)',
   accent:   '#0ea5e9',
   light:    '#f0f9ff',
-}
 
-const MOCK_GRADES = [
   // IC Track
   {id:'g1', code:'L1', name:'Level 1 - Junior',       track:'individual', level_num:1,
    min_npr:15000,  mid_npr:20000,  max_npr:25000,
@@ -21,7 +18,6 @@ const MOCK_GRADES = [
    can_approve_leave:false, can_hire:false, span_max:0,
    approval_limit_npr:0,
    designations_count:3, employees_count:45, status:'active',
-   nepal_law:'General Employee - CBA eligible, overtime applicable',
    impact_links:[{icon:'💰',module:'Payroll Band',desc:'Min wage NPR 15K/mo per law'},{icon:'⏰',module:'Overtime',desc:'1.5x rate eligible'}],
   },
   {id:'g2', code:'L2', name:'Level 2 - Associate',    track:'individual', level_num:2,
@@ -30,7 +26,6 @@ const MOCK_GRADES = [
    can_approve_leave:false, can_hire:false, span_max:0,
    approval_limit_npr:0,
    designations_count:5, employees_count:120, status:'active',
-   nepal_law:'General Employee - CBA eligible',
    impact_links:[{icon:'💰',module:'Payroll Band',desc:'Band NPR 25-45K'},{icon:'⏰',module:'Overtime',desc:'Eligible for overtime'}],
   },
   {id:'g3', code:'L3', name:'Level 3 - Senior',       track:'individual', level_num:3,
@@ -39,7 +34,6 @@ const MOCK_GRADES = [
    can_approve_leave:false, can_hire:false, span_max:0,
    approval_limit_npr:0,
    designations_count:8, employees_count:186, status:'active',
-   nepal_law:'General Employee - key individual contributor',
    impact_links:[{icon:'💰',module:'Payroll Band',desc:'Band NPR 45-75K'},{icon:'📊',module:'Performance',desc:'Annual bonus 10% target'}],
   },
   {id:'g4', code:'L4', name:'Level 4 - Lead',         track:'individual', level_num:4,
@@ -48,7 +42,6 @@ const MOCK_GRADES = [
    can_approve_leave:false, can_hire:false, span_max:0,
    approval_limit_npr:50000,
    designations_count:4, employees_count:42, status:'active',
-   nepal_law:'Senior IC - overtime exempt, not managerial category',
    impact_links:[{icon:'💰',module:'Payroll Band',desc:'Band NPR 75-120K'},{icon:'✅',module:'Approvals',desc:'Limited financial approval up to 50K'}],
   },
   {id:'g5', code:'L5', name:'Level 5 - Principal',    track:'individual', level_num:5,
@@ -57,7 +50,6 @@ const MOCK_GRADES = [
    can_approve_leave:false, can_hire:false, span_max:0,
    approval_limit_npr:100000,
    designations_count:2, employees_count:12, status:'active',
-   nepal_law:'Principal IC - senior technical or functional expert',
    impact_links:[{icon:'💰',module:'Payroll Band',desc:'Band NPR 120-200K'}],
   },
   // Management Track
@@ -67,7 +59,6 @@ const MOCK_GRADES = [
    can_approve_leave:true, can_hire:false, span_max:8,
    approval_limit_npr:200000,
    designations_count:6, employees_count:28, status:'active',
-   nepal_law:'Managerial Category - excluded from CBA per Labour Act 2074 Section 7',
    impact_links:[{icon:'✅',module:'Leave Approvals',desc:'Can approve team leave'},{icon:'💰',module:'Budget',desc:'NPR 2L approval authority'}],
   },
   {id:'g7', code:'M2', name:'Senior Manager',         track:'management', level_num:7,
@@ -76,7 +67,6 @@ const MOCK_GRADES = [
    can_approve_leave:true, can_hire:true, span_max:12,
    approval_limit_npr:500000,
    designations_count:4, employees_count:14, status:'active',
-   nepal_law:'Senior Management - can hire up to grade M1 level',
    impact_links:[{icon:'✅',module:'Hiring Authority',desc:'Can approve L1-M1 hires'},{icon:'💰',module:'Budget',desc:'NPR 5L approval authority'}],
   },
   {id:'g8', code:'M3', name:'Director',               track:'management', level_num:8,
@@ -85,7 +75,6 @@ const MOCK_GRADES = [
    can_approve_leave:true, can_hire:true, span_max:15,
    approval_limit_npr:2000000,
    designations_count:3, employees_count:6, status:'active',
-   nepal_law:'Director Level - board-delegated authority',
    impact_links:[{icon:'💰',module:'Budget',desc:'NPR 20L approval authority'},{icon:'🏛',module:'Board Reports',desc:'Dept metrics to board'}],
   },
   // Executive Track
@@ -95,7 +84,6 @@ const MOCK_GRADES = [
    can_approve_leave:true, can_hire:true, span_max:20,
    approval_limit_npr:10000000,
    designations_count:3, employees_count:5, status:'active',
-   nepal_law:'VP/Executive - board appointed, Managerial Category',
    impact_links:[{icon:'💰',module:'Executive Comp',desc:'ESOPs and variable pay'},{icon:'🏛',module:'Board',desc:'Reports to CEO/Board'}],
   },
   {id:'g10',code:'E2', name:'C-Suite / CEO-1',        track:'executive',  level_num:10,
@@ -104,7 +92,6 @@ const MOCK_GRADES = [
    can_approve_leave:true, can_hire:true, span_max:30,
    approval_limit_npr:999999999,
    designations_count:2, employees_count:3, status:'active',
-   nepal_law:'C-Suite - board appointed, highest authority tier',
    impact_links:[{icon:'🏛',module:'Board',desc:'Direct board accountability'},{icon:'💰',module:'ESOP',desc:'Equity compensation'}],
   },
 ]
@@ -113,7 +100,6 @@ const TRACK_CONFIG = {
   individual: {label:'IC Track', color:'#3b82f6', codes:['L1','L2','L3','L4','L5']},
   management: {label:'Management Track', color:'#f59e0b', codes:['M1','M2','M3']},
   executive:  {label:'Executive Track', color:'#ef4444', codes:['E1','E2']},
-}
 
 const CONTEXT_ACTIONS = [
   {icon:'👁',  label:'View Grade Details',   key:'view'},
@@ -129,7 +115,116 @@ const EXCEL_COLS = ['Grade Code','Grade Name','Track','Min Salary (NPR)','Mid Sa
   'Max Salary (NPR)','Bonus %','Leave Days','Overtime Exempt','Managerial Category',
   'Can Approve Leave','Can Hire','Span of Control Max','Approval Limit (NPR)']
 
+
+import React, { useState, useEffect, useRef, useCallback } from 'react'
+
+// ── Tenant-scoped data hook ─────────────────────────────────
+function useTenantData(resourceKey) {
+  const getAuth = () => {
+    try { return JSON.parse(localStorage.getItem('elogix_auth') || '{}') } catch { return {} }
+  const getCompanyId = () => {
+    const auth = getAuth()
+    return auth.company?.id || auth.company?.slug || auth.user?.company || 'demo'
+  const getToken = () => {
+    return localStorage.getItem('elogix_token') || getAuth().token || ''
+  const storageKey = () => `elogix_${resourceKey}_${getCompanyId()}`
+
+  const [items,   setItems]   = React.useState([])
+  const [loading, setLoading] = React.useState(true)
+  const [company, setCompany] = React.useState(null)
+
+  React.useEffect(() => {
+    // Load company info
+    const auth = getAuth()
+    const regCos = JSON.parse(localStorage.getItem('elogix_registered_companies') || '{}')
+    const slug = auth.company?.slug || auth.user?.company || 'demo'
+    setCompany({
+      id: auth.company?.id || slug,
+      name: auth.company?.name || regCos[slug]?.name || 'Your Company',
+      slug, plan: auth.company?.plan || 'trial',
+      country: auth.company?.country || 'Nepal',
+      currency: auth.company?.currency || 'NPR',
+      business_type: auth.company?.business_type || 'custom',
+    })
+    // Load data from API then localStorage fallback
+    const load = async () => {
+      try {
+        const token = getToken()
+        if (token) {
+          const res = await fetch(`/api/v1/${resourceKey}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          })
+          if (res.ok) {
+            const d = await res.json()
+            const data = d.data || d[resourceKey] || d.items || []
+            setItems(Array.isArray(data) ? data : [])
+            localStorage.setItem(storageKey(), JSON.stringify(data))
+            setLoading(false); return
+      } catch {}
+      // Fallback: tenant-keyed localStorage
+      const stored = JSON.parse(localStorage.getItem(storageKey()) || '[]')
+      setItems(stored)
+      setLoading(false)
+    load()
+  }, [])
+
+  const saveItems = (newItems) => {
+    setItems(newItems)
+    localStorage.setItem(storageKey(), JSON.stringify(newItems))
+    // Try API save
+    const token = getToken()
+    if (token) {
+      fetch(`/api/v1/${resourceKey}/bulk`, {
+        method: 'PUT',
+        headers: { 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
+        body: JSON.stringify(newItems)
+      }).catch(() => {})
+
+  const addItem = (item) => {
+    const newItem = { ...item, id: item.id || `${resourceKey}-${Date.now()}`,
+                     company_id: getCompanyId() }
+    const updated = [...items, newItem]
+    saveItems(updated)
+    // POST to API
+    const token = getToken()
+    if (token) {
+      fetch(`/api/v1/${resourceKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
+        body: JSON.stringify(newItem)
+      }).catch(() => {})
+    return newItem
+
+  const updateItem = (id, updates) => {
+    const updated = items.map(i => i.id === id ? { ...i, ...updates } : i)
+    saveItems(updated)
+
+  const deleteItem = (id) => {
+    const updated = items.filter(i => i.id !== id)
+    saveItems(updated)
+
+  return { items, loading, company, addItem, updateItem, deleteItem, setItems: saveItems }
+
+
+// ── Tenant context ────────────────────────────────────────────
+function useCompanyCtx() {
+  const auth   = (() => { try { return JSON.parse(localStorage.getItem('elogix_auth')||'{}') } catch { return {} } })()
+  const regCos = (() => { try { return JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}') } catch { return {} } })()
+  const slug   = auth.company?.slug || auth.user?.company || 'demo'
+  return {
+    company_id:   auth.company?.id || slug,
+    company_name: auth.company?.name || regCos[slug]?.name || 'Your Company',
+    company_slug: slug,
+    plan:         auth.company?.plan || 'trial',
+    currency:     auth.company?.currency || 'NPR',
+    token:        localStorage.getItem('elogix_token') || auth.token || '',
+
 export default function GradeLevelPage() {
+  const ctx = useCompanyCtx()
+  // ── Tenant context: only this company's data is shown ────────
+  const companyName = company?.name || 'Your Company'
+  const companySlug = company?.slug || ''
+
   const [grades,     setGrades]     = useState(MOCK_GRADES)
   const [search,     setSearch]     = useState('')
   const [trackFilter,setTrackFilter]= useState('all')
@@ -184,7 +279,6 @@ export default function GradeLevelPage() {
               {viewMode==='matrix'?'Cards View':'Matrix View'}
             </button>
           </div>
-        }
       />
 
       {/* Salary Band Visual */}
@@ -381,7 +475,6 @@ export default function GradeLevelPage() {
         ]}/>
     </div>
   )
-}
 
 function AddGradeModal({ onClose, onSave }) {
   const [f,setF] = useState({code:'',name:'',track:'individual',level_num:'',
@@ -448,4 +541,3 @@ function AddGradeModal({ onClose, onSave }) {
       </div>
     </div>
   )
-}

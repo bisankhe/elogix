@@ -72,4 +72,3 @@ export default function HRAnalyticsStandardPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

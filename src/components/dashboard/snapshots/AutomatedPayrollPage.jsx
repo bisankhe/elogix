@@ -19,7 +19,6 @@ const RUN_RECORDS = [
   { id:'pr1', employee:'Gita Maharjan', dept:'IT', gross_npr:85000, deductions_npr:18420, net_npr:66580, status:'ready',
     impact_links:['Tax & Compliance','Salary Structure'] },
   { id:'pr2', employee:'Bikash Rai', dept:'IT', gross_npr:62000, deductions_npr:31460, net_npr:30540, status:'flagged',
-    flag_note:'Total deductions at 50.7% - exceeds the 33% statutory cap without mutual agreement on file.',
     impact_links:['Loan Management','Deduction'] },
   { id:'pr3', employee:'Maya Pradhan', dept:'Finance', gross_npr:71000, deductions_npr:15730, net_npr:55270, status:'ready',
     impact_links:[] },
@@ -116,4 +115,3 @@ export default function AutomatedPayrollPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

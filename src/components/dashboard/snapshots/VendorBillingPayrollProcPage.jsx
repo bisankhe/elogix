@@ -14,7 +14,6 @@ const VENDOR_BILLS = [
     impact_links:['Vendor Billing','Outsource Compliance'] },
   { id:'vb2', vendor:'CleanPro Services', bill_no:'CP-2025-0098', workers_billed:5, days_billed:30,
     contract_rate_npr:720, billed_rate_npr:780, gross_npr:117000, match_status:'discrepancy',
-    flag_note:'Billed rate (NPR 780/day) exceeds contract rate (NPR 720/day) - NPR 9,000 overcharge flagged.',
     impact_links:['Vendor SLA'] },
   { id:'vb3', vendor:'TechStaff Solutions', bill_no:'TS-2025-0067', workers_billed:3, days_billed:22,
     contract_rate_npr:1200, billed_rate_npr:1200, gross_npr:79200, match_status:'matched',
@@ -98,4 +97,3 @@ export default function VendorBillingPayrollProcPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

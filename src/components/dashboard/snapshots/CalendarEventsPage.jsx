@@ -17,7 +17,6 @@ const EVENT_TYPES = {
   leave:     { icon:'🌴', label:'Leave',      color:'#06b6d4', bg:'#f0f9ff' },
   birthday:  { icon:'🎂', label:'Birthday',   color:'#ec4899', bg:'#fdf4ff' },
   note:      { icon:'📝', label:'Note',       color:'#64748b', bg:'#f8fafc' },
-}
 
 const MONTHS = ['January','February','March','April','May','June',
                 'July','August','September','October','November','December']
@@ -76,7 +75,6 @@ export default function CalendarEventsPage() {
     if (view === 'monthly')  d.setMonth(d.getMonth() + dir)
     if (view === 'annually') d.setFullYear(d.getFullYear() + dir)
     setCurDate(d)
-  }
 
   // Save event
   const saveEvent = () => {
@@ -88,29 +86,24 @@ export default function CalendarEventsPage() {
     } else {
       setEvents(p => [...p, {...form, id: Date.now()}])
       notify('✅ Event added')
-    }
     setShowForm(false); setSelEvent(null); setForm({...BLANK_FORM})
-  }
 
   const deleteEvent = id => {
     setEvents(p => p.filter(e => e.id !== id))
     setSelEvent(null)
     notify('🗑️ Event deleted')
-  }
 
   // Right-click context menu
   const onDayRightClick = (e, ds) => {
     e.preventDefault()
     e.stopPropagation()
     setCtxMenu({ x: e.clientX, y: e.clientY, date: ds })
-  }
 
   const ctxAction = (action, date) => {
     setCtxMenu(null)
     const newForm = {...BLANK_FORM, date, type: action}
     setForm(newForm)
     setShowForm(true)
-  }
 
   // ── Event Pill ──────────────────────────────────────────────
   const Pill = ({ ev, tiny }) => {
@@ -128,7 +121,6 @@ export default function CalendarEventsPage() {
         {!tiny && <span style={{color:'#94a3b8',fontSize:9,marginLeft:'auto',flexShrink:0}}>{ev.time}</span>}
       </div>
     )
-  }
 
   // ── View header label ───────────────────────────────────────
   const headerLabel = () => {
@@ -137,7 +129,6 @@ export default function CalendarEventsPage() {
     if (view==='monthly')  return `${MONTHS[curDate.getMonth()]} ${curDate.getFullYear()}`
     if (view==='annually') return `${curDate.getFullYear()}`
     return ''
-  }
 
   // ─────────────────────────────────────────────────────────────
   // DAILY VIEW
@@ -172,7 +163,6 @@ export default function CalendarEventsPage() {
         })}
       </div>
     )
-  }
 
   // ─────────────────────────────────────────────────────────────
   // WEEKLY VIEW
@@ -219,7 +209,6 @@ export default function CalendarEventsPage() {
         ))}
       </div>
     )
-  }
 
   // ─────────────────────────────────────────────────────────────
   // MONTHLY VIEW
@@ -275,7 +264,6 @@ export default function CalendarEventsPage() {
         </div>
       </div>
     )
-  }
 
   // ─────────────────────────────────────────────────────────────
   // ANNUAL VIEW — 12 mini months
@@ -349,7 +337,6 @@ export default function CalendarEventsPage() {
         })}
       </div>
     )
-  }
 
   // ─────────────────────────────────────────────────────────────
   // RENDER
@@ -583,4 +570,3 @@ export default function CalendarEventsPage() {
       )}
     </div>
   )
-}

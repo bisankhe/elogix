@@ -15,7 +15,6 @@ const BOX_NAMES = {
   '2,2':'Star',         '2,1':'High Performer',  '2,0':'Enigma',
   '1,2':'Future Star',  '1,1':'Core Player',     '1,0':'Inconsistent Player',
   '0,2':'Rough Diamond','0,1':'Effective',       '0,0':'Risk',
-}
 
 const INITIAL_BOXES = {
   '2,2':[{name:'Anjali Sharma',dept:'Sales'},{name:'Gita Maharjan',dept:'IT'}],
@@ -27,7 +26,6 @@ const INITIAL_BOXES = {
   '0,2':[{name:'Sushila Gurung',dept:'Ops'}],
   '0,1':[{name:'Dipesh Bhattarai',dept:'Finance'}],
   '0,0':[],
-}
 
 export default function TalentMappingPage() {
   const [boxes, setBoxes] = useState(INITIAL_BOXES)
@@ -47,7 +45,6 @@ export default function TalentMappingPage() {
       [targetKey]: [...prev[targetKey], person],
     }))
     setDragItem(null)
-  }
 
   return (
     <div onClick={()=>setCtx(null)}>
@@ -110,4 +107,3 @@ export default function TalentMappingPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

@@ -75,4 +75,3 @@ export default function MyRequestsPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
-}

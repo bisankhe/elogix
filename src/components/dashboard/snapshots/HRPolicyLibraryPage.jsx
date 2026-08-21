@@ -84,15 +84,12 @@ export default function HRPolicyLibraryPage() {
       if (!updated[selected.id]) updated[selected.id] = {}
       updated[selected.id][ME.id] = { name:ME.name, dept:ME.dept, readAt:now, signedAt:null }
       setReaders(updated); saveReaders(updated)
-    }
-  }
 
   const signPolicy = () => {
     if (!selected) return
     if (!updated[selected.id]) updated[selected.id] = {}
     updated[selected.id][ME.id] = { ...(updated[selected.id][ME.id]||{}), name:ME.name, dept:ME.dept, readAt:updated[selected.id][ME.id]?.readAt||now, signedAt:now }
     setReaders(updated); saveReaders(updated)
-  }
 
   const myStatus    = selected ? (readers[selected.id]?.[ME.id] || null) : null
   const hasRead     = !!myStatus?.readAt
@@ -317,4 +314,3 @@ export default function HRPolicyLibraryPage() {
       </div>
     </div>
   )
-}

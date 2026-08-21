@@ -11,16 +11,13 @@ const INTERVIEWS = [
     round:'Technical', date:'2025-06-18', time:'10:00 AM', duration:60,
     mode:'Video (Google Meet)', panel:['Rajesh Sharma (CTO)','Bikash Shrestha (IT Lead)'],
     status:'completed', hr_notes:'Calendar confirmed. Packet sent.',
-    eval_status:'evaluated',
     scorecard:{technical:92,communication:86,problem_solving:90,culture_fit:88,leadership:78},
-    feedback:'Strong technical candidate. Excellent React and AWS skills. Minor concern on leadership experience but acceptable for Senior level.',
     recommendation:'Hire', overall_score:87,
     impact_links:['Offer Management','ATS Dashboard','Candidate Database'] },
   { id:'im2', candidate:'Gita Maharjan', position:'Cloud Architect', dept:'IT',
     round:'Panel Interview', date:'2025-06-20', time:'11:00 AM', duration:90,
     mode:'Video (Google Meet)', panel:['Rajesh Sharma (CTO)','CFO','IT Lead'],
     status:'scheduled', hr_notes:'Room booked. Panel invites sent.',
-    eval_status:'pending',
     scorecard:{technical:0,communication:0,problem_solving:0,culture_fit:0,leadership:0},
     feedback:'',recommendation:'',overall_score:0,
     impact_links:['Offer Management','ATS Dashboard'] },
@@ -28,9 +25,7 @@ const INTERVIEWS = [
     round:'Technical', date:'2025-06-17', time:'09:00 AM', duration:60,
     mode:'In-Person (KTM HQ)', panel:['CFO','Finance Head'],
     status:'completed', hr_notes:'Completed on time. Feedback collected.',
-    eval_status:'evaluated',
     scorecard:{technical:88,communication:92,problem_solving:85,culture_fit:90,leadership:84},
-    feedback:'CA-qualified with strong IFRS knowledge. Excellent communication. Slight concern on ERP experience.',
     recommendation:'Strong Hire', overall_score:88,
     impact_links:['Offer Management','Background Verification'] },
   { id:'im4', candidate:'Priya Tamang', position:'Senior SW Dev', dept:'IT',
@@ -48,7 +43,6 @@ const STATUS_CFG = {
   completed:{c:'#10b981',bg:'#f0fdf4',icon:'✅',label:'Completed'},
   cancelled:{c:'#ef4444',bg:'#fef2f2',icon:'❌',label:'Cancelled'},
   rescheduled:{c:'#f59e0b',bg:'#fffbeb',icon:'🔄',label:'Rescheduled'},
-}
 const SCORE_CRITERIA = [
   {key:'technical',label:'Technical Skills',weight:30,color:'#3b82f6'},
   {key:'communication',label:'Communication',weight:20,color:'#8b5cf6'},
@@ -83,7 +77,6 @@ export default function InterviewManagementPage() {
     setEvalCard({...interview.scorecard})
     setEvalFeedback(interview.feedback)
     setEvalRec(interview.recommendation||'Hire')
-  }
 
   const saveEval = () => {
     const weighted = SCORE_CRITERIA.reduce((s,c)=>s+(evalCard[c.key]||0)*c.weight/100,0)
@@ -94,7 +87,6 @@ export default function InterviewManagementPage() {
     }:i))
     notify('✅ Evaluation saved for '+showEval.candidate+' — Overall: '+Math.round(weighted)+'%')
     setShowEval(null)
-  }
 
   const scheduled = interviews.filter(i=>i.status==='scheduled').length
   const completed  = interviews.filter(i=>i.status==='completed').length
@@ -291,4 +283,3 @@ export default function InterviewManagementPage() {
       ]}/>
     </div>
   )
-}
