@@ -53,7 +53,7 @@ export const ROLE_TO_PERSONA = {
 
 // Map role → default landing page (sub in App.jsx)
 export const ROLE_TO_DEFAULT_PAGE = {
-  super_admin:      'super-admin-dashboard',
+  super_admin:      'company-dashboard',    // Tenant super admin → company dashboard
   executive:        'executive-dashboard',
   hr_manager:       'hr-dashboard',
   hr_admin:         'hr-dashboard',

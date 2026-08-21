@@ -159,7 +159,7 @@ export default function ELogixAdminPanel() {
         {/* DASHBOARD */}
         {tab==='dashboard' && dash && (
           <div>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:16 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(120px,1fr))', gap:12, marginBottom:16 }}>
               {[
                 ['🏢','Total Companies', dash.companies?.total, '#0369a1'],
                 ['✅','Active',           dash.companies?.active, '#059669'],

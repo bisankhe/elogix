@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useCallback, createContext, useContext } from 'react'
 import { PERSONAS }   from './data/personas.js'
+import CompanyDashboardPage from './pages/company/CompanyDashboardPage.jsx'
 import { ROLE_TO_PERSONA, ROLE_TO_DEFAULT_PAGE, getTenantContext } from './data/rolePersonaMap.js'
 import { CURRENCIES } from './data/currencies.js'
 import { translate, getDir, LANGUAGES } from './i18n/index.js'
@@ -45,9 +46,6 @@ import DepartmentDashboard  from './components/dashboard/DepartmentDashboard.jsx
 import BranchDashboard      from './components/dashboard/BranchDashboard.jsx'
 import EmployeeDashboard    from './components/dashboard/EmployeeDashboard.jsx'
 import RecruitmentDashboard from './components/dashboard/RecruitmentDashboard.jsx'
-
-// ── Company Setup Dashboard (super_admin landing — replaces blank GenericPage) ──
-import CompanyDashboardPage from './pages/company/CompanyDashboardPage.jsx'
 
 // Snapshots & Analytics
 import AttendanceSnapshot   from './components/dashboard/snapshots/AttendanceSnapshot.jsx'
@@ -706,34 +704,27 @@ export const useApp = () => {
 
 // ── Route Map ─────────────────────────────────────────────────
 const ROUTES = {
-  // ── Persona dashboard routes (original keys — keep for sidebar nav) ──
   'super-admin-dashboard':  SuperAdminDashboard,
   'executive-dashboard':    ExecutiveDashboard,
   'hr-dashboard':           HRManagerDashboard,
-
-  // ── Aliases: keys returned by tenantRouting.js getLandingRoute() ──
-  // These MUST match ROLE_LANDING values in src/utils/tenantRouting.js
-  'company-dashboard':           CompanyDashboardPage,      // super_admin, company_admin
-  'hr-manager-dashboard':        HRManagerDashboard,        // hr_manager
-  'payroll-dashboard':           SuperAdminDashboard,       // payroll_officer, payroll_manager (uses admin dash payroll section)
-  'team-dashboard':              DepartmentDashboard,       // team_lead
-  'ld-dashboard':                LearningDevelopmentDashboard, // learning_development
-  'finance-dashboard':           FinanceDashboard,
-  'it-admin-dashboard':          ITAdministratorDashboard,
-  'recruitment-dashboard':       RecruitmentDashboard,      // recruitment_manager, recruiter
-  'recruitment-officer-dashboard': RecruitmentOfficerDashboard,
-  'procurement-dashboard':       ProcurementDashboard,
-  'admin-workspace-dashboard':   AdminWorkspaceDashboard,
-  'sales-dashboard':             SalesDashboard,
-  'customer-service-dashboard':  CustomerServiceDashboard,
-  'legal-dashboard':             LegalDashboard,
-  'operations-dashboard':        OperationsDashboard,
-  'learning-development-dashboard': LearningDevelopmentDashboard,
-  'hr-officer-dashboard':        HROfficerDashboard,
-  'marketing-dashboard':         MarketingDashboard,
-  'department-dashboard':        DepartmentDashboard,
-  'branch-dashboard':            BranchDashboard,
-  'employee-dashboard':          EmployeeDashboard,
+  // Role-based persona dashboards
+  'finance-dashboard':                 FinanceDashboard,
+  'it-admin-dashboard':                    ITAdministratorDashboard,
+  'recruitment-officer-dashboard':             RecruitmentOfficerDashboard,
+  'procurement-dashboard':                         ProcurementDashboard,
+  'admin-workspace-dashboard':                         AdminWorkspaceDashboard,
+  'sales-dashboard':                                       SalesDashboard,
+  'customer-service-dashboard':                                CustomerServiceDashboard,
+  'legal-dashboard':                                               LegalDashboard,
+  'operations-dashboard':                                              OperationsDashboard,
+  'learning-development-dashboard':                                        LearningDevelopmentDashboard,
+  'hr-officer-dashboard':                                                      HROfficerDashboard,
+  'marketing-dashboard':                                                           MarketingDashboard,
+  'department-dashboard':   DepartmentDashboard,
+  'branch-dashboard':       BranchDashboard,
+  'company-dashboard':              CompanyDashboardPage,
+  'employee-dashboard':     EmployeeDashboard,
+  'recruitment-dashboard':  RecruitmentDashboard,
   'attendance-snapshot':    AttendanceSnapshot,
   'leave-snapshot':         LeaveSnapshot,
   'payroll-snapshot':       PayrollSnapshot,
@@ -1461,8 +1452,13 @@ function GenericPage({ sub }) {
 // premium, "settling into place" feel instead of an abrupt content swap.
 function ContentRouter({ sub }) {
   const Comp = ROUTES[sub]
+  // Scroll main area to top on every page change
+  useEffect(() => {
+    const el = document.getElementById('elogix-main-scroll')
+    if (el) el.scrollTop = 0
+  }, [sub])
   return (
-    <div key={sub} className="page-transition">
+    <div key={sub} className="page-transition" style={{ minHeight: '100%' }}>
       {Comp ? <Comp /> : <GenericPage sub={sub} />}
     </div>
   )
@@ -1479,9 +1475,11 @@ export default function App({ initialPage, onLogout }) {
     return 'super-admin'
   })
   const [sub, setSub] = useState(() => {
+    // Priority: initialPage (business-type landing) → role default → fallback
+    if (initialPage) return initialPage
     const ctx = getTenantContext()
     if (ctx.isAuthenticated && ctx.role) return ROLE_TO_DEFAULT_PAGE[ctx.role] || 'employee-dashboard'
-    return 'super-admin-dashboard'
+    return 'employee-dashboard'
   })
   const [sidebarOpen,   setSidebarOpen]   = useState(true)
   const [language,      setLanguage]      = useState('en')
@@ -1518,43 +1516,24 @@ export default function App({ initialPage, onLogout }) {
   const [showProfile,  setShowProfile]  = useState(false)
   const [showSettings, setShowSettings] = useState(false)
 
-  // Logout: clears ALL auth data so next open shows login page.
-  // Includes both legacy keys (elogix_user, elogix_company) and new
-  // AuthContext key (elogix_session) written by AuthContext.jsx.
+  // Logout: clears ALL auth data so next open shows login page
   const handleLogout = useCallback(() => {
-    ;[
-      'elogix_session',          // new AuthContext session key
-      'elogix_admin_session',    // new AuthContext admin key
-      'elogix_token','elogix_refresh_token',
-      'elogix_user','elogix_company',
-      'elogix_permissions','elogix_tenant',
-      'elogix_admin_token','elogix_admin_user','elogix_admin_key',
-      'elogix_remember',
-    ].forEach(k => { localStorage.removeItem(k); sessionStorage.removeItem(k) })
+    ;['elogix_token','elogix_refresh_token','elogix_user','elogix_company',
+      'elogix_permissions','elogix_tenant','elogix_admin_token',
+      'elogix_admin_user','elogix_admin_key','elogix_remember',
+    ].forEach(k => localStorage.removeItem(k))
+    sessionStorage.clear()
     onLogout?.()
   }, [onLogout])
   const toggleExpanded = useCallback((id) => setExpanded(prev => ({ ...prev, [id]: !prev[id] })), [])
 
-  // Apply initialPage from AppRouter whenever it changes.
-  // useState() was used here before — it only ran once and never
-  // reacted to prop updates. useEffect with [initialPage] dep fixes this.
+  // Apply initialPage from router when provided (business-type landing)
   useEffect(() => {
-    if (!initialPage) return
-    setSub(initialPage)
-    // Read role from the new elogix_session key (written by AuthContext)
-    // with fallback to legacy elogix_user key for backwards compat
-    const session = (() => {
-      try {
-        return JSON.parse(
-          sessionStorage.getItem('elogix_session') ||
-          localStorage.getItem('elogix_session') ||
-          sessionStorage.getItem('elogix_user') ||
-          localStorage.getItem('elogix_user') || '{}'
-        )
-      } catch { return {} }
-    })()
-    const role = session?.user?.role || session?.role
-    if (role) setPersonaState(ROLE_TO_PERSONA[role] || 'super-admin')
+    if (initialPage) {
+      setSub(initialPage)
+      const ctx = getTenantContext()
+      if (ctx.role) setPersonaState(ROLE_TO_PERSONA[ctx.role] || 'super-admin')
+    }
   }, [initialPage])
 
   const ctx = {
@@ -1582,7 +1561,7 @@ export default function App({ initialPage, onLogout }) {
         <Sidebar open={sidebarOpen} />
 
         {/* Right side */}
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', minWidth: 0 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', minWidth: 0, minHeight: 0, position: 'relative' }}>
 
           {/* Topbar */}
           <Topbar
@@ -1610,22 +1589,21 @@ export default function App({ initialPage, onLogout }) {
               Confidential - Encrypted . RBAC . Nepal Privacy Act 2018
             </span>
             <span style={{ marginLeft: 'auto', fontSize: 11, color: '#b45309' }}>
-              {currentPersona?.icon} {(() => {
-                try {
-                  const sess = JSON.parse(
-                    sessionStorage.getItem('elogix_session') ||
-                    localStorage.getItem('elogix_session') || 'null'
-                  )
-                  const role = sess?.user?.role
-                  if (role) return role.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())
-                } catch {}
-                return t(currentPersona?.labelKey) || currentPersona?.label
-              })()}
+              {currentPersona?.icon} {t(currentPersona?.labelKey) || currentPersona?.label}
             </span>
           </div>
 
           {/* Page content */}
-          <main style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
+          <main
+            id="elogix-main-scroll"
+            style={{
+              flex: 1,
+              overflowY: 'auto',
+              overflowX: 'auto',
+              padding: '20px 24px',
+              scrollBehavior: 'smooth',
+              position: 'relative',
+            }}>
             <ContentRouter sub={sub} />
 
           {/* ── My Profile Modal ── */}

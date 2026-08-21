@@ -87,6 +87,7 @@ function downloadCSV(data, filename) {
 
 export default function ELogixAdminPage({ onLogout }) {
   const [tab, setTab] = useState('dashboard')
+  const [mobileMenu, setMobileMenu] = useState(false)
   const [companies, setCompanies] = useState(MOCK_COMPANIES)
 
   // Load registered tenants on every mount (picks up new self-registrations)
@@ -192,10 +193,20 @@ export default function ELogixAdminPage({ onLogout }) {
     } catch(e) { notify('⚠️ Could not load tenants') }
   }
 
-  const approveTenant = (tenant) => {
+  const approveTenant = async (tenant) => {
+    // Try to notify backend (if API is connected)
+    try {
+      await fetch(`/api/v1/companies/${tenant.slug}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type':'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('elogix_token')}` },
+        body: JSON.stringify({ status: 'active' })
+      })
+    } catch { /* offline — localStorage fallback below */ }
+    // Always update localStorage
     setCompanies(prev => {
       if (prev.find(c => c.slug === tenant.slug)) return prev
-      return [...prev, { ...tenant, status: tenant.plan==='trial'?'trial':'active' }]
+      return [...prev, { ...tenant, status: 'active' }]
     })
     const updated = pendingTenants.filter(t => t.slug !== tenant.slug)
     setPendingTenants(updated)
@@ -296,7 +307,7 @@ export default function ELogixAdminPage({ onLogout }) {
 
       {/* Tabs */}
       <div style={{background:'#fff',padding:'10px 20px',borderBottom:'1px solid #f1f5f9',
-        display:'flex',gap:8,overflowX:'auto'}}>
+        display:'flex',gap:6,overflowX:'auto',scrollbarWidth:'none',WebkitOverflowScrolling:'touch',flexWrap:'nowrap',padding:'10px 16px',borderBottom:'1px solid #f1f5f9'}}>
         <Tab id="pending"   label={`Pending Approval ${pendingTenants.length>0?`(${pendingTenants.length})`:''}` } icon="⏳"/>
         <Tab id="dashboard" label="Companies" icon="🏢"/>
         <Tab id="billing"   label="Billing"    icon="💰"/>
@@ -535,7 +546,7 @@ export default function ELogixAdminPage({ onLogout }) {
                 ⚡ Generate Monthly Invoices
               </button>
             </div>
-            <table style={{width:'100%',borderCollapse:'collapse',fontSize:11}}>
+            <div style={{overflowX:'auto',WebkitOverflowScrolling:'touch'}}><table style={{width:'100%',minWidth:700,borderCollapse:'collapse',fontSize:11}}>
               <thead>
                 <tr style={{background:'#f8fafc'}}>
                   {['Invoice #','Company','Period','Amount','Status','Due Date','Action'].map(h=>(
@@ -575,6 +586,7 @@ export default function ELogixAdminPage({ onLogout }) {
                 })}
               </tbody>
             </table>
+            </div>{/* end table scroll wrapper */}
           </div>
         </div>
       )}
@@ -709,9 +721,8 @@ export default function ELogixAdminPage({ onLogout }) {
         </div>
       )}
 
-      </div>{/* end content */}
+      </div>
 
-      {/* ── Company Detail Modal ── */}
       {selected&&(
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.6)',zIndex:1000,
           display:'flex',alignItems:'center',justifyContent:'center',padding:16}} onClick={()=>setSelected(null)}>

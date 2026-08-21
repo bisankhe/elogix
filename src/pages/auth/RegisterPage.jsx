@@ -319,7 +319,7 @@ export default function RegisterPage({ onSuccess }) {
           success:true, emp_id:empId,
           portal_url:`https://${form.slug}.elogix.com.np`,
           company_name:form.company_name, plan:form.plan,
-          note:`✅ Registration complete! Awaiting SuperAdmin approval. You will be notified via ${form.admin_email}`,
+          note:`✅ Your eLogix HRMS is ready! Login with ${form.admin_email}`,
         }
       }
       try { sessionStorage.setItem('elogix_pending_login', JSON.stringify({
@@ -351,7 +351,7 @@ export default function RegisterPage({ onSuccess }) {
             <div style={{ fontSize:11,color:'#065f46',lineHeight:1.8 }}>
               ✅ {form.modules.length} modules pre-configured<br/>
               📧 Login credentials: <b>{form.admin_email}</b><br/>
-              ⏳ <b>Pending SuperAdmin approval</b> — eLogix team will review and activate your account within 24 hours<br/>
+              🚀 <b>Your account is active!</b> Login now with your email and password<br/>
               📞 Questions? <a href="mailto:support@elogix.com.np" style={{color:'#0369a1'}}>support@elogix.com.np</a>
             </div>
           </div>
@@ -369,7 +369,7 @@ export default function RegisterPage({ onSuccess }) {
   )
 
   return (
-    <div style={{ minHeight:'100vh',background:'#f0f7ff',fontFamily:'system-ui,sans-serif' }}>
+    <div style={{ minHeight:'100vh',background:'#f0f7ff',fontFamily:'system-ui,sans-serif',overflowY:'auto',WebkitOverflowScrolling:'touch' }}>
       {/* Header */}
       <div style={{ background:G,padding:'14px 24px',color:'#fff',
         display:'flex',justifyContent:'space-between',alignItems:'center' }}>
@@ -595,7 +595,7 @@ export default function RegisterPage({ onSuccess }) {
                   <Inp label="Address Line 2" k="address_line2"
                     placeholder="Landmark, Building, Floor (optional)"
                     value={form.address_line2} onChange={e=>sf('address_line2',e.target.value)}/>
-                  <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:12 }}>
+                  <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(min(200px,100%),1fr))',gap:10 }}>
                     <Inp label="City / VDC / Municipality" k="city"
                       placeholder="e.g. Kathmandu"
                       value={form.city} onChange={e=>sf('city',e.target.value)}/>
@@ -603,7 +603,7 @@ export default function RegisterPage({ onSuccess }) {
                       placeholder="e.g. Kathmandu"
                       value={form.district} onChange={e=>sf('district',e.target.value)}/>
                   </div>
-                  <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:12 }}>
+                  <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(min(200px,100%),1fr))',gap:10 }}>
                     <Inp label="Province / State" k="province"
                       placeholder="e.g. Bagmati Province"
                       value={form.province} onChange={e=>sf('province',e.target.value)}/>
@@ -651,7 +651,7 @@ export default function RegisterPage({ onSuccess }) {
                   <div style={{ fontSize:10,color:'#64748b',marginBottom:14 }}>
                     Nepal standard: Shrawan (4) to Asar (3) · International: January (1) to December (12)
                   </div>
-                  <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:12 }}>
+                  <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(min(200px,100%),1fr))',gap:10 }}>
                     <Sel label="FY Start Month" required value={form.fy_start_month}
                       onChange={e=>sf('fy_start_month',e.target.value)}>
                       {calMonths.map((m,i)=><option key={i} value={String(i+1)}>{m}</option>)}
@@ -678,7 +678,7 @@ export default function RegisterPage({ onSuccess }) {
                   <div style={{ fontSize:10,color:'#64748b',marginBottom:14 }}>
                     When does the leave year begin and end? Usually same as financial year.
                   </div>
-                  <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:12 }}>
+                  <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(min(200px,100%),1fr))',gap:10 }}>
                     <Sel label="Leave Year Start" required value={form.leave_start_month}
                       onChange={e=>sf('leave_start_month',e.target.value)}>
                       {calMonths.map((m,i)=><option key={i} value={String(i+1)}>{m}</option>)}
@@ -754,7 +754,7 @@ export default function RegisterPage({ onSuccess }) {
                     </span>
                   </div>
                 )}
-                <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:12 }}>
+                <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(min(200px,100%),1fr))',gap:10 }}>
                   {PLANS.map(plan=>(
                     <div key={plan.id} onClick={()=>sf('plan',plan.id)}
                       style={{ borderRadius:12,padding:16,cursor:'pointer',position:'relative',
