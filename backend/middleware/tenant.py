@@ -1,105 +1,176 @@
-"""
-FILE: backend/middleware/tenant.py
-eLogix HRMS — Multi-tenant request middleware
-Resolves tenant from: JWT → X-Tenant-Id header → subdomain → query param
-eLogix Technologies · www.elogix.com.np
-"""
+# FILE: backend/middleware/tenant.py
+# eLogix HRMS — Multi-Tenant Isolation Middleware
+# Sets app.current_company_id PostgreSQL session variable per request
+# This activates Row-Level Security (RLS) policies in the database
+# so every query is automatically filtered to the current tenant.
+# eLogix Technologies · www.elogix.com.np
+
+import os
+import logging
 from functools import wraps
-from flask import request, jsonify, g
-import re
+from flask import request, g, jsonify
+import jwt
 
-RESERVED_SUBDOMAINS = {"www", "api", "app", "admin", "mail", "elogix",
-                        "portal", "static", "cdn", "support", "dev", "staging"}
+logger = logging.getLogger('elogix.tenant')
 
-def resolve_tenant() -> str | None:
+SECRET_KEY = os.getenv('SECRET_KEY', 'elogix-dev-secret')
+
+# Routes that don't require tenant context
+PUBLIC_ROUTES = {
+    '/api/v1/auth/login',
+    '/api/v1/auth/register',
+    '/api/v1/auth/refresh',
+    '/api/v1/auth/forgot-password',
+    '/api/v1/auth/reset-password',
+    '/api/elogix-admin/v1/login',
+    '/api/health',
+    '/api/saas/v1/register-tenant',
+}
+
+
+class TenantMiddleware:
     """
-    Priority order for eLogix tenant resolution:
-    1. g.tenant_id already set by JWT auth middleware
-    2. X-Tenant-Id header (set by Nginx from subdomain)
-    3. company_id query param
-    4. Subdomain: himalayan.elogix.com.np → 'himalayan'
-    5. Origin header subdomain
+    Flask middleware that:
+    1. Extracts JWT from Authorization header
+    2. Decodes company_id and user_id from the token
+    3. Sets Flask g.company_id and g.user_id
+    4. Sets PostgreSQL session variable for RLS isolation
     """
-    # 1. Already set by JWT
-    if hasattr(g, "tenant_id") and g.tenant_id:
-        return g.tenant_id
 
-    # 2. Nginx passes X-Tenant-Id from subdomain match
-    header = request.headers.get("X-Tenant-Id") or request.headers.get("X-Tenant")
-    if header and header not in RESERVED_SUBDOMAINS:
-        return header.lower().strip()
+    def __init__(self, app):
+        self.app = app
+        app.before_request(self.before_request)
+        app.teardown_request(self.teardown_request)
 
-    # 3. Query param (legacy support)
-    param = request.args.get("company_id") or request.args.get("tenant")
-    if param:
-        return param.lower().strip()
+    def before_request(self):
+        """Run before every request."""
+        # Skip middleware for non-API routes (static files, SPA)
+        if not request.path.startswith('/api/'):
+            return
 
-    # 4. Parse subdomain from Host header
-    host = (request.headers.get("Host") or request.host or "").split(":")[0]
-    parts = host.split(".")
-    if len(parts) >= 3:  # subdomain.elogix.com.np
-        subdomain = parts[0].lower()
-        if subdomain not in RESERVED_SUBDOMAINS and re.match(r'^[a-z0-9-]+$', subdomain):
-            return subdomain
+        # Skip public routes
+        if request.path in PUBLIC_ROUTES:
+            return
 
-    # 5. Parse from Origin header
-    origin = request.headers.get("Origin", "")
-    if origin:
+        # Skip OPTIONS preflight (CORS)
+        if request.method == 'OPTIONS':
+            return
+
+        # Extract and validate JWT
+        auth_header = request.headers.get('Authorization', '')
+        if not auth_header.startswith('Bearer '):
+            return jsonify({'error': 'Authorization token required'}), 401
+
+        token = auth_header.split(' ', 1)[1]
         try:
-            from urllib.parse import urlparse
-            origin_host = urlparse(origin).hostname or ""
-            parts = origin_host.split(".")
-            if len(parts) >= 3:
-                subdomain = parts[0].lower()
-                if subdomain not in RESERVED_SUBDOMAINS:
-                    return subdomain
-        except Exception:
-            pass
+            payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            return jsonify({'error': 'Token expired', 'code': 'TOKEN_EXPIRED'}), 401
+        except jwt.InvalidTokenError as e:
+            return jsonify({'error': f'Invalid token: {e}'}), 401
 
-    return None
+        # Set request context
+        g.user_id    = payload.get('user_id')
+        g.company_id = payload.get('company_id')
+        g.role       = payload.get('role', 'employee')
+        g.tenant_slug= payload.get('tenant_slug')
+        g.is_admin   = payload.get('is_elogix_admin', False)
+
+        # eLogix SuperAdmin bypasses tenant isolation
+        if g.is_admin:
+            return
+
+        if not g.company_id:
+            return jsonify({'error': 'Tenant context missing from token'}), 401
+
+        # Set PostgreSQL session variable for RLS
+        # This makes the RLS policies in saas_schema.sql activate
+        try:
+            from config.database import db
+            db.session.execute(
+                f"SET LOCAL app.current_company_id = '{int(g.company_id)}'"
+            )
+        except Exception as e:
+            logger.error(f'Failed to set tenant context in DB: {e}')
+            return jsonify({'error': 'Database context error'}), 500
+
+    def teardown_request(self, exception):
+        """Clean up after each request."""
+        pass
 
 
-def require_tenant(f):
-    """Decorator: ensure tenant context is set before the view runs."""
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        tenant = resolve_tenant()
-        if not tenant:
-            return jsonify({
-                "success": False,
-                "brand":   "eLogix",
-                "error":   "eLogix: Tenant context missing. Use your eLogix subdomain (e.g. company.elogix.com.np) or set X-Tenant-Id header.",
-            }), 400
-        g.tenant_id  = tenant
-        g.company_id = tenant
-        return f(*args, **kwargs)
-    return decorated
-
-
-def tenant_filter(model_class):
+def require_permission(module_key):
     """
-    Returns SQLAlchemy filters to scope queries to current eLogix tenant.
+    Decorator to check if the tenant has a specific module enabled.
+    Uses the module grants stored in elogix_tenant_permissions table.
+
     Usage:
-        employees = db.session.query(Employee).filter(
-            *tenant_filter(Employee)
-        ).all()
+        @recruitment_bp.route('/applicants')
+        @require_permission('ats')
+        def get_applicants():
+            ...
     """
-    filters = []
-    if hasattr(model_class, "company_id") and hasattr(g, "company_id"):
-        filters.append(model_class.company_id == g.company_id)
-    if hasattr(model_class, "is_deleted"):
-        filters.append(model_class.is_deleted == False)
-    return filters
+    def decorator(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            if getattr(g, 'is_admin', False):
+                return f(*args, **kwargs)  # eLogix admins bypass module checks
+
+            company_id = getattr(g, 'company_id', None)
+            if not company_id:
+                return jsonify({'error': 'No tenant context'}), 401
+
+            try:
+                from config.database import db
+                result = db.session.execute(
+                    "SELECT modules FROM tenant_module_permissions WHERE company_id = :cid",
+                    {'cid': company_id}
+                ).fetchone()
+
+                if not result:
+                    return jsonify({
+                        'error': 'Module not activated',
+                        'module': module_key,
+                        'message': 'Contact eLogix SuperAdmin to activate this module',
+                    }), 403
+
+                modules = result[0] or []
+                if module_key not in modules:
+                    return jsonify({
+                        'error': 'Module not activated',
+                        'module': module_key,
+                        'message': f'The "{module_key}" module is not in your plan. Contact support@elogix.com.np',
+                    }), 403
+            except Exception as e:
+                logger.error(f'Permission check failed: {e}')
+                return jsonify({'error': 'Permission check failed'}), 500
+
+            return f(*args, **kwargs)
+        return decorated
+    return decorator
 
 
-def apply_tenant_scope(query, model_class):
+def require_role(*allowed_roles):
     """
-    Chains eLogix tenant + soft-delete filters onto a SQLAlchemy query.
+    Decorator to restrict endpoints to specific roles.
+
     Usage:
-        q = apply_tenant_scope(db.session.query(Department), Department)
+        @require_role('super_admin', 'hr_manager')
+        def sensitive_endpoint():
+            ...
     """
-    if hasattr(model_class, "company_id") and hasattr(g, "company_id"):
-        query = query.filter(model_class.company_id == g.company_id)
-    if hasattr(model_class, "is_deleted"):
-        query = query.filter(model_class.is_deleted == False)
-    return query
+    def decorator(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            if getattr(g, 'is_admin', False):
+                return f(*args, **kwargs)
+
+            role = getattr(g, 'role', 'employee')
+            if role not in allowed_roles:
+                return jsonify({
+                    'error': 'Forbidden',
+                    'message': f'Role "{role}" cannot access this endpoint. Required: {allowed_roles}',
+                }), 403
+            return f(*args, **kwargs)
+        return decorated
+    return decorator
