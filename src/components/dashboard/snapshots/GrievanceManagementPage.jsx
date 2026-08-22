@@ -13,6 +13,7 @@ const A = '#7c3aed'
 const STAGE_CFG = {
   submitted:{c:'#94a3b8',label:'Submitted'},negotiation:{c:'#0284c7',label:'Internal Negotiation'},
   labour_office:{c:'#f59e0b',label:'Labour Office Review'},labour_court:{c:'#ef4444',label:'Labour Court Appeal'},resolved:{c:'#10b981',label:'Resolved'},
+}
 
 const GRIEVANCES = [
   { id:'g1', employee:'Bikash Rai', category:'Unfair Treatment', stage:'negotiation', submitted_at:'2025-06-15', deadline:'2025-06-30',
@@ -111,3 +112,4 @@ export default function GrievanceManagementPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

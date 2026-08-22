@@ -91,3 +91,4 @@ export default function ContractCompliancePage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

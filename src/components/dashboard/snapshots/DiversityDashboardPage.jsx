@@ -107,3 +107,4 @@ export default function DiversityDashboardPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

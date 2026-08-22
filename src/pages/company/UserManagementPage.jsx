@@ -2,8 +2,8 @@
 // eLogix HRMS — Company User & Role Management
 // HR Admins create users, assign roles, set department/branch hierarchy
 // eLogix Technologies · www.elogix.com.np
-import { useState } from 'react'
-import { useAuth } from '../../context/AuthContext.jsx'
+import { resolveTenantAccess, getSessionSlug } from '../../../utils/tenantPermissions.js'
+import AccessDenied from '../../shared/AccessDenied.jsx'
 
 const G  = 'linear-gradient(135deg,#1e3a5f 0%,#0369a1 60%,#38bdf8 100%)'
 const A  = '#0369a1'
@@ -27,6 +27,8 @@ const SYSTEM_ROLES = [
   {slug:'employee',        name:'Employee',         level:10, color:'#374151', desc:'Self-service only'},
 ]
 
+// Users are tenant-scoped — load from localStorage key per company slug
+// In production: GET /api/v1/users (JWT-filtered by company_id)
 const MOCK_USERS = [
   {id:'u1',full_name:'Bikash Adhikari', email:'bikash@company.com',role_slug:'super_admin',dept:'Management',branch:'HQ',level:1,is_active:true,last_login:'2 hrs ago'},
   {id:'u2',full_name:'Priya Sharma',    email:'priya@company.com', role_slug:'hr_manager',  dept:'HR',         branch:'HQ',level:3,is_active:true,last_login:'1 day ago'},
@@ -39,6 +41,11 @@ const MOCK_USERS = [
 const MODULES = ['employees','attendance','leave','payroll','recruitment','performance','training','documents','reports','settings']
 
 export default function UserManagementPage() {
+  const slug   = getSessionSlug()
+  const access = resolveTenantAccess(slug)
+  if (!access.hasAccess('permissions')) {
+    return <AccessDenied moduleName="User Management" />
+  }
   const { level:myLevel, role:myRole, can } = useAuth()
   const [tab, setTab]         = useState('users')
   const [users, setUsers]     = useState(MOCK_USERS)

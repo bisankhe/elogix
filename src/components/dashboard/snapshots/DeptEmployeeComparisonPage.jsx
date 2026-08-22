@@ -164,3 +164,4 @@ export default function DeptEmployeeComparisonPage() {
       )}
     </div>
   )
+}

@@ -120,3 +120,4 @@ export default function TaxSetupPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

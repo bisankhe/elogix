@@ -6,7 +6,7 @@
 //          AI compliance check, headcount stats, CRUD
 // ============================================================
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useApp } from '../../../context/AppContext.jsx'
 
 // ── All 11 Employment Categories (Nepal Labour Act 2074) ──────
@@ -255,6 +255,7 @@ function Pill({ children, color='blue' }) {
     purple:{bg:'#f5f3ff',text:'#6d28d9',border:'#ddd6fe'},
     orange:{bg:'#fff7ed',text:'#c2410c',border:'#fed7aa'},
     cyan:  {bg:'#ecfeff',text:'#0e7490',border:'#a5f3fc'},
+  }
   const c = m[color]||m.blue
   return (
     <span style={{background:c.bg,color:c.text,border:`1px solid ${c.border}`,
@@ -263,6 +264,7 @@ function Pill({ children, color='blue' }) {
       {children}
     </span>
   )
+}
 
 // ── Category Detail Modal ─────────────────────────────────────
 function CategoryDetailModal({ cat, onClose }) {
@@ -571,25 +573,10 @@ function CategoryDetailModal({ cat, onClose }) {
       </div>
     </div>
   )
+}
 
-// ── Main Page ───────────────────────────────────────
-// ── Tenant context ────────────────────────────────────────────
-function useCompanyCtx() {
-  const auth    = (() => { try { return JSON.parse(localStorage.getItem('elogix_auth')||'{}') } catch { return {} } })()
-  const regCos  = (() => { try { return JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}') } catch { return {} } })()
-  const slug    = auth.company?.slug || auth.user?.company || 'demo'
-  return {
-    company_id:   auth.company?.id || slug,
-    company_name: auth.company?.name || regCos[slug]?.name || 'Your Company',
-    company_slug: slug,
-    plan:         auth.company?.plan || 'trial',
-    currency:     auth.company?.currency || 'NPR',
-    country:      auth.company?.country || 'Nepal',
-    token:        localStorage.getItem('elogix_token') || auth.token || '',
-
+// ── Main Page ─────────────────────────────────────────────────
 export default function EmploymentCategoryPage() {
-  const ctx = useCompanyCtx()  // Tenant scope
-
   const { navTo } = useApp()
 
   const [activeGroup, setActiveGroup] = useState('all')
@@ -944,3 +931,4 @@ export default function EmploymentCategoryPage() {
       <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}`}</style>
     </div>
   )
+}

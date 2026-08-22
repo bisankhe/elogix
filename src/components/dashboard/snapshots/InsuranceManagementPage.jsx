@@ -14,6 +14,7 @@ const A = '#7c3aed'
 const MY_COVERAGE = {
   medical:{ limit_npr:200000, used_npr:34000, employer_pct:50, employee_pct:50 },
   accident:{ limit_npr:1000000, used_npr:0, employer_pct:100, employee_pct:0 },
+}
 
 const CLAIMS = [
   { id:'cl1', type:'Medical', amount_npr:8500, status:'approved', submitted:'2025-06-10', provider:'Norvic International Hospital' },
@@ -122,3 +123,4 @@ export default function InsuranceManagementPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

@@ -27,6 +27,7 @@ export default function WorkFromHomePage() {
   const approveWfh = (id, action) => {
     setWfh(prev=>prev.map(w=>w.id!==id?w:{...w,status:action==='approve'?'active':'rejected',type:action==='approve'?'approved':'rejected'}))
     notify(action==='approve'?'✅ WFH approved — employee notified':'❌ WFH request rejected')
+  }
 
   return (
     <div onClick={()=>setCtx(null)} style={{fontFamily:'system-ui,sans-serif'}}>
@@ -133,3 +134,4 @@ export default function WorkFromHomePage() {
       {showExcel&&<ExcelModal title="Work From Home" columns={['Employee','Emp ID','Dept','Date','Status','Task Plan','Check-In','Check-Out','Tasks Done']} onClose={()=>setShowExcel(false)} onImport={()=>{}}/>}
     </div>
   )
+}

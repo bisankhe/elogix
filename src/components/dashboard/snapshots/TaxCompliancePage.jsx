@@ -86,3 +86,4 @@ export default function TaxCompliancePage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

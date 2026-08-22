@@ -114,3 +114,4 @@ export default function CareerPathingPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

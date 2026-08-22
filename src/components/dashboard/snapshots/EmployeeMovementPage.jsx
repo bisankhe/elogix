@@ -45,6 +45,7 @@ const EVENT_CFG = {
   login:{c:'#10b981',icon:'▶'}, logout:{c:'#ef4444',icon:'⏹'},
   break_start:{c:'#f59e0b',icon:'☕'}, break_end:{c:'#3b82f6',icon:'↩'},
   movement:{c:'#7c3aed',icon:'📍'},
+}
 
 export default function EmployeeMovementPage() {
   const [logs, setLogs] = useState(MOVEMENT_LOGS)
@@ -135,3 +136,4 @@ export default function EmployeeMovementPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

@@ -78,3 +78,4 @@ export default function AssetManagementPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

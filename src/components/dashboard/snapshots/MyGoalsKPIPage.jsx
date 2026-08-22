@@ -71,3 +71,4 @@ export default function MyGoalsKPIPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

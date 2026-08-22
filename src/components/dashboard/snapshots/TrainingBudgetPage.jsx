@@ -67,3 +67,4 @@ export default function TrainingBudgetPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

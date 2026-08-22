@@ -21,6 +21,7 @@ const STATUS_CFG = {
   on_break:{c:'#f59e0b',bg:'#fffbeb',icon:'☕',label:'On Break'},
   working_overtime:{c:'#ef4444',bg:'#fef2f2',icon:'🔴',label:'Overtime (Unplanned)'},
   absent:{c:'#94a3b8',bg:'#f8fafc',icon:'⚪',label:'Absent'},
+}
 
 const ANOMALY_FEED = [
   {time:'2 min ago',text:'Bikash Rai started accruing unplanned overtime - no pre-approved OT request found for today.',severity:'high'},
@@ -41,6 +42,7 @@ export default function RealTimeMonitoringPage() {
     on_break: feed.filter(e=>e.status==='on_break').length,
     overtime: feed.filter(e=>e.status==='working_overtime').length,
     absent: feed.filter(e=>e.status==='absent').length,
+  }
 
   return (
     <div onClick={()=>setCtx(null)}>
@@ -106,3 +108,4 @@ export default function RealTimeMonitoringPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

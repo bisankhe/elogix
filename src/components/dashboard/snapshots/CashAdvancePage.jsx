@@ -24,6 +24,7 @@ const MY_ADVANCES = [
 const STAGE_CFG = {
   manager_review:{c:'#f59e0b',label:'Supervisor Review'},hr_review:{c:'#7c3aed',label:'HR Manager Review'},
   disbursed:{c:'#10b981',label:'Disbursed'},rejected:{c:'#ef4444',label:'Rejected'},
+}
 
 export default function CashAdvancePage() {
   const [search, setSearch] = useState('')
@@ -100,3 +101,4 @@ export default function CashAdvancePage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

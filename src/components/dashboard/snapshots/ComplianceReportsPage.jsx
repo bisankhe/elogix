@@ -89,3 +89,4 @@ export default function ComplianceReportsPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

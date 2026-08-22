@@ -33,6 +33,7 @@ const EMPLOYEES = [
     },
     completion_pct:88, all_mandatory_signed:true,
     it_triggered:true, facilities_triggered:true,
+    ai_note:'All 7 mandatory forms signed within 16 minutes. IT and Facilities provisioning auto-triggered.',
     status:'mandatory_complete' },
   { id:'df2', employee_id:'EMP-2081-0141', name:'Sunita Rai', position:'Senior Software Developer',
     forms:{
@@ -47,11 +48,13 @@ const EMPLOYEES = [
     },
     completion_pct:25, all_mandatory_signed:false,
     it_triggered:false, facilities_triggered:false,
+    ai_note:'2/7 mandatory forms signed. Direct deposit form not yet sent — waiting on bank document from Document Collection step.',
     status:'in_progress' },
   { id:'df3', employee_id:'EMP-2081-0143', name:'Hari Adhikari', position:'HR Business Partner',
     forms: Object.fromEntries(FORM_TEMPLATES.map(f=>[f.key,{status:'not_sent',signed_date:null,method:null}])),
     completion_pct:0, all_mandatory_signed:false,
     it_triggered:false, facilities_triggered:false,
+    ai_note:'No forms sent yet. Blocked — waiting for Document Collection completion before form package generation.',
     status:'blocked' },
 ]
 
@@ -60,6 +63,7 @@ const OVERALL_CFG = {
   mandatory_complete:{c:'#10b981',bg:'#f0fdf4',label:'Mandatory Complete'},
   in_progress:        {c:'#f59e0b',bg:'#fffbeb',label:'In Progress'},
   blocked:             {c:'#ef4444',bg:'#fef2f2',label:'Blocked'},
+}
 
 const CTX = [
   {icon:'👁',label:'View All Forms',        key:'view'},
@@ -177,3 +181,4 @@ export default function DigitalFormsEsignPage() {
       {showExcel&&<ExcelModal title="Digital Forms & E-sign" columns={['Employee ID','Name','Employment Contract','NDA','Handbook','Tax Form','Direct Deposit','Code of Conduct','Completion %']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

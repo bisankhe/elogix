@@ -2,6 +2,8 @@
 // Permission Matrix with submodule-level granularity:
 // Role -> expand -> Module -> expand (+) -> Submodule rows
 // Each row: View / Edit / Delete / Create / Forward / Approve / Report + Scope
+import { resolveTenantAccess, getSessionSlug } from '../../../utils/tenantPermissions.js'
+import AccessDenied from '../../shared/AccessDenied.jsx'
 import { useState, useEffect, useCallback } from 'react'
 import { PageHeader, AIImpact, SearchBar } from './DeptSetupShared.jsx'
 
@@ -325,6 +327,7 @@ const ROLE_DEFAULTS = {
   marketing:            { can_view:true, can_edit:true, can_delete:false, can_create:true, can_forward:false, can_approve:false, can_report:false, scope:'none' },
   legal:                { can_view:true, can_edit:true, can_delete:false, can_create:false, can_forward:true, can_approve:true, can_report:false, scope:'all' },
   employee:             { can_view:true, can_edit:false, can_delete:false, can_create:false, can_forward:false, can_approve:false, can_report:false, scope:'own' },
+}
 const BLOCKED = { ...EMPTY_CELL }
 const PAYROLL_BLOCKED = ['employee','sales','customer_service','marketing','legal','operations','procurement','admin_officer','recruitment_officer','recruitment_agency','it_admin']
 const SYS_BLOCKED = ['employee','sales','customer_service','marketing','legal','operations','finance','procurement','admin_officer','recruitment_officer','recruitment_agency','learning_development','department_head','branch_unit','hr_officer','executive']
@@ -347,6 +350,7 @@ function buildMatrix(){
     })
   })
   return m
+}
 
 // ── Permission Row ──
 function PermRow({ label, cellKey, matrix, onToggle, onScope, isEditor, isSub }){
@@ -375,6 +379,7 @@ function PermRow({ label, cellKey, matrix, onToggle, onScope, isEditor, isSub })
       </td>
     </tr>
   )
+}
 
 export default function PermissionMatrixPage(){
   const [matrix, setMatrix] = useState(() => buildMatrix())
@@ -427,7 +432,7 @@ export default function PermissionMatrixPage(){
       const ok = results.every(r => r.ok)
       setMsg(ok ? 'Saved -- effective immediately' : 'Partial save -- check connection')
       if (ok) setDirty(prev => { const n={...prev}; delete n[roleKey]; return n })
-    } catch { setMsg('Save failed -- backend not reachable in preview') }
+    } catch(_e) { setMsg('Save failed -- backend not reachable in preview') }
     setSaving(null)
     setTimeout(() => setMsg(''), 3000)
   }, [matrix])
@@ -575,3 +580,4 @@ export default function PermissionMatrixPage(){
       </div>
     </div>
   )
+}

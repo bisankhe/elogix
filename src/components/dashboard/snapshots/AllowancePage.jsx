@@ -100,3 +100,4 @@ export default function AllowancePage() {
       {showExcel&&<ExcelModal title="Allowances" columns={['Name','Code','Calculation Type','Value','Taxable','Statutory']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

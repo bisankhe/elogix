@@ -30,6 +30,8 @@ const METRICS = {
     attrition_risk: 'Low (2 hires show early churn signals)',
     headcount_gap: 'Technology dept understaff risk in 90 days',
     salary_market: 'React Developer market rate up 12% YoY',
+  }
+}
 
 function MiniBar({ val, max, color = '#3b82f6', height = 6 }) {
   return (
@@ -37,6 +39,7 @@ function MiniBar({ val, max, color = '#3b82f6', height = 6 }) {
       <div style={{ width: Math.round(val / max * 100) + '%', height: '100%', background: color, borderRadius: height / 2 }} />
     </div>
   )
+}
 
 export default function ATSAnalyticsDashPage() {
   const { navigate } = useApp()
@@ -321,3 +324,4 @@ export default function ATSAnalyticsDashPage() {
       )}
     </div>
   )
+}

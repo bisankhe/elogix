@@ -49,11 +49,13 @@ const FRAMEWORKS = {
     kpi: ['SLA Adherence ≥ 95%', 'Team Utilisation ≥ 85%', 'Quality ≥ 98%', 'Cost per transaction'],
     okr: ['Achieve operational excellence', 'Automate 5 manual processes'],
   },
+}
 
 const DEFAULT_FW = {
   kra: ['Role Delivery', 'Stakeholder Management', 'Continuous Improvement', 'Team Contribution'],
   kpi: ['Task Completion ≥ 95%', 'Quality Score ≥ 90%', 'Stakeholder Satisfaction ≥ 4/5'],
   okr: ['Deliver role excellence', 'Grow professional capability'],
+}
 
 // ── BUILT-IN JD LIBRARY ────────────────────────────────────────
 const BASE_LIBRARY = [
@@ -65,8 +67,10 @@ const BASE_LIBRARY = [
     status:'active', version:'v3.2', last_updated:'2026-06-15',
     usage_count:8, open_positions:2, signed:true,
     signatures:[{name:'Priya Sharma (HR Head)',role:'HR Head / HR Manager',method:'drawn'},{name:'Rajesh KC (Engineering Head)',role:'Department Head',method:'typed'}],
+    summary:'Lead backend microservices development, mentor a team of 4, drive technical architecture decisions aligned to engineering OKRs.',
     responsibilities:['Lead microservices architecture aligned to KRA: System Reliability','Mentor junior engineers (KRA: Team Mentorship, KPI: 4 certifications/year)','Technical design reviews and code quality (KPI: Bug rate < 5/sprint)','API performance optimisation and uptime (KPI: ≥ 99.9%)','Cross-team collaboration for OKR delivery'],
     qualifications:['5+ years backend experience','Node.js / Python proficiency','Microservices architecture expertise','PostgreSQL / Redis skills','AWS or GCP certification preferred'],
+    compliance_note:'Salary NPR 150K–200K meets minimum wage. Regular employment per Labour Act 2074 Section 10. SSF 31% contribution applicable.',
   },
   {
     id:'jd-002', title:'HR Business Partner', dept:'HR', level:'Mid-Level',
@@ -76,8 +80,10 @@ const BASE_LIBRARY = [
     status:'active', version:'v2.1', last_updated:'2026-05-20',
     usage_count:3, open_positions:1, signed:true,
     signatures:[{name:'Sita Thapa (HR Director)',role:'HR Head / HR Manager',method:'typed'},{name:'CEO Office',role:'CEO / Managing Director',method:'drawn'}],
+    summary:'Strategic HR partner supporting department heads with talent, performance, and compliance aligned to organizational OKRs.',
     responsibilities:['Partner with dept heads on HR strategy (KRA: Talent Acquisition)','Manage performance review cycles (KRA: L&D, KPI: Training ≥ 90%)','Ensure Labour Act 2074 compliance (KPI: Zero violations)','Drive employee engagement (KRA: Engagement, KPI: eNPS ≥ 40)','Handle grievance and disciplinary cases per Labour Act 2074 Section 52'],
     qualifications:["Bachelor's in HR or Management",'3-5 years HRBP experience','Nepal Labour Act expertise','HRIS system proficiency','Strong communication skills'],
+    compliance_note:'Regular employment. SSF 11% employee + 20% employer. Labour Act 2074 Section 10 written contract mandatory.',
   },
   {
     id:'jd-003', title:'Sales Manager', dept:'Sales', level:'Manager',
@@ -86,8 +92,10 @@ const BASE_LIBRARY = [
     inclusive_score:88, compliance_score:95, skill_drift:15,
     status:'needs_update', version:'v1.8', last_updated:'2025-11-10',
     usage_count:5, open_positions:0, signed:false, signatures:[],
+    summary:'Lead the sales team to achieve revenue targets, build client relationships, and contribute to company OKRs.',
     responsibilities:['Lead team of 8 (KRA: Team Leadership, KPI: Team attainment ≥ 80%)','Revenue targets quarterly (KRA: Revenue Generation, KPI: ≥ 100% target)','Build enterprise client relationships (KPI: Retention ≥ 90%)','Develop sales playbooks for OKR: high-performance culture','Report pipeline to C-Suite (KPI: Pipeline 3x quota)'],
     qualifications:['5+ years B2B sales experience','Proven team leadership','CRM expertise','Strong negotiation skills','Nepal/South Asia market knowledge'],
+    compliance_note:'Salary NPR 100K–150K. Labour Act 2074 compliant. Note: Inclusive language score 88 — update recommended.',
   },
   {
     id:'jd-004', title:'Finance Analyst', dept:'Finance', level:'Junior',
@@ -97,8 +105,10 @@ const BASE_LIBRARY = [
     status:'active', version:'v2.0', last_updated:'2026-04-01',
     usage_count:6, open_positions:1, signed:true,
     signatures:[{name:'Ramesh B. (Finance Head)',role:'Department Head',method:'drawn'}],
+    summary:'Support financial planning, reporting, and compliance functions aligned to OKR: zero-defect financial operations.',
     responsibilities:['Monthly financial reports (KRA: Reporting, KPI: Accuracy ≥ 99.5%)','Budget assistance (KRA: Budget Management, KPI: Variance < 5%)','Accounts payable/receivable management','CIT, VAT, SSF compliance Nepal (KPI: 100% on-time filing)','Audit support (KPI: Zero critical findings)'],
     qualifications:["Bachelor's in Finance or Accounting",'1-2 years experience','Excel and Tally proficiency','Nepal tax law (CIT, VAT)','Attention to detail'],
+    compliance_note:'Salary NPR 50K–70K meets minimum wage NPR 17,300. SSF applicable. Gratuity from Day 1.',
   },
   {
     id:'jd-005', title:'Product Manager', dept:'Engineering', level:'Senior',
@@ -107,8 +117,10 @@ const BASE_LIBRARY = [
     inclusive_score:96, compliance_score:98, skill_drift:31,
     status:'draft', version:'v1.0', last_updated:'2026-07-01',
     usage_count:0, open_positions:1, signed:false, signatures:[],
+    summary:'Own product vision and roadmap for flagship HRIS platform, aligned to OKR: launch market-defining features and maximize user value.',
     responsibilities:['Define product strategy (KRA: Product Vision, KPI: On-time delivery ≥ 85%)','Own quarterly roadmap (OKR: 3 major features/quarter)','Prioritise backlog with engineering','Stakeholder alignment (KPI: NPS ≥ 50)','Track product KPIs and OKR metrics'],
     qualifications:["Bachelor's in CS, Business, or related","3-5 years product management experience","Agile/Scrum expertise","Data-driven decision making","Nepal market experience preferred"],
+    compliance_note:'Regular employment. SSF 31% total contribution. Remote work policy per company WFH guidelines.',
   },
   {
     id:'jd-006', title:'Operations Manager', dept:'Operations', level:'Manager',
@@ -118,8 +130,10 @@ const BASE_LIBRARY = [
     status:'active', version:'v2.3', last_updated:'2026-06-01',
     usage_count:4, open_positions:0, signed:true,
     signatures:[{name:'Priya Sharma (HR Head)',role:'HR Head / HR Manager',method:'typed'},{name:'COO Office',role:'CEO / Managing Director',method:'drawn'}],
+    summary:'Drive operational excellence and team productivity, contributing to OKR: scalable, automated operations.',
     responsibilities:['Process efficiency ownership (KRA: Process Efficiency, KPI: SLA ≥ 95%)','Team productivity management (KPI: Utilisation ≥ 85%)','Cost control and budget adherence','Quality assurance (KPI: Quality Score ≥ 98%)','OKR: Automate 5 manual processes by Q4'],
     qualifications:['5+ years operations management','Six Sigma or Lean certification preferred','ERP system expertise','SLA management experience','Nepal business environment knowledge'],
+    compliance_note:'Labour Act 2074 compliant. Night shift premium applicable per Section 35. OT at 1.5x per Section 36.',
   },
 ]
 
@@ -128,6 +142,7 @@ const STATUS_CFG = {
   draft:        { c:'#f59e0b', bg:'#fffbeb', label:'Draft'        },
   needs_update: { c:'#ef4444', bg:'#fef2f2', label:'Needs Update' },
   archived:     { c:'#94a3b8', bg:'#f8fafc', label:'Archived'     },
+}
 
 export default function JDLibraryPage() {
   const { navTo } = useApp()
@@ -163,6 +178,7 @@ export default function JDLibraryPage() {
   const cloneToCreate = (jd) => {
     localStorage.setItem('elogix_jd_clone', JSON.stringify(jd))
     navTo?.('create-job-description')
+  }
 
   const fw = selected ? (FRAMEWORKS[selected.id] || DEFAULT_FW) : DEFAULT_FW
 
@@ -214,6 +230,7 @@ export default function JDLibraryPage() {
         </div>
       </div>
     )
+  }
 
   return (
     <div style={{display:'flex',flexDirection:'column',gap:16,fontFamily:'system-ui,sans-serif'}}>
@@ -471,3 +488,4 @@ export default function JDLibraryPage() {
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
+}

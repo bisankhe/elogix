@@ -18,6 +18,7 @@ const ALL_EMP = {
   'B+': [{id:'E010',name:'Bikash KC',dept:'Sales',pos:'Sales Executive',phone:'+977-9810101010',blood:'B+'},{id:'E011',name:'Anita Gurung',dept:'HR',pos:'HR Officer',phone:'+977-9811111111',blood:'B+'}],
   'O+': [{id:'E020',name:'Rajesh Sharma',dept:'IT',pos:'CTO',phone:'+977-9820202020',blood:'O+'},{id:'E021',name:'Priya Adhikari',dept:'HR',pos:'HR Head',phone:'+977-9821212121',blood:'O+'},{id:'E022',name:'Dev Thapa',dept:'Marketing',pos:'Mktg Head',phone:'+977-9822222222',blood:'O+'}],
   'AB+': [{id:'E030',name:'Sanjay Karki',dept:'Finance',pos:'CFO',phone:'+977-9830303030',blood:'AB+'}],
+}
 const UNRECORDED = [
   {id:'E050',name:'Ram Bhandari',dept:'Operations',pos:'Guard',joined:'2081-03-20'},
   {id:'E051',name:'Sita Lama',dept:'Marketing',pos:'Exec',joined:'2081-03-15'},
@@ -110,3 +111,4 @@ export default function BloodGroupPage() {
       )}
     </div>
   )
+}

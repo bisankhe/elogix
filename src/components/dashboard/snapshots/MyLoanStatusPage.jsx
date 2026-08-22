@@ -19,6 +19,7 @@ const MY_LOAN = {
     {month:'Jan 2025',amount:7875,status:'paid'},{month:'Feb 2025',amount:7875,status:'paid'},
     {month:'Mar 2025',amount:7875,status:'paid'},{month:'Apr 2025',amount:7875,status:'upcoming'},
   ],
+}
 
 export default function MyLoanStatusPage() {
   const [ctx, setCtx] = useState(null)
@@ -92,3 +93,4 @@ export default function MyLoanStatusPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

@@ -135,3 +135,4 @@ export default function ATSReferralPage() {
       </div>
     </div>
   )
+}

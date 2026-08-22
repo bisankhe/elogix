@@ -92,3 +92,4 @@ export default function AttendanceRequestPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

@@ -112,3 +112,4 @@ export default function BonusProcessingPage() {
       {showExcel&&<ExcelModal title="Bonus Processing" columns={['Employee','Department','Bonus Type','Category','Amount NPR','Proration %','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

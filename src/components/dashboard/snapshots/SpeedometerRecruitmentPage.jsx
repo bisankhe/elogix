@@ -19,6 +19,7 @@ function Gauge({ value, max, label, unit, zones, invert }) {
   const polarToCartesian = (r, deg) => {
     const rad = (deg - 180) * Math.PI / 180
     return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)]
+  }
 
   let cumulativeStart = 0
   const arcs = zones.map((z, i) => {
@@ -45,11 +46,13 @@ function Gauge({ value, max, label, unit, zones, invert }) {
       <div style={{fontSize:9,color:'#94a3b8',marginTop:2}}>{label}</div>
     </div>
   )
+}
 
 const RECRUITMENT_METRICS = {
   time_to_fill:{value:22,max:60,label:'Time-to-Fill (days)',unit:'d',zones:[{upTo:0.5,color:'#10b981'},{upTo:0.75,color:'#f59e0b'},{upTo:1,color:'#ef4444'}]},
   offer_acceptance:{value:88,max:100,label:'Offer Acceptance Rate',unit:'%',zones:[{upTo:0.75,color:'#ef4444'},{upTo:0.85,color:'#f59e0b'},{upTo:1,color:'#10b981'}]},
   cost_per_hire:{value:3200,max:8000,label:'Cost-per-Hire (NPR equiv.)',unit:'',zones:[{upTo:0.5,color:'#10b981'},{upTo:0.75,color:'#f59e0b'},{upTo:1,color:'#ef4444'}]},
+}
 
 const MOLESS_TRACKER = { advertised_compliant:14, total_vacancies:16, pct:88 }
 
@@ -104,3 +107,4 @@ export default function SpeedometerRecruitmentPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

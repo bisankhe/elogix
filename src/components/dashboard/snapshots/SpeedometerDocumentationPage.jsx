@@ -16,6 +16,7 @@ function Gauge({ value, max, label, unit, zones }) {
   const polarToCartesian = (r, deg) => {
     const rad = (deg - 180) * Math.PI / 180
     return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)]
+  }
   let cumulativeStart = 0
   const arcs = zones.map((z, i) => {
     const startDeg = cumulativeStart * 180, endDeg = z.upTo * 180
@@ -38,11 +39,13 @@ function Gauge({ value, max, label, unit, zones }) {
       <div style={{fontSize:9,color:'#94a3b8',marginTop:2}}>{label}</div>
     </div>
   )
+}
 
 const DOC_METRICS = {
   documentation_completion:{value:96,max:100,label:'Documentation Completion',unit:'%',zones:[{upTo:0.85,color:'#ef4444'},{upTo:0.95,color:'#f59e0b'},{upTo:1,color:'#10b981'}]},
   esignature_rate:{value:99,max:100,label:'e-Signature Completion',unit:'%',zones:[{upTo:0.85,color:'#ef4444'},{upTo:0.98,color:'#f59e0b'},{upTo:1,color:'#10b981'}]},
   missing_docs:{value:1.4,max:10,label:'Missing Documents',unit:'%',zones:[{upTo:0.2,color:'#10b981'},{upTo:0.5,color:'#f59e0b'},{upTo:1,color:'#ef4444'}]},
+}
 
 const CONTRACT_EXPIRY = [
   {employee:'Ramesh KC',contract_type:'Time-Bound',expires:'2025-07-30',days_left:36,status:'upcoming'},
@@ -104,3 +107,4 @@ export default function SpeedometerDocumentationPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

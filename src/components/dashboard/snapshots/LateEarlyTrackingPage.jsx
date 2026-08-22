@@ -123,3 +123,4 @@ export default function LateEarlyTrackingPage() {
       {showExcel&&<ExcelModal title="Late & Early Tracking" columns={['Employee','Department','Date','Type','Scheduled','Actual','Deviation (min)','Occurrences This Month','Chronic Flag']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

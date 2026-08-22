@@ -2,7 +2,7 @@
 // Vendor Employees - Contingent Workforce Portal
 // Nepal Labour Act 2074 Section 52-64 compliant, AI-driven risk scoring
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Field, ExcelModal, PageHeader, AIImpact, Drawer, SearchBar, Badge, LuxCard, ContextMenu } from './DeptSetupShared.jsx'
 
 const G = 'linear-gradient(135deg,#1e1b4b 0%,#6d28d9 60%,#a78bfa 100%)'
@@ -15,6 +15,7 @@ const VE_LIST = [
     contract_start:'2024-07-01', contract_end:'2026-06-30', days_remaining:365,
     assigned_branch:'KTM HQ', assigned_dept:'Facilities', shift:'Night (22:00-06:00)',
     status:'active', gender:'Male', phone:'9801234567', emergency:'Sita Shrestha 9812345678',
+    photo:'RS',
     id_verified:true, bg_verified:true, ssf_paid:true, insurance_active:true, min_wage_ok:true,
     monthly_wage:18500, badge_no:'B-2024-041', has_badge:true, has_system_access:false,
     ai_ghost_risk:12, ai_compliance:96, certifications:['Security License','First Aid'],
@@ -26,6 +27,7 @@ const VE_LIST = [
     contract_start:'2024-09-01', contract_end:'2026-08-31', days_remaining:440,
     assigned_branch:'KTM HQ', assigned_dept:'Facilities', shift:'Morning (06:00-14:00)',
     status:'active', gender:'Female', phone:'9823456789', emergency:'Ram Gurung 9834567890',
+    photo:'SG',
     id_verified:true, bg_verified:true, ssf_paid:true, insurance_active:true, min_wage_ok:true,
     monthly_wage:16500, badge_no:'B-2024-055', has_badge:true, has_system_access:false,
     ai_ghost_risk:8, ai_compliance:98, certifications:['Housekeeping Certificate'],
@@ -37,6 +39,7 @@ const VE_LIST = [
     contract_start:'2025-01-15', contract_end:'2026-01-14', days_remaining:212,
     assigned_branch:'KTM HQ', assigned_dept:'IT', shift:'General (09:00-18:00)',
     status:'active', gender:'Male', phone:'9845678901', emergency:'Mina Tamang 9856789012',
+    photo:'BT',
     id_verified:true, bg_verified:false, ssf_paid:false, insurance_active:true, min_wage_ok:true,
     monthly_wage:22000, badge_no:'B-2025-008', has_badge:true, has_system_access:false,
     ai_ghost_risk:35, ai_compliance:71, certifications:['CompTIA A+'],
@@ -48,6 +51,7 @@ const VE_LIST = [
     contract_start:'2024-04-01', contract_end:'2025-03-31', days_remaining:-78,
     assigned_branch:'Pokhara Office', assigned_dept:'Admin', shift:'General (09:00-18:00)',
     status:'contract_expired', gender:'Female', phone:'9867890123', emergency:'-',
+    photo:'PM',
     id_verified:true, bg_verified:true, ssf_paid:false, insurance_active:false, min_wage_ok:true,
     monthly_wage:17000, badge_no:'B-2024-012', has_badge:false, has_system_access:false,
     ai_ghost_risk:78, ai_compliance:42, certifications:['Driving License A'],
@@ -59,6 +63,7 @@ const VE_LIST = [
     contract_start:'2025-03-01', contract_end:'2027-02-28', days_remaining:620,
     assigned_branch:'Biratnagar Office', assigned_dept:'Facilities', shift:'Evening (14:00-22:00)',
     status:'active', gender:'Male', phone:'9812398765', emergency:'Kamala Rai 9823498765',
+    photo:'HR',
     id_verified:true, bg_verified:true, ssf_paid:true, insurance_active:true, min_wage_ok:true,
     monthly_wage:18000, badge_no:'B-2025-021', has_badge:true, has_system_access:false,
     ai_ghost_risk:5, ai_compliance:99, certifications:['Security License'],
@@ -122,28 +127,11 @@ function AddVEModal({onClose, onSave}) {
           </div>
         </div>
       </div>
-    </d
-
-iv>
+    </div>
   )
-
-
-// ── Tenant context ────────────────────────────────────────────
-function useCompanyCtx() {
-  const auth   = (() => { try { return JSON.parse(localStorage.getItem('elogix_auth')||'{}') } catch { return {} } })()
-  const regCos = (() => { try { return JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}') } catch { return {} } })()
-  const slug   = auth.company?.slug || auth.user?.company || 'demo'
-  return {
-    company_id:   auth.company?.id || slug,
-    company_name: auth.company?.name || regCos[slug]?.name || 'Your Company',
-    company_slug: slug,
-    plan:         auth.company?.plan || 'trial',
-    currency:     auth.company?.currency || 'NPR',
-    token:        localStorage.getItem('elogix_token') || auth.token || '',
+}
 
 export default function VendorEmployeesPage() {
-  const ctx = useCompanyCtx()  // Tenant scope
-
   const [employees, setEmployees] = useState(VE_LIST)
   const [view, setView] = useState('cards')
   const [search, setSearch] = useState('')
@@ -334,3 +322,4 @@ export default function VendorEmployeesPage() {
       ]}/>
     </div>
   )
+}

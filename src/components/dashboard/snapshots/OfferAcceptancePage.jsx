@@ -37,12 +37,14 @@ const OFFERS = [
       {event:'Employee ID Generated', date:'2025-06-12 16:43', by:'System (HRIM Auto-Sync)'},
     ],
     ai_score:100, ai_note:'Accepted within 4 days. Employee ID EMP-2081-0142 auto-generated. Preboarding workflow triggered.',
+    employee_id:'EMP-2081-0142',
     impact_links:['Digital Forms & E-sign','Document Collection','Joining Checklist','Biometric Capture'] },
   { id:'oa3', code:'OFR-2025-013', candidate:'Dipak Thapa', candidate_nepali:'दिपक थापा',
     position:'Finance Manager', department:'Finance', branch:'KTM HQ',
     employment_type:'regular', salary_npr:145000, probation_months:6,
     offer_sent:'2025-06-01', deadline:'2025-06-11', days_left:-5,
     status:'expired', otp_verified:false, viewed_count:1, last_viewed:'2025-06-02',
+    docusign_status:'expired',
     audit_trail:[
       {event:'Offer Generated', date:'2025-06-01 09:00', by:'Priya Adhikari (HR)'},
       {event:'Email Sent', date:'2025-06-01 09:02', by:'System'},
@@ -72,6 +74,7 @@ const STATUS_CFG = {
   accepted:          {c:'#10b981', bg:'#f0fdf4', b:'#bbf7d0', icon:'✅', label:'Accepted'},
   declined:          {c:'#ef4444', bg:'#fef2f2', b:'#fecaca', icon:'❌', label:'Declined'},
   expired:           {c:'#94a3b8', bg:'#f8fafc', b:'#e2e8f0', icon:'⌛', label:'Expired'},
+}
 
 const CTX = [
   {icon:'👁',label:'View Offer Package',     key:'view'},
@@ -238,3 +241,4 @@ export default function OfferAcceptancePage() {
       ]}/>
     </div>
   )
+}

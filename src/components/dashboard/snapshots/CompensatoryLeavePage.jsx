@@ -29,6 +29,7 @@ const STATUS_CFG = {
   expiring_soon:{c:'#f59e0b',bg:'#fffbeb',icon:'⚠',label:'Expiring Soon'},
   used:{c:'#10b981',bg:'#f0fdf4',icon:'✅',label:'Used'},
   expired_paid_out:{c:'#94a3b8',bg:'#f8fafc',icon:'💰',label:'Expired - Paid Out'},
+}
 const SOURCE_LABELS = {weekly_rest_day:'Weekly Rest Day',public_holiday:'Public Holiday'}
 
 export default function CompensatoryLeavePage() {
@@ -140,3 +141,4 @@ export default function CompensatoryLeavePage() {
       {showExcel&&<ExcelModal title="Compensatory Leave Balances" columns={['Employee','Worked Date','Source','Days Credited','Use-By Date','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

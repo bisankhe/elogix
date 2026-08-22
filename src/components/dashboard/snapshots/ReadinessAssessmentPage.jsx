@@ -95,3 +95,4 @@ export default function ReadinessAssessmentPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

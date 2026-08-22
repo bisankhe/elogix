@@ -31,6 +31,7 @@ const TEMPLATES = {
   LWS:['Leave Policies (Annual/Sick/etc.)','Bereavement Leave Policy','Meals & Break Periods Policy'],
   WRT:['Nepotism Policy','Immigration Policy','Equal Employment Opportunity (EEO)','Electronic Communications Policy','Confidentiality & NDA Policy','Data Protection & Privacy Policy','Email Use Policy'],
   LDP:['Employee Training & Development'],
+}
 const LA_REFS = [
   'Section 10 — Written Employment Contract','Section 13 — Probation Max 6 Months',
   'Section 26 — Minimum Wage NPR 17,300','Section 28 — 8h/day 48h/week Max',
@@ -47,6 +48,7 @@ const MODULE_LINKS = {
   LWS:['Leave Management','Payroll','Attendance'],
   WRT:['IT Administration','Data Protection','Email System'],
   LDP:['Training & Development','LMS','Certification Tracking'],
+}
 const STEPS = ['Category & Template','Policy Details','Requirements','AI Generating','Review & Submit']
 
 // ── AI CALL ────────────────────────────────────────────────────
@@ -105,7 +107,9 @@ Return only the policy document text, no preamble.`
       const d = await r.json()
       if (r.ok && d?.content?.[0]?.text) return d.content[0].text
     } catch {}
+  }
   return buildOffline(form)
+}
 
 function buildOffline(form) {
   const d = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})
@@ -217,6 +221,7 @@ All amendments will be version-controlled and communicated to all staff.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 This document is the confidential property of ${form.company}.
 Unauthorised distribution or reproduction is strictly prohibited.`
+}
 
 // ── OUTSIDE COMPONENT — stable helpers ─────────────────────────
 function FI({ label, value, onChange, type='text', placeholder, required, hint }) {
@@ -230,6 +235,7 @@ function FI({ label, value, onChange, type='text', placeholder, required, hint }
         style={{ width:'100%', padding:'9px 12px', borderRadius:9, border:'1px solid #e2e8f0', fontSize:11, outline:'none', fontFamily:'inherit', boxSizing:'border-box' }}/>
     </div>
   )
+}
 function TA({ label, value, onChange, rows=4, placeholder, required, hint }) {
   return (
     <div style={{ marginBottom:14 }}>
@@ -241,6 +247,7 @@ function TA({ label, value, onChange, rows=4, placeholder, required, hint }) {
         style={{ width:'100%', padding:'9px 12px', borderRadius:9, border:'1px solid #e2e8f0', fontSize:11, outline:'none', fontFamily:'inherit', resize:'vertical', boxSizing:'border-box', lineHeight:1.6 }}/>
     </div>
   )
+}
 function SE({ label, value, onChange, options, required }) {
   return (
     <div style={{ marginBottom:14 }}>
@@ -254,6 +261,7 @@ function SE({ label, value, onChange, options, required }) {
       </select>
     </div>
   )
+}
 
 // ── MAIN COMPONENT ─────────────────────────────────────────────
 export default function DraftHRPolicyPage() {
@@ -269,10 +277,12 @@ export default function DraftHRPolicyPage() {
   const [form, setForm] = useState({
     cat:'', catName:'', selectedTemplate:'', customTitle:'',
     control:'', company:'eLogix HRMS Pvt. Ltd.', owner:'HR Manager',
+    approver:'Chief Human Resources Officer (CHRO)',
     effectiveDate: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}),
     reviewCycle:'Annually', mandatory:true,
     audience:'All Employees', deptSpecific:'', purpose:'', requirements:'', context:'',
     laRefs:[], linkedModules:[],
+    content:'',
   })
   const set = (k,v) => setForm(p=>({...p,[k]:v}))
   const title = form.selectedTemplate || form.customTitle || 'Untitled Policy'
@@ -289,6 +299,7 @@ export default function DraftHRPolicyPage() {
     const result = await callClaude({ ...form, title })
     set('content', result)
     setGen(false); setStep(4)
+  }
 
   const saveDraft = (submitForApproval = false) => {
     const cat = CATS.find(c=>c.code===form.cat)
@@ -312,6 +323,7 @@ export default function DraftHRPolicyPage() {
       version:       '1.0',
       createdAt:     new Date().toISOString(),
       updatedAt:     new Date().toISOString(),
+    }
     const existing = JSON.parse(localStorage.getItem(DRAFT_KEY)||'[]').filter(d=>d.id!==draft.id)
     const newDrafts = [draft, ...existing].slice(0,100)
     setDrafts(newDrafts)
@@ -328,6 +340,8 @@ export default function DraftHRPolicyPage() {
     } else {
       setMsg('✅ Draft saved successfully.')
       setTimeout(()=>setMsg(''), 2500)
+    }
+  }
 
   const Nav = ({ onNext, disabled }) => (
     <div style={{ display:'flex', gap:10, marginTop:24 }}>
@@ -391,6 +405,7 @@ export default function DraftHRPolicyPage() {
                   approved:         { bg:'#dcfce7', color:'#15803d', label:'Approved'         },
                   rejected:         { bg:'#fee2e2', color:'#dc2626', label:'Rejected'         },
                   published:        { bg:'#d1fae5', color:'#065f46', label:'Published'        },
+                }
                 const sc = statusCfg[d.status] || statusCfg.draft
                 return (
                   <div key={i} style={{ background:'#fff', borderRadius:12, padding:'14px 20px', border:'1px solid #e2e8f0', display:'flex', alignItems:'center', gap:14, boxShadow:'0 1px 6px rgba(0,0,0,.04)' }}>
@@ -640,3 +655,4 @@ export default function DraftHRPolicyPage() {
       )}
     </div>
   )
+}

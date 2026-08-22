@@ -25,6 +25,7 @@ function cellColor(level, required) {
   if (ratio>=1) return '#10b981'
   if (ratio>=0.7) return '#eab308'
   return '#ef4444'
+}
 
 export default function SkillGapMatrixPage() {
   const [search, setSearch] = useState('')
@@ -120,3 +121,4 @@ export default function SkillGapMatrixPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

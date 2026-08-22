@@ -102,3 +102,4 @@ export default function EthicsGovernancePage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

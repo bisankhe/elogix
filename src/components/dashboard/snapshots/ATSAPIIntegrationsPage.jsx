@@ -18,6 +18,7 @@ const PLATFORMS = [
   {
     id:'career-portal', group:'Company Portals', name:'Company Career Portal',
     icon:'🏢', color:'#0369a1', bg:'#eff6ff',
+    desc:'Your branded career page on elogix.com.np/careers/your-company',
     authType:'builtin',  // no external login needed — managed by eLogix
     fields:[
       { k:'portal_url',   l:'Career Page URL',    ph:'https://careers.yourcompany.com.np', type:'text' },
@@ -33,6 +34,7 @@ const PLATFORMS = [
   {
     id:'internal-portal', group:'Company Portals', name:'Internal Career Portal',
     icon:'👥', color:'#7c3aed', bg:'#f5f3ff',
+    desc:'Internal job board visible to current employees only — referrals & promotions',
     authType:'builtin',
     fields:[
       { k:'allow_referral', l:'Enable Referral Bonus', ph:'NPR 10,000 per successful hire', type:'text' },
@@ -49,6 +51,7 @@ const PLATFORMS = [
   {
     id:'linkedin-jobs', group:'Social Media', name:'LinkedIn Jobs',
     icon:'🔗', color:'#0077b5', bg:'#eff6ff',
+    desc:'Post jobs directly to LinkedIn and import candidates automatically',
     authType:'oauth',
     oauthUrl:'https://www.linkedin.com/oauth/v2/authorization',
     fields:[
@@ -62,10 +65,12 @@ const PLATFORMS = [
     stats:{ jobs:12, applications:284, hires:8, views:'12K' },
     setupUrl:'https://developer.linkedin.com',
     signInUrl:'https://www.linkedin.com/jobs/post',
+    docs:'https://developer.linkedin.com/docs/guide/v2/jobs',
   },
   {
     id:'linkedin-groups', group:'Social Media', name:'LinkedIn Groups',
     icon:'🔗', color:'#005582', bg:'#eff6ff',
+    desc:'Share job openings in relevant LinkedIn groups for wider reach',
     authType:'oauth',
     oauthUrl:'https://www.linkedin.com/oauth/v2/authorization',
     fields:[
@@ -81,6 +86,7 @@ const PLATFORMS = [
   {
     id:'facebook-jobs', group:'Social Media', name:'Facebook Jobs',
     icon:'📘', color:'#1877f2', bg:'#eff6ff',
+    desc:'Post job listings directly to Facebook Jobs and your company page',
     authType:'oauth',
     oauthUrl:'https://www.facebook.com/dialog/oauth',
     fields:[
@@ -93,10 +99,12 @@ const PLATFORMS = [
     stats:{ jobs:10, applications:156, hires:6, views:'8.9K' },
     setupUrl:'https://developers.facebook.com',
     signInUrl:'https://business.facebook.com/jobs',
+    docs:'https://developers.facebook.com/docs/pages/jobs-on-facebook',
   },
   {
     id:'facebook-groups', group:'Social Media', name:'Facebook Groups',
     icon:'📘', color:'#0862b4', bg:'#eff6ff',
+    desc:'Share job posts in Nepal HR, Job, and Industry Facebook groups',
     authType:'oauth',
     oauthUrl:'https://www.facebook.com/dialog/oauth',
     fields:[
@@ -112,6 +120,7 @@ const PLATFORMS = [
   {
     id:'instagram', group:'Social Media', name:'Instagram Story/Post',
     icon:'📸', color:'#e1306c', bg:'#fdf2f8',
+    desc:'Share job openings as Instagram stories, posts, and reels',
     authType:'oauth',
     oauthUrl:'https://api.instagram.com/oauth/authorize',
     fields:[
@@ -128,6 +137,7 @@ const PLATFORMS = [
   {
     id:'x-twitter', group:'Social Media', name:'X (Twitter)',
     icon:'🐦', color:'#000000', bg:'#f0f0f0',
+    desc:'Tweet job openings and engage with candidates on X/Twitter',
     authType:'oauth',
     oauthUrl:'https://twitter.com/i/oauth2/authorize',
     fields:[
@@ -147,6 +157,7 @@ const PLATFORMS = [
   {
     id:'whatsapp', group:'Messaging', name:'WhatsApp Business',
     icon:'📘', color:'#25d366', bg:'#f0fdf4',
+    desc:'Send job alerts and communicate with candidates via WhatsApp Business API',
     authType:'apikey',
     fields:[
       { k:'phone_number_id', l:'Phone Number ID',    ph:'1234567890123', type:'text' },
@@ -162,6 +173,7 @@ const PLATFORMS = [
   {
     id:'whatsapp-groups', group:'Messaging', name:'WhatsApp Groups',
     icon:'📘', color:'#128c7e', bg:'#f0fdf4',
+    desc:'Share job openings to WhatsApp job groups in Nepal',
     authType:'apikey',
     fields:[
       { k:'phone_number_id', l:'Phone Number ID',  ph:'1234567890123', type:'text' },
@@ -177,6 +189,7 @@ const PLATFORMS = [
   {
     id:'viber', group:'Messaging', name:'Viber',
     icon:'📘', color:'#7360f2', bg:'#faf5ff',
+    desc:'Reach candidates via Viber — popular in Nepal for professional communication',
     authType:'apikey',
     fields:[
       { k:'auth_token',  l:'Viber Bot Auth Token', ph:'Abc123***-def456***', type:'password' },
@@ -192,6 +205,7 @@ const PLATFORMS = [
   {
     id:'email', group:'Messaging', name:'Email (SMTP / SendGrid)',
     icon:'📧', color:'#ea4335', bg:'#fef2f2',
+    desc:'Automated job alerts, application confirmations, and interview invitations by email',
     authType:'smtp',
     fields:[
       { k:'smtp_host',     l:'SMTP Host',     ph:'smtp.gmail.com / smtp.sendgrid.net', type:'text' },
@@ -224,10 +238,12 @@ const PLATFORMS = [
     stats:{ jobs:15, applications:89, hires:4, views:'7.3K' },
     setupUrl:'https://merojob.com/employer/register',
     signInUrl:'https://merojob.com/employer/login',
+    docs:'https://merojob.com/api',
   },
   {
     id:'merorojgari', group:'Nepal Job Portals', name:'Merorojgari',
     icon:'⚙️', color:'#e67e22', bg:'#fffbeb',
+    desc:'Growing Nepal job portal with strong government & NGO sector reach',
     authType:'credentials',
     fields:[
       { k:'username', l:'Merorojgari Username', ph:'hr@company.com', type:'text' },
@@ -243,6 +259,7 @@ const PLATFORMS = [
   {
     id:'jobaxle', group:'Nepal Job Portals', name:'JobAxle Nepal',
     icon:'⚙️', color:'#27ae60', bg:'#f0fdf4',
+    desc:'Tech-focused Nepal job portal — ideal for IT and engineering roles',
     authType:'apikey',
     fields:[
       { k:'api_key',  l:'JobAxle API Key', ph:'ja_***', type:'password' },
@@ -258,6 +275,7 @@ const PLATFORMS = [
   {
     id:'slicejob', group:'Nepal Job Portals', name:'Slicejob',
     icon:'📋', color:'#8e44ad', bg:'#faf5ff',
+    desc:'Nepal & South Asia job portal with strong fresh graduate network',
     authType:'credentials',
     fields:[
       { k:'username', l:'Slicejob Email',   ph:'hr@company.com', type:'text' },
@@ -286,10 +304,12 @@ const PLATFORMS = [
     stats:{ jobs:10, applications:196, hires:5, views:'24K' },
     setupUrl:'https://ads.indeed.com/jobroll/xmlfeed',
     signInUrl:'https://employers.indeed.com',
+    docs:'https://opensource.indeedeng.io/api-documentation',
   },
   {
     id:'glassdoor', group:'Global Job Portals', name:'Glassdoor',
     icon:'🪟', color:'#0caa41', bg:'#f0fdf4',
+    desc:'Post jobs and manage company reviews — builds employer brand',
     authType:'apikey',
     fields:[
       { k:'partner_id', l:'Partner ID',     ph:'123456', type:'text' },
@@ -305,6 +325,7 @@ const PLATFORMS = [
   {
     id:'naukri', group:'Global Job Portals', name:'Naukri.com',
     icon:'📋', color:'#4a90e2', bg:'#eff6ff',
+    desc:'India & Nepal job platform — ideal for cross-border hiring',
     authType:'apikey',
     fields:[
       { k:'api_key',    l:'Naukri API Key', ph:'naukri_***', type:'password' },
@@ -335,6 +356,7 @@ const GROUP_ICONS = {
   'Messaging':          '💬',
   'Nepal Job Portals':  '🇳🇵',
   'Global Job Portals': '🌍',
+}
 
 // ── STORAGE HELPERS ───────────────────────────────────────────
 // In production these go to backend /api/v1/integrations
@@ -343,15 +365,19 @@ function storageKey(userId, platformId) { return `elogix_int_${userId}_${platfor
 function loadCreds(userId, platformId) {
   try { return JSON.parse(localStorage.getItem(storageKey(userId, platformId)) || '{}') }
   catch { return {} }
+}
 function saveCreds(userId, platformId, data) {
   try { localStorage.setItem(storageKey(userId, platformId), JSON.stringify(data)) }
   catch {}
+}
 function loadStatus(userId, platformId) {
   try { return localStorage.getItem(`${storageKey(userId, platformId)}_status`) || 'not_connected' }
   catch { return 'not_connected' }
+}
 function saveStatus(userId, platformId, status) {
   try { localStorage.setItem(`${storageKey(userId, platformId)}_status`, status) }
   catch {}
+}
 
 // ── STATUS BADGE ─────────────────────────────────────────────
 function StatusBadge({ status }) {
@@ -360,6 +386,7 @@ function StatusBadge({ status }) {
     not_connected: { bg:'#f8fafc', color:'#94a3b8', label:'Not Connected',  dot:'#cbd5e1' },
     error:         { bg:'#fef2f2', color:'#dc2626', label:'⚠ Error',        dot:'#ef4444' },
     testing:       { bg:'#fffbeb', color:'#d97706', label:'⏳ Testing...',   dot:'#f59e0b' },
+  }
   const c = cfg[status] || cfg.not_connected
   return (
     <span style={{ fontSize:9, fontWeight:700, padding:'2px 8px', borderRadius:10,
@@ -368,6 +395,7 @@ function StatusBadge({ status }) {
       {c.label}
     </span>
   )
+}
 
 // ── PLATFORM CARD ─────────────────────────────────────────────
 function PlatformCard({ platform, userId, onToast }) {
@@ -389,6 +417,7 @@ function PlatformCard({ platform, userId, onToast }) {
     if (missing.length && platform.authType !== 'builtin') {
       onToast(`⚠️ Please fill: ${missing.map(f=>f.l).join(', ')}`)
       setSaving(false); return
+    }
     // In production: POST /api/v1/integrations/{platform.id}/credentials
     saveCreds(userId, platform.id, creds)
     setTimeout(() => {
@@ -397,6 +426,7 @@ function PlatformCard({ platform, userId, onToast }) {
       saveStatus(userId, platform.id, 'connected')
       onToast(`✅ ${platform.name} connected successfully!`)
     }, 800)
+  }
 
   const handleTest = async () => {
     setTesting(true)
@@ -409,16 +439,19 @@ function PlatformCard({ platform, userId, onToast }) {
       saveStatus(userId, platform.id, ok ? 'connected' : 'error')
       onToast(ok ? `✅ ${platform.name} connection test passed!` : `❌ ${platform.name} test failed — check credentials`)
     }, 1500)
+  }
 
   const handleSignIn = () => {
     if (platform.signInUrl) window.open(platform.signInUrl, '_blank')
     else onToast('✅ You are already signed in via eLogix — no external login needed.')
+  }
 
   const handleDisconnect = () => {
     saveCreds(userId, platform.id, {})
     saveStatus(userId, platform.id, 'not_connected')
     setCreds({}); setStatus('not_connected')
     onToast(`🔌 ${platform.name} disconnected.`)
+  }
 
   return (
     <div style={{ background:'#fff', borderRadius:14, overflow:'hidden',
@@ -580,6 +613,7 @@ function PlatformCard({ platform, userId, onToast }) {
       )}
     </div>
   )
+}
 
 // ── MAIN PAGE ─────────────────────────────────────────────────
 export default function ATSAPIIntegrationsPage() {
@@ -767,3 +801,4 @@ export default function ATSAPIIntegrationsPage() {
       </div>
     </div>
   )
+}

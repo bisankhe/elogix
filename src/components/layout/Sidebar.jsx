@@ -5,11 +5,13 @@
 //          badge indicators, search, dark theme
 // ============================================================
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useApp }  from '../../context/AppContext.jsx'
-import { SIDEBAR_MENU } from '../../data/sidebarMenu.js'
+import { SIDEBAR_MENU, getVisibleMenu } from '../../data/sidebarMenu.js'
+import { getTenantModules } from '../../utils/tenantPermissions.js'
 import { PERSONAS }     from '../../data/personas.js'
 import { getPlanModules, planHasFeature } from '../../data/planConfig.js'
+import { resolveTenantAccess, getSessionSlug } from '../../utils/tenantPermissions.js'
 
 
 // ── Persona → Dashboard mapping (shown ONLY to the logged-in user) ──
@@ -279,6 +281,17 @@ function MenuSection({ menu, isExpanded, onToggle, activeSub, onNavTo, t }) {
 
 // ── Main Sidebar ──────────────────────────────────────────────
 export default function Sidebar({ open }) {
+  // ── Permission-aware sidebar filtering ─────────────────────────
+  // Only show menu sections/items that eLogix SuperAdmin has granted
+  const _sidebarSlug   = getSessionSlug()
+  const _sidebarAccess = resolveTenantAccess(_sidebarSlug)
+  const _visibleItems  = _sidebarAccess.hasAny ? _sidebarAccess.visibleSidebarItems() : null
+  // null = no permission record yet = show nothing except dashboard basics
+  const _canSeeItem = (itemId) => {
+    if (!_sidebarSlug) return true   // eLogix admin — sees all
+    if (!_visibleItems) return false  // not provisioned yet
+    return _visibleItems.has(itemId)
+  }
   const {
     persona, switchPersona,
     sub, navTo,
@@ -300,7 +313,7 @@ export default function Sidebar({ open }) {
     try {
       const u = JSON.parse(sessionStorage.getItem('elogix_user') || localStorage.getItem('elogix_user') || '{}')
       return { role: u.role || '', level: Number(u.level) || 10 }
-    } catch { return { role: '', level: 10 } }
+    } catch(_e) { return { role: '', level: 10 } }
   })()
 
   // Level 1 (tenant super_admin) or eLogix admin = always full access
@@ -310,7 +323,7 @@ export default function Sidebar({ open }) {
     try {
       const co = JSON.parse(sessionStorage.getItem('elogix_company') || localStorage.getItem('elogix_company') || '{}')
       return co.plan || 'trial'
-    } catch { return 'trial' }
+    } catch(_e) { return 'trial' }
   })()
 
   // Plan-based module restriction (on top of role-based)
@@ -326,8 +339,21 @@ export default function Sidebar({ open }) {
   const isEmployee     = persona === 'employee' && authCtx.level >= 10
   const myDashboard    = PERSONA_DASHBOARD[persona] || PERSONA_DASHBOARD['employee']
 
+  // ── Plan + business type pre-filter ───────────────────────────
+  // getVisibleMenu filters the full 130+ item menu down to only
+  // what this tenant's plan and business type allows
+  const _sessRaw   = (() => { try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null') } catch(_e){ return null } })()
+  const _plan      = _sessRaw?.company?.plan || 'trial'
+  const _bizType   = _sessRaw?.company?.business_type || 'custom'
+  const _isAdminCtx= !!_sessRaw?.admin   // eLogix admin sees all
+  const _slug      = _sessRaw?.company?.slug || null
+  const _grantedMods = _slug ? getTenantModules(_slug) : []
+  const _planMenu  = (_slug && !_isAdminCtx)
+    ? getVisibleMenu(_plan, _bizType, _grantedMods)
+    : SIDEBAR_MENU  // eLogix admin sees everything
+
   // ── Build RBAC-filtered menu ──────────────────────────────
-  const rbacMenu = SIDEBAR_MENU
+  const rbacMenu = _planMenu
     // 1. Filter top-level modules
     .filter(menu => isAllAccess || (allowedModules || []).includes(menu.id))
     // 2. For each allowed module, filter its children
@@ -399,9 +425,19 @@ export default function Sidebar({ open }) {
       })).filter(menu => menu.children?.length > 0)
     : rbacMenu
 
+  // Detect mobile for conditional positioning
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768)
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
+
+  const isOpen = open !== false
+
   return (
     <aside
-      className="sidebar-scroll"
+      className={['elogix-sidebar', 'sidebar-scroll', isMobile && !isOpen ? 'sidebar-closed' : ''].filter(Boolean).join(' ')}
       style={{
         width: 248,
         minWidth: 248,
@@ -410,8 +446,13 @@ export default function Sidebar({ open }) {
         flexDirection: 'column',
         height: '100vh',
         overflowY: 'auto',
+        overflowX: 'hidden',
         flexShrink: 0,
         borderRight: '1px solid rgba(255,255,255,.06)',
+        transition: 'transform .22s ease',
+        // Scrollbar styling
+        scrollbarWidth: 'thin',
+        scrollbarColor: '#334155 #0f172a',
       }}
     >
       {/* ── Brand ── */}

@@ -9,22 +9,26 @@ const A = '#0891b2'
 const REASON_LABELS = {
   lateral_skill_alignment:'Skill Alignment',restructuring:'Restructuring',
   geographic_request:'Employee Request',business_need:'Business Need',promotion:'Promotion-based',
+}
 const STATUS_CFG = {
   completed:{c:'#10b981',bg:'#f0fdf4',icon:'✅',label:'Completed'},
   pending:  {c:'#f59e0b',bg:'#fffbeb',icon:'⏳',label:'In Progress'},
   cancelled:{c:'#ef4444',bg:'#fef2f2',icon:'❌',label:'Cancelled'},
+}
 
 const TRANSFERS_INIT = [
   { id:'t1', employee:'Priya Khadka', emp_id:'EMP-0089', position:'Sales Executive', dept_from:'Sales & Marketing', dept_to:'Customer Service',
     branch_from:'KTM HQ', branch_to:'Pokhara', manager_from:'Dipak Tamang', manager_to:'Anil Bista',
     hod_to:'Maya Gurung', effective_date:'2025-08-01', reason:'geographic_request',
     relocation_npr:50000, salary_unchanged:true, grade_unchanged:true, consent:true,
+    rationale:'Voluntary request for relocation closer to family. Skills transfer well to CS team.',
     status:'completed', letter_generated:true, letter_sent:true, notified:true,
     timeline_hit:true, impact_links:['Employee Timeline','Org Chart','Payroll Setup'] },
   { id:'t2', employee:'Ramesh KC', emp_id:'EMP-0054', position:'Accountant', dept_from:'Finance & Accounts', dept_to:'Finance & Accounts',
     branch_from:'KTM HQ', branch_to:'KTM HQ', manager_from:'Sanjay Karki', manager_to:'Sanjay Karki',
     hod_to:'Sanjay Karki', effective_date:'2025-07-15', reason:'restructuring',
     relocation_npr:0, salary_unchanged:true, grade_unchanged:true, consent:true,
+    rationale:'Internal reassignment from AP to Treasury function — no salary/grade change.',
     status:'pending', letter_generated:false, letter_sent:false, notified:false,
     timeline_hit:false, impact_links:['Employee Timeline'] },
 ]
@@ -91,29 +95,35 @@ export default function TransferHistoryPage() {
       setGenerating(false)
       notify('✅ AI Transfer Letter generated for '+transfer.employee)
     },1500)
+  }
 
   const sendNotifications = (transfer) => {
     setTransfers(prev=>prev.map(t=>t.id===transfer.id?{...t,letter_sent:true,notified:true,timeline_hit:true}:t))
     notify(`📧 Transfer letter sent to ${transfer.employee} + ${transfer.manager_to} + ${transfer.hod_to} via Email, WhatsApp & Viber. Employee Timeline updated.`)
+  }
 
   const completeTransfer = (id) => {
     setTransfers(prev=>prev.map(t=>t.id===id?{...t,status:'completed'}:t))
     notify('✅ Transfer completed and recorded in Employee Timeline.')
+  }
 
   const submitTransfer = () => {
     if (!form.employee||!form.effective_date||!form.dept_to) {
       notify('⚠️ Employee, effective date and new department required'); return
+    }
     const newT = {
       id:'t'+Date.now(),...form,
       relocation_npr:parseInt(form.relocation_npr)||0,
       status:'pending',letter_generated:false,letter_sent:false,notified:false,timeline_hit:false,
       impact_links:['Employee Timeline','Org Chart','Payroll Setup']
+    }
     setTransfers(prev=>[newT,...prev])
     setShowWizard(false); setWizStep(1)
     setForm({employee:'',emp_id:'EMP-NEW',position:'',dept_from:'',dept_to:'',branch_from:'KTM HQ',
       branch_to:'KTM HQ',manager_from:'',manager_to:'',hod_to:'',effective_date:'',reason:'business_need',
       relocation_npr:'0',rationale:'',salary_unchanged:true,grade_unchanged:true,consent:false})
     notify('✅ Transfer initiated for '+form.employee+' — AI letter generation available.')
+  }
 
   const inter = transfers.filter(t=>t.branch_from!==t.branch_to).length
 
@@ -330,3 +340,4 @@ export default function TransferHistoryPage() {
       {showExcel&&<ExcelModal title="Transfer History" columns={['Employee','Emp ID','From Dept','To Dept','From Branch','To Branch','Effective Date','Reason','Relocation Allowance','Status','Letter Sent','Timeline Hit']} onClose={()=>setShowExcel(false)} onImport={()=>{}}/>}
     </div>
   )
+}

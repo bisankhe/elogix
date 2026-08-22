@@ -31,6 +31,7 @@ const REC_CFG = {
   CONFIRM:{c:'#10b981',bg:'#f0fdf4',icon:'✅',label:'AI Recommends: Confirm'},
   EXTEND:{c:'#f59e0b',bg:'#fffbeb',icon:'⏸',label:'AI Recommends: Extend'},
   TERMINATE:{c:'#ef4444',bg:'#fef2f2',icon:'🚫',label:'AI Recommends: Terminate'},
+}
 
 export default function NinetyDayReviewPage() {
   const [reviews, setReviews] = useState(REVIEWS)
@@ -137,3 +138,4 @@ export default function NinetyDayReviewPage() {
       {showExcel&&<ExcelModal title="90 Days Review" columns={['Employee','Position','Department','Review Date','Competency Score','AI Recommendation','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

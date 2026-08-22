@@ -168,3 +168,4 @@ export default function BreakManagementPage() {
       {showExcel&&<ExcelModal title="Break Policies" columns={['Policy Name','Duration (min)','Trigger After (hrs)','Applicable To','Mandatory','Auto-Lockout','Compliance %']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

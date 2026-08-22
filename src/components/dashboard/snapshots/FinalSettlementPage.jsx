@@ -29,6 +29,7 @@ const STATUS_CFG = {
   pending_clearance:{c:'#f59e0b',bg:'#fffbeb',label:'Pending Clearance'},
   ready_for_payout:{c:'#10b981',bg:'#f0fdf4',label:'Ready for Payout'},
   overdue:{c:'#ef4444',bg:'#fef2f2',label:'⚠ Overdue (15-Day Deadline)'},
+}
 
 export default function FinalSettlementPage() {
   const [search, setSearch] = useState('')
@@ -118,3 +119,4 @@ export default function FinalSettlementPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

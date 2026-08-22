@@ -60,6 +60,7 @@ function QRDisplay({ jobTitle, jobId }) {
       <div style={{ textAlign:'center', fontSize:7, color:'#64748b', marginTop:4 }}>Scan to Apply</div>
     </div>
   )
+}
 
 export default function ATSMultiPostPage() {
   const { navigate } = useApp()
@@ -79,8 +80,10 @@ export default function ATSMultiPostPage() {
     for (const chId of selChannels) {
       await new Promise(r => setTimeout(r, 300))
       setPublished(p => ({ ...p, [chId]: 'done' }))
+    }
     setPublishing(false)
     notify(`✅ Published to ${selChannels.length} channels! Live on: ${selChannels.map(id => CHANNELS.find(c => c.id === id)?.name).join(', ')}`)
+  }
 
   const totalReach = selChannels.reduce((s, id) => {
     const ch = CHANNELS.find(c => c.id === id)
@@ -285,3 +288,4 @@ export default function ATSMultiPostPage() {
       )}
     </div>
   )
+}

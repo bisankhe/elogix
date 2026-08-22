@@ -34,6 +34,7 @@ export default function LeaveCalendarPage() {
     for (let d=t.start;d<=t.end;d++){
       if(!overlapDays[d]) overlapDays[d]={}
       overlapDays[d][t.dept]=(overlapDays[d][t.dept]||0)+1
+    }
   })
 
   return (
@@ -109,3 +110,4 @@ export default function LeaveCalendarPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

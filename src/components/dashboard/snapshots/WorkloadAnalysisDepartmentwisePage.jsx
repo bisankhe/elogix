@@ -24,6 +24,7 @@ const INTENSITY_CFG = {
   over:{c:'#ef4444',bg:'#fef2f2',label:'Over-Resourced Demand'},
   balanced:{c:'#10b981',bg:'#f0fdf4',label:'Balanced'},
   under:{c:'#3b82f6',bg:'#eff6ff',label:'Under-Utilized'},
+}
 
 export default function WorkloadAnalysisDepartmentwisePage() {
   const [search, setSearch] = useState('')
@@ -115,3 +116,4 @@ export default function WorkloadAnalysisDepartmentwisePage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

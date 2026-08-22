@@ -41,11 +41,13 @@ const EXP_LEVELS = ['Entry Level (0-2 yrs)','Mid Level (3-5 yrs)','Senior (6-10 
 function PlatformBadge({ name }) {
   const p = PLATFORMS.find(x => x.name === name)
   return <span style={{ fontSize:8, fontWeight:700, padding:'2px 7px', borderRadius:8, background:p?`${p.color}15`:'#f1f5f9', color:p?.color||'#64748b', border:`1px solid ${p?.color||'#e2e8f0'}20` }}>{p?.icon} {name}</span>
+}
 
 function StatusBadge({ status }) {
   const cfg = { Published:['#f0fdf4','#15803d'], Draft:['#fef9c3','#854d0e'], Approval:['#dbeafe','#1e40af'], Closed:['#fee2e2','#dc2626'] }
   const [bg,cl] = cfg[status]||['#f8fafc','#64748b']
   return <span style={{ fontSize:8, fontWeight:800, padding:'2px 8px', borderRadius:8, background:bg, color:cl }}>{status}</span>
+}
 
 export default function ATSJobManagerPage() {
   const { navTo } = useApp()
@@ -61,6 +63,7 @@ export default function ATSJobManagerPage() {
     openings:1, salaryMin:'', salaryMax:'', currency:'NPR',
     deadline:'', priority:'Medium', remote:false,
     skills:'', responsibilities:'', requirements:'', benefits:'',
+    jd:'',
   })
   const set = (k,v) => setForm(p=>({...p,[k]:v}))
 
@@ -94,6 +97,7 @@ Apply through our official career portal or submit your updated CV with a cover 
 [AI-Generated Job Description — Review before publishing]`)
     setGenJD(false)
     notify('✅ AI Job Description generated! Review and edit before publishing.')
+  }
 
   const publishJob = async () => {
     const active = platforms.filter(p=>p.active)
@@ -102,6 +106,7 @@ Apply through our official career portal or submit your updated CV with a cover 
     setPosting(false)
     notify(`✅ Job posted to ${active.length} platforms! Auto-notifications sent to ${Math.floor(Math.random()*800+400)} matching candidates.`)
     setTimeout(()=>setView('list'),2000)
+  }
 
   const W = ({children,title}) => (
     <div style={{ background:'#fff', borderRadius:14, padding:20, border:'1px solid #e2e8f0', boxShadow:'0 1px 6px rgba(0,0,0,.04)' }}>
@@ -323,3 +328,4 @@ Apply through our official career portal or submit your updated CV with a cover 
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
+}

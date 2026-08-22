@@ -12,6 +12,7 @@ const A = '#4338ca'
 const REVIEWS = [
   { id:'rv1', employee:'Gita Maharjan', cycle:'Annual FY 2082/83', meeting_date:'2025-06-25',
     full_cycle_evidence:{appraisal_rating:4,continuous_feedback_count:12,behaviour_avg:8.6},
+    discussion_notes:'Discussed career growth toward Senior Engineer track. Agreed on 2 stretch projects for H2.',
     career_development_topics:['Senior Engineer readiness','Cloud architecture certification'],
     status:'completed', impact_links:['Performance Appraisal','Training Records'] },
   { id:'rv2', employee:'Bikash Rai', cycle:'Annual FY 2082/83', meeting_date:'2025-06-28',
@@ -110,3 +111,4 @@ export default function PerformanceReviewPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

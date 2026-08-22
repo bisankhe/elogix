@@ -2,6 +2,8 @@
 // eLogix HRMS — Permission & Role Management
 // SuperAdmin (Level 1) only — assign/revoke module access per user/role
 // eLogix Technologies · www.elogix.com.np
+import { resolveTenantAccess, getSessionSlug } from '../../../utils/tenantPermissions.js'
+import AccessDenied from '../../shared/AccessDenied.jsx'
 import { useState } from 'react'
 
 const A  = '#0369a1'
@@ -36,6 +38,7 @@ const ROLE_TEMPLATES = {
   hr_officer:     { label:'HR Officer',        level:4,  color:'#0369a1', modules:['dashboard','ai-assistant','emp-lifecycle','workforce-ops','perf-talent','emp-experience','hr-services','reports'], actions:['view','create','edit'] },
   it_admin:       { label:'IT Administrator',  level:4,  color:'#64748b', modules:['dashboard','ai-assistant','org-mgmt','sys-admin','compliance','reports'], actions:['view','create','edit','delete','export'] },
   employee:       { label:'Employee',          level:10, color:'#6b7280', modules:['dashboard','hr-services'], actions:['view'] },
+}
 
 // Demo users
 const DEMO_USERS = [
@@ -50,8 +53,14 @@ const DEMO_USERS = [
 function notify(msg, setMsg) {
   setMsg(msg)
   setTimeout(() => setMsg(''), 3000)
+}
 
 export default function PermissionManagementPage() {
+  const slug   = getSessionSlug()
+  const access = resolveTenantAccess(slug)
+  if (!access.hasAccess('permissions')) {
+    return <AccessDenied moduleName="Permission Management" />
+  }
   const [tab,        setTab]        = useState('roles')     // roles | users | matrix
   const [roles,      setRoles]      = useState({...ROLE_TEMPLATES})
   const [users,      setUsers]      = useState(DEMO_USERS)
@@ -75,6 +84,7 @@ export default function PermissionManagementPage() {
       r.modules = mods.includes(mId) ? mods.filter(m=>m!==mId) : [...mods, mId]
       return {...p, [selRole]: r}
     })
+  }
 
   const toggleAction = (act) => {
     if (selRole === 'super_admin') return
@@ -84,6 +94,7 @@ export default function PermissionManagementPage() {
       r.actions = acts.includes(act) ? acts.filter(a=>a!==act) : [...acts, act]
       return {...p, [selRole]: r}
     })
+  }
 
   const grantAll  = () => { if (selRole==='super_admin') return; setRoles(p=>({...p,[selRole]:{...p[selRole],modules:'all',actions:'all'}})); notify('✅ Full access granted',setMsg) }
   const revokeAll = () => { if (selRole==='super_admin') return; setRoles(p=>({...p,[selRole]:{...p[selRole],modules:[],actions:[]}}));   notify('🚫 All access revoked',setMsg) }
@@ -94,13 +105,16 @@ export default function PermissionManagementPage() {
     setUsers(p=>[...p,{id:Date.now(),...newUser,level:ROLE_TEMPLATES[newUser.role]?.level||10,status:'active'}])
     setShowAdd(false); setNewUser({name:'',email:'',role:'employee',dept:''})
     notify('✅ User added successfully', setMsg)
+  }
 
   const changeUserRole = (userId, newRole) => {
     setUsers(p=>p.map(u=>u.id===userId ? {...u, role:newRole, level:ROLE_TEMPLATES[newRole]?.level||10} : u))
     notify('✅ User role updated', setMsg)
+  }
 
   const toggleUserStatus = (userId) => {
     setUsers(p=>p.map(u=>u.id===userId ? {...u, status:u.status==='active'?'suspended':'active'} : u))
+  }
 
   const filteredUsers = users.filter(u =>
     u.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -244,6 +258,7 @@ export default function PermissionManagementPage() {
                             border:`1.5px solid ${on?A:'#e2e8f0'}`,
                             background:on?`${A}08`:'#f8fafc',
                             cursor:selRole==='super_admin'?'default':'pointer',
+                            transition:'all .15s',
                             display:'flex',alignItems:'center',gap:10}}>
                           <div style={{width:34,height:34,borderRadius:8,flexShrink:0,
                             background:on?`${A}15`:'#e2e8f0',display:'flex',
@@ -495,3 +510,4 @@ export default function PermissionManagementPage() {
       )}
     </div>
   )
+}

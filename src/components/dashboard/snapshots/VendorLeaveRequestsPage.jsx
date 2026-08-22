@@ -16,39 +16,51 @@ const LEAVE_TYPES = {
   paternity:    {label:'Paternity Leave',  color:'#06b6d4',icon:'👨‍👶',annual:15},
   unpaid:       {label:'Unpaid Leave',     color:'#94a3b8',icon:'📋',annual:0},
   half_day:     {label:'Half Day Leave',   color:'#06b6d4',icon:'🕐',annual:0},
+}
 
 const LEAVE_REQUESTS = [
   { id:'lr1', request_no:'LR-2025-041', emp_id:'VE-001', emp_name:'Ramesh Bahadur Shrestha',
     vendor:'ShieldGuard Nepal', role:'Security Guard', leave_type:'sick',
     from_date:'2025-06-18', to_date:'2025-06-19', days:2,
+    reason:'Fever and headache. Doctor consultation required.',
     status:'pending', applied_on:'2025-06-16', applied_via:'mobile',
     balance_before:12, balance_after:10, cover_arrangement:'VE-005 Hari Prasad Rai',
+    ai_recommendation:'Auto-approve. Sufficient balance. Coverage arranged.',
     impact_links:['Attendance','Billing','SLA Contract'] },
   { id:'lr2', request_no:'LR-2025-038', emp_id:'VE-002', emp_name:'Sunita Gurung',
     vendor:'CleanPro Services', role:'Housekeeper', leave_type:'festival',
     from_date:'2025-07-05', to_date:'2025-07-07', days:3,
+    reason:'Teej Festival - home district visit.',
     status:'approved', applied_on:'2025-06-10', applied_via:'web',
     balance_before:13, balance_after:10, cover_arrangement:'Temp staff arranged by CleanPro',
+    ai_recommendation:'Approved. Festival leave entitlement per Nepal Labour Act 2074.',
     approved_by:'HR Manager - Priya Adhikari', approved_date:'2025-06-11',
     impact_links:['Attendance','Billing'] },
   { id:'lr3', request_no:'LR-2025-035', emp_id:'VE-003', emp_name:'Bikash Tamang',
     vendor:'TechStaff Solutions', role:'IT Helpdesk L1', leave_type:'casual',
     from_date:'2025-06-20', to_date:'2025-06-20', days:1,
+    reason:'Personal urgent work.',
     status:'rejected', applied_on:'2025-06-14', applied_via:'web',
     balance_before:3, balance_after:3, cover_arrangement:'None',
+    rejection_reason:'Insufficient balance and critical project deadline.',
+    ai_recommendation:'Reject. Only 3 casual days remaining. Critical sprint week.',
     rejected_by:'Team Lead - Anil KC', rejected_date:'2025-06-15',
     impact_links:['Attendance'] },
   { id:'lr4', request_no:'LR-2025-042', emp_id:'VE-005', emp_name:'Hari Prasad Rai',
     vendor:'ShieldGuard Nepal', role:'Security Guard', leave_type:'annual',
     from_date:'2025-07-14', to_date:'2025-07-18', days:5,
+    reason:'Annual family vacation - home village.',
     status:'pending', applied_on:'2025-06-15', applied_via:'mobile',
     balance_before:18, balance_after:13, cover_arrangement:'Pending - ShieldGuard to arrange',
+    ai_recommendation:'Review coverage first. 5-day gap in Biratnagar security.',
     impact_links:['Attendance','SLA Contract','Billing'] },
   { id:'lr5', request_no:'LR-2025-046', emp_id:'VE-002', emp_name:'Sunita Gurung',
     vendor:'CleanPro Services', role:'Housekeeper', leave_type:'half_day',
     from_date:'2025-06-22', to_date:'2025-06-22', days:0.5, half_day_slot:'afternoon',
+    reason:'Medical appointment — doctor visit in the afternoon.',
     status:'pending', applied_on:'2025-06-20', applied_via:'mobile',
     balance_before:6, balance_after:5.5, cover_arrangement:'Morning shift colleague to cover',
+    ai_recommendation:'Auto-approve. Half-day sick. Balance available. Coverage arranged.',
     impact_links:['Attendance','Billing'] },
 ]
 
@@ -57,6 +69,7 @@ const STATUS_CFG = {
   approved: {c:'#10b981',bg:'#f0fdf4',b:'#bbf7d0',icon:'✅',label:'Approved'},
   rejected: {c:'#ef4444',bg:'#fef2f2',b:'#fecaca',icon:'❌',label:'Rejected'},
   cancelled:{c:'#94a3b8',bg:'#f8fafc',b:'#e2e8f0',icon:'🚫',label:'Cancelled'},
+}
 const CTX_ACTIONS = [
   {icon:'✅',label:'Approve Leave',        key:'approve'},
   {icon:'❌',label:'Reject Leave',          key:'reject'},
@@ -249,3 +262,4 @@ export default function VendorLeaveRequestsPage() {
       {showExcel && <ExcelModal title="Leave Requests" columns={['Request No','Employee ID','Employee Name','Vendor','Leave Type','From Date','To Date','Days','Reason','Status','Applied On']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

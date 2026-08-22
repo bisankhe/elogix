@@ -87,3 +87,4 @@ export default function LegalCaseTrackingPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

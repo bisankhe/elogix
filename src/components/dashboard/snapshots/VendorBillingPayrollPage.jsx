@@ -82,3 +82,4 @@ export default function VendorBillingPayrollPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

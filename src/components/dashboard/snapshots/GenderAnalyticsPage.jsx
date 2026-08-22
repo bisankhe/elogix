@@ -92,3 +92,4 @@ export default function GenderAnalyticsPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

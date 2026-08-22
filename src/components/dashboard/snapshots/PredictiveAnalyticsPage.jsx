@@ -11,6 +11,7 @@ async function callAI(q){
   try{const r=await fetch('/api/v1/ai-proxy/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:sys,messages:[{role:'user',content:q}],model:'claude-sonnet-4-6',max_tokens:600}),signal:AbortSignal.timeout(10000)});if(r.ok){const d=await r.json();if(d.content)return d.content}}catch{}
   if(VITE_KEY&&VITE_KEY.startsWith('sk-ant')&&VITE_KEY!=='sk-ant-your-key-here'){try{const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':VITE_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-only-beta':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:600,system:sys,messages:[{role:'user',content:q}]})});const d=await r.json();if(r.ok&&d?.content?.[0]?.text)return d.content[0].text}catch{}}
   return null
+}
 
 const W=({children,title,subtitle,extra,span=1})=>(
   <div style={{background:'#fff',borderRadius:16,padding:'18px 20px',border:'1px solid #e2e8f0',boxShadow:'0 1px 8px rgba(0,0,0,.05)',gridColumn:`span ${span}`,display:'flex',flexDirection:'column',gap:10}}>
@@ -64,6 +65,7 @@ export default function PredictiveAnalyticsPage(){
     const r=await callAI(`Generate a 12-month HR predictive forecast for: ${t}. Include: current baseline, predicted trend, risk factors, confidence level, and top 3 recommended actions. Use specific numbers.`)
     setForecast(r||`**12-Month Predictive Forecast — ${t}:**\n\n- **Headcount:** 312 now → 316 by Dec 2026 (if attrition controlled)\n- **Attrition peak:** Sep-Oct 2026 (8.8-9.2%) — festival season + annual review window\n- **Payroll forecast:** NPR 4.8M → 5.4M by Dec 2026 (+12.5%)\n- **Skill gap risk:** AI/ML roles — 58-point gap, 18 months to close at current L&D pace\n- **Confidence:** 87% on headcount | 79% on attrition | 91% on payroll`)
     setLoading(false)
+  }
 
   useEffect(()=>{generate('overall 12-month workforce forecast')},[])
 
@@ -72,6 +74,7 @@ export default function PredictiveAnalyticsPage(){
     if(!l.trim())return<div style={{height:4}}/>
     if(l.startsWith('- '))return<div style={{paddingLeft:14,position:'relative',marginBottom:3}}><span style={{position:'absolute',left:2,color:P}}>•</span><span dangerouslySetInnerHTML={{__html:h.slice(2)}}/></div>
     return<div dangerouslySetInnerHTML={{__html:h}}/>
+  }
 
   return(
     <div style={{display:'flex',flexDirection:'column',gap:16}}>
@@ -187,3 +190,4 @@ export default function PredictiveAnalyticsPage(){
       </div>
     </div>
   )
+}

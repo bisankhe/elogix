@@ -124,3 +124,4 @@ export default function AttendanceProcessingPage() {
       {showExcel&&<ExcelModal title="Attendance Processing" columns={['Employee','Department','Source','Login','Logout','Total Hours','Break Min','Exception','Processed']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

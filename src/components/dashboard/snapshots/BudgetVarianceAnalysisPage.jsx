@@ -79,3 +79,4 @@ export default function BudgetVarianceAnalysisPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

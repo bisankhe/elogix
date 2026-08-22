@@ -34,6 +34,7 @@ const COMPANY_CANDIDATES = {
     { id:'sc10', name:'Aarav KC', avatar:'AK', role:'Frontend Developer', dept:'Tech', score:84, rank:'Silver', status:'Pending Review', shared:'2081-08-25', interview_date:'', feedback:'', salary:'NPR 75,000' },
   ],
   CL006: [],
+}
 
 const COMPANY_VACANCIES = {
   CL001: [
@@ -57,6 +58,7 @@ const COMPANY_VACANCIES = {
     { id:'v12', title:'Digital Marketing Exec', dept:'Marketing', status:'Active', openings:1, candidates:0, posted:'2081-08-26', deadline:'2081-10-01', salary:'NPR 50K-70K' },
   ],
   CL006: [],
+}
 
 const COMPANY_PAYROLL = {
   CL001: {
@@ -77,6 +79,7 @@ const COMPANY_PAYROLL = {
       { id:'N003', name:'Rajan Karki',   dept:'Sales',    designation:'Sales Manager',     gross:90000,  ssf:9900,  tax:5500,  deduction:15400, net:74600,  status:'Processed' },
     ]
   },
+}
 
 const STATUS_C = {
   'Active':           { color:'#059669', bg:'#f0fdf4', border:'#bbf7d0' },
@@ -84,9 +87,11 @@ const STATUS_C = {
   'On Hold':          { color:'#64748b', bg:'#f8fafc', border:'#e2e8f0' },
   'Blacklisted':      { color:'#dc2626', bg:'#fef2f2', border:'#fecaca' },
   'Completed':        { color:'#0891b2', bg:'#ecfeff', border:'#a5f3fc' },
+}
 const CAND_C = {
   'Pending Review':'#f59e0b','Interview Scheduled':'#1e40af',
   'Offer Sent':'#7c3aed','Offer Accepted':'#059669','Rejected by Client':'#ef4444',
+}
 
 export default function ATSClientPortalPage() {
   const { navigate, user } = useApp()
@@ -112,6 +117,7 @@ export default function ATSClientPortalPage() {
     pending:          candidates.filter(c=>c.status==='Pending Review').length,
     hired:            candidates.filter(c=>['Offer Sent','Offer Accepted'].includes(c.status)).length,
     interviews:       candidates.filter(c=>c.status==='Interview Scheduled').length,
+  }
 
   const TABS = [
     { key:'overview',   label:'Company Overview' },
@@ -525,3 +531,4 @@ export default function ATSClientPortalPage() {
       )}
     </div>
   )
+}

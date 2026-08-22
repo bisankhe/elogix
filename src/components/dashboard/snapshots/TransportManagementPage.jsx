@@ -71,3 +71,4 @@ export default function TransportManagementPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

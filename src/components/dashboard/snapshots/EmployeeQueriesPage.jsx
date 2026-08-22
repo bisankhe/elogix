@@ -98,3 +98,4 @@ export default function EmployeeQueriesPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

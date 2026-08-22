@@ -126,3 +126,4 @@ export default function DataMigrationPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

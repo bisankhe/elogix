@@ -86,3 +86,4 @@ export default function AutoReminderSetupPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

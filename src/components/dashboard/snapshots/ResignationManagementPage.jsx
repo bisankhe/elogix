@@ -32,6 +32,7 @@ const STATUS_CFG = {
   pending_acceptance:{c:'#f59e0b',bg:'#fffbeb',icon:'⏳',label:'Pending Acceptance'},
   accepted:{c:'#10b981',bg:'#f0fdf4',icon:'✅',label:'Accepted'},
   auto_accepted_15day:{c:'#3b82f6',bg:'#eff6ff',icon:'⚖',label:'Auto-Accepted (15-Day Rule)'},
+}
 const REASON_LABELS = {better_opportunity:'Better Opportunity',personal:'Personal Reasons',higher_studies:'Higher Studies',relocation:'Relocation',other:'Other'}
 
 export default function ResignationManagementPage() {
@@ -183,3 +184,4 @@ export default function ResignationManagementPage() {
       {showExcel&&<ExcelModal title="Resignation Management" columns={['Employee','Position','Department','Submitted Date','Proposed LWD','Required Notice','Actual Notice','Deduction NPR','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

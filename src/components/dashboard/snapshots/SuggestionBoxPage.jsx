@@ -93,3 +93,4 @@ export default function SuggestionBoxPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

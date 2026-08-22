@@ -13,6 +13,7 @@ const FLAGS = [
   { id:'tf1', employee:'Bikash Rai', dept:'IT',
     indicators:{consecutive_unsatisfactory_appraisals:2,unaddressed_pip_count:0,attendance_breach_count:1},
     documented_warnings:2, due_process_status:'pip_active', explanation_period_used:true,
+    flag_note:'2 of 3 unsatisfactory appraisals reached - currently on active PIP (60-day). Termination NOT yet legally permissible per Section 142 (requires 3 consecutive cycles).',
     recommendation:'continue_pip', impact_links:['PIP Management','Performance Appraisal'] },
 ]
 
@@ -34,6 +35,7 @@ export default function TerminationRecommendationPage() {
         <button onClick={()=>setAcknowledged(true)} style={{padding:'12px 28px',borderRadius:12,border:'none',background:G,color:'#fff',fontSize:13,fontWeight:700,cursor:'pointer'}}>I Understand - Continue</button>
       </div>
     )
+  }
 
   return (
     <div onClick={()=>setCtx(null)}>
@@ -100,3 +102,4 @@ export default function TerminationRecommendationPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

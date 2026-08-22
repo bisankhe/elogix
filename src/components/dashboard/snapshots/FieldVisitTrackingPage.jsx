@@ -40,6 +40,7 @@ const VISITS = [
     distance_km:12, city_tier:'A', ta_npr:180, da_npr:1200, total_allowance:1380,
     receipts_uploaded:0, receipt_total_npr:0, status:'rejected',
     route_deviation_pct:null, ai_flag:'No manager-assigned task/location found - GPS could not validate the claimed site.',
+    rejection_reason:'Field visit requires prior task+location assignment from supervisor. Please request assignment before traveling.',
     impact_links:[] },
 ]
 
@@ -48,6 +49,7 @@ const STATUS_CFG = {
   approved_manager:{c:'#3b82f6',bg:'#eff6ff',icon:'👔',label:'Manager Approved > Finance'},
   approved_finance:{c:'#10b981',bg:'#f0fdf4',icon:'✅',label:'Approved & Synced to Payroll'},
   rejected:{c:'#ef4444',bg:'#fef2f2',icon:'🚫',label:'Rejected'},
+}
 
 export default function FieldVisitTrackingPage() {
   const [visits, setVisits] = useState(VISITS)
@@ -258,3 +260,4 @@ export default function FieldVisitTrackingPage() {
       {showExcel&&<ExcelModal title="Field Visit Tracking" columns={['Employee','Visit Date','Task','Location','Distance KM','TA NPR','DA NPR','Total Allowance','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

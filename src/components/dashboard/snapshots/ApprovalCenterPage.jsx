@@ -93,3 +93,4 @@ export default function ApprovalCenterPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

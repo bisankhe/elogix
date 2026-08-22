@@ -101,3 +101,4 @@ export default function EmailSMSIntegrationPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

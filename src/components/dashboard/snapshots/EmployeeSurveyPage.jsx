@@ -106,3 +106,4 @@ export default function EmployeeSurveyPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

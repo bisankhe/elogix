@@ -170,3 +170,4 @@ export default function OKRManagementPage() {
       {showExcel&&<ExcelModal title="OKR Management" columns={['Objective','Level','Key Result 1','Key Result 2','Quarter','Score','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

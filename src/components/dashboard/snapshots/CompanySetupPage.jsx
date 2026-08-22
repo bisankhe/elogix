@@ -9,143 +9,355 @@ const COUNTRY_CONFIGS = {
   'Nepal': {
     flag:'🇳🇵', region:'South Asia',
     currency:'NPR — Nepalese Rupee', currency_code:'NPR', currency_symbol:'रू',
+    fy_pattern:'Shrawan–Ashad (Mid-July to Mid-July)',
     fy_start:'1 Shrawan (mid-July)',   fy_end:'32 Ashad (mid-July)',
+    fy_example:'FY 2081-82 (BS) = July 2024 – July 2025 (AD)',
+    fy_note:'Nepal uses Bikram Sambat (BS) calendar. Fiscal year runs with BS year.',
+    calendar:'Bikram Sambat (BS) Primary + Gregorian (AD) Secondary',
+    leave_year:'Same as Financial Year (Shrawan 1 – Ashad End)',
+    leave_year_note:'Labour Act 2074: leave year follows FY. Annual leave 18 days, sick 12 days, festival 13 days.',
+    carry_forward:'No carry forward — expires end of leave year',
+    encashment:'Allowed on exit only',
     official_lang:'Nepali (नेपाली)', interface_lang:'English',
     letter_lang:'Nepali', extra_langs:['English','Nepali'],
     date_format:'DD/MM/YYYY (BS/AD)', time_format:'12-hour (AM/PM)',
     timezone:'Asia/Kathmandu (NPT +5:45)', timezone_offset:'+05:45',
+    number_format:'1,00,000.00 (Lakh system)',
     weekend:['Saturday'], payroll_cycle:'Monthly (BS calendar)',
     ot_weekday:'1.5× base rate', ot_weekend:'2.0× base rate',
     ot_max_daily:'4 hours', ot_max_weekly:'24 hours',
+    min_wage:'NPR 15,000 / month',
+    tax_year:'Shrawan 1 – Ashad End (same as FY)',
+    income_tax:'Slab rate — IRD',
+    social_security:'SSF (Social Security Fund) — 11% Employee + 20% Employer',
+    labour_act:'Nepal Labour Act 2074 (2017 AD)',
+    compliance:'Nepal Companies Act 2063 · Labour Act 2074 · IRD · SSF · PAN/VAT',
+    holiday_authority:'Nepal Government / Ministry of Labour',
+    max_foreign_workers:'5% of total workforce (Labour Act 2074 Section 6)',
+    probation_max:'6 months (Labour Act 2074 Section 10)',
+    notice_period:'30 days (probation) / 3 months (permanent)',
+    gratuity:'1 month per year after 1 year service',
     ssf_applicable:true,
+    dual_calendar_note:'BS calendar used for salary periods, AD calendar for correspondence.',
   },
   'India': {
     flag:'🇮🇳', region:'South Asia',
     currency:'INR — Indian Rupee', currency_code:'INR', currency_symbol:'₹',
+    fy_pattern:'April – March',
     fy_start:'1 April',   fy_end:'31 March',
+    fy_example:'FY 2024-25 = 1 Apr 2024 – 31 Mar 2025',
+    fy_note:'India FY runs April to March. Used for all corporate and tax purposes.',
+    calendar:'Gregorian (AD)',
+    leave_year:'Calendar Year (Jan 1 – Dec 31) or FY-aligned (company choice)',
+    leave_year_note:'Varies by state. Many companies align to calendar year.',
+    carry_forward:'Carry forward up to max cap (varies by state)',
+    encashment:'Allowed annually for excess / on exit',
     official_lang:'Hindi (हिन्दी) + English', interface_lang:'English',
     letter_lang:'English', extra_langs:['Hindi','English'],
     date_format:'DD/MM/YYYY', time_format:'12-hour (AM/PM)',
     timezone:'Asia/Kolkata (IST +5:30)', timezone_offset:'+05:30',
+    number_format:'1,00,000.00 (Lakh system)',
     weekend:['Sunday'], payroll_cycle:'Monthly',
     ot_weekday:'2× base rate (Factories Act)', ot_weekend:'2× base rate',
     ot_max_daily:'Varies by state', ot_max_weekly:'As per Factories Act',
+    min_wage:'State-wise minimum wage',
+    tax_year:'April 1 – March 31',
+    income_tax:'Slab rate — Income Tax Act 1961',
+    social_security:'PF (12% + 12%), ESI (0.75% Employee + 3.25% Employer)',
+    labour_act:'Factories Act 1948 / New Labour Codes 2020',
+    compliance:'Companies Act 2013 · Factories Act 1948 · PF Act · ESI Act',
+    holiday_authority:'Central / State Government',
+    max_foreign_workers:'As per visa and sector policy',
+    probation_max:'6 months (common practice)',
+    notice_period:'As per employment contract',
+    gratuity:'15 days per year after 5 years service (Payment of Gratuity Act)',
     ssf_applicable:false,
+    dual_calendar_note:'',
   },
   'United States': {
     flag:'🇺🇸', region:'North America',
     currency:'USD — US Dollar', currency_code:'USD', currency_symbol:'$',
+    fy_pattern:'January – December (Calendar Year) or Custom',
     fy_start:'1 January',   fy_end:'31 December',
+    fy_example:'FY 2025 = Jan 1 – Dec 31, 2025',
+    fy_note:'Most US companies use calendar year FY. Federal government: Oct–Sep.',
+    calendar:'Gregorian (AD)',
+    leave_year:'Calendar Year (Jan 1 – Dec 31) or Employee Anniversary Year',
+    leave_year_note:'PTO policies vary widely. FMLA provides 12 weeks unpaid family/medical leave.',
+    carry_forward:'Full carry forward (company policy) or Use-it-or-lose-it',
+    encashment:'State-dependent',
     official_lang:'English', interface_lang:'English',
     letter_lang:'English', extra_langs:['English','Spanish'],
     date_format:'MM/DD/YYYY', time_format:'12-hour (AM/PM)',
     timezone:'America/New_York (EST/EDT −5/−4)', timezone_offset:'-05:00',
+    number_format:'1,000,000.00 (International)',
     weekend:['Saturday','Sunday'], payroll_cycle:'Bi-weekly (26 payrolls/year)',
     ot_weekday:'1.5× over 40 hrs/week (FLSA)', ot_weekend:'1.5× if over 40 hrs week',
     ot_max_daily:'No federal daily OT cap', ot_max_weekly:'OT after 40 hrs/week',
+    min_wage:'Federal $7.25/hr (state minimums vary)',
+    tax_year:'January 1 – December 31',
+    income_tax:'Federal + State income tax',
+    social_security:'Social Security 6.2% + Medicare 1.45% (employer matches)',
+    labour_act:'Fair Labor Standards Act (FLSA) 1938',
+    compliance:'FLSA · FMLA · ADA · Title VII · State Labour Laws',
+    holiday_authority:'Federal Government / State',
+    max_foreign_workers:'H-1B and other visa categories — per USCIS',
+    probation_max:'At-will employment (no formal probation)',
+    notice_period:'At-will (usually 2 weeks)',
+    gratuity:'No statutory gratuity',
     ssf_applicable:false,
+    dual_calendar_note:'',
   },
   'United Kingdom': {
     flag:'🇬🇧', region:'Europe',
     currency:'GBP — Pound Sterling', currency_code:'GBP', currency_symbol:'£',
+    fy_pattern:'April – March (Tax Year: 6 April – 5 April)',
     fy_start:'6 April',   fy_end:'5 April',
+    fy_example:'FY 2024/25 = 6 Apr 2024 – 5 Apr 2025',
+    fy_note:'UK tax year runs 6 Apr–5 Apr (historic quirk). Corporate FY can be any 12-month period.',
+    calendar:'Gregorian (AD)',
+    leave_year:'April 6 – April 5 (tax year aligned)',
+    leave_year_note:'28 days statutory minimum (including bank holidays) per Working Time Regulations 1998.',
+    carry_forward:'Up to 4 weeks carry forward (statutory)',
+    encashment:'On termination only (statutory minimum)',
     official_lang:'English', interface_lang:'English',
     letter_lang:'English', extra_langs:['English','Welsh'],
     date_format:'DD/MM/YYYY', time_format:'12-hour (AM/PM)',
     timezone:'Europe/London (GMT/BST +0/+1)', timezone_offset:'+00:00',
+    number_format:'1,000,000.00 (International)',
     weekend:['Saturday','Sunday'], payroll_cycle:'Monthly or Weekly',
     ot_weekday:'As per contract (no statutory OT rate)', ot_weekend:'As per contract',
     ot_max_daily:'No statutory daily limit', ot_max_weekly:'48 hrs avg (Working Time Regs)',
+    min_wage:'£11.44/hr (2024 — National Living Wage 21+)',
+    tax_year:'6 April – 5 April',
+    income_tax:'PAYE (Pay As You Earn) — HMRC',
+    social_security:'National Insurance (NI) — 8% Employee + 13.8% Employer',
+    labour_act:'Employment Rights Act 1996',
+    compliance:'ERA 1996 · Working Time Regulations 1998 · HMRC PAYE · IR35',
+    holiday_authority:'UK Government (Bank Holidays)',
+    max_foreign_workers:'Skilled Worker Visa — UKVI',
+    probation_max:'Common 3–6 months (no statutory limit)',
+    notice_period:'Statutory: 1 week per year, max 12 weeks',
+    gratuity:'No statutory gratuity',
     ssf_applicable:false,
+    dual_calendar_note:'',
   },
   'Australia': {
     flag:'🇦🇺', region:'Oceania',
     currency:'AUD — Australian Dollar', currency_code:'AUD', currency_symbol:'A$',
+    fy_pattern:'July – June',
     fy_start:'1 July',   fy_end:'30 June',
+    fy_example:'FY 2024-25 = 1 Jul 2024 – 30 Jun 2025',
+    fy_note:'Australia FY runs July to June. ATO financial year for tax purposes.',
+    calendar:'Gregorian (AD)',
+    leave_year:'July 1 – June 30 (FY-aligned)',
+    leave_year_note:'4 weeks annual leave per year (NES). 10 days personal/carers leave.',
+    carry_forward:'Full carry forward (no expiry under NES)',
+    encashment:'On termination; some states allow cashing out with agreement',
     official_lang:'English', interface_lang:'English',
     letter_lang:'English', extra_langs:['English'],
     date_format:'DD/MM/YYYY', time_format:'12-hour (AM/PM)',
     timezone:'Australia/Sydney (AEST/AEDT +10/+11)', timezone_offset:'+10:00',
+    number_format:'1,000,000.00 (International)',
     weekend:['Saturday','Sunday'], payroll_cycle:'Weekly, Fortnightly, or Monthly',
     ot_weekday:'1.5× first 2hrs, then 2× (varies by award)', ot_weekend:'2× (Saturday) / 2.5× (Sunday)',
     ot_max_daily:'No statutory limit (reasonable additional hours)', ot_max_weekly:'38 hrs ordinary + reasonable OT',
+    min_wage:'A$23.23/hr (2024 — National Minimum Wage)',
+    tax_year:'1 July – 30 June',
+    income_tax:'ATO income tax + Medicare Levy 2%',
+    social_security:'Superannuation 11.5% (employer contribution)',
+    labour_act:'Fair Work Act 2009',
+    compliance:'Fair Work Act 2009 · NES · Modern Awards · ATO Superannuation',
+    holiday_authority:'Federal / State Government',
+    max_foreign_workers:'Visa-dependent (TSS, Employer Nomination, Skills in Demand)',
+    probation_max:'6 months (or 12 months for small business — qualifying period)',
+    notice_period:'1–4 weeks depending on length of service',
+    gratuity:'No statutory gratuity (covered by Superannuation)',
     ssf_applicable:false,
+    dual_calendar_note:'',
   },
   'Singapore': {
     flag:'🇸🇬', region:'Southeast Asia',
     currency:'SGD — Singapore Dollar', currency_code:'SGD', currency_symbol:'S$',
+    fy_pattern:'April – March or January – December (company choice)',
     fy_start:'1 January (most common)',   fy_end:'31 December',
+    fy_example:'FY 2025 = 1 Jan – 31 Dec 2025',
+    fy_note:'No statutory FY requirement. Most companies use calendar year.',
+    calendar:'Gregorian (AD)',
+    leave_year:'Calendar Year or Employee Anniversary Year',
+    leave_year_note:'7–14 days annual leave (increasing with service) per Employment Act.',
+    carry_forward:'Up to unused leave (company policy)',
+    encashment:'On termination',
     official_lang:'English (Primary)', interface_lang:'English',
     letter_lang:'English', extra_langs:['English','Mandarin','Malay','Tamil'],
     date_format:'DD/MM/YYYY', time_format:'12-hour (AM/PM)',
     timezone:'Asia/Singapore (SGT +8:00)', timezone_offset:'+08:00',
+    number_format:'1,000,000.00 (International)',
     weekend:['Saturday','Sunday'], payroll_cycle:'Monthly (within 7 days of month end)',
     ot_weekday:'1.5× basic rate', ot_weekend:'1.5× basic rate',
     ot_max_daily:'No statutory daily limit', ot_max_weekly:'44 hrs ordinary; 72 hrs max with OT',
+    min_wage:'Progressive Wage Model (sector-specific)',
+    tax_year:'January 1 – December 31',
+    income_tax:'Flat / slab rate — IRAS',
+    social_security:'CPF (Central Provident Fund) — up to 17% Employer + 20% Employee',
+    labour_act:'Employment Act (Cap.91)',
+    compliance:'Employment Act · CPF Act · MOM Regulations · PDPA',
+    holiday_authority:'Ministry of Manpower (MOM)',
+    max_foreign_workers:'Dependency Ratio Ceiling (sector-based)',
+    probation_max:'3–6 months (common practice)',
+    notice_period:'1 day–1 month depending on service',
+    gratuity:'No statutory gratuity',
     ssf_applicable:false,
+    dual_calendar_note:'',
   },
   'UAE': {
     flag:'🇦🇪', region:'Middle East',
     currency:'AED — UAE Dirham', currency_code:'AED', currency_symbol:'د.إ',
+    fy_pattern:'January – December (Calendar Year)',
     fy_start:'1 January',   fy_end:'31 December',
+    fy_example:'FY 2025 = 1 Jan – 31 Dec 2025',
+    fy_note:'UAE uses calendar year for corporate tax (introduced 2023). No income tax on individuals.',
+    calendar:'Gregorian (AD) Primary; Hijri (Islamic) for holidays and events',
+    leave_year:'Calendar Year or Employee Joining Anniversary',
+    leave_year_note:'30 calendar days annual leave per year (after 1 year service).',
+    carry_forward:'Max 30 days carry forward',
+    encashment:'End of service gratuity in lieu of unused leave',
     official_lang:'Arabic (عربي)', interface_lang:'English',
     letter_lang:'Arabic / English', extra_langs:['Arabic','English'],
     date_format:'DD/MM/YYYY', time_format:'12-hour (AM/PM)',
     timezone:'Asia/Dubai (GST +4:00)', timezone_offset:'+04:00',
+    number_format:'1,000,000.00 (International)',
     weekend:['Saturday','Sunday'], payroll_cycle:'Monthly (WPS — Wage Protection System)',
     ot_weekday:'1.25× basic rate', ot_weekend:'1.5× basic rate',
     ot_max_daily:'2 hours over 8 hrs/day', ot_max_weekly:'48 hrs/week max',
+    min_wage:'No federal minimum wage (sector minimums apply)',
+    tax_year:'January 1 – December 31',
+    income_tax:'No personal income tax; 9% corporate tax on profit > AED 375,000 (2023)',
+    social_security:'GPSSA for UAE nationals (employer 15% + employee 5%); None for expats',
+    labour_act:'UAE Labour Law (Federal Law No. 33 of 2021)',
+    compliance:'Federal Law 33/2021 · WPS · GPSSA · UAE Corporate Tax',
+    holiday_authority:'UAE Federal Government',
+    max_foreign_workers:'No cap (most UAE workforce is expatriate)',
+    probation_max:'6 months',
+    notice_period:'30–90 days depending on contract',
+    gratuity:'21 days/year (first 5 yrs) then 30 days/year after; capped at 2 years salary',
     ssf_applicable:false,
+    dual_calendar_note:'Hijri calendar used for determining Islamic public holidays.',
   },
   'Bangladesh': {
     flag:'🇧🇩', region:'South Asia',
     currency:'BDT — Bangladeshi Taka', currency_code:'BDT', currency_symbol:'৳',
+    fy_pattern:'July – June',
     fy_start:'1 July',   fy_end:'30 June',
+    fy_example:'FY 2024-25 = 1 Jul 2024 – 30 Jun 2025',
+    fy_note:'Bangladesh national budget and FY run July to June.',
+    calendar:'Gregorian (AD) Primary; Bengali Calendar secondary',
+    leave_year:'Calendar Year (January 1 – December 31)',
+    leave_year_note:'Bangladesh Labour Act 2006: 1 day leave per 18 working days (casual: 10 days, sick: 14 days).',
+    carry_forward:'Allowed (BLA 2006)',
+    encashment:'On termination',
     official_lang:'Bengali (বাংলা)', interface_lang:'English',
     letter_lang:'Bengali', extra_langs:['Bengali','English'],
     date_format:'DD/MM/YYYY', time_format:'12-hour (AM/PM)',
     timezone:'Asia/Dhaka (BST +6:00)', timezone_offset:'+06:00',
+    number_format:'1,00,000.00 (Lakh system)',
     weekend:['Friday','Saturday'], payroll_cycle:'Monthly',
     ot_weekday:'2× ordinary wage', ot_weekend:'2× ordinary wage',
     ot_max_daily:'2 hrs (factory); 3 hrs (with Labour Directorate approval)', ot_max_weekly:'10 hrs/week',
+    min_wage:'BDT 12,500/month (garments 2023); sector-specific',
+    tax_year:'July 1 – June 30',
+    income_tax:'Slab rate — NBR',
+    social_security:'Workers Profit Participation Fund (WPPF) 5% of net profit',
+    labour_act:'Bangladesh Labour Act 2006 (amended 2013, 2018)',
+    compliance:'Bangladesh Labour Act 2006 · BLA 2018 · NBR tax',
+    holiday_authority:'Bangladesh Government',
+    max_foreign_workers:'Work permit required; sector-dependent limits',
+    probation_max:'3 months (6 months for skilled workers) per BLA',
+    notice_period:'60 days (after 1 year permanent service)',
+    gratuity:'30 days wages per year after 10 years service',
     ssf_applicable:false,
+    dual_calendar_note:'Bengali calendar used for cultural events; Gregorian for official records.',
   },
   'Germany': {
     flag:'🇩🇪', region:'Europe',
     currency:'EUR — Euro', currency_code:'EUR', currency_symbol:'€',
+    fy_pattern:'January – December (Calendar Year)',
     fy_start:'1 January',   fy_end:'31 December',
+    fy_example:'FY 2025 = 1 Jan – 31 Dec 2025',
+    fy_note:'Germany uses calendar year for both corporate and personal tax.',
+    calendar:'Gregorian (AD)',
+    leave_year:'Calendar Year (January 1 – December 31)',
+    leave_year_note:'20 days minimum statutory annual leave (Bundesurlaubsgesetz). Most employers offer 25–30 days.',
+    carry_forward:'Up to 31 March of following year (statutory)',
+    encashment:'On termination',
     official_lang:'German (Deutsch)', interface_lang:'English',
     letter_lang:'German', extra_langs:['German','English'],
     date_format:'DD.MM.YYYY', time_format:'24-hour',
     timezone:'Europe/Berlin (CET/CEST +1/+2)', timezone_offset:'+01:00',
+    number_format:'1.000.000,00 (European)',
     weekend:['Saturday','Sunday'], payroll_cycle:'Monthly',
     ot_weekday:'As per collective agreement (Tarifvertrag)', ot_weekend:'125%–150% common',
     ot_max_daily:'10 hours max (Arbeitszeitgesetz)', ot_max_weekly:'48 hrs avg over 6 months',
+    min_wage:'€12.41/hr (2024)',
+    tax_year:'January 1 – December 31',
+    income_tax:'Lohnsteuer (wage tax) — progressive 0%–45%',
+    social_security:'~20% each employer/employee (health, pension, unemployment, care)',
+    labour_act:'Arbeitszeitgesetz (ArbZG) + Kündigungsschutzgesetz (KSchG)',
+    compliance:'ArbZG · BDSG (GDPR) · BetrVG · SGB IV Social Law',
+    holiday_authority:'Federal / State Government',
+    max_foreign_workers:'EU freedom of movement; non-EU needs work permit',
+    probation_max:'6 months',
+    notice_period:'4 weeks to end of month (up to 7 months after 20 years)',
+    gratuity:'No statutory gratuity',
     ssf_applicable:false,
+    dual_calendar_note:'',
   },
   'Canada': {
     flag:'🇨🇦', region:'North America',
     currency:'CAD — Canadian Dollar', currency_code:'CAD', currency_symbol:'C$',
+    fy_pattern:'January – December (Calendar Year)',
     fy_start:'1 January',   fy_end:'31 December',
+    fy_example:'FY 2025 = 1 Jan – 31 Dec 2025',
+    fy_note:'Canadian personal tax year is calendar year. Corporate FY can be any 53-week period.',
+    calendar:'Gregorian (AD)',
+    leave_year:'Calendar Year or Anniversary Year',
+    leave_year_note:'2 weeks minimum (federally), up to 3 weeks after 5 years; varies by province.',
+    carry_forward:'Province-dependent',
+    encashment:'On termination',
     official_lang:'English / French (bilingual)', interface_lang:'English',
     letter_lang:'English / French', extra_langs:['English','French'],
     date_format:'DD/MM/YYYY or YYYY-MM-DD (ISO common)', time_format:'12-hour (AM/PM)',
     timezone:'America/Toronto (EST/EDT −5/−4)', timezone_offset:'-05:00',
+    number_format:'1,000,000.00 (International)',
     weekend:['Saturday','Sunday'], payroll_cycle:'Bi-weekly or Semi-monthly',
     ot_weekday:'1.5× over 44 hrs/week (federal)', ot_weekend:'1.5× if over threshold',
     ot_max_daily:'No federal daily limit (some provinces have 8 hr threshold)', ot_max_weekly:'44 hrs/week (federal)',
+    min_wage:'C$17.30/hr (federal, 2024; provinces vary)',
+    tax_year:'January 1 – December 31',
+    income_tax:'Federal + Provincial income tax — CRA',
+    social_security:'CPP (5.95% employee + 5.95% employer) + EI',
+    labour_act:'Canada Labour Code (federal) / Provincial Labour Standards',
+    compliance:'Canada Labour Code · CRA · CPP · EI · PIPEDA',
+    holiday_authority:'Federal / Provincial Government',
+    max_foreign_workers:'LMIA-based work permits; CUSMA/USMCA',
+    probation_max:'3 months (common; province-dependent)',
+    notice_period:'2 weeks minimum (after 3 months service)',
+    gratuity:'No statutory gratuity',
     ssf_applicable:false,
+    dual_calendar_note:'',
   },
   'Custom / Other': {
     flag:'🌍', region:'Custom',
     currency:'', currency_code:'', currency_symbol:'',
     fy_pattern:'Custom', fy_start:'', fy_end:'', fy_example:'', fy_note:'Define your own financial year.',
+    calendar:'Gregorian (AD)',
     leave_year:'Custom', leave_year_note:'Define your leave year period.',
     carry_forward:'', encashment:'',
     official_lang:'', interface_lang:'English',
     letter_lang:'', extra_langs:['English'],
     date_format:'DD/MM/YYYY', time_format:'24-hour',
     timezone:'UTC', timezone_offset:'+00:00',
+    number_format:'1,000,000.00 (International)',
     weekend:['Saturday','Sunday'], payroll_cycle:'Monthly',
     ot_weekday:'As per local law', ot_weekend:'As per local law',
     ot_max_daily:'', ot_max_weekly:'',
@@ -155,6 +367,7 @@ const COUNTRY_CONFIGS = {
     probation_max:'', notice_period:'', gratuity:'',
     ssf_applicable:false, dual_calendar_note:'',
   },
+}
 
 const COUNTRIES = Object.keys(COUNTRY_CONFIGS)
 
@@ -242,9 +455,11 @@ function Pill({ children, color='blue' }) {
   const m = { green:{bg:'#f0fdf4',text:'#15803d',border:'#bbf7d0'}, blue:{bg:'#eff6ff',text:'#1d4ed8',border:'#bfdbfe'}, yellow:{bg:'#fffbeb',text:'#b45309',border:'#fde68a'}, red:{bg:'#fef2f2',text:'#dc2626',border:'#fecaca'}, gray:{bg:'#f1f5f9',text:'#475569',border:'#e2e8f0'}, purple:{bg:'#f5f3ff',text:'#6d28d9',border:'#ddd6fe'}, orange:{bg:'#fff7ed',text:'#c2410c',border:'#fed7aa'} }
   const c = m[color]||m.blue
   return <span style={{background:c.bg,color:c.text,border:`1px solid ${c.border}`,padding:'2px 8px',borderRadius:20,fontSize:10,fontWeight:700,display:'inline-flex',alignItems:'center',whiteSpace:'nowrap'}}>{children}</span>
+}
 
 function Bar({ value, color='#3b82f6', h=6 }) {
   return <div style={{height:h,background:'#f1f5f9',borderRadius:h,overflow:'hidden'}}><div style={{width:`${Math.min(value,100)}%`,height:'100%',background:color,borderRadius:h,transition:'width .5s'}}/></div>
+}
 
 function FI({ label, value, onChange, placeholder, required, type='text', hint, readOnly, span }) {
   return (
@@ -255,6 +470,7 @@ function FI({ label, value, onChange, placeholder, required, type='text', hint, 
       {hint&&<div style={{fontSize:10,color:'#94a3b8',marginTop:3}}>{hint}</div>}
     </div>
   )
+}
 
 function FS({ label, value, onChange, options, required, span }) {
   return (
@@ -267,6 +483,7 @@ function FS({ label, value, onChange, options, required, span }) {
       </select>
     </div>
   )
+}
 
 // ── Country Picker Modal (shown on first open) ────────────────
 function CountryPickerModal({ onSelect }) {
@@ -305,6 +522,7 @@ function CountryPickerModal({ onSelect }) {
       </div>
     </div>
   )
+}
 
 // ── Financial Config Tab ──────────────────────────────────────
 function FinancialConfigTab({ data, onChange, country }) {
@@ -492,6 +710,7 @@ function FinancialConfigTab({ data, onChange, country }) {
       </div>
     </div>
   )
+}
 
 // ── Company Profile Tab ───────────────────────────────────────
 function CompanyProfileTab({ data, onChange, country, onCountryChange }) {
@@ -547,7 +766,7 @@ function CompanyProfileTab({ data, onChange, country, onCountryChange }) {
         <FI label="Founded / Incorporated Date" value={data.founded_date} onChange={v=>onChange('founded_date',v)} type="date"/>
         <FI label="Total Employees (approx)" value={data.total_employees} onChange={v=>onChange('total_employees',v)} type="number" placeholder="e.g. 250"/>
         <FI label={country==='Nepal'?'Minimum Wage (NPR/month)':'Minimum Wage (local currency)'} value={data.min_wage} onChange={v=>onChange('min_wage',v)} type="number"
-          placeholder={country==='Nepal'?'15000':'Local minimum wage'} hint={country==='Nepal'?'Nepal minimum: NPR 15,000/month (2024)':cc=>cc}/>
+          placeholder={country==='Nepal'?'15000':'Local minimum wage'} hint={country==='Nepal'?'Nepal minimum: NPR 15,000/month (2024)':'Per local labour law'}/>
         <FI label={country==='Nepal'?'Foreign Worker % (max 5%)':'Foreign Worker %'} value={data.foreign_worker_pct} onChange={v=>onChange('foreign_worker_pct',v)} type="number" placeholder="0"
           hint={country==='Nepal'?'Nepal max: 5% per Labour Act 2074 Section 6':'Per local immigration policy'}/>
       </div>
@@ -570,6 +789,7 @@ function CompanyProfileTab({ data, onChange, country, onCountryChange }) {
       </div>
     </div>
   )
+}
 
 // ── Legal Documents Tab ───────────────────────────────────────
 function LegalDocsTab({ uploadedDocs, onUpload, country, companyName }) {
@@ -621,6 +841,7 @@ function LegalDocsTab({ uploadedDocs, onUpload, country, companyName }) {
       </div>
     </div>
   )
+}
 
 // ── Summary / Review Tab ──────────────────────────────────────
 function SummaryTab({ country, companyForm, financialForm, uploadedDocs }) {
@@ -684,6 +905,7 @@ function SummaryTab({ country, companyForm, financialForm, uploadedDocs }) {
       </div>
     </div>
   )
+}
 
 // ── MAIN PAGE ─────────────────────────────────────────────────
 
@@ -707,7 +929,9 @@ function useTenantCompany() {
             setCompany(d.data || d.company || d)
             setLoading(false)
             return
-      } catch {}
+          }
+        }
+      } catch(_e) {}
       // 2. Fallback: localStorage auth
       try {
         const auth = JSON.parse(localStorage.getItem('elogix_auth')||'{}')
@@ -733,8 +957,9 @@ function useTenantCompany() {
           phone: regData.phone || '', email: regData.admin_email || co.admin_email || '',
           province:'', district:'', municipality:'', registered_address:'', website:'',
         })
-      } catch {}
+      } catch(_e) {}
       setLoading(false)
+    }
     load()
   }, [])
 
@@ -745,7 +970,7 @@ function useTenantCompany() {
       auth.company = { ...(auth.company||{}), ...updates }
       localStorage.setItem('elogix_auth', JSON.stringify(auth))
       setCompany(p => ({...p, ...updates}))
-    } catch {}
+    } catch(_e) {}
     // Try API
     try {
       const token = localStorage.getItem('elogix_token') ||
@@ -756,9 +981,12 @@ function useTenantCompany() {
           headers: { 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
           body: JSON.stringify(updates)
         })
-    } catch {}
+      }
+    } catch(_e) {}
+  }
 
   return { company, loading, saveTenantCompany }
+}
 
 export default function CompanySetupPage() {
   const [showCountryPicker, setShowCountryPicker] = useState(true)
@@ -785,6 +1013,7 @@ export default function CompanySetupPage() {
         registered_address: tenantCo.registered_address || '',
       }))
       if (tenantCo.country) setCountry(tenantCo.country)
+    }
   }, [tenantCo?.id])
 
   const [companyForm, setCompanyForm] = useState({
@@ -799,7 +1028,10 @@ export default function CompanySetupPage() {
     current_fy_start:'',current_fy_end:'',
     tax_year:'Same as Financial Year', payroll_cycle:'Monthly',
     leave_year_pattern:'Same as Financial Year', leave_year_desc:'', leave_year_start:'', leave_year_end:'',
+    leave_carry_forward:'No carry forward — expires end of leave year',
+    leave_encashment:'Allowed on exit only',
     currency:'', currency_symbol:'', currency_secondary:'None', exchange_rate:'',
+    number_format:'1,000,000.00 (International)',
     income_tax:'', social_security:'',
     official_language:'English', interface_language:'English', letter_language:'English',
     extra_languages:['English'],
@@ -866,6 +1098,7 @@ export default function CompanySetupPage() {
     }))
 
     notify('✅ ' + c + ' selected — FY: ' + cc.fy_pattern + ' · Currency: ' + cc.currency_code + ' · ' + cc.calendar?.split(' (')[0] + ' Calendar · ' + cc.official_lang)
+  }
 
   const cc = COUNTRY_CONFIGS[country] || {}
 
@@ -947,3 +1180,4 @@ export default function CompanySetupPage() {
       </div>
     </div>
   )
+}

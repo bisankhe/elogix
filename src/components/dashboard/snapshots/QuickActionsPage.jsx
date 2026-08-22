@@ -87,6 +87,7 @@ export default function QuickActionsPage() {
   const handleClick = (a) => {
     notify(a.label)
     if (navigate) navigate(a.page)
+  }
 
   const totalActions = SECTIONS.reduce((s,sec)=>s+sec.actions.length,0)
 
@@ -202,3 +203,4 @@ export default function QuickActionsPage() {
       </div>
     </div>
   )
+}

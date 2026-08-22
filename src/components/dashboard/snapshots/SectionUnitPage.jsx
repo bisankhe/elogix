@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+// FILE: SectionUnitPage.jsx - Page 3: Section & Unit Setup
+import { useState } from 'react'
 import {
   THEMES, Field, ContextMenu, ExcelModal, PageHeader,
   AIImpact, Drawer, SearchBar, Badge, LuxCard
@@ -6,39 +7,46 @@ import {
 
 const T = THEMES.section
 
+const MOCK_SECTIONS = [
   { id:'s1', code:'SEC-FE',  name:'Frontend Engineering',  short:'Frontend',    type:'Technical Section',
     department:'Information Technology', dept_code:'DEPT-IT', head:'Roshan Thapa',
     employees:24, status:'active', icon:'💻', color:'#0ea5e9',
+    description:'React, TypeScript, mobile UI development.',
     ulrich_type:'CoE', ulrich_label:'Centre of Excellence',
     impact_links:[{icon:'💰',module:'Payroll',desc:'Frontend team salary group'},{icon:'🎯',module:'Performance',desc:'Team OKRs'},{icon:'📅',module:'Leave',desc:'Team coverage policy'}],
   },
   { id:'s2', code:'SEC-BE',  name:'Backend Engineering',   short:'Backend',     type:'Technical Section',
     department:'Information Technology', dept_code:'DEPT-IT', head:'Anita Karki',
     employees:20, status:'active', icon:'Settings️', color:'#6366f1',
+    description:'APIs, database, microservices, DevOps.',
     ulrich_type:'CoE', ulrich_label:'Centre of Excellence',
     impact_links:[{icon:'💰',module:'Payroll',desc:'Backend team payroll'},{icon:'🔐',module:'IT Access',desc:'Server & DB access rights'}],
   },
   { id:'s3', code:'SEC-QA',  name:'Quality Assurance',     short:'QA',          type:'Technical Section',
     department:'Information Technology', dept_code:'DEPT-IT', head:'Dev Poudel',
     employees:12, status:'active', icon:'✅', color:'#10b981',
+    description:'Test automation, manual testing, release management.',
     ulrich_type:'HRSS', ulrich_label:'Shared Services',
     impact_links:[{icon:'🎯',module:'Performance',desc:'QA team KPIs'},{icon:'📊',module:'Reports',desc:'Bug metrics'}],
   },
   { id:'s4', code:'SEC-RECRUIT',name:'Talent Acquisition',  short:'Recruitment', type:'HR Section',
     department:'Human Resources', dept_code:'DEPT-HR', head:'Gita Lama',
     employees:6, status:'active', icon:'🎯', color:'#8b5cf6',
+    description:'End-to-end recruitment, ATS management, employer branding.',
     ulrich_type:'CoE', ulrich_label:'Centre of Excellence',
     impact_links:[{icon:'📋',module:'Job Postings',desc:'Requisition approval flow'},{icon:'💰',module:'Payroll',desc:'Offer salary in band'},{icon:'🏛️',module:'Org Chart',desc:'Position fill tracking'}],
   },
   { id:'s5', code:'SEC-PAYROLL',name:'Payroll & Compensation',short:'Payroll',   type:'Finance Section',
     department:'Finance & Accounts', dept_code:'DEPT-FIN', head:'Hari KC',
     employees:5, status:'active', icon:'💳', color:'#f59e0b',
+    description:'Monthly payroll, tax, PF, SSF, final settlement.',
     ulrich_type:'HRSS', ulrich_label:'Shared Services',
     impact_links:[{icon:'💰',module:'Payroll Processing',desc:'Runs all payroll'},{icon:'⚖️',module:'IRD Filing',desc:'Tax submission'},{icon:'🏥',module:'SSF',desc:'Social security fund'}],
   },
   { id:'s6', code:'SEC-DIGIT',name:'Digital Marketing',      short:'Digital',    type:'Marketing Section',
     department:'Marketing', dept_code:'DEPT-MKT', head:'Priya Rai',
     employees:8, status:'active', icon:'📱', color:'#ec4899',
+    description:'SEO, SEM, social media, content marketing.',
     ulrich_type:'HRBP', ulrich_label:'HR Business Partner',
     impact_links:[{icon:'💰',module:'Payroll',desc:'Marketing team salary'},{icon:'📊',module:'Budget',desc:'Campaign spend tracking'}],
   },
@@ -59,117 +67,9 @@ const ULRICH_COLORS = {
   'CoE':  {bg:'#eef2ff',color:'#4f46e5',label:'Centre of Excellence'},
   'HRSS': {bg:'#f0fdf4',color:'#15803d',label:'HR Shared Services'},
   'HRBP': {bg:'#fffbeb',color:'#b45309',label:'HR Business Partner'},
-
-
-import React, { useState, useEffect, useRef, useCallback } from 'react'
-
-// ── Tenant-scoped data hook ─────────────────────────────────
-function useTenantData(resourceKey) {
-  const getAuth = () => {
-    try { return JSON.parse(localStorage.getItem('elogix_auth') || '{}') } catch { return {} }
-  const getCompanyId = () => {
-    const auth = getAuth()
-    return auth.company?.id || auth.company?.slug || auth.user?.company || 'demo'
-  const getToken = () => {
-    return localStorage.getItem('elogix_token') || getAuth().token || ''
-  const storageKey = () => `elogix_${resourceKey}_${getCompanyId()}`
-
-  const [items,   setItems]   = React.useState([])
-  const [loading, setLoading] = React.useState(true)
-  const [company, setCompany] = React.useState(null)
-
-  React.useEffect(() => {
-    // Load company info
-    const auth = getAuth()
-    const regCos = JSON.parse(localStorage.getItem('elogix_registered_companies') || '{}')
-    const slug = auth.company?.slug || auth.user?.company || 'demo'
-    setCompany({
-      id: auth.company?.id || slug,
-      name: auth.company?.name || regCos[slug]?.name || 'Your Company',
-      slug, plan: auth.company?.plan || 'trial',
-      country: auth.company?.country || 'Nepal',
-      currency: auth.company?.currency || 'NPR',
-      business_type: auth.company?.business_type || 'custom',
-    })
-    // Load data from API then localStorage fallback
-    const load = async () => {
-      try {
-        const token = getToken()
-        if (token) {
-          const res = await fetch(`/api/v1/${resourceKey}`, {
-            headers: { Authorization: `Bearer ${token}` }
-          })
-          if (res.ok) {
-            const d = await res.json()
-            const data = d.data || d[resourceKey] || d.items || []
-            setItems(Array.isArray(data) ? data : [])
-            localStorage.setItem(storageKey(), JSON.stringify(data))
-            setLoading(false); return
-      } catch {}
-      // Fallback: tenant-keyed localStorage
-      const stored = JSON.parse(localStorage.getItem(storageKey()) || '[]')
-      setItems(stored)
-      setLoading(false)
-    load()
-  }, [])
-
-  const saveItems = (newItems) => {
-    setItems(newItems)
-    localStorage.setItem(storageKey(), JSON.stringify(newItems))
-    // Try API save
-    const token = getToken()
-    if (token) {
-      fetch(`/api/v1/${resourceKey}/bulk`, {
-        method: 'PUT',
-        headers: { 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
-        body: JSON.stringify(newItems)
-      }).catch(() => {})
-
-  const addItem = (item) => {
-    const newItem = { ...item, id: item.id || `${resourceKey}-${Date.now()}`,
-                     company_id: getCompanyId() }
-    const updated = [...items, newItem]
-    saveItems(updated)
-    // POST to API
-    const token = getToken()
-    if (token) {
-      fetch(`/api/v1/${resourceKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
-        body: JSON.stringify(newItem)
-      }).catch(() => {})
-    return newItem
-
-  const updateItem = (id, updates) => {
-    const updated = items.map(i => i.id === id ? { ...i, ...updates } : i)
-    saveItems(updated)
-
-  const deleteItem = (id) => {
-    const updated = items.filter(i => i.id !== id)
-    saveItems(updated)
-
-  return { items, loading, company, addItem, updateItem, deleteItem, setItems: saveItems }
-
-
-// ── Tenant context ────────────────────────────────────────────
-function useCompanyCtx() {
-  const auth   = (() => { try { return JSON.parse(localStorage.getItem('elogix_auth')||'{}') } catch { return {} } })()
-  const regCos = (() => { try { return JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}') } catch { return {} } })()
-  const slug   = auth.company?.slug || auth.user?.company || 'demo'
-  return {
-    company_id:   auth.company?.id || slug,
-    company_name: auth.company?.name || regCos[slug]?.name || 'Your Company',
-    company_slug: slug,
-    plan:         auth.company?.plan || 'trial',
-    currency:     auth.company?.currency || 'NPR',
-    token:        localStorage.getItem('elogix_token') || auth.token || '',
+}
 
 export default function SectionUnitPage() {
-  const ctx = useCompanyCtx()
-  // ── Tenant context: only this company's data is shown ────────
-  const companyName = company?.name || 'Your Company'
-  const companySlug = company?.slug || ''
-
   const [sections,  setSections]  = useState(MOCK_SECTIONS)
   const [search,    setSearch]    = useState('')
   const [ctx,       setCtx]       = useState(null)
@@ -207,6 +107,7 @@ export default function SectionUnitPage() {
             style={{padding:'10px 14px',borderRadius:12,border:'1.5px solid #e2e8f0',fontSize:12,background:'#fff',cursor:'pointer',outline:'none'}}>
             {depts.map(d=><option key={d} value={d}>{d==='all'?'All Departments':d}</option>)}
           </select>
+        }
       />
 
       <div style={{background:'#f0f9ff',border:'1px solid #bae6fd',borderRadius:10,
@@ -291,6 +192,7 @@ export default function SectionUnitPage() {
       </Drawer>
     </div>
   )
+}
 
 function AddSectionModal({ T, onClose, onSave }) {
   const [f,setF] = useState({code:'',name:'',short:'',type:'Technical Section',department:'',head:'',ulrich_type:'CoE',description:''})
@@ -334,3 +236,4 @@ function AddSectionModal({ T, onClose, onSave }) {
       </div>
     </div>
   )
+}

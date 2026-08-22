@@ -46,6 +46,7 @@ const PERMISSIONS = {
   'Reports': ['View Team Reports','View Company Reports','View All Reports','Export Reports'],
   'Settings': ['Manage Users','Manage Roles','Manage Integrations','Billing'],
   'Requisitions': ['Create Requisition','Approve Requisition','View All Requisitions'],
+}
 
 export default function ATSRBACPage() {
   const { navigate } = useApp()
@@ -261,3 +262,4 @@ export default function ATSRBACPage() {
       )}
     </div>
   )
+}

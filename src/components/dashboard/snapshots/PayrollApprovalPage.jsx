@@ -101,3 +101,4 @@ export default function PayrollApprovalPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

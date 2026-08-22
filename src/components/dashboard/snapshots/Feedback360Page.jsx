@@ -11,8 +11,10 @@ const A = '#0891b2'
 
 const RELEASED_RESULTS = [
   { id:'r1', employee:'Bikash Rai', cycle:'Q3 2026 Mid-Cycle', reviewer_count:5, top_strength:'Technical Skill (avg 8.5/10)',
+    biggest_blind_spot:'Strategic Thinking - self-rated 5, peers/manager averaged 6.7 (perception gap)',
     used_for:'development_only', impact_links:['360 Degree PMS','Individual Development Plan'] },
   { id:'r2', employee:'Anjali Sharma', cycle:'Q3 2026 Mid-Cycle', reviewer_count:6, top_strength:'Teamwork (avg 9.1/10)',
+    biggest_blind_spot:'Communication - self-rated 6, direct reports averaged 4.8 (significant gap)',
     used_for:'development_only', impact_links:['Continuous Feedback'] },
 ]
 
@@ -78,3 +80,4 @@ export default function Feedback360Page() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

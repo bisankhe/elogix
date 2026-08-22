@@ -74,3 +74,4 @@ export default function LocationDeptPage() {
       {showExcel&&<ExcelModal title="Location Department View" columns={['Name','Code','Province/Branch','Quota','Filled','Vacant','Fill Rate %','Budget NPR']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

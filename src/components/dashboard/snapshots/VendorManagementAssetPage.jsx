@@ -96,3 +96,4 @@ export default function VendorManagementAssetPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

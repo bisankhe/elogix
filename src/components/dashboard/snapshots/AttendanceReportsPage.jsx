@@ -127,3 +127,4 @@ export default function AttendanceReportsPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

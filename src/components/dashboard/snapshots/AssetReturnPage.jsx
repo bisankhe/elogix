@@ -49,6 +49,7 @@ export default function AssetReturnPage() {
       const items = r.items.map((it,i)=>i===idx?{...it,status:'returned',condition:'Good',photo_uploaded:true}:it)
       return {...r, items, all_returned:items.every(i=>i.status==='returned')}
     }))
+  }
 
   return (
     <div onClick={()=>setCtx(null)}>
@@ -161,3 +162,4 @@ export default function AssetReturnPage() {
       {showExcel&&<ExcelModal title="Asset Return" columns={['Employee','LWD','Item','Model','Serial','Status','Condition','Photo Uploaded','Data Wiped']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

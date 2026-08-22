@@ -61,7 +61,7 @@ export default function ELogixAdminPanel() {
       setCompanies(c.companies || [])
       const t = await adminFetch('/tickets?status=open')
       setTickets(t.tickets || [])
-    } catch { toast('⚠️ API error — check admin key and server') }
+    } catch(_e) { toast('⚠️ API error — check admin key and server') }
   }
 
   const doAction = async (slug, action, extra={}) => {
@@ -77,7 +77,7 @@ export default function ELogixAdminPanel() {
       const r = await adminFetch(url, { method, body:JSON.stringify(body) })
       toast(r.message || r.error || 'Done')
       loadAll()
-    } catch { toast('⚠️ Action failed') }
+    } catch(_e) { toast('⚠️ Action failed') }
   }
 
   const createCompany = async () => {
@@ -87,7 +87,7 @@ export default function ELogixAdminPanel() {
       toast(r.message || r.error || 'Company created')
       setNewCo({company_name:'',slug:'',admin_email:'',admin_name:'Admin',plan:'trial',industry:'',country:'Nepal',sales_rep:'',account_manager:''})
       loadAll()
-    } catch { toast('⚠️ Creation failed') }
+    } catch(_e) { toast('⚠️ Creation failed') }
   }
 
   const inp = { padding:'8px 10px', borderRadius:8, border:'1.5px solid #e2e8f0', fontSize:11,
@@ -95,8 +95,17 @@ export default function ELogixAdminPanel() {
 
   // ── Admin key gate ────────────────────────────────────────
   if (!authed) return (
-    <div style={{ minHeight:'100vh', background:G, display:'flex', alignItems:'center',
-                   justifyContent:'center', fontFamily:'system-ui,sans-serif', padding:16 }}>
+    <div style={{
+      position:'fixed', inset:0,
+      fontFamily:'system-ui,sans-serif',
+      background:'#f0f0ff',
+      overflowY:'scroll',
+      overflowX:'hidden',
+      WebkitOverflowScrolling:'touch',
+      scrollbarWidth:'thin',
+      scrollbarColor:'#818cf8 #e0e7ff',
+      zIndex:10,
+    }}>
       <div style={{ background:'#fff', borderRadius:20, padding:36, maxWidth:380, width:'100%',
                      textAlign:'center', boxShadow:'0 20px 60px rgba(0,0,0,.2)' }}>
         <div style={{ fontSize:40, marginBottom:8 }}>🔐</div>
@@ -159,7 +168,7 @@ export default function ELogixAdminPanel() {
         {/* DASHBOARD */}
         {tab==='dashboard' && dash && (
           <div>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(120px,1fr))', gap:12, marginBottom:16 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:16 }}>
               {[
                 ['🏢','Total Companies', dash.companies?.total, '#0369a1'],
                 ['✅','Active',           dash.companies?.active, '#059669'],

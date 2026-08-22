@@ -19,6 +19,7 @@ const PROGRESSION = [
 const CURRENT_BREAKDOWN = {
   gross:62000, ssf_employee:6820, tds:2400, other_deductions:780, net:52000,
   ytd_gross:372000, ytd_net:310000,
+}
 
 export default function MyPayrollPage() {
   const [ctx, setCtx] = useState(null)
@@ -88,3 +89,4 @@ export default function MyPayrollPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

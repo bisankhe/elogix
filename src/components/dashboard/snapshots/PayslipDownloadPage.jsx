@@ -92,3 +92,4 @@ export default function PayslipDownloadPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

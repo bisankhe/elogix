@@ -109,3 +109,4 @@ export default function WebCheckinPage() {
       {showExcel&&<ExcelModal title="Web Check-In" columns={['Employee','Emp ID','Dept','Date','Check-In','Check-Out','Hours','IP','Device','Location','Status']} onClose={()=>setShowExcel(false)} onImport={()=>{}}/>}
     </div>
   )
+}

@@ -77,3 +77,4 @@ export default function TrainingReportsStandardPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

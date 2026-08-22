@@ -18,6 +18,7 @@ const TODAY_AGENDA = [
 
 const TYPE_CFG = {
   quiz:{c:'#7c3aed',icon:'❓'},micro:{c:'#10b981',icon:'⚡'},live:{c:'#0284c7',icon:'🎥'},flashcard:{c:'#f59e0b',icon:'🗂'},
+}
 
 export default function DailyTrainingCalendarPage() {
   const [showFAB, setShowFAB] = useState(false)
@@ -100,3 +101,4 @@ export default function DailyTrainingCalendarPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

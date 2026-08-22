@@ -23,6 +23,7 @@ const REQUESTS = [
     reason:'Coverage for absent colleague', weekly_hours_before:22, weekly_hours_after:25,
     weekly_cap_pct:104, base_rate_npr:225, ot_rate_multiplier:1.5, ot_amount_npr:1012.5,
     employee_consent:true, manager:'Dipak Tamang', status:'rejected', submitted_at:'2025-06-21 02:00 PM', rejected_at:'2025-06-21 02:30 PM',
+    rejection_reason:'Would exceed the 24hr/week statutory OT cap per Nepal LA2074. Please redistribute coverage to another team member.',
     impact_links:['Overtime & Monitoring'] },
 ]
 
@@ -183,3 +184,4 @@ export default function OvertimeManagementPage() {
       {showExcel&&<ExcelModal title="Overtime Management" columns={['Employee','Department','Date','Requested Hours','Reason','Weekly Hours After','OT Amount NPR','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

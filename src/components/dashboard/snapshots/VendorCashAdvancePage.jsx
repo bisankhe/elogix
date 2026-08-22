@@ -11,6 +11,9 @@ const ADVANCES = [
   { id:'ca1', request_no:'CA-2025-012', emp_id:'VE-001', emp_name:'Ramesh Bahadur Shrestha',
     vendor:'ShieldGuard Nepal', role:'Security Guard',
     amount_requested:10000, amount_approved:8000, monthly_wage:18500,
+    purpose:'Medical emergency - hospitalization of family member',
+    purpose_category:'medical_emergency',
+    disbursement_date:'2025-06-20',
     repayment_months:4, repayment_per_month:2000,
     status:'approved', applied_on:'2025-06-16',
     approval_chain:[
@@ -24,6 +27,9 @@ const ADVANCES = [
   { id:'ca2', request_no:'CA-2025-009', emp_id:'VE-002', emp_name:'Sunita Gurung',
     vendor:'CleanPro Services', role:'Housekeeper',
     amount_requested:5000, amount_approved:5000, monthly_wage:16500,
+    purpose:'School fee payment for children',
+    purpose_category:'education',
+    disbursement_date:'2025-06-05',
     repayment_months:2, repayment_per_month:2500,
     status:'disbursed', applied_on:'2025-06-01',
     approval_chain:[
@@ -37,6 +43,8 @@ const ADVANCES = [
   { id:'ca3', request_no:'CA-2025-014', emp_id:'VE-003', emp_name:'Bikash Tamang',
     vendor:'TechStaff Solutions', role:'IT Helpdesk L1',
     amount_requested:25000, amount_approved:null, monthly_wage:22000,
+    purpose:'House construction - roof repair',
+    purpose_category:'personal',
     disbursement_date:null,
     repayment_months:null, repayment_per_month:null,
     status:'pending', applied_on:'2025-06-15',
@@ -51,6 +59,9 @@ const ADVANCES = [
   { id:'ca4', request_no:'CA-2025-007', emp_id:'VE-005', emp_name:'Hari Prasad Rai',
     vendor:'ShieldGuard Nepal', role:'Security Guard',
     amount_requested:7500, amount_approved:7500, monthly_wage:18000,
+    purpose:'Festival expenses - Dashain',
+    purpose_category:'festival',
+    disbursement_date:'2025-09-25',
     repayment_months:3, repayment_per_month:2500,
     status:'pending_disbursement', applied_on:'2025-06-14',
     approval_chain:[
@@ -70,11 +81,13 @@ const STATUS_CFG = {
   disbursed:            {c:'#10b981',bg:'#f0fdf4',b:'#bbf7d0',icon:'💰',label:'Disbursed'},
   rejected:             {c:'#ef4444',bg:'#fef2f2',b:'#fecaca',icon:'❌',label:'Rejected'},
   fully_repaid:         {c:'#64748b',bg:'#f8fafc',b:'#e2e8f0',icon:'✓',label:'Fully Repaid'},
+}
 const CHAIN_STATUS = {
   approved:   {c:'#10b981',icon:'✓'},
   pending:    {c:'#f59e0b',icon:'⏳'},
   rejected:   {c:'#ef4444',icon:'✗'},
   disbursed:  {c:'#3b82f6',icon:'💸'},
+}
 const CTX_ACTIONS = [
   {icon:'✅',label:'Approve Advance',      key:'approve'},
   {icon:'💸',label:'Mark as Disbursed',    key:'disburse'},
@@ -281,3 +294,4 @@ export default function VendorCashAdvancePage() {
       {showExcel && <ExcelModal title="Cash Advances" columns={['Request No','Employee ID','Name','Vendor','Amount NPR','Purpose','Status','Applied On','Disbursement Date','Repayment Months','Outstanding']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

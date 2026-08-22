@@ -87,3 +87,4 @@ export default function IncentiveRecommendationPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

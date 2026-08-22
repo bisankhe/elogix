@@ -149,3 +149,4 @@ export default function GeoFencingPage() {
       {showExcel&&<ExcelModal title="Geo-Fences" columns={['Name','Type','Latitude','Longitude','Radius (m)','Employees Assigned','Tracking Window']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

@@ -82,3 +82,4 @@ export default function AssetAllocationFinPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

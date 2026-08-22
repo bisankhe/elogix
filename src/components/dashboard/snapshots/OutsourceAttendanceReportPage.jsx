@@ -1,6 +1,6 @@
 // FILE: OutsourceAttendanceReportPage.jsx — Vendor Employee Attendance
 // Vendor/Outsource company: view, edit, print, export attendance + generate invoice directly
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { PageHeader, SearchBar, ExcelModal, ContextMenu } from './DeptSetupShared.jsx'
 
 const G = 'linear-gradient(135deg,#052e16 0%,#15803d 60%,#86efac 100%)'
@@ -19,27 +19,9 @@ const DATA = [
   {id:'a7',emp_id:'CP-007', name:'Mina Shrestha',     vendor:'CleanPro Services',   role:'Housekeeping',      shift:'Day',    dept:'Floor 2-3',      present:25,absent:1,late:1,half:1,ot:0,  att_pct:96},
 ]
 
-const RATE_PER_DAY = {'ShieldGuard Nepal':710,'CleanPro Services':635,'TechStaff Solutions':847,'NepCatering Services':580}
-
-ces':615}
-
-
-// ── Tenant context ────────────────────────────────────────────
-function useCompanyCtx() {
-  const auth   = (() => { try { return JSON.parse(localStorage.getItem('elogix_auth')||'{}') } catch { return {} } })()
-  const regCos = (() => { try { return JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}') } catch { return {} } })()
-  const slug   = auth.company?.slug || auth.user?.company || 'demo'
-  return {
-    company_id:   auth.company?.id || slug,
-    company_name: auth.company?.name || regCos[slug]?.name || 'Your Company',
-    company_slug: slug,
-    plan:         auth.company?.plan || 'trial',
-    currency:     auth.company?.currency || 'NPR',
-    token:        localStorage.getItem('elogix_token') || auth.token || '',
+const RATE_PER_DAY = {'ShieldGuard Nepal':710,'CleanPro Services':635,'TechStaff Solutions':847,'NepCatering Services':615}
 
 export default function OutsourceAttendanceReportPage() {
-  const ctx = useCompanyCtx()  // Tenant scope
-
   const [vendor,    setVendor]    = useState('all')
   const [month,     setMonth]     = useState('June 2026')
   const [search,    setSearch]    = useState('')
@@ -63,13 +45,16 @@ export default function OutsourceAttendanceReportPage() {
     setData(prev=>prev.map(e=>e.id===editId?{...editRow,att_pct:Math.round(editRow.present/26*100)}:e))
     setEditId(null); setEditRow(null)
     notify('✅ Attendance record updated')
+  }
 
   const generateInvoiceFor = (v) => {
     setInvVendor(v)
     setShowInvoice(true)
+  }
 
   const printAttendance = () => {
     notify('🖨️ Sending to printer — '+filtered.length+' records for '+month)
+  }
 
   // Summary by vendor
   const vendorSummary = VENDORS.map(v => {
@@ -240,3 +225,4 @@ export default function OutsourceAttendanceReportPage() {
       {showExcel&&<ExcelModal title="Vendor Employee Attendance" columns={['EMP ID','Name','Vendor','Dept','Shift','Present','Absent','Late','Half Day','OT Hours','Att%','Month']} onClose={()=>setShowExcel(false)} onImport={(f)=>notify('Imported: '+f.name)}/>}
     </div>
   )
+}

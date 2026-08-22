@@ -37,7 +37,9 @@ async function callClaude(prompt, system) {
       const d = await r.json()
       if (r.ok && d?.content?.[0]?.text) return d.content[0].text
     } catch {}
+  }
   return null
+}
 
 // ── POSITION-WISE KRA/KPI/OKR FRAMEWORK ──────────────────────
 const POSITION_FRAMEWORKS = {
@@ -89,6 +91,7 @@ const POSITION_FRAMEWORKS = {
       { objective: 'Build scalable operations', krs: ['Automate 5 manual processes', 'Document all SOPs by Q3'] },
     ],
   },
+}
 
 const DEFAULT_FRAMEWORK = {
   kra: ['Role Delivery & Quality', 'Stakeholder Management', 'Continuous Improvement', 'Team Contribution'],
@@ -97,6 +100,7 @@ const DEFAULT_FRAMEWORK = {
     { objective: 'Deliver excellence in role', krs: ['Achieve 100% KPI targets', 'Zero critical escalations'] },
     { objective: 'Grow professional capability', krs: ['Complete 2 skill upgrades', '360 feedback score ≥ 4.2'] },
   ],
+}
 
 function getFramework(title) {
   if (!title) return DEFAULT_FRAMEWORK
@@ -104,6 +108,7 @@ function getFramework(title) {
     title.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(title.toLowerCase().split(' ')[0])
   )
   return POSITION_FRAMEWORKS[key] || DEFAULT_FRAMEWORK
+}
 
 // ── OFFLINE JD TEMPLATE ───────────────────────────────────────
 function buildOfflineJD(vars, framework) {
@@ -141,6 +146,8 @@ function buildOfflineJD(vars, framework) {
     inclusive_score: 94,
     bias_flags: [],
     compliance_flags: Number(vars.salary_min) < 17300 ? ['Minimum wage NPR 17,300/month not met (Labour Act 2074)'] : [],
+  }
+}
 
 // ── BIAS SCANNER ──────────────────────────────────────────────
 function scanBias(text) {
@@ -159,6 +166,7 @@ function scanBias(text) {
   const flags = rules.filter(r => text.toLowerCase().includes(r.word))
   const score  = Math.max(60, 100 - flags.length * 8)
   return { flags, score }
+}
 
 // ── COMPLIANCE CHECK ──────────────────────────────────────────
 function checkCompliance(vars) {
@@ -168,6 +176,7 @@ function checkCompliance(vars) {
   if (!vars.location)   issues.push('Work location not specified')
   if (!vars.salary_min) issues.push('Salary range not specified — required for transparency')
   return { issues, passed: issues.length === 0 }
+}
 
 // ── SIGNATURE PAD COMPONENT ───────────────────────────────────
 function SignaturePad({ onSave, onClose, signerName, signerRole }) {
@@ -183,6 +192,7 @@ function SignaturePad({ onSave, onClose, signerName, signerRole }) {
     const ctx = c.getContext('2d')
     ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height)
     ctx.strokeStyle = '#1e1b4b'; ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round'
+  }
   const pos = (e, c) => { const r=c.getBoundingClientRect(),s=e.touches?e.touches[0]:e; return{x:s.clientX-r.left,y:s.clientY-r.top} }
   const startD = e => { e.preventDefault(); initCanvas(); setDrawing(true); last.current=pos(e,canvasRef.current) }
   const draw   = e => {
@@ -190,6 +200,7 @@ function SignaturePad({ onSave, onClose, signerName, signerRole }) {
     const c=canvasRef.current, ctx=c.getContext('2d'), p=pos(e,c)
     ctx.beginPath(); ctx.moveTo(last.current.x,last.current.y); ctx.lineTo(p.x,p.y); ctx.stroke()
     last.current=p; setHasDraw(true)
+  }
   const stopD  = () => setDrawing(false)
   const clear  = () => { initCanvas(); setHasDraw(false) }
 
@@ -203,6 +214,7 @@ function SignaturePad({ onSave, onClose, signerName, signerRole }) {
     } else if (!hasDraw) { alert('Please draw your signature'); return }
     const dataUrl = canvasRef.current.toDataURL('image/png')
     onSave({ dataUrl, name: signerName, role: signerRole, method: mode==='draw'?'drawn':'typed', timestamp: new Date().toISOString() })
+  }
 
   return (
     <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.7)',zIndex:9200,display:'flex',alignItems:'center',justifyContent:'center',padding:20}} onClick={onClose}>
@@ -250,6 +262,7 @@ function SignaturePad({ onSave, onClose, signerName, signerRole }) {
       </div>
     </div>
   )
+}
 
 // ── FIELD COMPONENT (outside component to prevent remount on every render) ──
 function F({ label, field, type='text', options, placeholder, required, span=1, vars, set }) {
@@ -277,6 +290,7 @@ function F({ label, field, type='text', options, placeholder, required, span=1, 
       )}
     </div>
   )
+}
 
 const DEPTS = ['Engineering','HR','Finance','Sales','Marketing','Operations','IT','Legal','Procurement','Administration']
 const LEVELS = ['Junior','Mid-Level','Senior','Manager','Lead','Director','C-Level']
@@ -299,6 +313,7 @@ function StableTextarea({ value, onChange, rows=4, placeholder='', style={} }) {
         boxSizing:'border-box',color:'#1e293b', ...style}}
     />
   )
+}
 
 // ── Stable controlled input (prevents cursor jumping) ────────────────
 function StableInput({ value, onChange, type='text', placeholder='', style={} }) {
@@ -313,6 +328,7 @@ function StableInput({ value, onChange, type='text', placeholder='', style={} })
         outline:'none',fontFamily:'system-ui,sans-serif',boxSizing:'border-box',color:'#1e293b', ...style}}
     />
   )
+}
 
 export default function CreateJobDescriptionPage() {
   const { navTo } = useApp()
@@ -396,6 +412,7 @@ Requirements:
     let result = null
     if (aiText) {
       try { result = JSON.parse(aiText.replace(/```json|```/g,'').trim()) } catch {}
+    }
     if (!result) result = buildOfflineJD(vars, fw)
 
     const biasResult  = scanBias([result.summary,...(result.responsibilities||[]),...(result.qualifications||[])].join(' '))
@@ -408,6 +425,7 @@ Requirements:
 
     setJD(result); setEdited({...result, title:vars.title, dept:vars.dept, level:vars.level, type:vars.type, location:vars.location, salary_min:vars.salary_min, salary_max:vars.salary_max})
     setBias(biasResult); setCompliance(compResult); setStep(3)
+  }
 
   const saveAndPublish = async () => {
     const allRequired = SIGNATORIES.filter(s=>s.required)
@@ -437,6 +455,7 @@ Requirements:
       okr_contribution:    jd?.okr_contribution,
       framework,
       jd: editMode ? edited : jd,
+    }
 
     // Save to backend
     try {
@@ -450,12 +469,14 @@ Requirements:
           method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${localStorage.getItem('elogix_access_token')||''}`},
           body: JSON.stringify({ type:'job_description', title:`JD — ${vars.title}`, record }), signal: AbortSignal.timeout(6000),
         })
+      }
     } catch {}
 
     // localStorage fallback
     const existing = JSON.parse(localStorage.getItem(JD_KEY)||'[]')
     localStorage.setItem(JD_KEY, JSON.stringify([record,...existing].slice(0,100)))
     setSaving(false); setPublished(true); setStep(5)
+  }
 
   const downloadPDF = () => {
     if (!d) return
@@ -543,6 +564,7 @@ ul{padding-left:18px;margin:0 0 12px}
 <script>window.print()</script>
 </body></html>`
     const w=window.open('','_blank'); w.document.write(html); w.document.close()
+  }
 
   // ── UI HELPERS ────────────────────────────────────────────────
   const W = ({children,title,span=1}) => (
@@ -902,3 +924,4 @@ ul{padding-left:18px;margin:0 0 12px}
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}`}</style>
     </div>
   )
+}

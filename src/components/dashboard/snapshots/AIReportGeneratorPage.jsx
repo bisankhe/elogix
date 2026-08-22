@@ -13,6 +13,7 @@ async function callAI(q){
   try{const r=await fetch('/api/v1/ai-proxy/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:sys,messages:[{role:'user',content:q}],model:'claude-sonnet-4-6',max_tokens:2048}),signal:AbortSignal.timeout(15000)});if(r.ok){const d=await r.json();if(d.content)return d.content}}catch{}
   if(VITE_KEY&&VITE_KEY.startsWith('sk-ant')&&VITE_KEY!=='sk-ant-your-key-here'){try{const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':VITE_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-only-beta':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:2048,system:sys,messages:[{role:'user',content:q}]})});const d=await r.json();if(r.ok&&d?.content?.[0]?.text)return d.content[0].text}catch{}}
   return null
+}
 
 const TEMPLATES=[
   {icon:'📊',label:'Monthly HR Report',   prompt:'Generate a comprehensive monthly HR report for July 2026 with KPIs, compliance status, attrition analysis, and strategic recommendations.'},
@@ -40,6 +41,7 @@ const MsgLine=({l})=>{
   if(l.startsWith('- '))return<div style={{paddingLeft:14,position:'relative',marginBottom:3}}><span style={{position:'absolute',left:2,color:P}}>•</span><span dangerouslySetInnerHTML={{__html:h.slice(2)}}/></div>
   if(l.match(/^\d+\.\s/))return<div style={{paddingLeft:18,marginBottom:2}} dangerouslySetInnerHTML={{__html:h}}/>
   return<div dangerouslySetInnerHTML={{__html:h}}/>
+}
 
 export default function AIReportGeneratorPage(){
   const [prompt,setPrompt]=useState('')
@@ -84,6 +86,7 @@ Engineering team salary gap of NPR 13K/month is primary attrition driver. SSF fi
 | Retention meetings | HR Manager | Jul 30 | High |
 | SSF filing | Finance | Poush 20 | Compliance |`)
     setLoading(false)
+  }
 
   return(
     <div style={{display:'flex',flexDirection:'column',gap:16}}>
@@ -167,3 +170,4 @@ Engineering team salary gap of NPR 13K/month is primary attrition driver. SSF fi
       )}
     </div>
   )
+}

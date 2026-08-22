@@ -16,6 +16,7 @@ async function callAI(prompt, sys) {
     if (r.ok) { const d = await r.json(); return d.content?.map(c => c.text).join('') || '' }
   } catch {}
   return 'Thank you for your message! Our team will get back to you shortly. You can also check your application status in the tracker above.'
+}
 
 const JOBS = [
   { id:'j1', title:'Senior React Developer', dept:'Technology', location:'Kathmandu', type:'Full-Time', salary:'NPR 80K-120K/month', exp:'4+ years', posted:'2 days ago', deadline:'2081-09-30', openings:2, tags:['React','Node.js','AWS','PostgreSQL'], desc:'Lead frontend architecture for our SaaS HRMS platform. Work with AI, real-time data, and complex UI systems.', benefits:['Medical Insurance','Festival Bonus','Remote Fridays','Training Budget NPR 30K/yr'], urgency:'Actively Hiring' },
@@ -67,6 +68,7 @@ function JobCard({ job, onApply, onView, applied }) {
       </div>
     </div>
   )
+}
 
 function ApplicationTracker({ app }) {
   return (
@@ -101,6 +103,7 @@ function ApplicationTracker({ app }) {
       </div>
     </div>
   )
+}
 
 function Chatbot() {
   const [msgs, setMsgs] = useState([{ role: 'bot', text: 'Hi! I am the eLogix ATS AI Career Assistant. I can help you with job applications, interview prep, application status, and more. How can I help you today?' }])
@@ -119,6 +122,7 @@ function Chatbot() {
     const resp = await callAI(`Context:\n${history}\n\nCandidate: ${q}`, 'You are eLogix ATS AI Career Assistant. Help candidates with job search, application status, interview prep, and FAQs. Be concise (2-4 sentences max). Company: eLogix HRMS, Nepal.')
     setMsgs(m => [...m, { role: 'bot', text: resp || 'I am here to help! Please check your email for the latest updates on your application.' }])
     setLoading(false)
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 420, background: '#fff', borderRadius: 14, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
@@ -147,6 +151,7 @@ function Chatbot() {
       <style>{`@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}`}</style>
     </div>
   )
+}
 
 function ApplyModal({ job, onClose, onSubmit }) {
   const [step, setStep] = useState(1)
@@ -159,6 +164,7 @@ function ApplyModal({ job, onClose, onSubmit }) {
     await new Promise(r => setTimeout(r, 1500))
     setSubmitting(false)
     onSubmit(job)
+  }
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={onClose}>
@@ -249,6 +255,7 @@ function ApplyModal({ job, onClose, onSubmit }) {
       </div>
     </div>
   )
+}
 
 export default function ATSCareerPortalPage() {
   const { navigate } = useApp()
@@ -394,3 +401,4 @@ export default function ATSCareerPortalPage() {
       )}
     </div>
   )
+}

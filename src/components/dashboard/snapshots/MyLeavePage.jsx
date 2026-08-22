@@ -67,3 +67,4 @@ export default function MyLeavePage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

@@ -67,6 +67,7 @@ function ScoreBar({ label, value, color }) {
       </div>
     </div>
   )
+}
 
 export default function ATSResumeParserPage() {
   const { navTo } = useApp()
@@ -80,6 +81,7 @@ export default function ATSResumeParserPage() {
     await new Promise(r=>setTimeout(r,2500))
     setUploading(false)
     setUploadMsg('✅ 24 CVs uploaded! AI parsing complete — 18 candidates created, 3 duplicates detected and merged, 3 invalid files skipped.')
+  }
 
   const rankColor = { Gold:'#fbbf24', Silver:'#94a3b8', Bronze:'#d97706' }
 
@@ -257,3 +259,4 @@ export default function ATSResumeParserPage() {
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
+}

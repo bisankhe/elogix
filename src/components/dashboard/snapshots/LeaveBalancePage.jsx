@@ -18,6 +18,7 @@ const LEAVE_TYPES = {
   BL:  { label:'Bereavement',      bg:'#f1f5f9', text:'#334155', border:'#cbd5e1', dot:'#64748b', total:13 },
   CWL: { label:'Child Welfare',    bg:'#fefce8', text:'#713f12', border:'#fef08a', dot:'#eab308', total:10 },
   HD:  { label:'Half Day',         bg:'#fff1f2', text:'#9f1239', border:'#fda4af', dot:'#f43f5e', total:6  },
+}
 
 const DEPTS = ['All','Management','Human Resources','Finance','IT','Sales','Operations','Procurement']
 
@@ -42,6 +43,7 @@ function genRows() {
       return [code,{ used, carry, avail, total:lt.total }]
     })),
   }))
+}
 
 const inp = {padding:'7px 10px',borderRadius:8,border:'1.5px solid #e2e8f0',
   fontSize:10,outline:'none',fontFamily:'inherit',width:'100%',boxSizing:'border-box',background:'#fff'}
@@ -56,6 +58,7 @@ const LeaveCell = ({code,value,type}) => {
       <span style={{fontSize:9.5,fontWeight:800,color}}>{value}</span>
     </td>
   )
+}
 
 export default function LeaveBalancePage() {
   const today = new Date()
@@ -107,6 +110,7 @@ export default function LeaveBalancePage() {
         )}
       </div>
     )
+  }
 
   return (
     <div style={{fontFamily:'system-ui,sans-serif',minHeight:'100vh',background:'#fdf4ff'}}>
@@ -329,3 +333,4 @@ export default function LeaveBalancePage() {
       )}
     </div>
   )
+}

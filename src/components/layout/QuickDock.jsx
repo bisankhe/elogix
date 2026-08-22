@@ -9,6 +9,8 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useApp } from '../../context/AppContext.jsx'
+import { getVisibleDockItems } from '../../data/sidebarMenu.js'
+import { getTenantModules } from '../../utils/tenantPermissions.js'
 
 // ── DOCK ITEMS PER ROLE ───────────────────────────────────────
 // emoji  = the icon displayed
@@ -242,8 +244,20 @@ export default function QuickDock() {
   const { navTo, currentPersona, persona, sub, darkMode, setShowNotif, setShowAI } = useApp()
 
   // Get dock items for current persona
-  const personaId = currentPersona?.id || ''
-  const items = DOCK_CONFIGS[personaId] || DEFAULT_DOCK
+  const personaId  = currentPersona?.id || ''
+  const _rawItems  = DOCK_CONFIGS[personaId] || DEFAULT_DOCK
+
+  // ── Plan-aware dock filtering ─────────────────────────────────
+  // Only show dock shortcuts for pages the tenant's plan unlocks
+  const _sessRaw = (() => { try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null') } catch(_e) { return null } })()
+  const _plan    = _sessRaw?.company?.plan || 'trial'
+  const _slug    = _sessRaw?.company?.slug || null
+  const _mods    = _slug ? getTenantModules(_slug) : []
+  const items    = _slug
+    ? getVisibleDockItems(_rawItems, _plan, _mods)
+    : _rawItems  // eLogix admin sees all
+
+  const _planLabel = { trial:'Trial', starter:'Starter', growth:'Growth', business:'Business', enterprise:'Enterprise', unlimited:'Unlimited' }[_plan] || _plan
 
   const handleClick = (item) => {
     if (item.action === 'ai') {

@@ -202,3 +202,4 @@ export default function CourseManagementPage() {
       {showExcel&&<ExcelModal title="Course Catalog" columns={['Title','Format','Duration (hrs)','Skill Tags','Enrolled','Completion %','Mandatory']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

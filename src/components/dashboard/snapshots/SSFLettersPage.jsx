@@ -35,6 +35,7 @@ const STATUS_CFG = {
   submitted:{c:'#3b82f6',bg:'#eff6ff',icon:'📤',label:'Submitted'},
   acknowledged:{c:'#10b981',bg:'#f0fdf4',icon:'✅',label:'Acknowledged'},
   rejected:{c:'#ef4444',bg:'#fef2f2',icon:'🚫',label:'Rejected - Action Needed'},
+}
 
 export default function SSFLettersPage() {
   const [letters, setLetters] = useState(LETTERS)
@@ -140,3 +141,4 @@ export default function SSFLettersPage() {
       {showExcel&&<ExcelModal title="SSF Letters" columns={['Subject','Type','Employee','SSF No','Reference No','Date Sent','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

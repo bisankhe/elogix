@@ -24,6 +24,7 @@ const SLABS = {
     { upto:3000000, rate:0.36, label:'Next NPR 30 Lakh',   color:'#dc2626', bg:'#fef2f2' },
     { upto:Infinity,rate:0.39, label:'Exceeding NPR 50 Lakh',color:'#7f1d1d',bg:'#fef2f2'},
   ],
+}
 
 // FY 2082-83 (previous year for comparison)
 const SLABS_PREV = {
@@ -32,6 +33,7 @@ const SLABS_PREV = {
     {upto:300000, rate:0.20,label:'20%'},{upto:1000000,rate:0.30,label:'30%'},
     {upto:3000000,rate:0.36,label:'36%'},{upto:Infinity,rate:0.39,label:'39%'},
   ],
+}
 
 function calcTaxFull({
   basicSalary,otherAllowance,dearnessAllowance,laptopAllowance,rentAllowance,
@@ -84,6 +86,7 @@ function calcTaxFull({
     breakdown.push({ ...slab, amount:chunk, tax, pct: taxableIncome>0 ? chunk/taxableIncome*100 : 0 })
     totalTax += tax
     remaining -= chunk
+  }
 
   const femaleCredit   = isFemale ? totalTax * 0.10 : 0
   const netTax         = totalTax - femaleCredit
@@ -99,6 +102,7 @@ function calcTaxFull({
     const chunk = Math.min(prevRemaining, slab.upto === Infinity ? prevRemaining : slab.upto)
     prevTax += chunk * slab.rate
     prevRemaining -= chunk
+  }
 
   return {
     ssfTotal, ssfEmployer, pfRate, gratuityRate, insuranceRate,
@@ -108,6 +112,8 @@ function calcTaxFull({
     citMonthly, prevTax,
     netSalary: monthlyGross - ssfTotal - citMonthly - monthlyTax,
     effectiveRate: taxableIncome > 0 ? (netTax / taxableIncome * 100) : 0,
+  }
+}
 
 const inp = {padding:'8px 11px',borderRadius:8,border:'1.5px solid #e2e8f0',
   fontSize:11,outline:'none',fontFamily:'inherit',width:'100%',boxSizing:'border-box'}
@@ -484,3 +490,4 @@ export default function TaxCalculatorPage() {
       )}
     </div>
   )
+}

@@ -106,3 +106,4 @@ export default function LeaveAnalyticsPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

@@ -83,3 +83,4 @@ export default function ProductivityAnalysisPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

@@ -152,3 +152,4 @@ export default function HolidayManagementPage() {
       {showExcel&&<ExcelModal title="Holiday Calendar" columns={['Name','Name (Nepali)','Date AD','Date BS','Type','Category','Women Extra Day']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

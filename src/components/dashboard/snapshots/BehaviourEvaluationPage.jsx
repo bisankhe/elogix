@@ -16,6 +16,7 @@ const EVALUATIONS = [
     overall_avg:8.4, evaluator:'Dipesh Bhattarai (Manager)', evidence_based:true, impact_links:['Performance Appraisal'] },
   { id:'b2', employee:'Hari Thapa', dept:'IT', cycle:'Q3 2026', scores:{Communication:5,Teamwork:6,'Adherence to Core Values':7,Adaptability:6,Integrity:8},
     overall_avg:6.4, evaluator:'Sushila Gurung (Manager)', evidence_based:true,
+    flag_note:'Communication scored below the 6.0 threshold - specific behavior cited: missed 3 stakeholder updates this quarter.',
     impact_links:['Continuous Feedback','PIP Management'] },
 ]
 
@@ -105,3 +106,4 @@ export default function BehaviourEvaluationPage() {
       {showExcel&&<ExcelModal title="Behaviour Evaluation" columns={['Employee','Department','Communication','Teamwork','Core Values','Adaptability','Integrity','Overall Avg']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

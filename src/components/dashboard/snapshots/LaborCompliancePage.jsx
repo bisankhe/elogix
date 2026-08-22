@@ -71,3 +71,4 @@ export default function LaborCompliancePage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

@@ -124,3 +124,4 @@ export default function LeaveAdjustmentPage() {
       {showExcel&&<ExcelModal title="Leave Adjustments" columns={['Employee','Leave Type','Adjustment Type','Days Delta','Reason','Adjusted By','Date']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

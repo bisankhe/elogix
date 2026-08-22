@@ -76,3 +76,4 @@ export default function MyActivityThisYearPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

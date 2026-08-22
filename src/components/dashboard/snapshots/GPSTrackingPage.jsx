@@ -87,3 +87,4 @@ export default function GPSTrackingPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

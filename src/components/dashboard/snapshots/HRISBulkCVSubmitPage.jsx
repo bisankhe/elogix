@@ -20,6 +20,7 @@ const VACANCIES = {
   CL003:[ { id:'JB003', title:'HR Business Partner',       dept:'HR',        exp:'Mid (3-6 yrs)',     salary:'NPR 70K-100K', openings:2 }, { id:'JB009', title:'HR Officer',            dept:'HR',        exp:'Entry (0-3 yrs)',   salary:'NPR 40K-55K',  openings:1 } ],
   CL004:[ { id:'JB008', title:'Operations Manager',        dept:'Operations',exp:'Senior (5-8 yrs)',  salary:'NPR 75K-110K', openings:1 } ],
   CL005:[ { id:'JB004', title:'Marketing Manager',         dept:'Marketing', exp:'Mid (3-6 yrs)',     salary:'NPR 60K-90K',  openings:1 } ],
+}
 
 const ALL_CANDIDATES = [
   { id:'C001', name:'Sanjay Thapa',    avatar:'ST', dob:'2055-04-12', age:26, gender:'Male',   phone:'+977-9801111111', email:'sanjay@email.com',   degree:'B.Tech Computer Science', university:'Tribhuvan University', grad_year:'2078', exp_yrs:7,  current_role:'Software Engineer', current_company:'InfoTech Nepal', salary_exp:105000, availability:'Immediate',   ai_score:94, grade:'S', skills:['React','Node.js','TypeScript','AWS','PostgreSQL','Docker'], address:'Baneshwor, Kathmandu', nationality:'Nepali', passport:'NA',  languages:['Nepali','English','Hindi'] },
@@ -56,6 +57,7 @@ function generateExcel(candidates, client, vacancy, submittedBy) {
   a.download = `CV_Submission_${client?.name?.split(' ')[0]||'Client'}_${new Date().toISOString().slice(0,10)}.csv`
   a.click()
   URL.revokeObjectURL(url)
+}
 
 // ── Submission History ─────────────────────────────────────────
 const INIT_HISTORY = [
@@ -100,6 +102,7 @@ export default function HRISBulkCVSubmitPage() {
   const toggleAll  = () => {
     if (selCandidates.size === filteredCands.length) setSelCandidates(new Set())
     else setSelCandidates(new Set(filteredCands.map(c=>c.id)))
+  }
 
   const handleSubmit = () => {
     const sub = {
@@ -109,14 +112,17 @@ export default function HRISBulkCVSubmitPage() {
       date: new Date().toISOString().slice(0,10),
       status: 'Pending Review', client_feedback: '',
       method: [sendEmail&&'Email',sendWhatsApp&&'WhatsApp',sendPortal&&'Portal'].filter(Boolean).join(' + ')
+    }
     setHistory(p=>[sub,...p])
     notify(`✅ ${selCandidates.size} CVs submitted to ${selClient?.name}! Excel + notifications sent.`)
     setStep(0); setSelClient(null); setSelVacancy(null); setSelCandidates(new Set()); setCoverNote('')
     setView('history')
+  }
 
   const autoNote = () => {
     if (!selClient || !selVacancy || selCandidates.size === 0) return
     setCoverNote(`Dear ${selClient.contact},\n\nPlease find attached the CVs of ${selCandidates.size} shortlisted candidate${selCandidates.size>1?'s':''} for the position of ${selVacancy.title} at ${selClient.name}.\n\nAll candidates have been carefully screened by our AI-powered ATS and verified by our recruitment team. Each candidate's profile, qualifications, and expected salary have been summarized in the attached Excel sheet for your convenience.\n\nWe recommend reviewing the top ${Math.min(3,selCandidates.size)} candidates for first-round interviews. Please share your feedback at your earliest convenience.\n\nBest regards,\nFuture Recruitment Agency\nhr@futureagency.com.np | +977-01-4XXXXXX`)
+  }
 
   return (
     <div style={{fontFamily:'system-ui,sans-serif'}}>
@@ -456,3 +462,4 @@ export default function HRISBulkCVSubmitPage() {
       )}
     </div>
   )
+}

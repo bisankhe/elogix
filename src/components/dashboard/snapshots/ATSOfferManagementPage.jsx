@@ -23,6 +23,7 @@ const STATUS_CFG = {
   Counter:  { bg:'#fffbeb', cl:'#92400e', label:'💬 Counter'   },
   Joined:   { bg:'#d1fae5', cl:'#065f46', label:'🎉 Joined'    },
   Withdrawn:{ bg:'#f8fafc', cl:'#64748b', label:'⛔ Withdrawn' },
+}
 
 const OFFER_TEMPLATE = (c) => `OFFER LETTER
 
@@ -101,17 +102,20 @@ export default function ATSOfferManagementPage() {
     setLetter(OFFER_TEMPLATE(selected))
     setGenLetter(false)
     notify('✅ AI-generated offer letter ready. Review and send.')
+  }
 
   const sendOffer = async () => {
     setSending(true)
     await new Promise(r=>setTimeout(r,1500))
     setSending(false)
     notify(`✅ Offer letter sent to ${selected.name} via Email + WhatsApp! Digital signature link included. Candidate has 7 days to respond.`)
+  }
 
   const signOffer = () => {
     if (!sigName.trim()) { notify('Please type your full name to sign'); return }
     setSigned(true)
     notify('🎉 Offer accepted and digitally signed! HR notified. Welcome email will be sent automatically.')
+  }
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:14, fontFamily:'system-ui,sans-serif' }}>
@@ -279,3 +283,4 @@ export default function ATSOfferManagementPage() {
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
+}

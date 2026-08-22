@@ -61,3 +61,4 @@ export default function KPITransformationBeforePage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

@@ -45,6 +45,7 @@ export default function TenureChartPage() {
         <text x={cx} y={cy+12} textAnchor="middle" fontSize={8} fill="#64748b">Total Staff</text>
       </svg>
     )
+  }
 
   const filtered = sel ? EMPLOYEES.filter(e=>e.range===sel) : EMPLOYEES
 
@@ -139,3 +140,4 @@ export default function TenureChartPage() {
       )}
     </div>
   )
+}

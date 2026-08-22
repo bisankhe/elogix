@@ -76,3 +76,4 @@ export default function FieldTaskManagementPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

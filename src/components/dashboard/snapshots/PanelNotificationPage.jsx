@@ -19,6 +19,7 @@ const STATUS_CFG = {
   pending:  {c:'#f59e0b', bg:'#fffbeb', b:'#fde68a', icon:'⏳', label:'Pending'},
   completed:{c:'#64748b', bg:'#f8fafc', b:'#e2e8f0', icon:'✓',  label:'Completed'},
   rejected: {c:'#ef4444', bg:'#fef2f2', b:'#fecaca', icon:'❌', label:'Rejected'},
+}
 
 const CTX_ACTIONS = [
   {icon:'👁', label:'View Details',     key:'view'},
@@ -149,3 +150,4 @@ export default function PanelNotificationPage() {
       ]}/>
     </div>
   )
+}

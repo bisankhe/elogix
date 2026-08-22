@@ -99,7 +99,7 @@ export const eLogixAPI = {
   refreshToken,
 
   // Tenant management (eLogix SuperAdmin)
-  createCompany:   (body)  => eLogixFetch('/auth/register-company', { method:'POST', body:JSON.stringify(body) }),
+  createCompany:   (body)  => eLogixFetch('/companies', { method:'POST', body:JSON.stringify(body) }, true),
   listCompanies:   (q='')  => eLogixFetch(`/companies${q}`, {}, true),
   getCompany:      (slug)  => eLogixFetch(`/companies/${slug}`, {}, true),
   updateCompanyPlan:(slug,b)=> eLogixFetch(`/companies/${slug}/plan`, { method:'PUT', body:JSON.stringify(b) }, true),

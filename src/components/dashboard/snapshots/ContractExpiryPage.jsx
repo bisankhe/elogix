@@ -32,6 +32,7 @@ export default function ContractExpiryPage() {
   const renew = (id) => {
     setContracts(prev=>prev.map(c=>c.id!==id?c:{...c,renewed:true}))
     notify('✅ Contract renewal initiated! HR will send paperwork.'); setModal(null)
+  }
 
   return (
     <div style={{fontFamily:'system-ui,sans-serif'}}>
@@ -131,3 +132,4 @@ export default function ContractExpiryPage() {
       )}
     </div>
   )
+}

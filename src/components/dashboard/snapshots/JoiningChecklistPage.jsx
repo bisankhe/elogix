@@ -13,6 +13,7 @@ const DEPARTMENTS_CFG = {
   facilities:{label:'Facilities', icon:'🏢', color:'#f59e0b'},
   finance:   {label:'Finance',    icon:'💰', color:'#10b981'},
   manager:   {label:'Manager',    icon:'👔', color:'#ec4899'},
+}
 
 const NEW_HIRES = [
   { id:'jc1', name:'Gita Maharjan', position:'Cloud Architect', department:'IT', branch:'KTM HQ',
@@ -32,6 +33,7 @@ const NEW_HIRES = [
       {id:'t12',title:'Orientation schedule confirmed',dept:'manager',done:false,due:'2025-06-23',completed_date:null},
       {id:'t13',title:'Buddy assigned',dept:'manager',done:true,due:'2025-06-20',completed_date:'2025-06-19'},
     ],
+    ai_note:'On track. 2 IT tasks and 1 Finance task pending before join date. Auto-reminder sent to IT.',
     impact_links:['Employee Onboarding','IT Asset Management','Orientation Program'] },
   { id:'jc2', name:'Sunita Rai', position:'Senior Software Developer', department:'IT', branch:'KTM HQ',
     join_date:'2025-06-25', manager:'Bikash Shrestha (IT Lead)', overall_pct:31,
@@ -46,6 +48,7 @@ const NEW_HIRES = [
       {id:'t8',title:'Bank account / salary details verified',dept:'finance',done:false,due:'2025-06-24',completed_date:null},
       {id:'t9',title:'Orientation schedule confirmed',dept:'manager',done:false,due:'2025-06-25',completed_date:null},
     ],
+    ai_note:'BEHIND SCHEDULE. Document collection overdue. Escalate to HR - risk of delayed start date.',
     impact_links:['Document Collection','IT Asset Management'] },
   { id:'jc3', name:'Maya Pradhan', position:'Finance Manager', department:'Finance', branch:'KTM HQ',
     join_date:'2025-06-20', manager:'Sanjay Karki (CFO)', overall_pct:100,
@@ -58,6 +61,7 @@ const NEW_HIRES = [
       {id:'t6',title:'Bank account verified',dept:'finance',done:true,due:'2025-06-18',completed_date:'2025-06-17'},
       {id:'t7',title:'Orientation schedule confirmed',dept:'manager',done:true,due:'2025-06-19',completed_date:'2025-06-18'},
     ],
+    ai_note:'100% complete. Ready for smooth Day 1. Excellent cross-department coordination.',
     impact_links:['Orientation Program'] },
 ]
 
@@ -92,6 +96,7 @@ export default function JoiningChecklistPage() {
       const pct = Math.round(newTasks.filter(t=>t.done).length/newTasks.length*100)
       return {...h, tasks:newTasks, overall_pct:pct}
     }))
+  }
 
   return (
     <div onClick={()=>setCtx(null)}>
@@ -205,3 +210,4 @@ export default function JoiningChecklistPage() {
       ]}/>
     </div>
   )
+}

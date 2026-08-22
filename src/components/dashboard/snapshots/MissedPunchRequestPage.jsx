@@ -14,16 +14,20 @@ const REASON_OPTIONS = ['Forgot to clock out','Forgot to clock in','System/devic
 const REQUESTS = [
   { id:'mp1', employee:'Hari Thapa', dept:'IT', date:'2025-06-20', punch_type:'clock_out',
     scheduled_time:'06:00 AM', requested_time:'06:05 AM', reason:'System/device error',
+    comment:'Biometric device was offline at shift end, security guard confirmed I left at 6:05 AM.',
     evidence_uploaded:true, weekly_hours_after:46, overtime_triggered:false,
     status:'pending', submitted_at:'2025-06-21 08:10 AM', manager:'Bikash Shrestha',
     impact_links:['Employee Movement','Live Attendance'] },
   { id:'mp2', employee:'Maya Pradhan', dept:'Finance', date:'2025-06-19', punch_type:'clock_in',
     scheduled_time:'09:00 AM', requested_time:'09:00 AM', reason:'Forgot to clock in',
+    comment:'Walked straight to a finance review meeting, forgot to badge in at the door.',
     evidence_uploaded:false, weekly_hours_after:40, overtime_triggered:false,
     status:'approved', submitted_at:'2025-06-19 02:15 PM', manager:'Sanjay Karki',
+    approved_at:'2025-06-19 03:40 PM',
     impact_links:['Employee Movement'] },
   { id:'mp3', employee:'Anjali Sharma', dept:'Sales', date:'2025-06-18', punch_type:'clock_out',
     scheduled_time:'05:00 PM', requested_time:'08:30 PM', reason:'Client visit - no access to device',
+    comment:'Stayed late at client site for contract signing, no device access until I got home.',
     evidence_uploaded:true, weekly_hours_after:52, overtime_triggered:true,
     status:'rejected', submitted_at:'2025-06-19 09:00 AM', manager:'Dipak Tamang',
     rejected_at:'2025-06-19 11:20 AM', rejection_reason:'Pushes weekly hours past LA2074 48hr cap without prior OT approval. Please resubmit with manager pre-authorization.',
@@ -34,6 +38,7 @@ const STATUS_CFG = {
   pending:{c:'#f59e0b',bg:'#fffbeb',icon:'⏳',label:'Pending Approval'},
   approved:{c:'#10b981',bg:'#f0fdf4',icon:'✅',label:'Approved'},
   rejected:{c:'#ef4444',bg:'#fef2f2',icon:'🚫',label:'Rejected'},
+}
 const PUNCH_TYPE_LABELS = {clock_in:'Clock In',clock_out:'Clock Out'}
 
 export default function MissedPunchRequestPage() {
@@ -231,3 +236,4 @@ export default function MissedPunchRequestPage() {
       {showExcel&&<ExcelModal title="Missed Punch Requests" columns={['Employee','Department','Date','Punch Type','Scheduled Time','Requested Time','Reason','Status','Manager']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

@@ -14,6 +14,7 @@ const SETTLEMENTS = [
     earnings:{unpaid_salary:42000,leave_encashment:18500,gratuity:24500,pf_employer:8000,bonus:0,overtime:0},
     deductions:{tds:4200,advance_recovery:0,asset_damage:0,notice_shortfall:0,loan_recovery:0},
     net_payable:88800, payout_method:'bank_transfer', payout_status:'processed', payout_date:'2025-07-12',
+    status:'settled',
     impact_links:['Experience Letter','Relieving Letter','Exit Clearance'] },
   { id:'fnf2', employee:'Anjali Sharma', position:'Sales Executive', lwd:'2025-06-22',
     resignation_date:'2025-06-18', deadline:'2025-07-07', days_remaining:16,
@@ -21,6 +22,7 @@ const SETTLEMENTS = [
     earnings:{unpaid_salary:28000,leave_encashment:6200,gratuity:3100,pf_employer:1850,bonus:0,overtime:1200},
     deductions:{tds:1400,advance_recovery:5000,asset_damage:0,notice_shortfall:5250,loan_recovery:0},
     net_payable:28700, payout_method:'bank_transfer', payout_status:'pending', payout_date:null,
+    status:'awaiting_clearance',
     impact_links:['Exit Clearance','Asset Return'] },
 ]
 
@@ -28,6 +30,7 @@ const STATUS_CFG = {
   settled:{c:'#10b981',bg:'#f0fdf4',icon:'✅',label:'Settled'},
   awaiting_clearance:{c:'#f59e0b',bg:'#fffbeb',icon:'⏳',label:'Awaiting Clearance'},
   overdue:{c:'#ef4444',bg:'#fef2f2',icon:'🚨',label:'Overdue (15-Day Breach)'},
+}
 const EARNING_LABELS = {unpaid_salary:'Unpaid Salary',leave_encashment:'Leave Encashment',gratuity:'Gratuity',pf_employer:'PF (Employer)',bonus:'Bonus',overtime:'Overtime'}
 const DEDUCTION_LABELS = {tds:'TDS (Tax)',advance_recovery:'Advance Recovery',asset_damage:'Asset Damage',notice_shortfall:'Notice Shortfall',loan_recovery:'Loan Recovery'}
 
@@ -207,3 +210,4 @@ export default function FullFinalSettlementPage() {
       {showExcel&&<ExcelModal title="Full & Final Settlement" columns={['Employee','Position','LWD','Total Earnings','Total Deductions','Net Payable','Payout Status','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

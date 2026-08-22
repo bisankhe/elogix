@@ -20,6 +20,9 @@ function useCompanyCtx() {
     currency:     auth.company?.currency || 'NPR',
     token:        localStorage.getItem('elogix_token') || auth.token || '',
 
+}
+}
+
 export default function CashAdvanceVendorPage() {
   const ctx = useCompanyCtx()
   const { navTo } = useApp()
@@ -173,3 +176,5 @@ export default function CashAdvanceVendorPage() {
       </div>
     </div>
   )
+
+}

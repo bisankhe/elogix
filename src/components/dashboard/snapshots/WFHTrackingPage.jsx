@@ -26,6 +26,7 @@ const TEAM = [
   { id:'w4', employee:'Anjali Sharma', dept:'Sales', status:'focusing', login:'07:15 AM', logout:null,
     tasks_completed:5, tasks_total:5, okr_progress:100, last_active:'5 min ago',
     burnout_risk:'high', core_hours_compliant:false, weekly_wfh_days:5,
+    note:'Logged in before 7 AM three days this week - flagged for always-on/burnout risk, not productivity concern.',
     impact_links:['Wellbeing Program'] },
 ]
 
@@ -34,6 +35,7 @@ const STATUS_CFG = {
   in_meeting:{c:'#3b82f6',bg:'#eff6ff',icon:'👥',label:'In a Meeting'},
   away:{c:'#94a3b8',bg:'#f8fafc',icon:'☕',label:'Away'},
   offline:{c:'#ef4444',bg:'#fef2f2',icon:'⚪',label:'Offline'},
+}
 const BURNOUT_CFG = {low:{c:'#10b981',label:'Low Risk'},medium:{c:'#f59e0b',label:'Watch'},high:{c:'#ef4444',label:'Burnout Risk'}}
 
 const CORE_HOURS = {start:'1:00 PM',end:'4:00 PM',label:'Kathmandu Core Collaboration Window'}
@@ -183,3 +185,4 @@ export default function WFHTrackingPage() {
       {showExcel&&<ExcelModal title="WFH Tracking" columns={['Employee','Department','Status','Login Time','Tasks Completed','Tasks Total','OKR Progress %','Burnout Risk','Weekly WFH Days']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

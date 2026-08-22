@@ -38,6 +38,7 @@ const SYNC_CFG = {
   synced:{c:'#10b981',bg:'#f0fdf4',icon:'✅',label:'Synced from Vendor'},
   discrepancy:{c:'#ef4444',bg:'#fef2f2',icon:'⚠',label:'Variance Detected'},
   pending_sync:{c:'#f59e0b',bg:'#fffbeb',icon:'⏳',label:'Pending Sync'},
+}
 
 export default function DailyOutsourceAttendancePage() {
   const [logs, setLogs] = useState(OUTSOURCE_LOG)
@@ -127,3 +128,4 @@ export default function DailyOutsourceAttendancePage() {
       {showExcel&&<ExcelModal title="Outsource Attendance" columns={['Employee','Vendor','Role','Date','Login','Logout','Total Hrs','Sync Status','Variance']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

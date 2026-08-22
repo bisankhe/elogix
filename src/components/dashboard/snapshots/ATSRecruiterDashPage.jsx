@@ -39,6 +39,7 @@ function MetricCard({ icon, label, value, sub, color, badge }) {
       {sub && <div style={{ fontSize:8, color:'#94a3b8', marginTop:2 }}>{sub}</div>}
     </div>
   )
+}
 
 export default function ATSRecruiterDashPage() {
   const { navigate } = useApp()
@@ -163,3 +164,4 @@ export default function ATSRecruiterDashPage() {
       </div>
     </div>
   )
+}

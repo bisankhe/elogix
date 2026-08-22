@@ -74,3 +74,4 @@ export default function AuditManagementPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

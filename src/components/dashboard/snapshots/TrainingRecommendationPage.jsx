@@ -96,3 +96,4 @@ export default function TrainingRecommendationPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

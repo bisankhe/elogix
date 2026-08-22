@@ -91,3 +91,4 @@ export default function EscalationRulesPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

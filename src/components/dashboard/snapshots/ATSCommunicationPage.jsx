@@ -16,6 +16,7 @@ async function callAI(prompt, sys) {
     if (r.ok) { const d = await r.json(); return d.content?.map(c => c.text).join('') || '' }
   } catch {}
   return null
+}
 
 const STAGES = [
   { id:'received',    label:'Application Received',       icon:'📩', color:'#3b82f6' },
@@ -232,6 +233,7 @@ Wishing you all the best! 🙏
 — {COMPANY_NAME} HR Team`,
     sms: `Hi {CANDIDATE_NAME}, thank you for applying for {JOB_TITLE} at {COMPANY_NAME}. We appreciate your time. We will keep your profile for future opportunities.`
   },
+}
 
 const HISTORY = [
   { to:'Gita Maharjan',   type:'Email + WhatsApp', stage:'Selected',      sent:'Today 2:30 PM',    status:'Delivered', opened:true },
@@ -263,12 +265,14 @@ export default function ATSCommunicationPage() {
     const result = await callAI(prompt)
     setEditedContent(result || currentTpl || '')
     setGenerating(false)
+  }
 
   const sendNow = async () => {
     setSending(true)
     await new Promise(r => setTimeout(r, 1200))
     setSending(false)
     notify(`✅ ${selStage.label} message sent via ${channel.toUpperCase()} to selected candidates!`)
+  }
 
   return (
     <div style={{ fontFamily: 'system-ui,sans-serif' }}>
@@ -461,3 +465,4 @@ export default function ATSCommunicationPage() {
       )}
     </div>
   )
+}

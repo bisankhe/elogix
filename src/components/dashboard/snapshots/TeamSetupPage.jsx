@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+// FILE: TeamSetupPage.jsx - Page 4: Team Setup
+import { useState } from 'react'
 import { THEMES, Field, ContextMenu, ExcelModal, PageHeader, AIImpact, Drawer, SearchBar, Badge, LuxCard } from './DeptSetupShared.jsx'
 
 const T = THEMES.team
 
+const MOCK_TEAMS = [
   { id:'t1', code:'TEAM-FE-WEB', name:'Web Frontend Team', short:'Web FE',
     section:'Frontend Engineering', department:'IT', head:'Ram Bista', deputy:'Prabesh Tamang',
     members:8, max_members:10, status:'active', icon:'🌐', color:'#0ea5e9',
@@ -25,6 +27,7 @@ const T = THEMES.team
     team_type:'Permanent', work_mode:'Field + Office', sprint_cycle:'Monthly',
     tools:'Salesforce, HubSpot, LinkedIn Sales', slack_channel:'#team-ent-sales',
     cba_eligible:true, safety_committee:false,
+    cba_note:'CBA eligible: 10+ employees per Labour Act 2074',
     impact_links:[{icon:'💰',module:'Commission',desc:'Sales incentive payroll'},{icon:'🎯',module:'Targets',desc:'Monthly quota tracking'}],
   },
   { id:'t4', code:'TEAM-HR-HRBP', name:'HR Business Partners', short:'HRBPs',
@@ -41,6 +44,7 @@ const T = THEMES.team
     team_type:'Permanent', work_mode:'On-Site', sprint_cycle:'Monthly',
     tools:'Asset Tracker, Maintenance Portal', slack_channel:'#team-facilities',
     cba_eligible:true, safety_committee:true,
+    cba_note:'CBA eligible (22 emp > 10). Safety Committee mandatory (22 emp > 20) per Labour Act 2074',
     impact_links:[{icon:'🛡️',module:'Safety',desc:'EHS & fire safety'},{icon:'🏢',module:'Assets',desc:'Facility asset mgmt'}],
   },
 ]
@@ -56,116 +60,7 @@ const CONTEXT_ACTIONS = [
   {icon:'🗑️',label:'Dissolve Team',   key:'dissolve', danger:true},
 ]
 
-
-import React, { useState, useEffect, useRef, useCallback } from 'react'
-
-// ── Tenant-scoped data hook ─────────────────────────────────
-function useTenantData(resourceKey) {
-  const getAuth = () => {
-    try { return JSON.parse(localStorage.getItem('elogix_auth') || '{}') } catch { return {} }
-  const getCompanyId = () => {
-    const auth = getAuth()
-    return auth.company?.id || auth.company?.slug || auth.user?.company || 'demo'
-  const getToken = () => {
-    return localStorage.getItem('elogix_token') || getAuth().token || ''
-  const storageKey = () => `elogix_${resourceKey}_${getCompanyId()}`
-
-  const [items,   setItems]   = React.useState([])
-  const [loading, setLoading] = React.useState(true)
-  const [company, setCompany] = React.useState(null)
-
-  React.useEffect(() => {
-    // Load company info
-    const auth = getAuth()
-    const regCos = JSON.parse(localStorage.getItem('elogix_registered_companies') || '{}')
-    const slug = auth.company?.slug || auth.user?.company || 'demo'
-    setCompany({
-      id: auth.company?.id || slug,
-      name: auth.company?.name || regCos[slug]?.name || 'Your Company',
-      slug, plan: auth.company?.plan || 'trial',
-      country: auth.company?.country || 'Nepal',
-      currency: auth.company?.currency || 'NPR',
-      business_type: auth.company?.business_type || 'custom',
-    })
-    // Load data from API then localStorage fallback
-    const load = async () => {
-      try {
-        const token = getToken()
-        if (token) {
-          const res = await fetch(`/api/v1/${resourceKey}`, {
-            headers: { Authorization: `Bearer ${token}` }
-          })
-          if (res.ok) {
-            const d = await res.json()
-            const data = d.data || d[resourceKey] || d.items || []
-            setItems(Array.isArray(data) ? data : [])
-            localStorage.setItem(storageKey(), JSON.stringify(data))
-            setLoading(false); return
-      } catch {}
-      // Fallback: tenant-keyed localStorage
-      const stored = JSON.parse(localStorage.getItem(storageKey()) || '[]')
-      setItems(stored)
-      setLoading(false)
-    load()
-  }, [])
-
-  const saveItems = (newItems) => {
-    setItems(newItems)
-    localStorage.setItem(storageKey(), JSON.stringify(newItems))
-    // Try API save
-    const token = getToken()
-    if (token) {
-      fetch(`/api/v1/${resourceKey}/bulk`, {
-        method: 'PUT',
-        headers: { 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
-        body: JSON.stringify(newItems)
-      }).catch(() => {})
-
-  const addItem = (item) => {
-    const newItem = { ...item, id: item.id || `${resourceKey}-${Date.now()}`,
-                     company_id: getCompanyId() }
-    const updated = [...items, newItem]
-    saveItems(updated)
-    // POST to API
-    const token = getToken()
-    if (token) {
-      fetch(`/api/v1/${resourceKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
-        body: JSON.stringify(newItem)
-      }).catch(() => {})
-    return newItem
-
-  const updateItem = (id, updates) => {
-    const updated = items.map(i => i.id === id ? { ...i, ...updates } : i)
-    saveItems(updated)
-
-  const deleteItem = (id) => {
-    const updated = items.filter(i => i.id !== id)
-    saveItems(updated)
-
-  return { items, loading, company, addItem, updateItem, deleteItem, setItems: saveItems }
-
-
-// ── Tenant context ────────────────────────────────────────────
-function useCompanyCtx() {
-  const auth   = (() => { try { return JSON.parse(localStorage.getItem('elogix_auth')||'{}') } catch { return {} } })()
-  const regCos = (() => { try { return JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}') } catch { return {} } })()
-  const slug   = auth.company?.slug || auth.user?.company || 'demo'
-  return {
-    company_id:   auth.company?.id || slug,
-    company_name: auth.company?.name || regCos[slug]?.name || 'Your Company',
-    company_slug: slug,
-    plan:         auth.company?.plan || 'trial',
-    currency:     auth.company?.currency || 'NPR',
-    token:        localStorage.getItem('elogix_token') || auth.token || '',
-
 export default function TeamSetupPage() {
-  const ctx = useCompanyCtx()
-  // ── Tenant context: only this company's data is shown ────────
-  const companyName = company?.name || 'Your Company'
-  const companySlug = company?.slug || ''
-
   const [teams,     setTeams]     = useState(MOCK_TEAMS)
   const [search,    setSearch]    = useState('')
   const [ctx,       setCtx]       = useState(null)
@@ -293,6 +188,7 @@ export default function TeamSetupPage() {
         ]}/>
     </div>
   )
+}
 
 function AddTeamModal({ T, onClose, onSave }) {
   const [f,setF] = useState({code:'',name:'',short:'',section:'',department:'',head:'',deputy:'',max_members:'',team_type:'Permanent',work_mode:'Office',sprint_cycle:'Monthly',tools:'',slack_channel:''})
@@ -344,3 +240,4 @@ function AddTeamModal({ T, onClose, onSave }) {
       </div>
     </div>
   )
+}

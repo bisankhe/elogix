@@ -20,6 +20,7 @@ const CURRENT_AUDIT = {
     {category:'Safety Provisions & Committee Minutes',status:'ready'},
     {category:'Leave & Overtime Registers',status:'pending',flag:'Q4 overtime register still being compiled.'},
   ],
+}
 
 const PAST_AUDITS = [
   {fiscal_year:'2081/82',submitted_date:'2025-07-10',status:'accepted',penalties:'None'},
@@ -83,3 +84,4 @@ export default function AnnualLabourAuditPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

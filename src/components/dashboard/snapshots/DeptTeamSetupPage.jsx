@@ -16,6 +16,7 @@ const BU_TYPE_CONFIG = {
   legal_entity:  { icon:'⚖️', color:'#f59e0b', label:'Legal Entity'   },
   subsidiary:    { icon:'🏢', color:'#06b6d4', label:'Subsidiary'      },
   holding:       { icon:'🎯', color:'#ef4444', label:'Holding'         },
+}
 
 const DEPT_TYPE_CONFIG = {
   functional:    { icon:'⚙️', color:'#3b82f6', label:'Functional'      },
@@ -27,6 +28,7 @@ const DEPT_TYPE_CONFIG = {
   hrbp:          { icon:'🤝', color:'#a855f7', label:'HR Business Partner'},
   coe:           { icon:'⭐', color:'#f97316', label:'Center of Excellence'},
   hrss:          { icon:'🎧', color:'#84cc16', label:'HR Shared Services'},
+}
 
 const TEAM_TYPE_CONFIG = {
   functional:       { icon:'⚙️', color:'#3b82f6' },
@@ -36,6 +38,7 @@ const TEAM_TYPE_CONFIG = {
   agile_squad:      { icon:'🚀', color:'#ef4444' },
   tribe:            { icon:'🏹', color:'#06b6d4' },
   virtual:          { icon:'💻', color:'#a855f7' },
+}
 
 const LOC_TYPE_CONFIG = {
   hq:          { icon:'🏛️', color:'#3b82f6' },
@@ -46,15 +49,19 @@ const LOC_TYPE_CONFIG = {
   coworking:   { icon:'☕', color:'#f97316' },
   client_site: { icon:'🤝', color:'#a855f7' },
   virtual:     { icon:'💻', color:'#64748b' },
+}
 
 // ── Mock data (replace with API calls in production) ──────────
 const MOCK_DATA = {
   businessUnits: [
     { id:'bu-001', code:'BU-NPL-001', name:'Nepal Operations',     bu_type:'division',    employee_count:1250, annual_budget:120000000, currency_code:'NPR', country_code:'NP', hierarchy_level:1, requires_cba:true, requires_lrc:true, requires_safety_com:true, is_active:true,
+      ai_summary:'Strong operational division with 1,250 employees. Nepal Labour Act compliance required for all 3 committees.',
       compliance_alerts:[] },
     { id:'bu-002', code:'BU-IND-001', name:'India Operations',     bu_type:'region',      employee_count:420,  annual_budget:45000000,  currency_code:'INR', country_code:'IN', hierarchy_level:1, requires_cba:true, requires_lrc:true, requires_safety_com:true, is_active:true,
+      ai_summary:'Growing India region. DPDP Act 2023 and state-specific Shops Act compliance required.',
       compliance_alerts:[] },
     { id:'bu-003', code:'BU-UK-001',  name:'UK & Europe Division', bu_type:'region',      employee_count:85,   annual_budget:18000000,  currency_code:'GBP', country_code:'GB', hierarchy_level:1, requires_cba:false, requires_lrc:false, requires_safety_com:true, is_active:true,
+      ai_summary:'UK/EU division with GDPR and UK GDPR compliance fully implemented.',
       compliance_alerts:['Safety & Health Committee required (20+ employees)'] },
   ],
   departments: [
@@ -94,6 +101,7 @@ const MOCK_DATA = {
     { id:'wl-004', code:'LOC-LDN-UK', name:'London UK Office',       location_type:'office',  city:'London',     country_code:'GB', country_name:'United Kingdom',timezone:'Europe/London',  utc_offset:'+00:00', current_headcount:55,  max_capacity:80,   capacity_utilization:68.8, supports_remote:true,  supports_hybrid:true,  is_primary:false, is_active:true, local_minimum_wage:0, minimum_wage_currency:'GBP', labour_office_zone:'Greater London', facilities:{canteen:false,medical:false,parking:false} },
     { id:'wl-005', code:'LOC-RMT-GL', name:'Global Remote Workers',  location_type:'remote',  city:'Various',    country_code:'XX', country_name:'Global',       timezone:'Multiple',       utc_offset:'Various',current_headcount:180, max_capacity:500,  capacity_utilization:36.0, supports_remote:true,  supports_hybrid:false, is_primary:false, is_active:true, local_minimum_wage:null, minimum_wage_currency:null, labour_office_zone:null, facilities:{canteen:false,medical:false,parking:false} },
   ]
+}
 
 // ── Shared Components ─────────────────────────────────────────
 function Pill({ children, color='blue' }) {
@@ -106,6 +114,7 @@ function Pill({ children, color='blue' }) {
     orange: { bg:'#fff7ed', text:'#c2410c', border:'#fed7aa' },
     cyan:   { bg:'#ecfeff', text:'#0e7490', border:'#a5f3fc' },
     gray:   { bg:'#f1f5f9', text:'#475569', border:'#e2e8f0' },
+  }
   const c = m[color] || m.blue
   return (
     <span style={{ background:c.bg, color:c.text, border:`1px solid ${c.border}`,
@@ -114,6 +123,7 @@ function Pill({ children, color='blue' }) {
       {children}
     </span>
   )
+}
 
 function ProgressBar({ value, color='#3b82f6', size='sm' }) {
   const h = size === 'sm' ? 6 : 10
@@ -123,6 +133,7 @@ function ProgressBar({ value, color='#3b82f6', size='sm' }) {
         borderRadius:h, transition:'width .5s ease' }}/>
     </div>
   )
+}
 
 function StatMini({ icon, label, value, color='#3b82f6' }) {
   return (
@@ -133,6 +144,7 @@ function StatMini({ icon, label, value, color='#3b82f6' }) {
       <div style={{ fontSize:10, color:'#94a3b8', marginTop:2, fontWeight:600 }}>{label}</div>
     </div>
   )
+}
 
 function AIInsightBox({ summary, score, observations = [] }) {
   if (!summary) return null
@@ -160,6 +172,7 @@ function AIInsightBox({ summary, score, observations = [] }) {
       ))}
     </div>
   )
+}
 
 // ── Section: Business Units ───────────────────────────────────
 function BusinessUnitsSection({ data }) {
@@ -250,6 +263,7 @@ function BusinessUnitsSection({ data }) {
       </div>
     </div>
   )
+}
 
 // ── Section: Departments (Ulrich Model) ───────────────────────
 function DepartmentsSection({ data }) {
@@ -259,6 +273,7 @@ function DepartmentsSection({ data }) {
     coe:     data.filter(d => d.ulrich_pillar === 'coe'),
     hrss:    data.filter(d => d.ulrich_pillar === 'hrss'),
     general: data.filter(d => !d.ulrich_pillar || d.ulrich_pillar === 'general'),
+  }
 
   return (
     <div>
@@ -340,6 +355,7 @@ function DepartmentsSection({ data }) {
       </div>
     </div>
   )
+}
 
 // ── Section: Sections & Units (Swim Lanes) ────────────────────
 function SectionsSection({ data }) {
@@ -385,6 +401,7 @@ function SectionsSection({ data }) {
       </div>
     </div>
   )
+}
 
 // ── Section: Teams ────────────────────────────────────────────
 function TeamsSection({ data }) {
@@ -456,6 +473,7 @@ function TeamsSection({ data }) {
       </div>
     </div>
   )
+}
 
 // ── Section: Cost Centers ─────────────────────────────────────
 function CostCentersSection({ data }) {
@@ -539,6 +557,7 @@ function CostCentersSection({ data }) {
       </div>
     </div>
   )
+}
 
 // ── Section: Work Locations ───────────────────────────────────
 function WorkLocationsSection({ data }) {
@@ -622,6 +641,7 @@ function WorkLocationsSection({ data }) {
       </div>
     </div>
   )
+}
 
 // ── Org Tree Visualization ────────────────────────────────────
 function OrgTreeView({ data }) {
@@ -668,6 +688,7 @@ function OrgTreeView({ data }) {
       </div>
     </div>
   )
+}
 
 // ── Main Page ─────────────────────────────────────────────────
 export default function DeptTeamSetupPage() {
@@ -762,3 +783,4 @@ export default function DeptTeamSetupPage() {
       {activeTab === 'location'   && <WorkLocationsSection data={data.workLocations} />}
     </div>
   )
+}

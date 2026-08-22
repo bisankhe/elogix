@@ -36,6 +36,7 @@ export default function DigitalSignatureCreationPage() {
       ctx.lineCap = 'round'
       ctx.lineJoin = 'round'
       ctxRef.current = ctx
+    }
   }, [method])
 
   const startDraw = (e) => {
@@ -46,15 +47,18 @@ export default function DigitalSignatureCreationPage() {
     ctxRef.current.beginPath()
     ctxRef.current.moveTo(x, y)
     setIsDrawing(true)
+  }
   const draw = (e) => {
     if (!isDrawing||!ctxRef.current) return
     e.preventDefault()
     ctxRef.current.lineTo(x, y)
     ctxRef.current.stroke()
+  }
   const endDraw = () => setIsDrawing(false)
   const clearCanvas = () => {
     if (!ctxRef.current||!canvasRef.current) return
     ctxRef.current.clearRect(0,0,canvasRef.current.width,canvasRef.current.height)
+  }
 
   const saveSignature = () => {
     if (method==='draw'&&canvasRef.current) {
@@ -69,6 +73,8 @@ export default function DigitalSignatureCreationPage() {
       notify('✅ Signature uploaded from: '+uploadedFile.name)
     } else {
       notify('⚠️ Please create your signature first')
+    }
+  }
 
   return (
     <div style={{fontFamily:'system-ui,sans-serif'}}>
@@ -185,3 +191,4 @@ export default function DigitalSignatureCreationPage() {
       )}
     </div>
   )
+}

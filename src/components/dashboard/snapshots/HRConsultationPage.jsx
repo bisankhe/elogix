@@ -101,3 +101,4 @@ export default function HRConsultationPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

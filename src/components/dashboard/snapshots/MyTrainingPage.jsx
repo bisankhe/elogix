@@ -90,3 +90,4 @@ export default function MyTrainingPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

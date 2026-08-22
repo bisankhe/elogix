@@ -89,3 +89,4 @@ export default function MyInternalTrainingCertificatesPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

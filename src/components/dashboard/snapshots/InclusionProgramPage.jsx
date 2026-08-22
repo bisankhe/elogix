@@ -102,3 +102,4 @@ export default function InclusionProgramPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

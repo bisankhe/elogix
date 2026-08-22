@@ -44,6 +44,7 @@ function SBar({ val, max, color='#3b82f6' }) {
       <div style={{ width:Math.round(val/max*100)+'%', height:'100%', background:color, borderRadius:4, transition:'width .4s' }}/>
     </div>
   )
+}
 
 export default function ATSExecutiveDashPage() {
   const [msg, setMsg] = useState('')
@@ -295,3 +296,4 @@ export default function ATSExecutiveDashPage() {
       )}
     </div>
   )
+}

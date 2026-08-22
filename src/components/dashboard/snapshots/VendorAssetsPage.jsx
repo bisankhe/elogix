@@ -67,12 +67,14 @@ const CAT_CONFIG = {
   vehicle_key: {label:'Vehicle Key',     icon:'🔑', color:'#f59e0b'},
   communication:{label:'Communication',  icon:'📻', color:'#8b5cf6'},
   safety:      {label:'Safety/PPE',      icon:'🦺', color:'#10b981'},
+}
 const STATUS_CFG = {
   assigned:  {c:'#3b82f6',bg:'#eff6ff',label:'Assigned'},
   available: {c:'#10b981',bg:'#f0fdf4',label:'Available'},
   returned:  {c:'#64748b',bg:'#f8fafc',label:'Returned'},
   damaged:   {c:'#ef4444',bg:'#fef2f2',label:'Damaged'},
   lost:      {c:'#dc2626',bg:'#fef2f2',label:'Lost'},
+}
 const CTX_ACTIONS = [
   {icon:'👁',label:'View Asset Details',      key:'view'},
   {icon:'📋',label:'Assign to Employee',       key:'assign'},
@@ -252,3 +254,4 @@ export default function VendorAssetsPage() {
       ]}/>
     </div>
   )
+}

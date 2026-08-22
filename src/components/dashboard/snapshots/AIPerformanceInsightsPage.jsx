@@ -105,3 +105,4 @@ export default function AIPerformanceInsightsPage(){
       </div>
     </div>
   )
+}

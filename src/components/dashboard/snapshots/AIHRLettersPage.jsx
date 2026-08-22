@@ -43,7 +43,9 @@ Return JSON: {"english":"...full letter...","nepali":"...full Nepali letter..."}
       const d = await r.json()
       if (r.ok && d?.content?.[0]?.text) return d.content[0].text
     } catch {}
+  }
   return null
+}
 
 // ── OFFLINE TEMPLATES (no API key needed) ────────────────────
 function offlineLetter(type, vars) {
@@ -97,7 +99,9 @@ function offlineLetter(type, vars) {
 
       nepali: `${nd}\n\nप्रिय ${vars.name},\n\nविषय: परिवीक्षा पूर्णता र रोजगारी पुष्टि\n\nनेपाल श्रम ऐन २०७४ को दफा १३ बमोजिम ${vars.effective_date || '[मिति]'} देखि ${vars.probation_period || '६ महिना'} को परिवीक्षा अवधि सफलतापूर्वक पूरा गर्नुभएकोमा तपाईंलाई ${vars.company || 'नेपएचआर प्रो प्रा.लि.'} को नियमित कर्मचारीको रूपमा पुष्टि गरिन्छ।\n\nतपाईंको ${vars.position || '[पद]'} को भूमिकामा कार्यसम्पादन अपेक्षा पूरा गरेकोमा बधाई दिन्छौं।\n\n${vars.signatory || '[अधिकृत हस्ताक्षरकर्ता]'}\n${vars.company || 'नेपएचआर प्रो प्रा.लि.'}`
     },
+  }
   return templates[type] || templates.experience
+}
 
 // ── SIGNATURE PAD ─────────────────────────────────────────────
 function SignaturePad({ onSave, onClose, signerName }) {
@@ -125,11 +129,13 @@ function SignaturePad({ onSave, onClose, signerName }) {
     const rect = canvas.getBoundingClientRect()
     const src = e.touches ? e.touches[0] : e
     return { x: src.clientX - rect.left, y: src.clientY - rect.top }
+  }
 
   const startDraw = (e) => {
     e.preventDefault()
     setDrawing(true)
     lastPos.current = getPos(e, canvasRef.current)
+  }
 
   const draw = (e) => {
     if (!drawing) return
@@ -141,6 +147,7 @@ function SignaturePad({ onSave, onClose, signerName }) {
     ctx.stroke()
     lastPos.current = pos
     setHasDrawing(true)
+  }
 
   const stopDraw = () => setDrawing(false)
 
@@ -148,6 +155,7 @@ function SignaturePad({ onSave, onClose, signerName }) {
     ctx.fillStyle = '#ffffff'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     setHasDrawing(false)
+  }
 
   const saveSignature = () => {
     if (mode === 'type') {
@@ -162,8 +170,10 @@ function SignaturePad({ onSave, onClose, signerName }) {
     } else if (!hasDrawing) {
       alert('Please draw your signature first')
       return
+    }
     const dataUrl = canvas.toDataURL('image/png')
     onSave({ dataUrl, name: signerName, timestamp: new Date().toISOString(), method: mode === 'draw' ? 'drawn' : 'typed' })
+  }
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.7)', zIndex: 9100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
@@ -248,6 +258,7 @@ function SignaturePad({ onSave, onClose, signerName }) {
       </div>
     </div>
   )
+}
 
 // ── LETTER TYPES ──────────────────────────────────────────────
 const LETTER_TYPES = [
@@ -289,6 +300,7 @@ const VARS_CONFIG = {
   salary_revision:     ['name','effective_date','old_salary','new_salary','increment','increment_pct','company','signatory'],
   transfer:            ['name','from_dept','to_dept','position','effective_date','handover_date','joining_date','company','signatory'],
   probation_clearance: ['name','position','probation_period','effective_date','company','signatory','signatory_title'],
+}
 
 const VAR_LABELS = {
   name: 'Employee Full Name', position: 'Position / Designation', department: 'Department',
@@ -306,6 +318,7 @@ const VAR_LABELS = {
   increment: 'Increment Amount (NPR)', increment_pct: 'Increment %', from_dept: 'From Department/Branch',
   to_dept: 'To Department/Branch', handover_date: 'Handover Date', joining_date: 'New Reporting Date',
   probation_period: 'Probation Period Completed',
+}
 
 const HISTORY_KEY = 'elogix_letters_history'
 
@@ -355,6 +368,7 @@ Return ONLY valid JSON: {"english":"...","nepali":"..."}`
         const parsed  = JSON.parse(cleaned)
         if (parsed.english && parsed.nepali) result = parsed
       } catch {}
+    }
 
     if (!result) result = offlineLetter(letterType, vars)
 
@@ -363,6 +377,7 @@ Return ONLY valid JSON: {"english":"...","nepali":"..."}`
     setEditNe(result.nepali)
     setGenerating(false)
     setStep(3)
+  }
 
   // ── SAVE SIGNED LETTER TO EMPLOYEE FILE ──────────────────────
   const saveToEmployeeFile = async () => {
@@ -379,6 +394,7 @@ Return ONLY valid JSON: {"english":"...","nepali":"..."}`
       signatures: signatures,
       signed:    signatures.length > 0,
       status:    signatures.length > 0 ? 'signed' : 'draft',
+    }
     // Save to localStorage (in production: POST to /api/v1/letters)
     try {
       await fetch('/api/v1/letters/save', {
@@ -393,6 +409,7 @@ Return ONLY valid JSON: {"english":"...","nepali":"..."}`
     setHistory(newHistory)
     localStorage.setItem(HISTORY_KEY, JSON.stringify(newHistory))
     setSaving(false); setSaved(true); setStep(5)
+  }
 
   // ── DOWNLOAD PDF ─────────────────────────────────────────────
   const downloadPDF = () => {
@@ -451,6 +468,7 @@ Return ONLY valid JSON: {"english":"...","nepali":"..."}`
     const w = window.open('', '_blank', 'width=900,height=700')
     w.document.write(html)
     w.document.close()
+  }
 
   // ── RENDER ────────────────────────────────────────────────────
   return (
@@ -739,3 +757,4 @@ Return ONLY valid JSON: {"english":"...","nepali":"..."}`
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
+}

@@ -14,6 +14,7 @@ const DEPT_CFG = {
   admin:            {label:'Administration',  icon:'🏢',color:'#f59e0b',order:4,responsibility:'Return access card, ID badge, car pass. Vacate desk. Issue locker clearance.'},
   hr:               {label:'HR',              icon:'👥',color:'#8b5cf6',order:5,responsibility:'Confirm exit interview done. Issue experience letter request. Update HRIS. Archive file.'},
   finance:          {label:'Finance',         icon:'💰',color:'#10b981',order:6,responsibility:'Settle advances, loans, pending claims. Confirm F&F computation. Release payout.'},
+}
 
 const CLEARANCES = [
   { id:'cl1', employee:'Dipendra Yadav', position:'Junior Accountant', lwd:'2025-07-10',
@@ -66,6 +67,7 @@ export default function ExitClearancePage() {
       notify('✅ '+dc.label+' clearance recorded. '+dc.responsibility)
       return {...c, departments, ff_frozen:!allCleared, status:allCleared?'fully_cleared':'in_progress'}
     }))
+  }
 
   return (
     <div onClick={()=>setCtx(null)}>
@@ -159,3 +161,4 @@ export default function ExitClearancePage() {
       {showExcel&&<ExcelModal title="Exit Clearance" columns={['Employee','Position','LWD','IT Status','Finance Status','Facilities Status','HR Status','F&F Amount','F&F Frozen']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

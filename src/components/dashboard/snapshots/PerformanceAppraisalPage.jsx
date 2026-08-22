@@ -14,6 +14,7 @@ const APPRAISALS = [
     criteria_communicated_at:'2025-04-01', impact_links:['KRA Management','Bonus Processing'] },
   { id:'a2', employee:'Bikash Rai', dept:'IT', cycle:'Annual FY 2082/83', kra_avg:62, kpi_avg:58, okr_avg:40,
     self_rating:3, manager_rating:2, final_rating:2, status:'disputed', disagreement:true,
+    disagreement_note:'Employee believes Q3 sprint delays were due to unstaffed dependencies, not personal performance.',
     criteria_communicated_at:'2025-04-01', impact_links:['Workload Analysis','PIP Management'] },
   { id:'a3', employee:'Maya Pradhan', dept:'Finance', cycle:'Annual FY 2082/83', kra_avg:90, kpi_avg:87, okr_avg:0,
     self_rating:5, manager_rating:4, final_rating:4, status:'pending_manager', disagreement:false,
@@ -24,6 +25,7 @@ const STATUS_CFG = {
   pending_manager:{c:'#f59e0b',bg:'#fffbeb',label:'Pending Manager Review'},
   acknowledged:{c:'#10b981',bg:'#f0fdf4',label:'Acknowledged'},
   disputed:{c:'#ef4444',bg:'#fef2f2',label:'Disputed - Review Pending'},
+}
 
 export default function PerformanceAppraisalPage() {
   const [search, setSearch] = useState('')
@@ -120,3 +122,4 @@ export default function PerformanceAppraisalPage() {
       {showExcel&&<ExcelModal title="Performance Appraisal" columns={['Employee','Cycle','KRA Avg','KPI Avg','Self Rating','Manager Rating','Final Rating','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

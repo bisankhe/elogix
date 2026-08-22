@@ -39,3 +39,4 @@ export default function EmploymentContractPage(){
       {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[{icon:'📥',label:'Download PDF',key:'view'}]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

@@ -95,3 +95,4 @@ export default function PolicyCompliancePage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

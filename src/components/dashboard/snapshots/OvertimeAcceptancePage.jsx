@@ -35,6 +35,7 @@ const STATUS_CFG = {
   approved:    { c:'#10b981', bg:'#f0fdf4', icon:'✅', label:'Approved — Payroll Ready' },
   rejected:    { c:'#ef4444', bg:'#fef2f2', icon:'❌', label:'Rejected' },
   forwarded:   { c:'#8b5cf6', bg:'#f5f3ff', icon:'📤', label:'Forwarded to HR' },
+}
 
 export default function OvertimeAcceptancePage() {
   const [requests, setRequests] = useState(OT_REQUESTS)
@@ -68,6 +69,7 @@ export default function OvertimeAcceptancePage() {
     setShowNote(null); setNoteText('')
     const labels = { approve_hod:'✅ Approved by HOD — forwarded to HR', approve_hr:'✅ OT Approved — will hit next payroll', forward:'📤 Forwarded to HR for final approval', reject:'❌ OT Rejected — employee notified' }
     notify(labels[action] || 'Done')
+  }
 
   return (
     <div onClick={()=>setCtx(null)} style={{fontFamily:'system-ui,sans-serif'}}>
@@ -192,3 +194,4 @@ export default function OvertimeAcceptancePage() {
       {showExcel&&<ExcelModal title="Overtime Acceptance" columns={['Employee','Emp ID','Dept','Date','OT Hours','Type','Rate','Est Pay','Status','Approved By','Date Approved']} onClose={()=>setShowExcel(false)} onImport={()=>{}}/>}
     </div>
   )
+}

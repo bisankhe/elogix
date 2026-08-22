@@ -185,3 +185,4 @@ export default function PayrollReportsPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

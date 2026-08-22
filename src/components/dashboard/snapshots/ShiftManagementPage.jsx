@@ -147,3 +147,4 @@ export default function ShiftManagementPage() {
       {showExcel&&<ExcelModal title="Shift Management" columns={['Shift Name','Start','End','Duration Hrs','Type','Night Differential %','Assigned Employees']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

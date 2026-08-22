@@ -19,6 +19,7 @@ const MY_RESIGNATION = {
     {item:'Final Settlement Calculation',status:'not_started',owner:'Finance'},
     {item:'Exit Interview',status:'not_started',owner:'HR'},
   ],
+}
 
 export default function MyResignationPage() {
   const [showWizard, setShowWizard] = useState(false)
@@ -101,3 +102,4 @@ export default function MyResignationPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

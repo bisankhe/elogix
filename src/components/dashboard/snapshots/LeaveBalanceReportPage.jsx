@@ -16,6 +16,7 @@ const LEAVE_COLORS = {
   PL: { bg:'#e3f2fd', c:'#1565c0', border:'#90caf9', label:'Paternity'     },
   HD: { bg:'#fff7ed', c:'#9a3412', border:'#fdba74', label:'Half Day'      },
   A:  { bg:'#fef2f2', c:'#dc2626', border:'#fca5a5', label:'Absent'        },
+}
 
 const DEPTS   = ['All Departments','Nursing','Administration','Finance','IT','HR','Operations','Medical']
 const FIRST   = ['Ram','Shyam','Hari','Sita','Gita','Maya','Binod','Sunil','Priya','Anil','Bikash','Sunita','Rajesh','Puja','Deepak','Anita','Sanjay','Rupa','Nabin','Sabita']
@@ -44,6 +45,9 @@ function genLBRow(i) {
     el_cf,sl_cf:parseFloat((Math.random()*2).toFixed(2)),
     // Applicable
     cl_ap,el_ap,sl_ap,
+    remarks:'',
+  }
+}
 const ALL_LB = Array.from({length:33},(_,i)=>genLBRow(i))
 
 const G  = 'linear-gradient(135deg,#14532d 0%,#15803d 55%,#86efac 100%)'
@@ -71,6 +75,7 @@ const LV = ({val,type}) => {
       {parseFloat(val).toFixed(val%1===0?0:2)}
     </td>
   )
+}
 
 export default function LeaveBalanceReportPage() {
   const [dept,setDept]   = useState('All Departments')
@@ -88,6 +93,7 @@ export default function LeaveBalanceReportPage() {
   const sign    = k2=>{
     const s=sigs[k2];if(!s.name||!s.designation){notify('⚠️ Fill name & designation');return}
     setSigs(p=>({...p,[k2]:{...p[k2],signed:true,date:today}}));notify(`✅ ${k2} signed`)
+  }
 
   const filtered = ALL_LB.filter(r=>{
     if(dept!=='All Departments'&&r.dept!==dept) return false
@@ -111,6 +117,7 @@ export default function LeaveBalanceReportPage() {
     const blob=new Blob([[h,...body].map(r=>r.join(',')).join('\n')],{type:'text/csv'})
     const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`Leave_Balance_${month}.csv`;a.click()
     notify('📤 Exported')
+  }
 
   return (
     <div style={{fontFamily:'system-ui,sans-serif',height:'100vh',display:'flex',flexDirection:'column',background:'#f0fdf4'}}>
@@ -374,3 +381,4 @@ export default function LeaveBalanceReportPage() {
       )}
     </div>
   )
+}

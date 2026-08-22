@@ -97,3 +97,4 @@ export default function GPSAttendancePage() {
       {showExcel&&<ExcelModal title="GPS Attendance Log" columns={['Employee','Location','Distance (m)','Status','Time','Assigned Task']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

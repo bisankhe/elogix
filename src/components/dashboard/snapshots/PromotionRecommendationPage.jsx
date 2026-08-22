@@ -18,6 +18,7 @@ const CANDIDATES = [
     tenure_years:1.8, avg_appraisal_rating:3.6, compa_ratio:1.05, readiness_score:54,
     calibration_status:'pending', calibrated_by:['Direct Manager'],
     salary_band_current:'L3: NPR 50K-65K', salary_band_next:'L4: NPR 68K-85K',
+    flag_note:'Tenure below typical 2-year minimum for this band - flagged for calibration discussion, not auto-rejected.',
     status:'under_review', impact_links:[] },
 ]
 
@@ -97,3 +98,4 @@ export default function PromotionRecommendationPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

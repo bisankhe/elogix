@@ -14,6 +14,7 @@ const ROLE_KPI_PRESETS = {
   'Line Manager': ['Team Goal Completion Rate (OKRs)','Department Overtime Cost','Skill Gap / Training Completion'],
   'HR Admin': ['Payroll Accuracy Rate','Compliance Audit Pass Rate','Benefits Enrollment Penetration'],
   Employee: ['Individual KPI Progress','Training Completion Status','Leave Balance Accrual'],
+}
 
 const KPIS = [
   { id:'p1', kpi_title:'Close $500K ARR Pipeline', kra_parent:'Revenue Generation & Client Retention',
@@ -42,6 +43,7 @@ const STATUS_CFG = {
   on_track:{c:'#10b981',bg:'#f0fdf4',icon:'🟢',label:'On Track'},
   at_risk:{c:'#f59e0b',bg:'#fffbeb',icon:'🟡',label:'At Risk'},
   off_track:{c:'#ef4444',bg:'#fef2f2',icon:'🔴',label:'Off Track'},
+}
 
 export default function KPIManagementPage() {
   const [kpis, setKpis] = useState(KPIS)
@@ -164,3 +166,4 @@ export default function KPIManagementPage() {
       {showExcel&&<ExcelModal title="KPI Management" columns={['KPI Title','Parent KRA','Formula','Target','Current','Unit','Data Source','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

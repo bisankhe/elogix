@@ -37,6 +37,7 @@ export default function EmployeeJoiningPage() {
     setMode('create_new')
     setSelected(candidate)
     notify('✅ Existing data loaded for '+candidate.name)
+  }
 
   const generateContract = () => {
     if (!form.name||!form.position) { notify('⚠️ Name and position required'); return }
@@ -80,6 +81,7 @@ ${form.name}                 HR Manager
       setGenerating(false)
       notify('🤖 Employment contract auto-generated based on JD and role details')
     }, 1800)
+  }
 
   const sendContract = () => {
     if (!contract) { notify('⚠️ Generate contract first'); return }
@@ -88,6 +90,7 @@ ${form.name}                 HR Manager
     setMode('list')
     setForm(BLANK); setContract(null); setSelected(null)
     notify(`✅ Employment contract sent to ${form.name} via Email (${form.email}), WhatsApp (${form.phone}) & Viber`)
+  }
 
   const f = (l,k,t='text') => (
     <div key={k}>
@@ -138,6 +141,7 @@ ${form.name}                 HR Manager
                 </div>
               ))}
             </div>
+          }
         </div>
       )}
 
@@ -208,3 +212,4 @@ ${form.name}                 HR Manager
       )}
     </div>
   )
+}

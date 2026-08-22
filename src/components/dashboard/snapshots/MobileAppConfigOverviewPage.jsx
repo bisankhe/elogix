@@ -63,3 +63,4 @@ export default function MobileAppConfigOverviewPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

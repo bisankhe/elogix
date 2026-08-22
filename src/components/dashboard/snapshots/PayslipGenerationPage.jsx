@@ -95,3 +95,4 @@ export default function PayslipGenerationPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

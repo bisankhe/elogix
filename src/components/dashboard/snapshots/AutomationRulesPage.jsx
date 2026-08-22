@@ -98,3 +98,4 @@ export default function AutomationRulesPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

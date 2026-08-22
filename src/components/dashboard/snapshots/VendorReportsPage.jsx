@@ -1,7 +1,7 @@
 // FILE: VendorReportsPage.jsx - Vendor Reports & Analytics
 // Strategic spend analytics, Nepal DOL statutory reports, AI insights
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { ExcelModal, PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
 
 const G = 'linear-gradient(135deg,#0f172a 0%,#581c87 60%,#7c3aed 100%)'
@@ -17,6 +17,7 @@ const REPORT_TYPES = [
       {label:'Payroll Processing',  value:321120,  pct:13, color:'#8b5cf6'},
       {label:'Others',              value:297000,  pct:12, color:'#64748b'},
     ],
+    ai_insight:'Vendor spend up 12% YoY. Security services dominating at 45%. Consider renegotiating ShieldGuard rate at renewal.',
   },
   { id:'r2', name:'SLA Compliance Summary', icon:'📊', color:'#059669',
     value:'89.5%', change:'-2.1%', period:'Jun 2025',
@@ -26,6 +27,7 @@ const REPORT_TYPES = [
       {label:'SalaryExpert',        value:99, pct:99, color:'#7c3aed'},
       {label:'TechStaff Solutions', value:74, pct:74, color:'#ef4444'},
     ],
+    ai_insight:'TechStaff Solutions pulling overall SLA below 90% threshold. Immediate performance review required.',
   },
   { id:'r3', name:'Invoice Processing Time', icon:'⏱', color:'#d97706',
     value:'2.8 days avg', change:'-0.7d', period:'Jun 2025',
@@ -35,6 +37,7 @@ const REPORT_TYPES = [
       {label:'HR Approval',         value:0.7, pct:25, color:'#8b5cf6'},
       {label:'Finance Approval',    value:0.8, pct:29, color:'#10b981'},
     ],
+    ai_insight:'Cycle time improved 0.7d to 2.8 days (target: <3.5d). Finance approval is bottleneck. Consider auto-approve for invoices under NPR 50,000.',
   },
   { id:'r4', name:'Workforce Headcount', icon:'👷', color:'#7c3aed',
     value:'83 workers', change:'+5', period:'Jun 2025',
@@ -45,6 +48,7 @@ const REPORT_TYPES = [
       {label:'Drivers (DrivePro)',     value:5,  pct:6,  color:'#8b5cf6'},
       {label:'Others',                 value:3,  pct:4,  color:'#64748b'},
     ],
+    ai_insight:'83 vendor workers across 5 agencies. 67% in non-core roles per LA2074. TechStaff IT roles need compliance review (core work risk).',
   },
   { id:'r5', name:'TDS & Tax Summary', icon:'🏛', color:'#dc2626',
     value:'NPR 1.23L', change:'+14%', period:'Jan-Jun 2025',
@@ -52,6 +56,7 @@ const REPORT_TYPES = [
       {label:'TDS on Services (1.5%)',  value:85000, pct:69, color:'#ef4444'},
       {label:'VAT Collected (13%)',     value:38000, pct:31, color:'#f97316'},
     ],
+    ai_insight:'All TDS deductions filed with IRD. 6 TDS certificates generated YTD. Q2 TDS return due July 15.',
   },
 ]
 
@@ -68,28 +73,10 @@ const CTX_ACTIONS = [
   {icon:'📤',label:'Export to Excel',      key:'export'},
   {icon:'📄',label:'Generate PDF Report',  key:'pdf'},
   {icon:'📧',label:'Email to Management',  key:'email'},
-  {icon:'🔗',label:'Impact Analysis',      key:'impact'}
-
-pact'},
+  {icon:'🔗',label:'Impact Analysis',      key:'impact'},
 ]
 
-
-// ── Tenant context ────────────────────────────────────────────
-function useCompanyCtx() {
-  const auth   = (() => { try { return JSON.parse(localStorage.getItem('elogix_auth')||'{}') } catch { return {} } })()
-  const regCos = (() => { try { return JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}') } catch { return {} } })()
-  const slug   = auth.company?.slug || auth.user?.company || 'demo'
-  return {
-    company_id:   auth.company?.id || slug,
-    company_name: auth.company?.name || regCos[slug]?.name || 'Your Company',
-    company_slug: slug,
-    plan:         auth.company?.plan || 'trial',
-    currency:     auth.company?.currency || 'NPR',
-    token:        localStorage.getItem('elogix_token') || auth.token || '',
-
 export default function VendorReportsPage() {
-  const ctx = useCompanyCtx()  // Tenant scope
-
   const [activeReport, setActiveReport] = useState('r1')
   const [generating, setGenerating] = useState(false)
   const [msg, setMsg] = useState('')
@@ -235,3 +222,4 @@ export default function VendorReportsPage() {
       {showExcel&&<ExcelModal title="Vendor Reports" columns={['Report Type','Period','Value','Change','Vendor','Category','Amount NPR']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

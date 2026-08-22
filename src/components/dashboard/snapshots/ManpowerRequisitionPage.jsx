@@ -13,6 +13,7 @@ const REQUISITIONS = [
    approval:[{role:'Dept Head',name:'Rajan Shrestha',status:'approved',date:'2025-06-01'},
              {role:'Finance',name:'Sanjay Karki',status:'approved',date:'2025-06-02'},
              {role:'HR Manager',name:'Priya Adhikari',status:'approved',date:'2025-06-03'}],
+   justification:'Backfill for resignation. Critical for Q3 product release.',
    created_on:'2025-05-30',sla_date:'2025-07-14',
    impact_links:['Vacancy Management','Job Posting','ATS Dashboard','Headcount Planning']},
   {id:'MR-2025-038',role:'Finance Manager',dept:'Finance',branch:'KTM HQ',grade:'G7',type:'regular',
@@ -20,6 +21,7 @@ const REQUISITIONS = [
    approval:[{role:'Dept Head',name:'Anil Pandey',status:'approved',date:'2025-06-05'},
              {role:'Finance',name:'Sanjay Karki',status:'approved',date:'2025-06-06'},
              {role:'HR Manager',name:'Priya Adhikari',status:'approved',date:'2025-06-07'}],
+   justification:'Expansion — new branch finance function.',
    created_on:'2025-06-04',sla_date:'2025-07-20',
    impact_links:['Vacancy Management','Job Posting','Headcount Planning']},
   {id:'MR-2025-039',role:'Sales Executive x3',dept:'Sales',branch:'Biratnagar',grade:'G3',type:'regular',
@@ -27,6 +29,7 @@ const REQUISITIONS = [
    approval:[{role:'Dept Head',name:'Dipak Tamang',status:'approved',date:'2025-06-08'},
              {role:'Finance',name:'Sanjay Karki',status:'pending',date:null},
              {role:'HR Manager',name:'Priya Adhikari',status:'pending',date:null}],
+   justification:'Expansion — new sales territory in Province 1.',
    created_on:'2025-06-07',sla_date:'2025-07-25',
    impact_links:['Expansion Planning','Vacancy Management','Job Posting']},
   {id:'MR-2025-040',role:'Security Guard x5',dept:'Facilities',branch:'Pokhara',grade:'G1',type:'regular',
@@ -34,6 +37,7 @@ const REQUISITIONS = [
    approval:[{role:'Dept Head',name:'Ram Bahadur KC',status:'pending',date:null},
              {role:'Finance',name:'Sanjay Karki',status:'pending',date:null},
              {role:'HR Manager',name:'Priya Adhikari',status:'pending',date:null}],
+   justification:'New Pokhara office security team.',
    created_on:'2025-06-10',sla_date:'2025-08-01',
    impact_links:['Vendor Outsource Mapping','Job Posting','Headcount Planning']},
 ]
@@ -45,6 +49,7 @@ const STATUS_CFG = {
   pending_hr:      {c:'#8b5cf6',bg:'#f5f3ff',b:'#c4b5fd',label:'Pending HR',icon:'👥'},
   active:          {c:'#10b981',bg:'#f0fdf4',b:'#bbf7d0',label:'Approved',icon:'✅'},
   cancelled:       {c:'#ef4444',bg:'#fef2f2',b:'#fecaca',label:'Cancelled',icon:'❌'},
+}
 const CTX = [
   {icon:'👁',label:'View Requisition',      key:'view'},
   {icon:'✅',label:'Approve Requisition',    key:'approve'},
@@ -273,6 +278,7 @@ KPI: Monthly performance metrics as defined by HOD`
                 {step<4
                   ? <button onClick={()=>setStep(s=>s+1)} style={{flex:1,padding:14,borderRadius:12,border:'none',background:G,color:'#fff',fontSize:14,fontWeight:700,cursor:'pointer'}}>Next Step</button>
                   : <button onClick={()=>{setShowAdd(false);setStep(1)}} style={{flex:1,padding:14,borderRadius:12,border:'none',background:G,color:'#fff',fontSize:14,fontWeight:700,cursor:'pointer'}}>Submit Requisition</button>
+                }
               </div>
             </div>
           </div>
@@ -290,3 +296,4 @@ KPI: Monthly performance metrics as defined by HOD`
       ]}/>
     </div>
   )
+}

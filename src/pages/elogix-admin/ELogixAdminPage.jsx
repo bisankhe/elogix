@@ -4,6 +4,10 @@
 // Manage all client companies, billing, support, communications
 // eLogix Technologies · www.elogix.com.np
 import { useState, useEffect } from 'react'
+import { provisionTenantPermissions, PLAN_DEFAULT_MODULES } from '../../utils/tenantPermissions.js'
+// Moved from tenant sidebar — SuperAdmin only
+import TenantModulePermissionPage from '../../components/dashboard/snapshots/TenantModulePermissionPage.jsx'
+import ReferralCommissionPage     from '../../components/dashboard/snapshots/ReferralCommissionPage.jsx'
 
 const G  = 'linear-gradient(135deg,#1e1b4b 0%,#312e81 55%,#6366f1 100%)'
 const A  = '#4338ca'
@@ -24,46 +28,59 @@ const STATUS_COLORS = {
   cancelled:{ bg:'#fef2f2', c:'#dc2626', b:'#fecaca', icon:'❌' },
 }
 
-// Mock data — in production comes from /api/elogix-admin/v1
+// Real tenant companies — sourced from eLogix CRM
+// Updated: 2026-08-21  (Subisu approved 2026-08-21 morning)
+// NOTE: In production this comes from /api/elogix-admin/v1/companies
 const MOCK_COMPANIES = [
-  { id:'c1', name:'Solid Future HR Consulting', slug:'solidfuture', plan:'enterprise', status:'active',
-    employee_count:320, max_employees:1000, created_at:'2025-01-15', account_manager:'Bikash KC',
-    support_tier:'priority', industry:'HR Consulting', country:'Nepal', currency:'NPR',
-    plan_expires_at:'2026-12-31', trial_ends_at:null,
-    pending_invoice: 45000, last_payment:'2026-07-01' },
-  { id:'c2', name:'Himalayan Bank Ltd.', slug:'himalayan', plan:'business', status:'active',
-    employee_count:487, max_employees:500, created_at:'2025-03-10', account_manager:'Priya Sharma',
-    support_tier:'dedicated', industry:'Banking & Finance', country:'Nepal', currency:'NPR',
-    plan_expires_at:'2026-12-31', trial_ends_at:null,
-    pending_invoice: 25000, last_payment:'2026-07-01' },
-  { id:'c3', name:'Global IME Bank', slug:'globalime', plan:'growth', status:'active',
-    employee_count:198, max_employees:250, created_at:'2025-05-20', account_manager:'Ramesh Poudel',
-    support_tier:'standard', industry:'Banking & Finance', country:'Nepal', currency:'NPR',
-    plan_expires_at:'2026-11-30', trial_ends_at:null,
-    pending_invoice: 12000, last_payment:'2026-07-01' },
-  { id:'c4', name:'Ncell Axiata', slug:'ncell', plan:'enterprise', status:'suspended',
-    employee_count:834, max_employees:1000, created_at:'2024-11-05', account_manager:'Bikash KC',
-    support_tier:'dedicated', industry:'Telecom', country:'Nepal', currency:'NPR',
-    plan_expires_at:'2026-08-31', trial_ends_at:null,
-    pending_invoice: 45000, last_payment:'2026-06-01', suspended_reason:'Overdue invoice 60+ days' },
-  { id:'c5', name:'Tech Startup Nepal', slug:'techstartup', plan:'trial', status:'trial',
-    employee_count:6, max_employees:10, created_at:'2026-07-25', account_manager:'New Lead',
-    support_tier:'standard', industry:'Technology', country:'Nepal', currency:'NPR',
-    plan_expires_at:null, trial_ends_at:'2026-08-08',
-    pending_invoice: 0, last_payment:null },
+  {
+    id:'c1', name:'Abasar Nepal', slug:'abasarnepal', plan:'starter', status:'active',
+    employee_count:0, max_employees:50, created_at:'2026-08-20',
+    account_manager:'eLogix Team', support_tier:'standard',
+    industry:'HR / Manpower', country:'Nepal', currency:'NPR',
+    plan_expires_at:'2026-09-20', trial_ends_at:null,
+    pending_invoice:0, last_payment:null,
+    admin_email:'robijan@abasarnepal.com', phone:'',
+    business_type:'recruitment_agency',
+  },
+  {
+    id:'c2', name:'Subisu Cablenet Pvt. Ltd.', slug:'subisu', plan:'growth', status:'active',
+    employee_count:0, max_employees:250, created_at:'2026-08-21',
+    account_manager:'eLogix Team', support_tier:'standard',
+    industry:'Telecom / ISP', country:'Nepal', currency:'NPR',
+    plan_expires_at:'2026-09-21', trial_ends_at:null,
+    pending_invoice:0, last_payment:null,
+    admin_email:'', phone:'',
+    business_type:'it_software',
+  },
+  {
+    id:'c3', name:'Mainawati Steels', slug:'mainawatisteels', plan:'starter', status:'active',
+    employee_count:0, max_employees:50, created_at:'2026-08-21',
+    account_manager:'eLogix Team', support_tier:'standard',
+    industry:'Manufacturing / Steel', country:'Nepal', currency:'NPR',
+    plan_expires_at:'2026-09-21', trial_ends_at:null,
+    pending_invoice:0, last_payment:null,
+    admin_email:'', phone:'',
+    business_type:'manufacturing',
+  },
+  {
+    id:'c4', name:'HR Hub', slug:'hrhub', plan:'trial', status:'trial',
+    employee_count:0, max_employees:10, created_at:'2026-08-21',
+    account_manager:'eLogix Team', support_tier:'standard',
+    industry:'HR Consulting', country:'Nepal', currency:'NPR',
+    plan_expires_at:null, trial_ends_at:'2026-09-04',
+    pending_invoice:0, last_payment:null,
+    admin_email:'', phone:'',
+    business_type:'custom',
+  },
 ]
 
 const MOCK_INVOICES = [
-  { id:'i1', invoice_number:'ELX-202607-SOLID-0001', company:'Solid Future HR', total_npr:45000, status:'pending', due_date:'2026-08-15', period_month:'2026-07' },
-  { id:'i2', invoice_number:'ELX-202607-HIMAL-0002', company:'Himalayan Bank', total_npr:25000, status:'paid', due_date:'2026-08-15', period_month:'2026-07' },
-  { id:'i3', invoice_number:'ELX-202607-GLOBA-0003', company:'Global IME Bank', total_npr:12000, status:'overdue', due_date:'2026-07-20', period_month:'2026-06' },
-  { id:'i4', invoice_number:'ELX-202607-NCELL-0004', company:'Ncell', total_npr:45000, status:'overdue', due_date:'2026-06-15', period_month:'2026-05' },
+  // Invoices will populate automatically once companies start their billing cycle
+  // Add via: Generate Monthly Invoices button in Billing tab
 ]
 
 const MOCK_TICKETS = [
-  { id:'t1', ticket_no:'SUPP-001', company:'Himalayan Bank', subject:'Payroll export issue', priority:'high', status:'open', category:'technical', created:'2 hrs ago' },
-  { id:'t2', ticket_no:'SUPP-002', company:'Global IME Bank', subject:'Add new department', priority:'normal', status:'in_progress', category:'hr_config', created:'1 day ago' },
-  { id:'t3', ticket_no:'SUPP-003', company:'Solid Future HR', subject:'SSF report format', priority:'normal', status:'resolved', category:'billing', created:'3 days ago' },
+  // Support tickets will appear here once clients submit requests
 ]
 
 // ── Export helper ─────────────────────────────────────────────
@@ -87,25 +104,32 @@ function downloadCSV(data, filename) {
 
 export default function ELogixAdminPage({ onLogout }) {
   const [tab, setTab] = useState('dashboard')
-  const [mobileMenu, setMobileMenu] = useState(false)
   const [companies, setCompanies] = useState(MOCK_COMPANIES)
 
-  // Load registered tenants on every mount (picks up new self-registrations)
+  // Merge any NEW self-registered tenants from localStorage on mount
+  // Real companies (Abasar Nepal, Subisu, Mainawati, HR Hub) live in MOCK_COMPANIES above
+  // and will NEVER disappear — localStorage is only additive for new signups
   useEffect(() => {
     try {
-      const pending = JSON.parse(localStorage.getItem('elogix_pending_tenants') || '[]')
+      const pending  = JSON.parse(localStorage.getItem('elogix_pending_tenants') || '[]')
+      const approved = JSON.parse(localStorage.getItem('elogix_approved_tenants') || '{}')
       const existing_slugs = new Set(MOCK_COMPANIES.map(c => c.slug))
-      const new_tenants = pending.filter(t => !existing_slugs.has(t.slug))
-      if (new_tenants.length > 0) {
-        setCompanies([...MOCK_COMPANIES, ...new_tenants])
-        console.log(`✅ Loaded ${new_tenants.length} registered tenant(s) from localStorage`)
+      // Only add approved tenants that aren't already in the real list
+      const new_approved = pending.filter(t =>
+        !existing_slugs.has(t.slug) && approved[t.slug]
+      )
+      if (new_approved.length > 0) {
+        setCompanies(prev => {
+          const existing = new Set(prev.map(c => c.slug))
+          const toAdd = new_approved.filter(t => !existing.has(t.slug))
+          return toAdd.length ? [...prev, ...toAdd] : prev
+        })
       }
-    } catch(e) { console.warn('Could not load tenants:', e) }
+    } catch(_e) { /* localStorage unavailable */ }
   }, [])
   // Pending self-registered tenants waiting for SuperAdmin approval
   const [pendingTenants, setPendingTenants] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('elogix_pending_tenants') || '[]') }
-    catch { return [] }
+    try { return JSON.parse(localStorage.getItem('elogix_pending_tenants') || '[]') } catch(_e) { return [] }
   })
 
   const [search, setSearch] = useState('')
@@ -193,20 +217,10 @@ export default function ELogixAdminPage({ onLogout }) {
     } catch(e) { notify('⚠️ Could not load tenants') }
   }
 
-  const approveTenant = async (tenant) => {
-    // Try to notify backend (if API is connected)
-    try {
-      await fetch(`/api/v1/companies/${tenant.slug}/status`, {
-        method: 'PUT',
-        headers: { 'Content-Type':'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('elogix_token')}` },
-        body: JSON.stringify({ status: 'active' })
-      })
-    } catch { /* offline — localStorage fallback below */ }
-    // Always update localStorage
+  const approveTenant = (tenant) => {
     setCompanies(prev => {
       if (prev.find(c => c.slug === tenant.slug)) return prev
-      return [...prev, { ...tenant, status: 'active' }]
+      return [...prev, { ...tenant, status: tenant.plan==='trial'?'trial':'active' }]
     })
     const updated = pendingTenants.filter(t => t.slug !== tenant.slug)
     setPendingTenants(updated)
@@ -214,7 +228,17 @@ export default function ELogixAdminPage({ onLogout }) {
     const approved = JSON.parse(localStorage.getItem('elogix_approved_tenants') || '{}')
     approved[tenant.slug] = { approved_at: new Date().toISOString(), approved_by: 'SuperAdmin' }
     localStorage.setItem('elogix_approved_tenants', JSON.stringify(approved))
-    notify(`✅ ${tenant.name} approved! They can now login with ${tenant.admin_email}`)
+    // ✅ AUTO-PROVISION module permissions based on plan + business type
+    // This writes to elogix_tenant_permissions:{slug} — the key that
+    // Sidebar.jsx, App.jsx and all page guards read to filter access
+    provisionTenantPermissions(
+      tenant.slug,
+      tenant.plan        || 'trial',
+      tenant.business_type || 'custom',
+      'elogix_superadmin'
+    )
+    const modCount = (PLAN_DEFAULT_MODULES[tenant.plan||'trial']||[]).length
+    notify(`✅ ${tenant.name} approved! ${modCount}+ modules activated. They can now login with ${tenant.admin_email}`)
   }
 
   const rejectTenant = (tenant) => {
@@ -238,13 +262,23 @@ export default function ELogixAdminPage({ onLogout }) {
   )
 
   return (
-    <div style={{fontFamily:'system-ui,sans-serif',minHeight:'100vh',background:'#f5f3ff'}}>
+    <div style={{
+      position:'fixed', inset:0,
+      fontFamily:'system-ui,sans-serif',
+      background:'#f0f0ff',
+      overflowY:'scroll',
+      overflowX:'hidden',
+      WebkitOverflowScrolling:'touch',
+      scrollbarWidth:'thin',
+      scrollbarColor:'#818cf8 #e0e7ff',
+      zIndex:10,
+    }}>
       {msg&&<div style={{position:'fixed',bottom:20,right:20,zIndex:9999,background:'#f0fdf4',
         border:'1px solid #bbf7d0',borderRadius:10,padding:'10px 18px',fontSize:11,
         color:'#065f46',boxShadow:'0 4px 16px rgba(0,0,0,.12)',maxWidth:440}}>{msg}</div>}
 
       {/* Header */}
-      <div style={{background:G,padding:'16px 24px',color:'#fff'}}>
+      <div style={{background:G,padding:'14px 16px',color:'#fff'}}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:10}}>
           <div>
             <div style={{fontSize:18,fontWeight:900}}>🏢 eLogix Technologies</div>
@@ -307,16 +341,18 @@ export default function ELogixAdminPage({ onLogout }) {
 
       {/* Tabs */}
       <div style={{background:'#fff',padding:'10px 20px',borderBottom:'1px solid #f1f5f9',
-        display:'flex',gap:6,overflowX:'auto',scrollbarWidth:'none',WebkitOverflowScrolling:'touch',flexWrap:'nowrap',padding:'10px 16px',borderBottom:'1px solid #f1f5f9'}}>
-        <Tab id="pending"   label={`Pending Approval ${pendingTenants.length>0?`(${pendingTenants.length})`:''}` } icon="⏳"/>
-        <Tab id="dashboard" label="Companies" icon="🏢"/>
-        <Tab id="billing"   label="Billing"    icon="💰"/>
-        <Tab id="tickets"   label="Support"    icon="🎫"/>
-        <Tab id="notify"    label="Broadcast"  icon="📢"/>
-        <Tab id="admins"    label="eLogix Team" icon="👥"/>
+        display:'flex',gap:8,overflowX:'auto'}}>
+        <Tab id="pending"      label={`Pending Approval ${pendingTenants.length>0?`(${pendingTenants.length})`:''}` } icon="⏳"/>
+        <Tab id="dashboard"    label="Companies"           icon="🏢"/>
+        <Tab id="billing"      label="Billing"             icon="💰"/>
+        <Tab id="tickets"      label="Support"             icon="🎫"/>
+        <Tab id="notify"       label="Broadcast"           icon="📢"/>
+        <Tab id="modules"      label="Module Permissions"  icon="🔐"/>
+        <Tab id="referral"     label="Referral & Commission" icon="🤝"/>
+        <Tab id="admins"       label="eLogix Team"         icon="👥"/>
       </div>
 
-      <div style={{padding:'16px 20px'}}>
+      <div style={{padding:'14px 14px'}}>
 
       {/* ── PENDING APPROVAL TAB ── */}
       {tab==='pending'&&(
@@ -326,7 +362,7 @@ export default function ELogixAdminPage({ onLogout }) {
               <div style={{fontSize:15,fontWeight:900,color:'#0f172a'}}>⏳ Pending Tenant Approvals ({pendingTenants.length})</div>
               <div style={{fontSize:11,color:'#64748b',marginTop:2}}>Companies that self-registered — approve to give them access</div>
             </div>
-            <button onClick={()=>{try{const f=JSON.parse(localStorage.getItem('elogix_pending_tenants')||'[]');setPendingTenants(f);notify(`🔄 ${f.length} pending`)}catch{}}}
+            <button onClick={()=>{try{const f=JSON.parse(localStorage.getItem('elogix_pending_tenants')||'[]');setPendingTenants(f);notify(`🔄 ${f.length} pending`)} catch(_e) {}}}
               style={{padding:'8px 16px',borderRadius:9,border:'1.5px solid #e2e8f0',background:'#fff',fontSize:11,fontWeight:700,cursor:'pointer'}}>
               🔄 Refresh
             </button>
@@ -374,7 +410,7 @@ export default function ELogixAdminPage({ onLogout }) {
                         </button>
                         <button onClick={()=>{
                             const pw=window.prompt(`Set password for ${t.admin_email}\n(Cancel = keep registered password):`)
-                            if(pw?.trim()){try{const ru=JSON.parse(localStorage.getItem('elogix_registered_tenants')||'{}');if(ru[t.admin_email?.toLowerCase()]){ru[t.admin_email.toLowerCase()].pw=pw.trim();localStorage.setItem('elogix_registered_tenants',JSON.stringify(ru))}}catch{}}
+                            if(pw?.trim()){try{const ru=JSON.parse(localStorage.getItem('elogix_registered_tenants')||'{}');if(ru[t.admin_email?.toLowerCase()]){ru[t.admin_email.toLowerCase()].pw=pw.trim();localStorage.setItem('elogix_registered_tenants',JSON.stringify(ru))}} catch(_e) {}}
                             approveTenant(t)
                           }}
                           style={{padding:'9px 20px',borderRadius:9,border:'1.5px solid #0369a1',background:'#eff6ff',color:'#0369a1',fontSize:11,fontWeight:700,cursor:'pointer'}}>
@@ -520,7 +556,7 @@ export default function ELogixAdminPage({ onLogout }) {
       {/* ── BILLING TAB ── */}
       {tab==='billing'&&(
         <div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:20}}>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',gap:12,marginBottom:18}}>
             {[
               {label:'Monthly MRR',value:`NPR ${mrr.toLocaleString()}`,icon:'💰',color:'#059669'},
               {label:'Annual ARR', value:`NPR ${(mrr*12).toLocaleString()}`,icon:'📈',color:'#0369a1'},
@@ -538,7 +574,7 @@ export default function ELogixAdminPage({ onLogout }) {
 
           <div style={{background:'#fff',borderRadius:12,boxShadow:'0 1px 6px rgba(0,0,0,.06)',overflow:'hidden'}}>
             <div style={{padding:'14px 18px',borderBottom:'1px solid #f1f5f9',display:'flex',
-              justifyContent:'space-between',alignItems:'center'}}>
+              justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:8}}>
               <div style={{fontWeight:800,fontSize:13}}>📋 Invoices</div>
               <button onClick={()=>notify('✅ Monthly invoices generated for all active companies')}
                 style={{padding:'7px 14px',borderRadius:8,border:'none',background:A,
@@ -546,7 +582,8 @@ export default function ELogixAdminPage({ onLogout }) {
                 ⚡ Generate Monthly Invoices
               </button>
             </div>
-            <div style={{overflowX:'auto',WebkitOverflowScrolling:'touch'}}><table style={{width:'100%',minWidth:700,borderCollapse:'collapse',fontSize:11}}>
+            <div style={{overflowX:'auto',WebkitOverflowScrolling:'touch'}}>
+            <table style={{width:'100%',borderCollapse:'collapse',fontSize:11,minWidth:600}}>
               <thead>
                 <tr style={{background:'#f8fafc'}}>
                   {['Invoice #','Company','Period','Amount','Status','Due Date','Action'].map(h=>(
@@ -586,7 +623,7 @@ export default function ELogixAdminPage({ onLogout }) {
                 })}
               </tbody>
             </table>
-            </div>{/* end table scroll wrapper */}
+            </div>{/* end invoice scroll */}
           </div>
         </div>
       )}
@@ -597,7 +634,8 @@ export default function ELogixAdminPage({ onLogout }) {
           <div style={{padding:'14px 18px',borderBottom:'1px solid #f1f5f9',fontWeight:800,fontSize:13}}>
             🎫 Support Tickets
           </div>
-          <table style={{width:'100%',borderCollapse:'collapse',fontSize:11}}>
+          <div style={{overflowX:'auto',WebkitOverflowScrolling:'touch'}}>
+          <table style={{width:'100%',borderCollapse:'collapse',fontSize:11,minWidth:700}}>
             <thead>
               <tr style={{background:'#f8fafc'}}>
                 {['Ticket #','Company','Subject','Priority','Status','Category','Created','Action'].map(h=>(
@@ -637,12 +675,13 @@ export default function ELogixAdminPage({ onLogout }) {
               })}
             </tbody>
           </table>
+          </div>{/* end ticket scroll */}
         </div>
       )}
 
       {/* ── BROADCAST TAB ── */}
       {tab==='notify'&&(
-        <div style={{maxWidth:600}}>
+        <div style={{maxWidth:600,width:'100%'}}>
           <div style={{background:'#fff',borderRadius:12,padding:'20px',boxShadow:'0 1px 6px rgba(0,0,0,.06)'}}>
             <div style={{fontWeight:800,fontSize:13,marginBottom:16}}>📢 Broadcast to All / Selected Companies</div>
             {[
@@ -721,8 +760,19 @@ export default function ELogixAdminPage({ onLogout }) {
         </div>
       )}
 
-      </div>
+      {/* ── MODULE PERMISSIONS TAB (SuperAdmin only) ── */}
+      {tab==='modules'&&(
+        <TenantModulePermissionPage />
+      )}
 
+      {/* ── REFERRAL & COMMISSION TAB (SuperAdmin only) ── */}
+      {tab==='referral'&&(
+        <ReferralCommissionPage />
+      )}
+
+      </div>{/* end content */}
+
+      {/* ── Company Detail Modal ── */}
       {selected&&(
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.6)',zIndex:1000,
           display:'flex',alignItems:'center',justifyContent:'center',padding:16}} onClick={()=>setSelected(null)}>
@@ -768,7 +818,7 @@ export default function ELogixAdminPage({ onLogout }) {
               </div>
 
               {/* Actions */}
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8}}>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:8}}>
                 {[
                   ['💰 Generate Invoice','#059669',()=>notify(`📄 Invoice generated for ${selected.name}`)],
                   ['📢 Send Notice','#7c3aed',()=>{setShowNotifyModal(selected);setSelected(null)}],
@@ -802,7 +852,7 @@ export default function ELogixAdminPage({ onLogout }) {
               <div style={{fontSize:10,opacity:.8}}>Provisions company schema, default roles, admin user & storage</div>
             </div>
             <div style={{padding:'20px 22px'}}>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:12,marginBottom:12}}>
                 {[
                   ['Company Name *','company_name','text'],
                   ['Company URL * (.elogix.com.np)','slug','text'],
@@ -857,7 +907,7 @@ export default function ELogixAdminPage({ onLogout }) {
             <div style={{background:G,padding:'13px 20px',borderRadius:'16px 16px 0 0',color:'#fff'}}>
               <div style={{fontSize:14,fontWeight:900}}>📢 Notify: {showNotifyModal.name}</div>
             </div>
-            <div style={{padding:'16px 20px'}}>
+            <div style={{padding:'14px 14px'}}>
               <div style={{marginBottom:12}}>
                 <label style={{fontSize:10,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>Title</label>
                 <input style={inp} placeholder="e.g. eLogix Invoice Ready"/>

@@ -69,3 +69,4 @@ export default function FurnitureInventoryPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

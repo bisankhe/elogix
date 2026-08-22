@@ -24,6 +24,7 @@ const IDENTIFIED_NEEDS = [
 
 const SOURCE_CFG = {
   'Automated Skill-Gap Mapping':{c:'#7c3aed',icon:'🤖'},'Self-Flagged':{c:'#10b981',icon:'🙋'},'Manager Pulse Survey':{c:'#f59e0b',icon:'📋'},
+}
 const STATUS_CFG = {new:{c:'#f59e0b',bg:'#fffbeb',label:'New'},reviewed:{c:'#10b981',bg:'#f0fdf4',label:'Reviewed > Sent to TNA'}}
 
 export default function TrainingNeedsIdentificationPage() {
@@ -138,3 +139,4 @@ export default function TrainingNeedsIdentificationPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

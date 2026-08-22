@@ -20,6 +20,9 @@ function useCompanyCtx() {
     currency:     auth.company?.currency || 'NPR',
     token:        localStorage.getItem('elogix_token') || auth.token || '',
 
+}
+}
+
 export default function VendorEmployeeMappingPage() {
   const ctx = useCompanyCtx()
   const { navTo } = useApp()
@@ -173,3 +176,5 @@ export default function VendorEmployeeMappingPage() {
       </div>
     </div>
   )
+
+}

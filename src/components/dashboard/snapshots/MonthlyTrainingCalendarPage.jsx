@@ -118,3 +118,4 @@ export default function MonthlyTrainingCalendarPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

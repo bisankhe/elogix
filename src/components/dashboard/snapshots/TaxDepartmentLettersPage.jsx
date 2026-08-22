@@ -20,18 +20,22 @@ const LETTERS = [
   { id:'t1', type:'tax_clearance', subject:'Tax Clearance Certificate Request - Bank Loan Application',
     fiscal_year:'2024-25', submitted_date:'2025-06-08', status:'issued', reference_no:'IRD-TCC-88231',
     deadline:null, amount_npr:null,
+    notes:'All TDS, VAT, and corporate tax confirmed paid for FY 2024-25.',
     impact_links:['Full & Final Settlement'] },
   { id:'t2', type:'refund_request', subject:'Advance Tax Refund Request - Overpaid TDS Q3',
     fiscal_year:'2024-25', submitted_date:'2025-06-12', status:'under_review', reference_no:'IRD-REF-44102',
     deadline:null, amount_npr:142500,
+    notes:'Overpayment identified during quarterly reconciliation - requesting refund or carry-forward credit.',
     impact_links:['Payroll Setup'] },
   { id:'t3', type:'revision_correction', subject:'VAT Return Correction - May 2025 Filing',
     fiscal_year:'2024-25', submitted_date:null, status:'drafting', reference_no:null,
     deadline:'2025-06-30', amount_npr:null,
+    notes:'Accounting error in input VAT claim - requesting correction to previously submitted return.',
     impact_links:[] },
   { id:'t4', type:'deadline_extension', subject:'Annual Income Tax Return Extension Request - FY 2024-25',
     fiscal_year:'2024-25', submitted_date:null, status:'pending', reference_no:null,
     deadline:'2025-07-15', amount_npr:null,
+    notes:'Annual audit delayed due to system migration - requesting 30-day filing extension.',
     impact_links:[] },
 ]
 
@@ -40,6 +44,7 @@ const STATUS_CFG = {
   under_review:{c:'#3b82f6',bg:'#eff6ff',icon:'🔍',label:'Under Review'},
   drafting:{c:'#f59e0b',bg:'#fffbeb',icon:'✏',label:'Drafting'},
   pending:{c:'#94a3b8',bg:'#f8fafc',icon:'⏳',label:'Pending'},
+}
 
 export default function TaxDepartmentLettersPage() {
   const [letters, setLetters] = useState(LETTERS)
@@ -142,3 +147,4 @@ export default function TaxDepartmentLettersPage() {
       {showExcel&&<ExcelModal title="Tax Department Letters" columns={['Subject','Type','Fiscal Year','Submitted Date','Reference No','Amount NPR','Deadline','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

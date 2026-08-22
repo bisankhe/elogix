@@ -13,6 +13,7 @@ const A = '#0284c7'
 const STATUS_CFG = {
   present:{c:'#10b981',label:'Present'},late:{c:'#f59e0b',label:'Late'},absent:{c:'#ef4444',label:'Absent'},
   missed_checkout:{c:'#7c3aed',label:'Missed Checkout'},weekend:{c:'#cbd5e1',label:'Weekend'},
+}
 
 const CALENDAR_DAYS = [
   {day:1,status:'present',hours:8.5},{day:2,status:'present',hours:8.0},{day:3,status:'weekend',hours:0},
@@ -73,3 +74,4 @@ export default function MyAttendancePage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

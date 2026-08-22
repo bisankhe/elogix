@@ -93,3 +93,4 @@ export default function IncentiveProcessingPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

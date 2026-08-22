@@ -119,3 +119,4 @@ export default function EmergencySupportPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

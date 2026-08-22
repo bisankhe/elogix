@@ -23,6 +23,7 @@ const MY_EDP = {
     {date:'2025-06-18',by:'Manager',note:'Good progress on AWS course. Discussed pairing with Sunil on the next architecture review.'},
     {date:'2025-06-05',by:'Self',note:'Feeling behind on the client-shadowing goal due to sprint workload -- need to reprioritize.'},
   ],
+}
 
 export default function EmployeeDevelopmentPlanPage() {
   const [search, setSearch] = useState('')
@@ -117,3 +118,4 @@ export default function EmployeeDevelopmentPlanPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

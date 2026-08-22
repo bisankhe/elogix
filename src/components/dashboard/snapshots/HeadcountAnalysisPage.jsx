@@ -33,3 +33,4 @@ export default function HeadcountAnalysisPage(){
       </div>
     </div>
   )
+}

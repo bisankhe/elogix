@@ -79,3 +79,4 @@ export default function GatePassManagementPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

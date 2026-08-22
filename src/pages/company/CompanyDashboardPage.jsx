@@ -1,308 +1,484 @@
 // FILE: src/pages/company/CompanyDashboardPage.jsx
-// eLogix HRMS — Tenant Company Dashboard
-// First page tenant super_admin sees after login
-// Shows: company info, modules, employee count, quick actions
-// Reads from localStorage auth + hits /api/v1/dashboard/company
+// eLogix HRMS — Company Dashboard (Super Admin Landing)
+// ─────────────────────────────────────────────────────────────────────
+// Shown when role = super_admin | company_admin lands on 'company-dashboard'.
+// Replaces the blank "under construction" EmptyState previously shown.
+//
+// THREE STATES this page handles:
+//   1. PENDING    — company registered but not yet approved by eLogix SuperAdmin
+//   2. ACTIVE     — approved, but setup incomplete (< 5 checklist steps done)
+//   3. READY      — setup complete, show live KPI summary dashboard
+//
+// Integrates with:
+//   src/context/AuthContext.jsx          — currentUser, currentCompany, permissions
+//   src/hooks/useTenant.js               — tenant state helpers
+//   src/utils/tenantRouting.js           — tenantGet/tenantSet for persisting progress
+//   src/components/shared/PageTitle.jsx  — page heading component
+//   src/components/shared/StatCard.jsx   — metric cards
+//   src/components/shared/Card.jsx       — card wrapper
+//   src/components/layout/Sidebar.jsx    — reads permissions (no change needed)
+//   src/components/shared/EmptyState.jsx — fallback (not used in this redesign)
+//
 // eLogix Technologies · www.elogix.com.np
-import { useState, useEffect } from 'react'
 
-const A = '#0369a1'
-const G = 'linear-gradient(135deg,#0c4a6e,#0369a1,#38bdf8)'
+import { useState, useEffect, useMemo } from 'react'
+import { useAuth }    from '../../context/AuthContext.jsx'
+import { tenantGet, tenantSet } from '../../utils/tenantRouting.js'
+import {
+  resolveTenantAccess, getTenantPermissionRecord,
+  PLAN_DEFAULT_MODULES,
+} from '../../utils/tenantPermissions.js'
 
-const BT_CFG = {
-  recruitment_agency: { icon:'🎯', label:'Recruitment Agency',  color:'#e11d48' },
-  bank_finance:       { icon:'🏦', label:'Bank / Finance',      color:'#0369a1' },
-  hospital_health:    { icon:'🏥', label:'Hospital / Healthcare',color:'#059669' },
-  ngo_ingo:           { icon:'🌱', label:'NGO / INGO',          color:'#d97706' },
-  it_software:        { icon:'💻', label:'IT / Software',        color:'#7c3aed' },
-  manufacturing:      { icon:'🏭', label:'Manufacturing',        color:'#64748b' },
-  hotel_hospitality:  { icon:'🏨', label:'Hotel / Hospitality', color:'#c2410c' },
-  education:          { icon:'🎓', label:'Education',           color:'#0891b2' },
-  government:         { icon:'🏛️', label:'Government',          color:'#374151' },
-  custom:             { icon:'⚙️', label:'Custom',              color:'#6b7280' },
+// ── Inline style tokens (mirrors CDS variables) ───────────────────────
+const S = {
+  page    : { padding:'24px', fontFamily:"'Segoe UI',system-ui,sans-serif", color:'#0f172a', maxWidth:1100 },
+  hero    : { display:'flex', alignItems:'center', gap:16, padding:'18px 20px',
+              background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:12, marginBottom:20 },
+  avatar  : { width:52, height:52, borderRadius:'50%', background:'#dbeafe', display:'flex',
+              alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:22 },
+  h1      : { fontSize:17, fontWeight:600, color:'#0f172a', margin:0 },
+  sub     : { fontSize:13, color:'#64748b', marginTop:3 },
+  badgeRow: { display:'flex', gap:6, marginTop:8, flexWrap:'wrap' },
+  badge   : (color) => ({
+    fontSize:11, padding:'3px 10px', borderRadius:20, fontWeight:600,
+    background: color === 'blue'   ? '#dbeafe' : color === 'amber' ? '#fef3c7'
+              : color === 'green'  ? '#dcfce7' : color === 'purple' ? '#f3e8ff' : '#f1f5f9',
+    color:      color === 'blue'   ? '#1e40af' : color === 'amber' ? '#92400e'
+              : color === 'green'  ? '#166534' : color === 'purple' ? '#6b21a8' : '#475569',
+  }),
+  alert   : (type) => ({
+    display:'flex', gap:12, alignItems:'flex-start', padding:'12px 16px',
+    background: type === 'warning' ? '#fffbeb' : type === 'success' ? '#f0fdf4' : '#eff6ff',
+    border     : `1px solid ${type === 'warning' ? '#fde68a' : type === 'success' ? '#bbf7d0' : '#bfdbfe'}`,
+    borderRadius:8, marginBottom:20,
+  }),
+  alertIcon: (type) => ({
+    fontSize:20, flexShrink:0, marginTop:1,
+    color: type === 'warning' ? '#d97706' : type === 'success' ? '#16a34a' : '#2563eb',
+  }),
+  label   : { fontSize:11, fontWeight:700, color:'#94a3b8', letterSpacing:'0.05em',
+              textTransform:'uppercase', marginBottom:12 },
+  statsGrid: { display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',
+               gap:10, marginBottom:20 },
+  statCard : { background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:8, padding:'14px 16px' },
+  statLabel: { fontSize:11, color:'#64748b', marginBottom:6 },
+  statVal  : { fontSize:20, fontWeight:600, color:'#0f172a' },
+  statSub  : { fontSize:11, color:'#94a3b8', marginTop:2 },
+  progress : { height:6, background:'#f1f5f9', borderRadius:3, marginBottom:20,
+               overflow:'hidden', border:'1px solid #e2e8f0' },
+  progressFill: (pct) => ({
+    height:'100%', width:`${pct}%`,
+    background:'linear-gradient(90deg,#0369a1,#0ea5e9)',
+    borderRadius:3, transition:'width .4s ease',
+  }),
+  checkList: { display:'flex', flexDirection:'column', gap:8, marginBottom:20 },
+  checkItem: (done,active) => ({
+    display:'flex', alignItems:'center', gap:12, padding:'10px 14px',
+    background: done ? '#f0fdf4' : active ? '#eff6ff' : '#f8fafc',
+    border    : `1px solid ${done ? '#bbf7d0' : active ? '#bfdbfe' : '#e2e8f0'}`,
+    borderRadius:8, cursor: done ? 'default' : 'pointer', transition:'background .12s',
+    opacity: 1,
+  }),
+  checkCircle: (done,active) => ({
+    width:28, height:28, borderRadius:'50%', display:'flex', alignItems:'center',
+    justifyContent:'center', flexShrink:0, fontSize:14, fontWeight:700,
+    background: done ? '#dcfce7' : active ? '#dbeafe' : '#f1f5f9',
+    color     : done ? '#166534' : active ? '#1d4ed8' : '#94a3b8',
+    border    : done ? 'none' : active ? 'none' : '1px solid #e2e8f0',
+  }),
+  itemTitle: { fontSize:13, fontWeight:600, color:'#0f172a', lineHeight:1.3 },
+  itemSub  : { fontSize:11, color:'#64748b', marginTop:2 },
+  itemAction:(done) => ({
+    fontSize:12, fontWeight:700, whiteSpace:'nowrap', flexShrink:0,
+    color: done ? '#16a34a' : '#0369a1',
+  }),
+  twoCol   : { display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:20 },
+  card     : { background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:12, padding:'16px 20px' },
+  cardTitle: { fontSize:13, fontWeight:600, marginBottom:12, display:'flex', alignItems:'center', gap:8, color:'#374151' },
+  infoRow  : { display:'flex', justifyContent:'space-between', alignItems:'center',
+               padding:'5px 0', borderBottom:'1px solid #f1f5f9', fontSize:12 },
+  infoKey  : { color:'#64748b' },
+  infoVal  : { fontWeight:600, fontSize:12, color:'#0f172a' },
+  tlItem   : { display:'flex', gap:12, paddingBottom:8 },
+  tlDot    : (state) => ({
+    width:10, height:10, borderRadius:'50%', marginTop:4, flexShrink:0,
+    background: state === 'done' ? '#16a34a' : state === 'now' ? '#0369a1' : '#d1d5db',
+  }),
+  footer   : { padding:'12px 16px', background:'#f8fafc', border:'1px solid #e2e8f0',
+               borderRadius:8, fontSize:12, color:'#64748b', textAlign:'center', lineHeight:1.7 },
 }
 
-const PLAN_CFG = {
-  trial:      { label:'14-Day Free Trial', color:'#059669', emp:10   },
-  starter:    { label:'Starter',           color:'#0891b2', emp:50   },
-  growth:     { label:'Growth',            color:'#0369a1', emp:250  },
-  business:   { label:'Business',          color:'#7c3aed', emp:500  },
-  enterprise: { label:'Enterprise',        color:'#d97706', emp:1000 },
-  unlimited:  { label:'Unlimited',         color:'#0f172a', emp:9999 },
-}
-
-const QUICK_ACTIONS = [
-  { icon:'👤', label:'Add Employee',         route:'add-employee',      color:'#0369a1' },
-  { icon:'📅', label:'Mark Attendance',      route:'attendance-today',  color:'#059669' },
-  { icon:'🏖️', label:'Leave Requests',       route:'leave-requests',   color:'#d97706' },
-  { icon:'💰', label:'Run Payroll',          route:'payroll-processing',color:'#7c3aed' },
-  { icon:'🎯', label:'Post Job',             route:'ats-job-postings',  color:'#e11d48' },
-  { icon:'📊', label:'View Reports',         route:'reports',           color:'#0891b2' },
-  { icon:'⚙️', label:'Company Settings',     route:'company-setup',     color:'#374151' },
-  { icon:'👥', label:'Manage Users',         route:'user-management',   color:'#64748b' },
+// ── Setup checklist steps ─────────────────────────────────────────────
+const SETUP_STEPS = [
+  {
+    id      : 'registered',
+    icon    : '✅',
+    title   : 'Company account registered',
+    desc    : 'Basic company info submitted to eLogix',
+    action  : null,
+    alwaysDone: true,
+  },
+  {
+    id      : 'profile',
+    icon    : '🏢',
+    title   : 'Complete company profile',
+    desc    : 'Business type, address, logo, fiscal year, currency',
+    action  : '/settings/org',
+    actionLabel: 'Set up',
+  },
+  {
+    id      : 'org_structure',
+    icon    : '🏗️',
+    title   : 'Set up departments and designations',
+    desc    : 'Define your org structure before adding employees',
+    action  : '/hr/departments',
+    actionLabel: 'Set up',
+  },
+  {
+    id      : 'employees',
+    icon    : '👥',
+    title   : 'Add your first employees',
+    desc    : 'Invite HR manager, payroll officer, and department heads',
+    action  : '/hr/employees',
+    actionLabel: 'Add employees',
+  },
+  {
+    id      : 'salary',
+    icon    : '💰',
+    title   : 'Configure salary structures',
+    desc    : 'Basic pay, allowances, SSF/PF contributions, CIT setup',
+    action  : '/settings/salary',
+    actionLabel: 'Configure',
+  },
 ]
 
-export default function CompanyDashboardPage() {
-  const [dashData, setDashData] = useState(null)
-  const [loading,  setLoading]  = useState(true)
-  const [error,    setError]    = useState('')
+// ── Plan → feature count display ─────────────────────────────────────
+const PLAN_META = {
+  trial   : { label:'Trial',      modules:20,  employees:10  },
+  starter : { label:'Starter',    modules:40,  employees:50  },
+  growth  : { label:'Growth',     modules:80,  employees:200 },
+  business: { label:'Business',   modules:110, employees:500 },
+  enterprise:{ label:'Enterprise',modules:130, employees:'∞' },
+}
 
-  // ── Load tenant data ────────────────────────────────────────
-  useEffect(() => {
-    const loadData = async () => {
-      setLoading(true)
-      try {
-        // Try real API first
-        const token = localStorage.getItem('elogix_token') ||
-          JSON.parse(localStorage.getItem('elogix_auth')||'{}').token
-        if (token) {
-          const res = await fetch('/api/v1/dashboard/company', {
-            headers: { 'Authorization': `Bearer ${token}` }
-          })
-          if (res.ok) {
-            const d = await res.json()
-            setDashData(d.data || d)
-            setLoading(false)
-            return
-          }
-        }
-      } catch { /* fallback to localStorage */ }
+// ═════════════════════════════════════════════════════════════════════
+export default function CompanyDashboardPage({ setCurrentPage }) {
+  const { currentUser, currentCompany, permissions } = useAuth()
+  // Resolve eLogix SuperAdmin-granted permissions for this tenant
+  const access   = resolveTenantAccess(currentCompany?.slug)
+  const permRec  = getTenantPermissionRecord(currentCompany?.slug)
+  const hasPerms = access.hasAny
 
-      // Fallback: read from localStorage auth data
-      try {
-        const auth = JSON.parse(localStorage.getItem('elogix_auth') || '{}')
-        const regCos = JSON.parse(localStorage.getItem('elogix_registered_companies') || '{}')
-        const company = auth.company || {}
-        const user    = auth.user    || {}
-        const slug    = company.slug || user.company || 'demo'
-        const regData = regCos[slug] || {}
+  // Load persisted setup progress from tenant-scoped storage
+  const [completedSteps, setCompletedSteps] = useState(() => {
+    const slug    = currentCompany?.slug
+    const saved   = slug ? (tenantGet(slug, 'setup_steps') || {}) : {}
+    // 'registered' is always done
+    return { registered: true, ...saved }
+  })
 
-        setDashData({
-          company: {
-            name:          company.name || regData.name || 'Your Company',
-            slug:          slug,
-            plan:          company.plan || regData.plan || 'trial',
-            status:        company.status || regData.status || 'active',
-            business_type: company.business_type || regData.business_type || 'custom',
-            country:       company.country || regData.country || 'Nepal',
-            currency:      company.currency || regData.currency || 'NPR',
-            created_at:    company.created_at || regData.created_at || new Date().toISOString().split('T')[0],
-            modules:       company.modules || regData.modules || [],
-          },
-          user: {
-            name:  user.full_name || user.name || 'Admin',
-            email: user.email || auth.email || '',
-            role:  user.role || 'super_admin',
-            emp_id:user.emp_id || 'ELX-0001',
-          },
-          stats: {
-            total_employees: 0,
-            active_today:    0,
-            pending_leaves:  0,
-            open_jobs:       0,
-          }
-        })
-      } catch(e) {
-        setError('Could not load company data. Please refresh.')
-      }
-      setLoading(false)
-    }
-    loadData()
-  }, [])
+  // Derive company approval state
+  const isPending = useMemo(() => {
+    if (!currentCompany) return false
+    const pendingTenants  = (() => { try { return JSON.parse(localStorage.getItem('elogix_pending_tenants') || '[]') } catch(_e) { return [] } })()
+    const approvedTenants = (() => { try { return JSON.parse(localStorage.getItem('elogix_approved_tenants') || '{}') } catch(_e) { return {} } })()
+    const STATIC_SLUGS    = ['demo', 'himalayan', 'solidfuture']
+    if (STATIC_SLUGS.includes(currentCompany.slug)) return false
+    return pendingTenants.some(t => t.slug === currentCompany.slug) && !approvedTenants[currentCompany.slug]
+  }, [currentCompany])
 
-  const navTo = (route) => {
-    // Navigate to the route in App.jsx
-    window.dispatchEvent(new CustomEvent('elogix:navigate', { detail: route }))
+  const doneCount  = SETUP_STEPS.filter(s => completedSteps[s.id]).length
+  const totalSteps = SETUP_STEPS.length
+  const pct        = Math.round((doneCount / totalSteps) * 100)
+  const isSetupDone= doneCount === totalSteps
+
+  const planMeta  = PLAN_META[currentCompany?.plan] || PLAN_META.growth
+  const company   = currentCompany || {}
+  const user      = currentUser   || {}
+  const regDate   = new Date().toLocaleDateString('en-NP', { day:'numeric', month:'short', year:'numeric' })
+
+  // Mark a step complete and persist
+  function markDone(stepId) {
+    const updated = { ...completedSteps, [stepId]: true }
+    setCompletedSteps(updated)
+    if (company.slug) tenantSet(company.slug, 'setup_steps', updated)
   }
 
-  if (loading) return (
-    <div style={{ display:'flex',alignItems:'center',justifyContent:'center',
-      height:'60vh',fontFamily:'system-ui,sans-serif' }}>
-      <div style={{ textAlign:'center' }}>
-        <div style={{ fontSize:48,marginBottom:16 }}>⏳</div>
-        <div style={{ fontSize:14,color:'#64748b' }}>Loading your dashboard...</div>
-      </div>
-    </div>
-  )
+  // Navigate to a setup page
+  function handleStepClick(step) {
+    if (completedSteps[step.id] || step.alwaysDone) return
+    if (step.action && setCurrentPage) {
+      // Mark as visited (not done yet — user must complete it)
+      setCurrentPage(step.action)
+    }
+  }
 
-  if (error) return (
-    <div style={{ display:'flex',alignItems:'center',justifyContent:'center',
-      height:'60vh',fontFamily:'system-ui,sans-serif' }}>
-      <div style={{ textAlign:'center',maxWidth:400 }}>
-        <div style={{ fontSize:48,marginBottom:16 }}>⚠️</div>
-        <div style={{ fontSize:14,color:'#dc2626',marginBottom:16 }}>{error}</div>
-        <button onClick={()=>window.location.reload()}
-          style={{ padding:'10px 24px',borderRadius:9,border:'none',background:A,
-            color:'#fff',fontSize:12,fontWeight:700,cursor:'pointer' }}>
-          Refresh Page
-        </button>
-      </div>
-    </div>
-  )
-
-  const co    = dashData?.company || {}
-  const user  = dashData?.user    || {}
-  const stats = dashData?.stats   || {}
-  const bt    = BT_CFG[co.business_type] || BT_CFG.custom
-  const plan  = PLAN_CFG[co.plan] || PLAN_CFG.trial
-  const modules_count = (co.modules || []).length
-
-  return (
-    <div style={{ fontFamily:'system-ui,sans-serif',minHeight:'100%',
-      background:'#f0f9ff',overflowY:'auto',WebkitOverflowScrolling:'touch' }}>
-
-      {/* Header */}
-      <div style={{ background:G,padding:'20px 24px',borderRadius:'0 0 16px 16px',marginBottom:16 }}>
-        <div style={{ display:'flex',justifyContent:'space-between',
-          alignItems:'flex-start',flexWrap:'wrap',gap:12 }}>
+  // ── STATUS ALERT ──────────────────────────────────────────────────
+  function StatusAlert() {
+    if (isPending) {
+      return (
+        <div style={S.alert('warning')}>
+          <span style={S.alertIcon('warning')}>⏳</span>
           <div>
-            <div style={{ display:'flex',alignItems:'center',gap:10,marginBottom:6 }}>
-              <span style={{ fontSize:28 }}>{bt.icon}</span>
-              <div>
-                <div style={{ fontSize:18,fontWeight:900,color:'#fff' }}>{co.name}</div>
-                <div style={{ fontSize:10,color:'rgba(255,255,255,.7)' }}>
-                  {co.slug}.elogix.com.np · {bt.label}
-                </div>
-              </div>
-            </div>
-            <div style={{ fontSize:11,color:'rgba(255,255,255,.85)' }}>
-              Welcome back, <b>{user.name}</b> · {user.emp_id}
+            <div style={{ fontSize:13, fontWeight:600, color:'#92400e' }}>Your account is under review</div>
+            <div style={{ fontSize:12, color:'#a16207', marginTop:3, lineHeight:1.5 }}>
+              eLogix SuperAdmin is verifying your company details. You'll receive an email at{' '}
+              <strong>{user.email}</strong> once approved — typically within 1 business day.
+              You can complete your setup below while you wait.
             </div>
           </div>
-          <div style={{ display:'flex',gap:8,flexWrap:'wrap' }}>
-            <div style={{ background:'rgba(255,255,255,.15)',borderRadius:10,
-              padding:'8px 14px',textAlign:'center',minWidth:90 }}>
-              <div style={{ fontSize:14,fontWeight:900,color:'#fff' }}>
-                {plan.label}
-              </div>
-              <div style={{ fontSize:9,color:'rgba(255,255,255,.65)' }}>Current Plan</div>
+        </div>
+      )
+    }
+    if (isSetupDone) {
+      return (
+        <div style={S.alert('success')}>
+          <span style={S.alertIcon('success')}>🎉</span>
+          <div>
+            <div style={{ fontSize:13, fontWeight:600, color:'#166534' }}>Setup complete — your HRMS is ready</div>
+            <div style={{ fontSize:12, color:'#15803d', marginTop:3 }}>
+              All setup steps are done. Your team can now log in and start using {company.name || 'eLogix HRMS'}.
             </div>
-            <div style={{ background:'rgba(255,255,255,.15)',borderRadius:10,
-              padding:'8px 14px',textAlign:'center',minWidth:90 }}>
-              <div style={{ fontSize:14,fontWeight:900,color:'#fff' }}>
-                {modules_count} Modules
-              </div>
-              <div style={{ fontSize:9,color:'rgba(255,255,255,.65)' }}>Enabled</div>
-            </div>
-            <div style={{ background:'rgba(255,255,255,.15)',borderRadius:10,
-              padding:'8px 14px',textAlign:'center',minWidth:90 }}>
-              <div style={{ fontSize:14,fontWeight:900,
-                color:co.status==='active'?'#86efac':'#fde68a' }}>
-                {co.status==='trial'?'🎁 Trial':co.status==='active'?'✅ Active':'⏳ Pending'}
-              </div>
-              <div style={{ fontSize:9,color:'rgba(255,255,255,.65)' }}>Status</div>
-            </div>
+          </div>
+        </div>
+      )
+    }
+    return (
+      <div style={S.alert('info')}>
+        <span style={S.alertIcon('info')}>💡</span>
+        <div>
+          <div style={{ fontSize:13, fontWeight:600, color:'#1e40af' }}>
+            Complete your setup to activate all modules
+          </div>
+          <div style={{ fontSize:12, color:'#1d4ed8', marginTop:3 }}>
+            {doneCount} of {totalSteps} steps done. Full access unlocks when setup is complete.
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div style={S.page}>
+
+      {/* ── Hero ── */}
+      <div style={S.hero}>
+        <div style={S.avatar}>🏢</div>
+        <div style={{ flex:1, minWidth:0 }}>
+          <div style={S.h1}>{company.name || 'Your Company'}</div>
+          <div style={S.sub}>
+            {user.full_name || 'Admin'} &nbsp;·&nbsp; Super Admin &nbsp;·&nbsp; {user.email || ''}
+          </div>
+          <div style={S.badgeRow}>
+            <span style={S.badge('blue')}>{planMeta.label} Plan</span>
+            {isPending
+              ? <span style={S.badge('amber')}>Awaiting eLogix Approval</span>
+              : <span style={S.badge('green')}>Account Active</span>
+            }
+            <span style={S.badge('purple')}>Nepal Labour Act 2074</span>
+            <span style={S.badge('gray')}>{company.slug || 'demo'}.elogix.com.np</span>
           </div>
         </div>
       </div>
 
-      <div style={{ padding:'0 20px 24px' }}>
+      {/* ── Status alert ── */}
+      <StatusAlert />
 
-        {/* Stats row */}
-        <div style={{ display:'grid',
-          gridTemplateColumns:'repeat(auto-fill,minmax(150px,1fr))',
-          gap:12,marginBottom:16 }}>
+      {/* ── Quick stats ── */}
+      {/* ── Permission Status Banner ── */}
+      {!hasPerms && (
+        <div style={{ background:'#fef3c7', border:'1px solid #fde68a', borderRadius:10,
+          padding:'12px 16px', marginBottom:18, display:'flex', gap:12, alignItems:'flex-start' }}>
+          <span style={{ fontSize:18 }}>⏳</span>
+          <div>
+            <div style={{ fontSize:13, fontWeight:700, color:'#92400e' }}>
+              Module permissions not yet assigned
+            </div>
+            <div style={{ fontSize:12, color:'#a16207', marginTop:3 }}>
+              eLogix SuperAdmin needs to activate your modules. You have limited access until permissions are granted.
+              Contact <strong>support@elogix.com.np</strong>.
+            </div>
+          </div>
+        </div>
+      )}
+      {hasPerms && (
+        <div style={{ background:'#f0fdf4', border:'1px solid #bbf7d0', borderRadius:10,
+          padding:'12px 16px', marginBottom:18, display:'flex', gap:12, alignItems:'center',
+          justifyContent:'space-between', flexWrap:'wrap' }}>
+          <div style={{ display:'flex', gap:10, alignItems:'center' }}>
+            <span style={{ fontSize:18 }}>✅</span>
+            <div>
+              <div style={{ fontSize:13, fontWeight:700, color:'#166534' }}>
+                {access.modules.length} modules activated by eLogix SuperAdmin
+              </div>
+              {permRec?.granted_at && (
+                <div style={{ fontSize:11, color:'#15803d' }}>
+                  Last updated: {new Date(permRec.granted_at).toLocaleDateString()}
+                </div>
+              )}
+            </div>
+          </div>
+          <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+            {access.modules.slice(0,6).map(m => (
+              <span key={m} style={{ background:'#dcfce7', color:'#166534', fontSize:10,
+                fontWeight:600, padding:'2px 8px', borderRadius:20, border:'1px solid #bbf7d0' }}>
+                {m.replace(/_/g,' ')}
+              </span>
+            ))}
+            {access.modules.length > 6 && (
+              <span style={{ background:'#f0fdf4', color:'#166534', fontSize:10,
+                fontWeight:700, padding:'2px 8px', borderRadius:20 }}>
+                +{access.modules.length - 6} more
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div style={S.label}>Company at a glance</div>
+      <div style={S.statsGrid}>
+        <div style={S.statCard}>
+          <div style={S.statLabel}>Your role</div>
+          <div style={{ ...S.statVal, fontSize:15 }}>Super Admin</div>
+          <div style={S.statSub}>Full company access</div>
+        </div>
+        <div style={S.statCard}>
+          <div style={S.statLabel}>Plan</div>
+          <div style={{ ...S.statVal, fontSize:15 }}>{planMeta.label}</div>
+          <div style={S.statSub}>{planMeta.modules}+ modules</div>
+        </div>
+        <div style={S.statCard}>
+          <div style={S.statLabel}>Business type</div>
+          <div style={{ ...S.statVal, fontSize:15 }}>
+            {(company.business_type || 'Custom').replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}
+          </div>
+          <div style={S.statSub}>Nepal (NPR)</div>
+        </div>
+        <div style={S.statCard}>
+          <div style={S.statLabel}>Setup progress</div>
+          <div style={S.statVal}>{pct}%</div>
+          <div style={S.statSub}>{doneCount} of {totalSteps} steps done</div>
+        </div>
+      </div>
+
+      {/* ── Setup checklist ── */}
+      <div style={S.label}>
+        {hasPerms ? 'Setup checklist' : 'Setup checklist — pending module activation'}
+        {!isSetupDone && !hasPerms && ' ⏳'}
+      </div>
+      <div style={S.progress}>
+        <div style={S.progressFill(pct)} />
+      </div>
+
+      <div style={S.checkList}>
+        {SETUP_STEPS.map((step, i) => {
+          const done   = !!completedSteps[step.id]
+          const active = !done && (i === 0 || !!completedSteps[SETUP_STEPS[i-1]?.id])
+          return (
+            <div
+              key={step.id}
+              style={S.checkItem(done, active)}
+              onClick={() => handleStepClick(step)}
+            >
+              <div style={S.checkCircle(done, active)}>
+                {done ? '✓' : active ? (i + 1) : '🔒'}
+              </div>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={S.itemTitle}>{step.icon} {step.title}</div>
+                <div style={S.itemSub}>{step.desc}</div>
+              </div>
+              <span style={S.itemAction(done)}>
+                {done ? 'Done ✓' : active ? `${step.actionLabel || 'Start'} →` : 'Locked'}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* ── Two-column info ── */}
+      <div style={S.twoCol}>
+
+        {/* Account details */}
+        <div style={S.card}>
+          <div style={S.cardTitle}>🪪 Your account</div>
           {[
-            { icon:'👥', label:'Total Employees',   value:stats.total_employees||0,     color:'#0369a1' },
-            { icon:'✅', label:'Active Today',       value:stats.active_today||0,         color:'#059669' },
-            { icon:'🏖️', label:'Pending Leaves',    value:stats.pending_leaves||0,       color:'#d97706' },
-            { icon:'🎯', label:'Open Positions',    value:stats.open_jobs||0,            color:'#7c3aed' },
-          ].map(s=>(
-            <div key={s.label} style={{ background:'#fff',borderRadius:12,padding:'14px 16px',
-              boxShadow:'0 2px 8px rgba(0,0,0,.06)',borderTop:`3px solid ${s.color}` }}>
-              <div style={{ fontSize:20,marginBottom:6 }}>{s.icon}</div>
-              <div style={{ fontSize:22,fontWeight:900,color:s.color }}>{s.value}</div>
-              <div style={{ fontSize:10,color:'#64748b',marginTop:2 }}>{s.label}</div>
+            ['Login ID',      user.email        || '—'],
+            ['ELX UID',       user.emp_id        || 'ELX-DEMO-0001'],
+            ['Company slug',  company.slug       || '—'],
+            ['Timezone',      company.timezone   || 'Asia/Kathmandu'],
+            ['Currency',      (company.currency  || 'NPR') + ' (रु)'],
+            ['Country',       company.country    || 'Nepal'],
+          ].map(([k, v]) => (
+            <div key={k} style={S.infoRow}>
+              <span style={S.infoKey}>{k}</span>
+              <span style={S.infoVal}>{v}</span>
             </div>
           ))}
         </div>
 
-        {/* Quick Actions */}
-        <div style={{ background:'#fff',borderRadius:12,padding:16,
-          boxShadow:'0 2px 8px rgba(0,0,0,.06)',marginBottom:16 }}>
-          <div style={{ fontSize:13,fontWeight:800,color:'#0f172a',marginBottom:12 }}>
-            ⚡ Quick Actions
-          </div>
-          <div style={{ display:'grid',
-            gridTemplateColumns:'repeat(auto-fill,minmax(130px,1fr))',gap:10 }}>
-            {QUICK_ACTIONS.map(a=>(
-              <button key={a.route} onClick={()=>navTo(a.route)}
-                style={{ padding:'14px 10px',borderRadius:10,border:'none',cursor:'pointer',
-                  background:a.color+'10',border:`1px solid ${a.color}20`,
-                  textAlign:'center',transition:'all .15s' }}
-                onMouseEnter={e=>{ e.currentTarget.style.background=a.color+'20';
-                  e.currentTarget.style.transform='translateY(-2px)' }}
-                onMouseLeave={e=>{ e.currentTarget.style.background=a.color+'10';
-                  e.currentTarget.style.transform='none' }}>
-                <div style={{ fontSize:22,marginBottom:6 }}>{a.icon}</div>
-                <div style={{ fontSize:10,fontWeight:700,color:a.color }}>{a.label}</div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Setup progress */}
-        {co.status==='trial' && (
-          <div style={{ background:'#fff',borderRadius:12,padding:16,
-            boxShadow:'0 2px 8px rgba(0,0,0,.06)',marginBottom:16,
-            border:'1.5px solid #bae6fd' }}>
-            <div style={{ fontSize:13,fontWeight:800,color:'#0f172a',marginBottom:8 }}>
-              🚀 Setup Checklist — Complete your setup
+        {/* Approval timeline */}
+        <div style={S.card}>
+          <div style={S.cardTitle}>🗓️ Approval timeline</div>
+          {[
+            { label:'Registration submitted', sub:regDate,       state:'done' },
+            { label:'eLogix team reviewing',  sub:'In progress', state: isPending ? 'now' : 'done' },
+            { label:'Credentials emailed',    sub:'Pending',     state: isPending ? 'wait' : 'done' },
+            { label:'Full portal activated',  sub: isSetupDone ? 'Complete' : 'After setup', state: isSetupDone ? 'done' : 'wait' },
+          ].map((tl, i) => (
+            <div key={i} style={S.tlItem}>
+              <div style={{ display:'flex', flexDirection:'column', alignItems:'center' }}>
+                <div style={S.tlDot(tl.state)} />
+                {i < 3 && <div style={{ width:1, background:'#e2e8f0', flex:1, minHeight:20, margin:'4px 0' }} />}
+              </div>
+              <div style={{ paddingBottom:4 }}>
+                <div style={{ fontSize:12, fontWeight:600, color:'#0f172a' }}>{tl.label}</div>
+                <div style={{ fontSize:11, color:'#64748b' }}>{tl.sub}</div>
+              </div>
             </div>
-            {[
-              { done:true,  label:'Company registered',           action:null },
-              { done:stats.total_employees>0, label:'Add first employee', action:'add-employee' },
-              { done:false, label:'Configure biometric device',   action:'biometric-attendance' },
-              { done:false, label:'Set up payroll structure',     action:'salary-structure' },
-              { done:false, label:'Import existing employees',    action:'employee-import' },
-              { done:false, label:'Upgrade to paid plan',        action:'billing' },
-            ].map((item,i)=>(
-              <div key={i} style={{ display:'flex',alignItems:'center',gap:10,
-                padding:'8px 0',borderBottom:'1px solid #f1f5f9' }}>
-                <span style={{ fontSize:16 }}>{item.done?'✅':'⭕'}</span>
-                <span style={{ fontSize:11,color:item.done?'#64748b':'#0f172a',
-                  flex:1,textDecoration:item.done?'line-through':'' }}>{item.label}</span>
-                {!item.done && item.action && (
-                  <button onClick={()=>navTo(item.action)}
-                    style={{ padding:'4px 12px',borderRadius:7,border:'none',
-                      background:A,color:'#fff',fontSize:10,fontWeight:700,cursor:'pointer' }}>
-                    Do it →
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Company info */}
-        <div style={{ background:'#fff',borderRadius:12,padding:16,
-          boxShadow:'0 2px 8px rgba(0,0,0,.06)' }}>
-          <div style={{ fontSize:13,fontWeight:800,color:'#0f172a',marginBottom:12 }}>
-            🏢 Company Information
-          </div>
-          <div style={{ display:'grid',
-            gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:10 }}>
-            {[
-              ['Portal URL',      `${co.slug}.elogix.com.np`],
-              ['Business Type',   bt.label],
-              ['Country',         co.country||'Nepal'],
-              ['Currency',        co.currency||'NPR'],
-              ['Plan',            plan.label],
-              ['Max Employees',   plan.emp.toLocaleString()],
-              ['Modules',         `${modules_count} enabled`],
-              ['Member Since',    co.created_at||'—'],
-            ].map(([lb,v])=>(
-              <div key={lb} style={{ padding:'10px 12px',background:'#f8fafc',
-                borderRadius:9,border:'1px solid #e2e8f0' }}>
-                <div style={{ fontSize:9,color:'#94a3b8',marginBottom:2 }}>{lb}</div>
-                <div style={{ fontSize:11,fontWeight:700,color:'#0f172a',
-                  overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{v}</div>
-              </div>
-            ))}
-          </div>
+          ))}
         </div>
-
       </div>
+
+      {/* ── Plan features ── */}
+      <div style={S.card}>
+        <div style={S.cardTitle}>📦 Your {planMeta.label} plan includes</div>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))', gap:'6px 20px' }}>
+          {[
+            `Up to ${planMeta.employees} employees`,
+            `${planMeta.modules}+ HR modules`,
+            'Core HR & Employee database',
+            'Attendance & Leave management',
+            'Payroll with SSF/PF/CIT/TDS',
+            'Performance management',
+            ...(planMeta.label === 'Growth' || planMeta.label === 'Business' || planMeta.label === 'Enterprise'
+              ? ['Recruitment & ATS', 'Training & Development'] : []),
+            ...(planMeta.label === 'Enterprise'
+              ? ['AI Insights & Analytics', 'API access & integrations'] : []),
+            'Nepal Labour Act 2074 compliant',
+            'RBAC role-based access control',
+            'Multi-tenant data isolation',
+          ].map((feat, i) => (
+            <div key={i} style={{ display:'flex', alignItems:'center', gap:8, fontSize:12, padding:'4px 0' }}>
+              <span style={{ color:'#16a34a', fontWeight:700, flexShrink:0 }}>✓</span>
+              <span style={{ color:'#374151' }}>{feat}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Footer ── */}
+      <div style={{ ...S.footer, marginTop:16 }}>
+        <strong style={{ color:'#0f172a' }}>Need help?</strong> Contact eLogix support at{' '}
+        <strong style={{ color:'#0369a1' }}>support@elogix.com.np</strong>
+        {' '}or call{' '}
+        <strong style={{ color:'#0369a1' }}>+977-1-XXXXXXX</strong>
+        {' '}· Mon–Fri 9am–5pm NPT
+        <br />
+        <span style={{ fontSize:11 }}>
+          eLogix Technologies · www.elogix.com.np · Datahub Nepal · National ICT Award 2024
+        </span>
+      </div>
+
     </div>
   )
 }

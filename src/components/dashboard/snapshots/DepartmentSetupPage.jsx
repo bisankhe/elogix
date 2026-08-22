@@ -9,8 +9,8 @@ const A = '#0369a1'
 const G = 'linear-gradient(135deg,#0c4a6e,#0369a1)'
 
 function useCompanyCtx() {
-  const auth   = (() => { try { return JSON.parse(localStorage.getItem('elogix_auth')||'{}') } catch { return {} } })()
-  const regCos = (() => { try { return JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}') } catch { return {} } })()
+  const auth   = (() => { try { return JSON.parse(localStorage.getItem('elogix_auth')||'{}') } catch(_e) { return {} } })()
+  const regCos = (() => { try { return JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}') } catch(_e) { return {} } })()
   const slug   = auth.company?.slug || auth.user?.company || 'demo'
   return {
     company_id:   auth.company?.id || slug,
@@ -19,6 +19,8 @@ function useCompanyCtx() {
     plan:         auth.company?.plan || 'trial',
     currency:     auth.company?.currency || 'NPR',
     token:        localStorage.getItem('elogix_token') || auth.token || '',
+  }
+}
 
 export default function DepartmentSetupPage() {
   const ctx = useCompanyCtx()
@@ -46,7 +48,7 @@ export default function DepartmentSetupPage() {
             setItems(Array.isArray(data) ? data : [])
             localStorage.setItem(storageKey, JSON.stringify(data))
             setLoading(false); return
-      } catch {}
+      } catch(_e) {}
       const stored = JSON.parse(localStorage.getItem(storageKey) || '[]')
       setItems(stored)
       setLoading(false)
@@ -65,16 +67,18 @@ export default function DepartmentSetupPage() {
         headers:{'Content-Type':'application/json', Authorization:`Bearer ${ctx.token}`},
         body: JSON.stringify(item)
       })
-    } catch {}
+    } catch(_e) {}
     notify('Saved')
     setShowAdd(false)
     setForm({ name:'', description:'', status:'active' })
+  }
 
   const handleDelete = (id) => {
     const updated = items.filter(i => i.id !== id)
     setItems(updated)
     localStorage.setItem(storageKey, JSON.stringify(updated))
     notify('Deleted')
+  }
 
   return (
     <div style={{ fontFamily:'system-ui,sans-serif', minHeight:'100%',
@@ -173,3 +177,5 @@ export default function DepartmentSetupPage() {
       </div>
     </div>
   )
+
+}

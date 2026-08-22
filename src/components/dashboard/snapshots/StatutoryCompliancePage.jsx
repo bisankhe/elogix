@@ -70,3 +70,4 @@ export default function StatutoryCompliancePage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

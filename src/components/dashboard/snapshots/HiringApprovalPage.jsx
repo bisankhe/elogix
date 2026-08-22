@@ -11,6 +11,7 @@ const APPROVALS = [
     date:'2025-06-18', priority:'high', status:'pending_hr',
     ai_score_total:94,
     ai_breakdown:{ technical:96, cultural_fit:92, communication:91, experience:98, leadership:88, education:94 },
+    ai_recommendation:'Strong Hire — Top performer in technical assessment. Exceeds role requirements.',
     approval_chain:[
       {step:'Dept Head',    by:'Rajesh Sharma',  status:'approved', date:'2025-06-19', note:'Excellent technical skills.'},
       {step:'Finance',      by:'Sanjay Karki',   status:'approved', date:'2025-06-20', note:'Budget approved.'},
@@ -23,6 +24,7 @@ const APPROVALS = [
     date:'2025-06-20', priority:'critical', status:'pending_ceo',
     ai_score_total:97,
     ai_breakdown:{ technical:99, cultural_fit:95, communication:96, experience:98, leadership:97, education:97 },
+    ai_recommendation:'Outstanding match. Highest-ranked candidate in 2025. Fast-track strongly recommended.',
     approval_chain:[
       {step:'Dept Head',  by:'Rajesh Sharma',  status:'approved', date:'2025-06-21', note:'Must hire.'},
       {step:'Finance',    by:'Sanjay Karki',   status:'approved', date:'2025-06-21', note:'Approved at G7 band.'},
@@ -35,6 +37,7 @@ const APPROVALS = [
     date:'2025-06-17', priority:'high', status:'pending_finance',
     ai_score_total:88,
     ai_breakdown:{ technical:90, cultural_fit:85, communication:88, experience:92, leadership:82, education:90 },
+    ai_recommendation:'Hire — CA qualified with 8 years experience. Minor concern on leadership score.',
     approval_chain:[
       {step:'Dept Head',  by:'Anil Pandey',    status:'approved', date:'2025-06-18', note:'Good candidate.'},
       {step:'Finance',    by:'Sanjay Karki',   status:'pending',  date:null, note:''},
@@ -47,6 +50,7 @@ const APPROVALS = [
     date:'2025-06-19', priority:'medium', status:'approved',
     ai_score_total:83,
     ai_breakdown:{ technical:80, cultural_fit:90, communication:86, experience:82, leadership:78, education:83 },
+    ai_recommendation:'Hire — Strong culture fit. MBA HR. Good communication skills.',
     approval_chain:[
       {step:'Dept Head',  by:'Priya Adhikari', status:'approved', date:'2025-06-19', note:'Good HR fit.'},
       {step:'Finance',    by:'Sanjay Karki',   status:'approved', date:'2025-06-20', note:'Within budget.'},
@@ -62,6 +66,7 @@ const STATUS_CFG = {
   pending_finance:{c:'#3b82f6',bg:'#eff6ff',b:'#bfdbfe',icon:'💰',label:'Pending Finance'},
   approved:       {c:'#10b981',bg:'#f0fdf4',b:'#bbf7d0',icon:'✅',label:'Fully Approved'},
   rejected:       {c:'#ef4444',bg:'#fef2f2',b:'#fecaca',icon:'❌',label:'Rejected'},
+}
 
 const SCORE_LABELS = {technical:'Technical',cultural_fit:'Cultural Fit',communication:'Communication',experience:'Experience',leadership:'Leadership',education:'Education'}
 const SCORE_COLORS = {technical:'#3b82f6',cultural_fit:'#10b981',communication:'#8b5cf6',experience:'#f59e0b',leadership:'#ef4444',education:'#06b6d4'}
@@ -87,15 +92,18 @@ export default function HiringApprovalPage() {
       if (pendingIdx >= 0) {
         chain[pendingIdx] = {...chain[pendingIdx], status:'approved', date:new Date().toISOString().split('T')[0], note: noteText||'Approved via HRMS'}
         if (pendingIdx+1 < chain.length) chain[pendingIdx+1] = {...chain[pendingIdx+1], status:'pending'}
+      }
       const allApproved = chain.every(s => s.status==='approved')
       return {...it, approval_chain:chain, status:allApproved?'approved':it.status, notified:false}
     }))
     setNoteModal(null); setNoteText('')
     notify('✅ Approval recorded — next approver notified automatically')
+  }
 
   const sendNotification = (item) => {
     setItems(prev=>prev.map(it=>it.id===item.id?{...it,notified:true}:it))
     notify(`📧 Notification sent to ${item.candidate} via Email + WhatsApp + HRMS`)
+  }
 
   const filtered = items.filter(it=>{
     if (filter!=='all'&&it.status!==filter) return false
@@ -269,3 +277,4 @@ export default function HiringApprovalPage() {
       ]}/>
     </div>
   )
+}

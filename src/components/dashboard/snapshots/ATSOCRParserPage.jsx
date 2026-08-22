@@ -15,6 +15,7 @@ async function callAI(prompt, sys) {
     if (r.ok) { const d = await r.json(); return d.content?.map(c => c.text).join('') || '' }
   } catch {}
   return null
+}
 
 const FILE_ICONS = {
   pdf: { icon: '📄', color: '#ef4444', bg: '#fef2f2', label: 'PDF' },
@@ -27,6 +28,7 @@ const FILE_ICONS = {
   png:  { icon: '🖼️', color: '#7c3aed', bg: '#f5f3ff', label: 'Image' },
   txt:  { icon: '📃', color: '#64748b', bg: '#f8fafc', label: 'Text' },
   rtf:  { icon: '📋', color: '#0891b2', bg: '#ecfeff', label: 'RTF' },
+}
 
 const OCR_STAGES = [
   { label: 'Downloading file from source', pct: 8 },
@@ -106,6 +108,7 @@ function calcAIScore(parsed, job) {
     d.salary * w.salary / 100 +
     d.notice * w.notice / 100
   )
+}
 
 function getRank(score, ageOK, isDupe, ageRejected) {
   if (ageRejected) return 'Reject'
@@ -114,6 +117,7 @@ function getRank(score, ageOK, isDupe, ageRejected) {
   if (score >= 70) return 'Silver'
   if (score >= 55) return 'Bronze'
   return 'Reject'
+}
 
 const rankStyle = {
   Gold:      { c: '#92400e', bg: '#fef9c3', border: '#f59e0b', icon: '🥇' },
@@ -121,6 +125,7 @@ const rankStyle = {
   Bronze:    { c: '#7c2d12', bg: '#fff7ed', border: '#fb923c', icon: '🥉' },
   Reject:    { c: '#dc2626', bg: '#fef2f2', border: '#fecaca', icon: '❌' },
   Duplicate: { c: '#7c3aed', bg: '#f5f3ff', border: '#c4b5fd', icon: '🔁' },
+}
 
 function ScoreRing({ score, size = 56 }) {
   const c = score >= 80 ? '#059669' : score >= 65 ? '#f59e0b' : '#ef4444'
@@ -135,6 +140,7 @@ function ScoreRing({ score, size = 56 }) {
         fontWeight="900" transform={`rotate(90,${size/2},${size/2})`}>{score}%</text>
     </svg>
   )
+}
 
 function MatchBreakdown({ detail, weights }) {
   const labels = { skills:'Skills', experience:'Experience', education:'Education',
@@ -155,6 +161,7 @@ function MatchBreakdown({ detail, weights }) {
       ))}
     </div>
   )
+}
 
 export default function ATSOCRParserPage() {
   const { navigate } = useApp()
@@ -184,6 +191,7 @@ export default function ATSOCRParserPage() {
           parseConfidence: 92 + Math.random() * 7
         } : f))
         return
+      }
       const stage = OCR_STAGES[idx]
       setFiles(prev => prev.map(f => f.id === entry.id ? { ...f, stage: stage.label, pct: stage.pct } : f))
       idx++
@@ -444,3 +452,4 @@ export default function ATSOCRParserPage() {
       })()}
     </div>
   )
+}

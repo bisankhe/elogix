@@ -1,10 +1,14 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+// FILE: BranchLocationPage.jsx - Luxury Branch & Location Setup
 
+import { useState, useRef, useCallback } from 'react'
 import { useApp } from '../../../context/AppContext.jsx'
 
 const THEME = {
+  gradient:'linear-gradient(135deg,#0ea5e9 0%,#6366f1 100%)',
   success:'#10b981', danger:'#ef4444',
+}
 
+const MOCK_BRANCHES = [
   { id:'br-001', code:'KTM-HQ', name:'Kathmandu Headquarters', short_name:'KTM HQ',
     type:'Headquarters', status:'active', country:'Nepal', province:'Bagmati Province',
     district:'Kathmandu', municipality:'Kathmandu Metropolitan', ward_no:'14',
@@ -63,6 +67,7 @@ const TYPE_COLORS = {
   'International Office':'#0ea5e9',
   'Virtual':           '#8b5cf6',
   'Regional Office':   '#f59e0b',
+}
 
 function ContextMenu({ x, y, item, onClose, onAction }) {
   const actions = [
@@ -100,6 +105,7 @@ function ContextMenu({ x, y, item, onClose, onAction }) {
       ))}
     </div>
   )
+}
 
 function useAudio(onResult) {
   const [listening, setListening] = useState(false)
@@ -110,7 +116,9 @@ function useAudio(onResult) {
     r.onresult = e => { onResult(e.results[0][0].transcript); setListening(false) }
     r.onerror = () => setListening(false); r.onend = () => setListening(false)
     r.start(); setListening(true)
+  }
   return { listening, start }
+}
 
 function LuxInput({ label, value, onChange, type='text', options, required, cols=1 }) {
   const { listening, start } = useAudio(t => onChange && onChange(t))
@@ -121,6 +129,7 @@ function LuxInput({ label, value, onChange, type='text', options, required, cols
     outline:'none', boxSizing:'border-box',
     boxShadow: focused?'0 0 0 3px rgba(14,165,233,0.12)':'none',
     transition:'all .2s', background:'#fff'
+  }
   return (
     <div style={{ marginBottom:14, gridColumn:`span ${cols}` }}>
       <label style={{ display:'block', fontSize:11, fontWeight:700, color:'#334155', marginBottom:4 }}>
@@ -148,6 +157,7 @@ function LuxInput({ label, value, onChange, type='text', options, required, cols
       </div>
     </div>
   )
+}
 
 function AddBranchModal({ onClose, onSave }) {
   const [form, setForm] = useState({
@@ -227,117 +237,9 @@ function AddBranchModal({ onClose, onSave }) {
       </div>
     </div>
   )
-
-
-import React, { useState, useEffect, useRef, useCallback } from 'react'
-
-// ── Tenant-scoped data hook ─────────────────────────────────
-function useTenantData(resourceKey) {
-  const getAuth = () => {
-    try { return JSON.parse(localStorage.getItem('elogix_auth') || '{}') } catch { return {} }
-  const getCompanyId = () => {
-    const auth = getAuth()
-    return auth.company?.id || auth.company?.slug || auth.user?.company || 'demo'
-  const getToken = () => {
-    return localStorage.getItem('elogix_token') || getAuth().token || ''
-  const storageKey = () => `elogix_${resourceKey}_${getCompanyId()}`
-
-  const [items,   setItems]   = React.useState([])
-  const [loading, setLoading] = React.useState(true)
-  const [company, setCompany] = React.useState(null)
-
-  React.useEffect(() => {
-    // Load company info
-    const auth = getAuth()
-    const regCos = JSON.parse(localStorage.getItem('elogix_registered_companies') || '{}')
-    const slug = auth.company?.slug || auth.user?.company || 'demo'
-    setCompany({
-      id: auth.company?.id || slug,
-      name: auth.company?.name || regCos[slug]?.name || 'Your Company',
-      slug, plan: auth.company?.plan || 'trial',
-      country: auth.company?.country || 'Nepal',
-      currency: auth.company?.currency || 'NPR',
-      business_type: auth.company?.business_type || 'custom',
-    })
-    // Load data from API then localStorage fallback
-    const load = async () => {
-      try {
-        const token = getToken()
-        if (token) {
-          const res = await fetch(`/api/v1/${resourceKey}`, {
-            headers: { Authorization: `Bearer ${token}` }
-          })
-          if (res.ok) {
-            const d = await res.json()
-            const data = d.data || d[resourceKey] || d.items || []
-            setItems(Array.isArray(data) ? data : [])
-            localStorage.setItem(storageKey(), JSON.stringify(data))
-            setLoading(false); return
-      } catch {}
-      // Fallback: tenant-keyed localStorage
-      const stored = JSON.parse(localStorage.getItem(storageKey()) || '[]')
-      setItems(stored)
-      setLoading(false)
-    load()
-  }, [])
-
-  const saveItems = (newItems) => {
-    setItems(newItems)
-    localStorage.setItem(storageKey(), JSON.stringify(newItems))
-    // Try API save
-    const token = getToken()
-    if (token) {
-      fetch(`/api/v1/${resourceKey}/bulk`, {
-        method: 'PUT',
-        headers: { 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
-        body: JSON.stringify(newItems)
-      }).catch(() => {})
-
-  const addItem = (item) => {
-    const newItem = { ...item, id: item.id || `${resourceKey}-${Date.now()}`,
-                     company_id: getCompanyId() }
-    const updated = [...items, newItem]
-    saveItems(updated)
-    // POST to API
-    const token = getToken()
-    if (token) {
-      fetch(`/api/v1/${resourceKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
-        body: JSON.stringify(newItem)
-      }).catch(() => {})
-    return newItem
-
-  const updateItem = (id, updates) => {
-    const updated = items.map(i => i.id === id ? { ...i, ...updates } : i)
-    saveItems(updated)
-
-  const deleteItem = (id) => {
-    const updated = items.filter(i => i.id !== id)
-    saveItems(updated)
-
-  return { items, loading, company, addItem, updateItem, deleteItem, setItems: saveItems }
-
-
-// ── Tenant context ────────────────────────────────────────────
-function useCompanyCtx() {
-  const auth   = (() => { try { return JSON.parse(localStorage.getItem('elogix_auth')||'{}') } catch { return {} } })()
-  const regCos = (() => { try { return JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}') } catch { return {} } })()
-  const slug   = auth.company?.slug || auth.user?.company || 'demo'
-  return {
-    company_id:   auth.company?.id || slug,
-    company_name: auth.company?.name || regCos[slug]?.name || 'Your Company',
-    company_slug: slug,
-    plan:         auth.company?.plan || 'trial',
-    currency:     auth.company?.currency || 'NPR',
-    token:        localStorage.getItem('elogix_token') || auth.token || '',
+}
 
 export default function BranchLocationPage() {
-  const ctx = useCompanyCtx()
-  // ── Tenant context: only this company's data is shown ────────
-  const companyName = company?.name || 'Your Company'
-  const companySlug = company?.slug || ''
-
   const [branches,    setBranches]    = useState(MOCK_BRANCHES)
   const [contextMenu, setContextMenu] = useState(null)
   const [showAdd,     setShowAdd]     = useState(false)
@@ -573,3 +475,4 @@ export default function BranchLocationPage() {
       )}
     </div>
   )
+}

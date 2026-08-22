@@ -130,3 +130,4 @@ export default function SkillGapAnalysisPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

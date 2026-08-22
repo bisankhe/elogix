@@ -50,6 +50,7 @@ function PlatformCard({ p, onConnect, onDisconnect, onTest }){
     await new Promise(r=>setTimeout(r,800))
     setTesting(false)
     alert(`${p.name} connection verified ✓`)
+  }
   return(
     <div style={{background:'#fff',border:`2px solid ${status==='connected'?p.color+'44':'#e2e8f0'}`,borderRadius:16,padding:'16px',transition:'border .2s'}}>
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:10}}>
@@ -90,6 +91,7 @@ function PlatformCard({ p, onConnect, onDisconnect, onTest }){
       </div>
     </div>
   )
+}
 
 function EventRow({ ev, platformMap }){
   const [active, setActive] = useState(true)
@@ -137,6 +139,7 @@ function EventRow({ ev, platformMap }){
       )}
     </div>
   )
+}
 
 export default function IntegrationHubPage(){
   const [tab, setTab] = useState('platforms')
@@ -246,3 +249,4 @@ export default function IntegrationHubPage(){
       </div>
     </div>
   )
+}

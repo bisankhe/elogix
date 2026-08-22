@@ -39,6 +39,7 @@ function MiniBarChart({data,color}) {
       ))}
     </div>
   )
+}
 
 const RISK_CFG = {high:{c:'#ef4444',bg:'#fef2f2'},medium:{c:'#f59e0b',bg:'#fffbeb'},low:{c:'#10b981',bg:'#f0fdf4'}}
 
@@ -131,3 +132,4 @@ export default function OvertimeMonitoringPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

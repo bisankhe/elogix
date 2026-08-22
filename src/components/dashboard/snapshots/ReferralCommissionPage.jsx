@@ -7,7 +7,6 @@
 // Transparent: partners see live data on their referred tenants' billing
 // eLogix Technologies · www.elogix.com.np
 import { useState, useMemo } from 'react'
-import { useApp } from '../../../context/AppContext.jsx'
 
 const A = '#7c3aed'
 const G = 'linear-gradient(135deg,#1e1b4b,#7c3aed,#c4b5fd)'
@@ -30,6 +29,7 @@ const COMMISSION_RULES = {
   chargeback_period: 90,    // 90 days — if client refunds, commission reversed
   lifetime:          true,  // Lifetime commission (as long as client stays)
   upgrade_bonus:     5,     // Extra % when referred client upgrades plan
+}
 
 // ── PLANS MONTHLY VALUE ───────────────────────────────────────
 const PLAN_MRR = {
@@ -39,6 +39,7 @@ const PLAN_MRR = {
   business:   25000,
   enterprise: 45000,
   unlimited:  75000,
+}
 
 // ── DEMO PARTNERS ─────────────────────────────────────────────
 const DEMO_PARTNERS = [
@@ -117,6 +118,7 @@ const DEMO_PARTNERS = [
 // ── HELPERS ──────────────────────────────────────────────────
 function getCommissionRate(tier) {
   return COMMISSION_TIERS.find(t=>t.id===tier)?.rate || 10
+}
 
 function calcPartnerStats(partner) {
   const tier_info = COMMISSION_TIERS.find(t=>t.id===partner.tier)
@@ -138,6 +140,8 @@ function calcPartnerStats(partner) {
     total_earned,
     pending_payout,
     ytd: Math.round(monthly_commission * 8),
+  }
+}
 
 // ── STATUS BADGE ─────────────────────────────────────────────
 function StatusBadge({ status }) {
@@ -146,6 +150,7 @@ function StatusBadge({ status }) {
     pending: { bg:'#fffbeb', color:'#d97706', label:'⏳ Pending' },
     trial:   { bg:'#f0f9ff', color:'#0369a1', label:'🎁 Trial' },
     paid:    { bg:'#f0fdf4', color:'#16a34a', label:'✓ Paid' },
+  }
   const c = cfg[status] || cfg.active
   return (
     <span style={{ fontSize:9,padding:'2px 8px',borderRadius:10,fontWeight:700,
@@ -153,6 +158,7 @@ function StatusBadge({ status }) {
       {c.label}
     </span>
   )
+}
 
 // ── TIER BADGE ───────────────────────────────────────────────
 function TierBadge({ tier }) {
@@ -163,12 +169,16 @@ function TierBadge({ tier }) {
       {t.icon} {t.label}
     </span>
   )
+}
 
 // ── MAIN COMPONENT ────────────────────────────────────────────
 export default function ReferralCommissionPage() {
-  const { currentPersona, persona } = useApp()
-  const role = (currentPersona?.id||persona||'').toLowerCase()
-  const isSuperAdmin = role.includes('super')||role.includes('admin')||role.includes('exec')
+  // Rendered inside ELogixAdminPage — user is always eLogix SuperAdmin
+  // Read directly from admin session (no AppContext needed outside <App />)
+  const _adminSess = (() => { try {
+    return JSON.parse(localStorage.getItem('elogix_admin_session') || 'null')
+  } catch(_e) { return null } })()
+  const isSuperAdmin = true  // only eLogix admins can reach this tab
 
   const [tab,         setTab]         = useState('dashboard')
   const [selPartner,  setSelPartner]  = useState(DEMO_PARTNERS[0].id)
@@ -198,6 +208,7 @@ export default function ReferralCommissionPage() {
       total_commission:   all_stats.reduce((s,p)=>s+p.monthly_commission,0),
       total_earned:       all_stats.reduce((s,p)=>s+p.total_earned,0),
       pending_payout:     all_stats.reduce((s,p)=>s+p.pending_payout,0),
+    }
   }, [])
 
   const TABS = isSuperAdmin
@@ -837,3 +848,4 @@ export default function ReferralCommissionPage() {
       </div>
     </div>
   )
+}

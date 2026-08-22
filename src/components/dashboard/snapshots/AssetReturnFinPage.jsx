@@ -73,3 +73,4 @@ export default function AssetReturnFinPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

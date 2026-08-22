@@ -96,3 +96,4 @@ export default function RiskAlertsPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

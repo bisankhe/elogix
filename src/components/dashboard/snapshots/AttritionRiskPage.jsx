@@ -89,3 +89,4 @@ export default function AttritionRiskPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

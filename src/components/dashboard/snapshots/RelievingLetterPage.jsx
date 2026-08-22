@@ -34,6 +34,7 @@ const LETTERS = [
   { id:'rl2', employee:'Anjali Sharma', position:'Sales Executive', lwd:'2025-06-22',
     notice_completed:false, clearance_complete:false, fnf_settled:false,
     issued_date:null, status:'blocked', digital_signature:false,
+    withholding_reason:'Notice period shortfall (3 days) and pending asset return - clearance must complete first. F&F dispute, if any, must NOT delay this letter once clearance/notice conditions are met.',
     impact_links:['Exit Clearance','Asset Return'] },
 ]
 
@@ -41,6 +42,7 @@ const STATUS_CFG = {
   issued:{c:'#10b981',bg:'#f0fdf4',icon:'✅',label:'Issued'},
   blocked:{c:'#f59e0b',bg:'#fffbeb',icon:'🚫',label:'Blocked - Conditions Not Met'},
   ready:{c:'#3b82f6',bg:'#eff6ff',icon:'📋',label:'Ready to Issue'},
+}
 
 export default function RelievingLetterPage() {
   const [letters, setLetters] = useState(LETTERS)
@@ -197,3 +199,4 @@ export default function RelievingLetterPage() {
       {showExcel&&<ExcelModal title="Relieving Letters" columns={['Employee','Position','LWD','Notice Completed','Clearance Complete','F&F Settled','Issued Date','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

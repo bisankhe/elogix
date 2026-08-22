@@ -23,6 +23,7 @@ const PERSONAS = {
     data: ['Team certificates issued this month', 'Pending manual-override approvals', 'Department compliance snapshot'] },
   employee: { label: 'Employee (ESS)', icon:'🙋',
     data: ['My Credentials list', 'Download PDF / Share to LinkedIn', 'QR verify link', 'Renewal reminders'] },
+}
 
 const AUTO_ISSUE_QUEUE = [
   { id:'q1', employee:'Sunil Magar', course:'AWS Solutions Architect', completed_at:'2025-06-21 14:32', status:'issued', cert_id:'CERT-2025-0412' },
@@ -175,3 +176,4 @@ export default function GenerateCertificatePage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

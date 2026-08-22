@@ -14,6 +14,7 @@ async function callAI(prompt, sys) {
     if (r.ok) { const d = await r.json(); return d.content?.map(c => c.text).join('') || '' }
   } catch {}
   return null
+}
 
 const REQUISITIONS = [
   { id:'r1', title:'Senior React Developer', dept:'Technology', hm:'Bikash Shrestha', requested:'2081-08-01', status:'Approved', priority:'High', budget:'NPR 80K-120K', headcount:2, reason:'Team expansion for Q4 product launch', approvals:[{by:'Line Manager',name:'Bikash S.',date:'2081-08-02',status:'Approved'},{by:'HR Director',name:'Maya P.',date:'2081-08-03',status:'Approved'},{by:'Finance',name:'Ramesh K.',date:'2081-08-04',status:'Approved'},{by:'CEO',name:'Sunita R.',date:'2081-08-05',status:'Approved'}] },
@@ -45,6 +46,7 @@ export default function ATSJobRequisitionPage() {
     )
     setGeneratedJD(jd || `Job Description for ${jdForm.role}\n\nAbout the Role: We are seeking an experienced ${jdForm.role} to join our ${jdForm.dept} team...`)
     setGenerating(false)
+  }
 
   const submitRequisition = async () => {
     setSubmitting(true)
@@ -52,6 +54,7 @@ export default function ATSJobRequisitionPage() {
     setSubmitting(false)
     notify('Requisition submitted! Approval chain triggered. Line Manager notified via Email + WhatsApp.')
     setView('list')
+  }
 
   return (
     <div style={{ fontFamily: 'system-ui,sans-serif' }}>
@@ -250,3 +253,4 @@ export default function ATSJobRequisitionPage() {
       )}
     </div>
   )
+}

@@ -28,6 +28,7 @@ function getRole(personaId='', level=10) {
   if (p.includes('hod')||p.includes('head')) return 'hod'
   if (p.includes('recruit')) return 'recruiter'
   return level>=10 ? 'employee' : 'manager'
+}
 
 const ROLES = {
   super_admin: { label:'Super Admin',   emoji:'👑', color:'#7c3aed', tier:'strategic' },
@@ -39,6 +40,7 @@ const ROLES = {
   recruiter:   { label:'Recruiter',     emoji:'🎯',  color:'#e11d48', tier:'manager'   },
   manager:     { label:'Manager',       emoji:'📊',  color:'#0369a1', tier:'manager'   },
   employee:    { label:'Employee',      emoji:'👤',  color:'#64748b', tier:'employee'  },
+}
 
 // ══════════════════════════════════════════════════════════════
 // LANGUAGE DETECTION & TTS CONFIG
@@ -46,11 +48,13 @@ const ROLES = {
 function detectLang(text='') {
   if (/[\u0900-\u097F]/.test(text)) {
     return /\b(छ|छन्|हुन्|गर्न|हामी|तपाईं|के|कसरी|मेरो)\b/.test(text) ? 'ne' : 'hi'
+  }
   if (/[\u4E00-\u9FFF]/.test(text)) return 'zh'
   const lo = text.toLowerCase()
   if (/\b(und|ist|ein|die|der)\b/.test(lo)) return 'de'
   if (/\b(le|la|les|est|pas)\b/.test(lo)) return 'fr'
   return 'en'
+}
 
 const LANG_CONFIG = {
   en: { code:'en-US', name:'English',    sttLang:'en-US' },
@@ -59,6 +63,7 @@ const LANG_CONFIG = {
   zh: { code:'zh-CN', name:'Chinese',    sttLang:'zh-CN' },
   de: { code:'de-DE', name:'German',     sttLang:'de-DE' },
   fr: { code:'fr-FR', name:'French',     sttLang:'fr-FR' },
+}
 
 // ══════════════════════════════════════════════════════════════
 // TEXT-TO-SPEECH ENGINE
@@ -83,6 +88,7 @@ class TTSEngine {
       .replace(/\s{2,}/g, ' ')
       .trim()
       .slice(0, 1200)                 // max ~2 min speech
+  }
 
   static speak(text, lang='en', onStart, onEnd) {
     if (!window.speechSynthesis) { onEnd?.(); return }
@@ -111,10 +117,13 @@ class TTSEngine {
 
     this.utterance = u
     setTimeout(() => window.speechSynthesis.speak(u), 100)
+  }
 
   static stop() {
     window.speechSynthesis?.cancel()
     this.speaking = false
+  }
+}
 
 // ══════════════════════════════════════════════════════════════
 // SPEECH-TO-TEXT ENGINE (Web Speech API)
@@ -124,6 +133,7 @@ class STTEngine {
 
   static isSupported() {
     return !!(window.SpeechRecognition || window.webkitSpeechRecognition)
+  }
 
   static start(lang='en', onResult, onEnd, onError) {
     if (!this.isSupported()) { onError?.('Speech recognition not supported in this browser. Please use Chrome or Edge.'); return }
@@ -140,16 +150,21 @@ class STTEngine {
       for (let i = e.resultIndex; i < e.results.length; i++) {
         if (e.results[i].isFinal) final += e.results[i][0].transcript
         else interim += e.results[i][0].transcript
+      }
       onResult?.(final || interim, !!final)
+    }
     r.onend   = () => onEnd?.()
     r.onerror = (e) => onError?.(e.error)
 
     r.start()
     this.recognition = r
+  }
 
   static stop() {
     this.recognition?.stop()
     this.recognition = null
+  }
+}
 
 // ══════════════════════════════════════════════════════════════
 // FILE READER ENGINE
@@ -161,12 +176,14 @@ async function readFileContent(file) {
   // Plain text / Markdown / CSV / JSON
   if (['txt','md','csv','json','log'].includes(ext)) {
     return await file.text()
+  }
 
   // PDF — read as text via FileReader (basic extraction)
   if (ext === 'pdf') {
     return `[PDF file: "${file.name}" — ${(file.size/1024).toFixed(1)}KB]\n` +
            `Content analysis requested. Please describe what information you need from this PDF ` +
            `and I will guide you through extracting and analyzing the data using eLogix HRMS tools.`
+  }
 
   // Excel / CSV
   if (['xlsx','xls'].includes(ext)) {
@@ -175,6 +192,7 @@ async function readFileContent(file) {
            `- Analyze HR data trends\n- Generate reports from this data\n` +
            `- Import into eLogix payroll/attendance\n- Create visualizations\n` +
            `What would you like to do with this Excel file?`
+  }
 
   // Audio / Video
   if (['mp3','wav','ogg','m4a','webm','mp4','mov'].includes(ext)) {
@@ -183,6 +201,7 @@ async function readFileContent(file) {
            `- Minutes of Meeting (MOM) from this recording\n` +
            `- Action items summary\n- Key decisions list\n` +
            `Please describe the context of this recording and I'll generate the appropriate document.`
+  }
 
   // Word documents
   if (['doc','docx'].includes(ext)) {
@@ -191,6 +210,7 @@ async function readFileContent(file) {
            `- Review and improve HR documents\n- Check Labour Act compliance\n` +
            `- Translate to Nepali/Hindi\n- Format as eLogix standard template\n` +
            `What would you like me to do with this document?`
+  }
 
   // Images
   if (['jpg','jpeg','png','gif','webp'].includes(ext)) {
@@ -200,8 +220,10 @@ async function readFileContent(file) {
            `- A chart/report → I can help interpret and analyze\n` +
            `- An ID/certificate → eLogix can store this in employee documents\n` +
            `What does this image contain?`
+  }
 
   return `[File: "${file.name}" — ${(file.size/1024).toFixed(1)}KB] Uploaded and ready for analysis.`
+}
 
 // ══════════════════════════════════════════════════════════════
 // DOCUMENT GENERATOR (download as file)
@@ -212,6 +234,7 @@ function downloadDoc(content, filename) {
   const a    = document.createElement('a')
   a.href = url; a.download = filename; document.body.appendChild(a)
   a.click(); document.body.removeChild(a); URL.revokeObjectURL(url)
+}
 
 // ══════════════════════════════════════════════════════════════
 // AI SYSTEM PROMPT BUILDER
@@ -247,6 +270,7 @@ AUDIENCE: ${label} — Individual employee.
 TONE: Friendly, helpful, clear, supportive.
 FOCUS: Personal entitlements, leave, salary, rights under Nepal Labour Act 2074.
 NEVER: Share other employees' data, salary, or confidential company info.`,
+  }
 
   return `${tierPrompts[tier]}
 
@@ -286,6 +310,7 @@ RESPONSE RULES:
 8. For policy questions → always cite Nepal Labour Act 2074 section number
 9. Be COMPLETE — never truncate. Never say "I'll prepare this separately."
 10. You are speaking to: ${userName || label}`
+}
 
 // ══════════════════════════════════════════════════════════════
 // API CALL
@@ -304,12 +329,14 @@ async function callAI(messages, system, signal) {
       const d = await r.json()
       const text = d.reply || (Array.isArray(d.content)?d.content.map(c=>c.text||'').join(''):d.content)
       if (text && !text.includes('not configured')) return text
+    }
   } catch {}
 
   // Direct Anthropic API
   if (VITE_KEY?.startsWith('sk-ant')) {
     try {
       const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method:'POST',
         headers:{
           'Content-Type':'application/json',
           'x-api-key': VITE_KEY,
@@ -322,7 +349,9 @@ async function callAI(messages, system, signal) {
       const d = await r.json()
       if (r.ok && d?.content?.[0]?.text) return d.content[0].text
     } catch {}
+  }
   return null
+}
 
 // ══════════════════════════════════════════════════════════════
 // BUILT-IN INSTANT KNOWLEDGE (no API needed)
@@ -350,7 +379,10 @@ function instantAnswer(q, role, lang) {
       return isNe
         ? `## तलब गणना — NPR ${sal.toLocaleString()}/महिना\n\n| विवरण | रकम (NPR) |\n|--------|----------|\n| कुल तलब | ${sal.toLocaleString()} |\n| SSF (कर्मचारी ११%) | -${ssf_emp.toLocaleString()} |\n| आयकर (CIT) | -${citMon.toLocaleString()} |\n| **हातमा पाउने** | **${net.toLocaleString()}** |\n\n**नियोक्ताको लागत:** NPR ${(sal+ssf_er).toLocaleString()}/महिना\n**वार्षिक ग्रेच्युटी:** NPR ${Math.round(sal*12*0.0833).toLocaleString()}`
         : `## Salary Calculation — NPR ${sal.toLocaleString()}/month\n\n| Component | Amount (NPR) |\n|-----------|-------------|\n| Gross Salary | ${sal.toLocaleString()} |\n| SSF Employee (11%) | -${ssf_emp.toLocaleString()} |\n| Income Tax (CIT) | -${citMon.toLocaleString()} |\n| **Net Take-Home** | **${net.toLocaleString()}** |\n\n**Employer total CTC:** NPR ${(sal+ssf_er).toLocaleString()}/month\n**Annual Gratuity (per year):** NPR ${Math.round(sal*12*0.0833).toLocaleString()}\n\n⚡ eLogix Action: Finance → Payroll Processing → Generate Payslip`
+    }
+  }
   return null
+}
 
 // ══════════════════════════════════════════════════════════════
 // QUICK PROMPTS BY ROLE
@@ -388,6 +420,7 @@ const QUICK_BY_TIER = {
     '📋 How to request experience letter',
     '❓ Notice period if I resign',
   ],
+}
 
 // ══════════════════════════════════════════════════════════════
 // MESSAGE BUBBLE
@@ -470,6 +503,7 @@ function Bubble({ msg, onSpeak, onCopy, speaking, copied }) {
       )}
     </div>
   )
+}
 
 // ══════════════════════════════════════════════════════════════
 // MAIN COMPONENT
@@ -538,9 +572,11 @@ ${auth.tier==='employee'
 - "Create HR board presentation slides" → complete deck 📑
 - "Calculate SSF for NPR 85,000" → instant calculation 💰
 - Or click 🎤 and just talk to me!`,
+    }
     setMessages([greet])
     if (autoSpeak) {
       setTimeout(() => TTSEngine.speak(greet.content, lang, ()=>setSpeaking('boot'), ()=>setSpeaking(null)), 500)
+    }
   }, [])
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior:'smooth' }) }, [messages, loading])
@@ -556,6 +592,7 @@ ${auth.tier==='employee'
   const handleCopy = (text, id) => {
     navigator.clipboard?.writeText(text)
     setCopied(id); setTimeout(()=>setCopied(null), 2000)
+  }
 
   // Voice input
   const toggleListen = useCallback(() => {
@@ -563,9 +600,11 @@ ${auth.tier==='employee'
       STTEngine.stop(); setListening(false)
       if (sttText.trim()) { setInput(p => (p+' '+sttText).trim()); setSttText('') }
       return
+    }
     if (!STTEngine.isSupported()) {
       notify('⚠️ Speech recognition not supported. Use Chrome or Edge browser.')
       return
+    }
     setListening(true); setSttText('')
     STTEngine.start(
       lang,
@@ -589,6 +628,7 @@ ${auth.tier==='employee'
     let fileContent = null
     if (selectedFile) {
       fileContent = await readFileContent(selectedFile)
+    }
 
     const userContent = [q, fileContent].filter(Boolean).join('\n\n')
 
@@ -596,6 +636,7 @@ ${auth.tier==='employee'
       id:Date.now()+'u', role:'user',
       content: q || `[Uploaded: ${selectedFile?.name}]`,
       time, fileInfo: selectedFile?.name || null,
+    }
     setMessages(p=>[...p, userMsg])
     setInput(''); setFile(null); setSttText(''); setLoading(true)
 
@@ -610,12 +651,15 @@ ${auth.tier==='employee'
       if (aiText) {
         answer = aiText
         setHistory([...newHistory, { role:'assistant', content:aiText }])
+      }
+    }
 
     // 3. Helpful fallback
     if (!answer) {
       answer = lang==='ne'
         ? `माफ गर्नुहोस्, अहिले मैले पूर्ण AI जडान गर्न सकिन।\n\nतपाईं सोध्न सक्नुहुन्छ:\n- "SSF NPR ७०,००० को लागि गणना गर्नुस्"\n- "नेपाल श्रम ऐन २०७४ बिदाको नियम"\n- "MOM ढाँचा बनाइदिनुस्"\n\nANTHROPIC_API_KEY थप्नुहोस् पूर्ण AI को लागि।`
         : `I couldn't reach the AI engine right now.\n\nTry these — I'll answer instantly:\n- "Calculate SSF for NPR 85,000"\n- "Nepal Labour Act — leave rules"\n- "Generate MOM template"\n- "Gratuity for 5 years service"\n\nFor full AI: Add VITE_ANTHROPIC_API_KEY to your .env file.`
+    }
 
     setLoading(false)
     const aiMsg = { id:Date.now()+'a', role:'assistant', content:answer, time:new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) }
@@ -625,6 +669,7 @@ ${auth.tier==='employee'
     if (autoSpeak) {
       setSpeaking(aiMsg.id)
       TTSEngine.speak(answer, msgLang, ()=>{}, ()=>setSpeaking(null))
+    }
 
     inputRef.current?.focus()
   }, [input, selectedFile, loading, history, role, lang, autoSpeak, userInfo.name])
@@ -897,9 +942,12 @@ ${auth.tier==='employee'
         @keyframes typedot {
           from { opacity:.3; transform:translateY(0) }
           to   { opacity:1;  transform:translateY(-4px) }
+        }
         @keyframes voicepulse {
           0%,100% { box-shadow:0 0 0 0 rgba(220,38,38,.4) }
           50%      { box-shadow:0 0 0 8px rgba(220,38,38,0) }
+        }
       `}</style>
     </div>
   )
+}

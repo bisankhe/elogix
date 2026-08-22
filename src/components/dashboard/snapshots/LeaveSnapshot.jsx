@@ -72,6 +72,7 @@ const typeColor = {
   Maternity: 'green',
   Paternity: 'yellow',
   Comp:      'cyan',
+}
 
 // ── Calendar Heatmap ─────────────────────────────────────────
 function LeaveCalendarHeatmap({ month = 'June 2026' }) {
@@ -120,6 +121,7 @@ function LeaveCalendarHeatmap({ month = 'June 2026' }) {
       </div>
     </div>
   )
+}
 
 // ── Main Component ───────────────────────────────────────────
 export default function LeaveSnapshot() {
@@ -370,3 +372,4 @@ export default function LeaveSnapshot() {
       )}
     </div>
   )
+}

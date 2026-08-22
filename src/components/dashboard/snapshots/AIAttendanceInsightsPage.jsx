@@ -123,3 +123,4 @@ export default function AIAttendanceInsightsPage(){
       </div>
     </div>
   )
+}

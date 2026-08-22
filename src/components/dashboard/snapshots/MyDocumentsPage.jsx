@@ -13,6 +13,7 @@ const A = '#0284c7'
 const CATEGORY_CFG = {
   tax_forms:{icon:'🧾',label:'Tax Forms'},certificates:{icon:'🏆',label:'Certificates'},contracts:{icon:'📜',label:'Contracts'},
   nda:{icon:'🔒',label:'NDA'},id_proof:{icon:'🪪',label:'ID Proof'},medical:{icon:'🏥',label:'Medical'},other:{icon:'📁',label:'Other'},
+}
 
 const MY_DOCUMENTS = [
   { id:'d1', file_name:'Employment_Contract_2025.pdf', category:'contracts', uploaded_at:'2025-01-15', expires_at:null },
@@ -109,3 +110,4 @@ export default function MyDocumentsPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

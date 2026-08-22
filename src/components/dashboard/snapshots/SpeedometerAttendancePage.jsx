@@ -16,6 +16,7 @@ function Gauge({ value, max, label, unit, zones }) {
   const polarToCartesian = (r, deg) => {
     const rad = (deg - 180) * Math.PI / 180
     return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)]
+  }
   let cumulativeStart = 0
   const arcs = zones.map((z, i) => {
     const startDeg = cumulativeStart * 180, endDeg = z.upTo * 180
@@ -38,11 +39,13 @@ function Gauge({ value, max, label, unit, zones }) {
       <div style={{fontSize:9,color:'#94a3b8',marginTop:2}}>{label}</div>
     </div>
   )
+}
 
 const ATTENDANCE_METRICS = {
   absenteeism:{value:2.1,max:8,label:'Absenteeism Rate',unit:'%',zones:[{upTo:0.31,color:'#10b981'},{upTo:0.56,color:'#f59e0b'},{upTo:1,color:'#ef4444'}]},
   overtime_ratio:{value:6.4,max:15,label:'Overtime Hours Ratio',unit:'%',zones:[{upTo:0.33,color:'#10b981'},{upTo:0.67,color:'#f59e0b'},{upTo:1,color:'#ef4444'}]},
   leave_utilization:{value:78,max:100,label:'Leave Utilization Rate',unit:'%',zones:[{upTo:0.74,color:'#f59e0b'},{upTo:0.90,color:'#10b981'},{upTo:1,color:'#f59e0b'}]},
+}
 
 const OT_CAP_STATUS = { within_legal_cap_pct:94, exceeds_24hr_week:6 }
 
@@ -88,3 +91,4 @@ export default function SpeedometerAttendancePage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

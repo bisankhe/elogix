@@ -21,6 +21,7 @@ const AUTO_CONFIG = { whatsapp:true, viber:true, email:true, notification:true, 
 const WISH_TEMPLATES = {
   birthday: (name) => `🎂 Happy Birthday, ${name}!\n\nWishing you a wonderful day filled with joy and happiness. Thank you for your valuable contributions to our team!\n\nWith warm regards,\nHR Team — Future Company Nepal`,
   anniversary: (name, years) => `🥂 Happy Work Anniversary, ${name}!\n\nToday marks ${years} incredible year${years>1?'s':''} of your journey with us. Thank you for your dedication and hard work. Here's to many more years of success together!\n\nWith appreciation,\nHR Team — Future Company Nepal`,
+}
 
 export default function BirthdayAnniversaryPage() {
   const [people, setPeople]   = useState(PEOPLE)
@@ -37,6 +38,7 @@ export default function BirthdayAnniversaryPage() {
     const def = p.type==='birthday' ? WISH_TEMPLATES.birthday(p.name) : WISH_TEMPLATES.anniversary(p.name, p.years)
     setCustomMsg(def)
     setWishModal(p)
+  }
 
   const sendWish = () => {
     if (!wishModal) return
@@ -44,6 +46,7 @@ export default function BirthdayAnniversaryPage() {
     const channels = [autoConfig.whatsapp&&'WhatsApp',autoConfig.viber&&'Viber',autoConfig.email&&'Email'].filter(Boolean).join(' + ')
     notify(`🎉 Wish sent to ${wishModal.name} via ${channels}!`)
     setWishModal(null)
+  }
 
   const toggleAuto = (key) => setAuto(p=>({...p,[key]:!p[key]}))
 
@@ -86,6 +89,7 @@ export default function BirthdayAnniversaryPage() {
         </div>
       </div>
     )
+  }
 
   return (
     <div style={{fontFamily:'system-ui,sans-serif'}}>
@@ -225,3 +229,4 @@ export default function BirthdayAnniversaryPage() {
       )}
     </div>
   )
+}

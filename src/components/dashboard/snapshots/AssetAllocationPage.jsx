@@ -145,3 +145,4 @@ export default function AssetAllocationPage() {
       {showExcel&&<ExcelModal title="Asset Allocation" columns={['Employee','Work Mode','Item','Model','Serial Number','Status','Signed Receipt']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

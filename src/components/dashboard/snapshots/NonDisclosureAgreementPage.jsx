@@ -50,6 +50,7 @@ export default function NonDisclosureAgreementPage() {
     if (!sigName.trim()) { notify('⚠️ Please type your full name to sign'); return }
     setSigned(true)
     notify('✅ NDA signed digitally. You now have full HRMS access.')
+  }
 
   return (
     <div style={{fontFamily:'system-ui,sans-serif'}}>
@@ -127,3 +128,4 @@ export default function NonDisclosureAgreementPage() {
       )}
     </div>
   )
+}

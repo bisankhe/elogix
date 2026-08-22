@@ -126,6 +126,7 @@ function ENPSGauge({ score }) {
       </div>
     </div>
   )
+}
 
 // ── Main Component ───────────────────────────────────────────
 export default function EngagementSnapshot() {
@@ -416,3 +417,4 @@ export default function EngagementSnapshot() {
       )}
     </div>
   )
+}

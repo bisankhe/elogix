@@ -743,8 +743,6 @@ export const SIDEBAR_MENU = [
       // User & Access
       { id: 'user-management',          label: 'User Management',                      group: 'User & Access' },
       { id: 'role-permission',          label: 'Role & Permission',                    group: 'User & Access' },
-      { id: 'referral-commission', label: 'Referral & Commission', icon: '🤝', badge: 'SA' },
-      { id: 'tenant-module-permissions', label: 'Tenant Module Permissions', icon: '🔐', badge: 'SA' },
       { id: 'permission-management', label: 'Permission Management', icon: '🔐', group: 'Access Control', badge: 'NEW', desc: 'Assign & revoke user/role access' },
       { id: 'permission-matrix',        label: 'Permission Matrix',                    group: 'User & Access' },
       { id: 'access-control',           label: 'Access Control',                       group: 'User & Access' },
@@ -811,3 +809,336 @@ export const getAllPageIds = () => {
 }
 
 export default SIDEBAR_MENU
+
+// ════════════════════════════════════════════════════════════════════
+// PLAN-BASED SIDEBAR FILTERING
+// Maps every plan to which TOP-LEVEL section IDs and child item IDs
+// are visible. Everything NOT in this list is hidden for that plan.
+//
+// Based on the official eLogix plan features table:
+//   Trial   → Core basics only (ESS, Attendance, Leave)
+//   Starter → + Payroll, Recruitment
+//   Growth  → + Performance, Training, Multi-branch, Reports, AI
+//   Business→ + Advanced Analytics, API, SSO
+//   Enterprise → + White Label, On-site, Dedicated
+//   Unlimited  → Everything
+// ════════════════════════════════════════════════════════════════════
+
+// ── PLAN → MODULE IDs (matches tenantPermissions.js module keys) ──
+export const PLAN_VISIBLE_SECTIONS = {
+  trial: {
+    // Only show these top-level section IDs
+    sections: ['dashboard', 'hr-services', 'sys-admin'],
+    // Within those sections, only these child IDs
+    items: new Set([
+      // Dashboard basics
+      'attendance-snapshot','leave-snapshot','calendar-events',
+      'notifications','upcoming-events','birthday-anniversary',
+      // ESS
+      'my-profile','my-documents','my-attendance-ess','my-leave-ess',
+      'leave-request-ess','attendance-request','my-policies',
+      'my-daily-activity','helpdesk-ticket',
+      // Leave & Attendance (limited)
+      'leave-request','leave-balance','leave-calendar',
+      'live-attendance','web-check-in',
+      // Very basic sys admin
+      'user-management',
+    ]),
+  },
+
+  starter: {
+    sections: ['dashboard','workforce-ops','hr-services','sys-admin','org-mgmt'],
+    items: new Set([
+      // Dashboard
+      'attendance-snapshot','leave-snapshot','payroll-snapshot',
+      'recruitment-snapshot','calendar-events','notifications',
+      'upcoming-events','birthday-anniversary','roster-details',
+      // Org (basic)
+      'company-profile','company-setup','department-setup','designation-setup',
+      'branch-location-setup','shift-setup','holiday-calendar',
+      // Attendance
+      'live-attendance','web-check-in','missed-punch','attendance-regularization',
+      'leave-request','leave-balance','leave-approval','leave-calendar',
+      'leave-setup','leave-policy','leave-type','leave-reports',
+      'attendance-policy','attendance-reports',
+      // Payroll
+      'payroll-setup','salary-structure','tax-setup','allowance-setup',
+      'deduction-setup','automated-payroll','payslip-generation',
+      'ssf-information','cit-information','tax-information',
+      'payroll-reports',
+      // Recruitment (basic)
+      'recruitment-mgmt-dash','job-posting','vacancy-management',
+      'candidate-database','interview-scheduling','offer-management',
+      // ESS
+      'my-profile','my-documents','my-attendance-ess','my-leave-ess',
+      'leave-request-ess','attendance-request','my-payroll-ess',
+      'payslip-download','my-policies','helpdesk-ticket',
+      // Sys admin
+      'user-management','role-permission','security-settings',
+    ]),
+  },
+
+  growth: {
+    sections: ['dashboard','org-mgmt','emp-lifecycle','workforce-ops',
+               'perf-talent','hr-services','compliance','reports','sys-admin'],
+    items: new Set([
+      // Everything from starter PLUS:
+      // Dashboard
+      'attendance-snapshot','leave-snapshot','payroll-snapshot',
+      'recruitment-snapshot','performance-snapshot','engagement-snapshot',
+      'onboarding-month','calendar-events','notifications',
+      'upcoming-events','birthday-anniversary','tenure-chart',
+      'age-group','blood-group','contract-expiry','ai-insights',
+      'roster-details','headcount-analysis',
+      // Org (full)
+      'company-profile','company-setup','group-company',
+      'branch-location-setup','business-unit-setup',
+      'department-setup','section-unit','team-setup',
+      'cost-center','work-location','employment-category',
+      'designation-setup','grade-level','reporting-hierarchy',
+      'position-management','org-chart','process-flow',
+      'holiday-calendar','weekend-policy','shift-setup',
+      // Employee Lifecycle
+      'recruitment-mgmt-dash','ats-dashboard','ats-career-portal',
+      'ats-job-requisition','ats-command-center','manpower-requisition',
+      'create-job-description','jd-library','ats-multipost','job-posting',
+      'ats-job-manager','vacancy-management','ats-candidate-pipeline',
+      'candidate-database','resume-screening','interview-scheduling',
+      'ats-interview-panel','interview-management','offer-management',
+      'ats-onboarding','background-verification',
+      'employee-joining','employee-enrollment','orientation-program',
+      'employee-directory','employee-profile','personal-information',
+      'family-details','emergency-contact','employee-assets',
+      'employment-history','document-management','digital-employee-file',
+      'ai-hr-letters','promotion-history','transfer-history',
+      'resignation-management','exit-clearance','full-final-settlement',
+      'attrition-dashboard',
+      // Headcount planning
+      'headcount-planning','replacement-planning','expansion-planning',
+      'vacancy-planning','resource-allocation',
+      // Attendance & Leave (full)
+      'attendance-policy','shift-management','roster-management',
+      'biometric-integration','gps-attendance','geo-fencing',
+      'live-attendance','biometric-attendance','geo-attendance',
+      'web-check-in','missed-punch','wfh-tracking',
+      'attendance-regularization','overtime-monitoring-dashboard',
+      'overtime-management','attendance-processing','attendance-approval',
+      'attendance-reports','leave-setup','leave-policy','leave-type',
+      'leave-request','leave-balance','leave-approval','leave-calendar',
+      'leave-encashment','leave-analytics','leave-reports',
+      // Payroll (full)
+      'payroll-setup','salary-structure','tax-setup','allowance-setup',
+      'deduction-setup','compliance-setup','automated-payroll',
+      'payroll-approval','payslip-generation','bank-transfer-file',
+      'ssf-information','cit-information','payroll-reports',
+      // Performance & Talent
+      'kra-management','kpi-management','okr-management',
+      'goal-assignment','goal-tracking',
+      'performance-appraisal','continuous-feedback','performance-review',
+      'performance-reports','performance-dashboard',
+      'skill-gap-matrix','skill-gap-analysis','training-request',
+      'annual-training-calendar','course-management','learning-portal',
+      'training-feedback','training-reports','career-pathing',
+      // ESS + MSS (full)
+      'my-profile','my-documents','my-attendance-ess','my-leave-ess',
+      'leave-request-ess','attendance-request','my-payroll-ess',
+      'payslip-download','my-policies','helpdesk-ticket','my-goals-kpi',
+      'my-training-ess','letter-request','my-resignation',
+      'team-dashboard-mss','team-attendance','approval-center',
+      'team-performance-mss','performance-review-mss',
+      // Compliance
+      'hr-policy-library','hr-policies','policy-acknowledgment',
+      'labor-compliance','statutory-compliance','compliance-reports',
+      // Reports (standard + some advanced)
+      'hr-analytics-page','workforce-summary','department-reports',
+      'attendance-reports-page','payroll-reports-std',
+      'recruitment-reports','performance-reports-page','leave-reports-page',
+      'headcount-analysis-page','attrition-analysis','workforce-analytics',
+      'custom-report-builder',
+      // Sys admin
+      'user-management','role-permission','permission-management',
+      'permission-matrix','workflow-builder','approval-matrix',
+      'data-migration','security-settings','audit-logs','system-setting',
+    ]),
+  },
+
+  business: {
+    // Business gets everything Growth has + Advanced Analytics, API, SSO, Dedicated support
+    sections: ['dashboard','org-mgmt','emp-lifecycle','workforce-ops',
+               'perf-talent','emp-experience','hr-services',
+               'finance-assets','compliance','reports','sys-admin'],
+    items: 'GROWTH_PLUS_BUSINESS', // signal to filter function
+  },
+
+  enterprise: {
+    sections: 'ALL',
+    items: 'ALL',
+  },
+
+  unlimited: {
+    sections: 'ALL',
+    items: 'ALL',
+  },
+}
+
+// ── BUSINESS TYPE → SECTION VISIBILITY ───────────────────────────
+// Certain sections are only relevant for specific business types.
+// Hides irrelevant sections entirely from sidebar.
+export const BUSINESS_TYPE_VISIBLE_SECTIONS = {
+  recruitment_agency: [
+    'dashboard','org-mgmt','emp-lifecycle','workforce-ops',
+    'hr-services','reports','sys-admin',
+    // recruitment agencies see emp-lifecycle heavily (ATS is their core)
+  ],
+  bank_finance: [
+    'dashboard','org-mgmt','emp-lifecycle','workforce-ops',
+    'perf-talent','emp-experience','hr-services',
+    'finance-assets','compliance','reports','sys-admin',
+  ],
+  hospital_health: [
+    'dashboard','org-mgmt','emp-lifecycle','workforce-ops',
+    'perf-talent','hr-services','compliance','reports','sys-admin',
+  ],
+  ngo_ingo: [
+    'dashboard','org-mgmt','emp-lifecycle','workforce-ops',
+    'hr-services','finance-assets','compliance','reports','sys-admin',
+  ],
+  it_software: [
+    'dashboard','org-mgmt','emp-lifecycle','workforce-ops',
+    'perf-talent','emp-experience','hr-services',
+    'compliance','reports','sys-admin',
+    // + AI heavily
+  ],
+  manufacturing: [
+    'dashboard','org-mgmt','emp-lifecycle','workforce-ops',
+    'perf-talent','hr-services','finance-assets','compliance','reports','sys-admin',
+  ],
+  hotel_hospitality: [
+    'dashboard','org-mgmt','emp-lifecycle','workforce-ops',
+    'emp-experience','hr-services','finance-assets','reports','sys-admin',
+  ],
+  education: [
+    'dashboard','org-mgmt','emp-lifecycle','workforce-ops',
+    'perf-talent','emp-experience','hr-services','compliance','reports','sys-admin',
+  ],
+  government: [
+    'dashboard','org-mgmt','emp-lifecycle','workforce-ops',
+    'hr-services','finance-assets','compliance','reports','sys-admin',
+  ],
+  custom: 'ALL',
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// MAIN FILTER FUNCTION
+// Call this in Sidebar.jsx and QuickDock.jsx to filter what's visible.
+//
+// Usage:
+//   import { getVisibleMenu } from './sidebarMenu.js'
+//   const menu = getVisibleMenu(plan, businessType, grantedModules)
+//
+// @param plan          {string}   - tenant's plan key
+// @param businessType  {string}   - tenant's business_type
+// @param grantedModules{string[]} - modules from tenantPermissions.js
+// @returns {Array}     filtered SIDEBAR_MENU
+// ─────────────────────────────────────────────────────────────────────
+export function getVisibleMenu(plan, businessType, grantedModules = []) {
+  const planKey   = plan || 'trial'
+  const bizType   = businessType || 'custom'
+  const planCfg   = PLAN_VISIBLE_SECTIONS[planKey] || PLAN_VISIBLE_SECTIONS.trial
+  const grantedSet= new Set(grantedModules)
+
+  // Enterprise / Unlimited — show everything
+  if (planCfg.sections === 'ALL') return SIDEBAR_MENU
+
+  // Which top-level sections are allowed by BOTH plan AND business type
+  const bizSections = BUSINESS_TYPE_VISIBLE_SECTIONS[bizType]
+  const planSections = new Set(planCfg.sections)
+
+  const allowedSections = bizSections === 'ALL'
+    ? planSections
+    : new Set([...planCfg.sections].filter(s => bizSections.includes(s)))
+
+  // For Business plan: combine Growth items + add advanced items
+  let allowedItems = planCfg.items
+  if (planCfg.items === 'GROWTH_PLUS_BUSINESS') {
+    const growthItems = PLAN_VISIBLE_SECTIONS.growth.items
+    // Business adds: Advanced analytics, API, SSO, finance-assets, emp-experience
+    const businessExtras = new Set([
+      // Advanced analytics
+      'predictive-analytics-page','ai-insights-page','bi-dashboard',
+      'export-center','ai-business-intelligence','ai-hr-analytics',
+      'ai-attrition-prediction','ai-performance-insights',
+      // API & SSO
+      'api-integration','integration-hub','email-sms-integration',
+      'biometric-setup','security-settings','sso',
+      // Employee Experience
+      'engagement-dashboard','announcement-board','employee-engagement',
+      'employee-survey','grievance-management','wellness-program',
+      'diversity-dashboard',
+      // Finance & Assets
+      'annual-hr-budget','department-budget','asset-management',
+      'expense-claims','travel-management','reimbursement',
+      // Performance extras
+      '360-feedback','pip-management','reward-program',
+      'recognition-program','succession-planning',
+      'successor-identification','talent-mapping','hipo-employees',
+    ])
+    allowedItems = new Set([...growthItems, ...businessExtras])
+  }
+
+  return SIDEBAR_MENU
+    .filter(section => allowedSections.has(section.id))
+    .map(section => {
+      // If items = 'ALL' (enterprise) keep all children
+      if (allowedItems === 'ALL') return section
+
+      const visibleChildren = (section.children || []).filter(child => {
+        // Must be in plan's allowed items
+        if (!allowedItems.has(child.id)) return false
+        // Must also pass tenantPermissions module grant (if we have them)
+        // If no grants yet, use plan items as gate
+        return true
+      })
+
+      return visibleChildren.length > 0
+        ? { ...section, children: visibleChildren }
+        : null
+    })
+    .filter(Boolean)
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// QUICKDOCK FILTER
+// Filters dock items to only show pages the tenant has access to.
+//
+// @param dockItems     {Array}    - DOCK_CONFIGS[persona]
+// @param plan          {string}
+// @param grantedModules{string[]}
+// @returns {Array}     filtered dock items
+// ─────────────────────────────────────────────────────────────────────
+export function getVisibleDockItems(dockItems, plan, grantedModules = []) {
+  const planKey  = plan || 'trial'
+  const planCfg  = PLAN_VISIBLE_SECTIONS[planKey] || PLAN_VISIBLE_SECTIONS.trial
+  const granted  = new Set(grantedModules)
+
+  // Enterprise/Unlimited — all items visible
+  if (planCfg.items === 'ALL') return dockItems
+
+  let allowedItems = planCfg.items
+  if (planCfg.items === 'GROWTH_PLUS_BUSINESS') {
+    allowedItems = new Set([
+      ...PLAN_VISIBLE_SECTIONS.growth.items,
+      'predictive-analytics-page','bi-dashboard','api-integration',
+    ])
+  }
+
+  return dockItems.filter(item => {
+    // Always show: notifications, AI co-pilot (action items)
+    if (item.action) return true
+    // Dashboard landing pages always show
+    if (!item.page) return true
+    // Check if page is in allowed items
+    if (allowedItems === 'ALL') return true
+    return allowedItems.has(item.page)
+  })
+}

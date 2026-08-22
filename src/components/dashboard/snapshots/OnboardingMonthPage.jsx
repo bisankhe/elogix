@@ -157,3 +157,4 @@ export default function OnboardingMonthPage() {
       {showExcel&&<ExcelModal title="Onboarding This Month" columns={['Staff Name','Designation','Supervisor','Department','Date of Joining','Employment Type','Status']} onClose={()=>setShowExcel(false)} onImport={()=>setShowExcel(false)}/>}
     </div>
   )
+}

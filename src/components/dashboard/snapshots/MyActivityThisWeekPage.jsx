@@ -88,3 +88,4 @@ export default function MyActivityThisWeekPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

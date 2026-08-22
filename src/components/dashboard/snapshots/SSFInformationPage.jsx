@@ -100,3 +100,4 @@ export default function SSFInformationPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

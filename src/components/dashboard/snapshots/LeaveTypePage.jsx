@@ -160,3 +160,4 @@ export default function LeaveTypePage() {
       {showExcel&&<ExcelModal title="Leave Types" columns={['Name','Code','Annual Entitlement','Is Paid','Requires Doc','Probation Eligible','Half-Day Supported','Max Carry Forward','Statutory']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

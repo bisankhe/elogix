@@ -119,3 +119,4 @@ export default function AnnouncementBoardPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

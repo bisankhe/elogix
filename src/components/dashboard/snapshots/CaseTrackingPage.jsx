@@ -113,3 +113,4 @@ export default function CaseTrackingPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

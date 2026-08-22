@@ -90,3 +90,4 @@ export default function LicenseManagementPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

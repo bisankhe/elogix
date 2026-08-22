@@ -104,6 +104,7 @@ const CustomTooltip = ({ active, payload, label }) => {
       ))}
     </div>
   )
+}
 
 // ── Tab Button ───────────────────────────────────────────────
 function TabBtn({ active, onClick, children }) {
@@ -119,6 +120,7 @@ function TabBtn({ active, onClick, children }) {
       {children}
     </button>
   )
+}
 
 // ── Main Component ───────────────────────────────────────────
 export default function AIInsightsPage() {
@@ -422,3 +424,4 @@ export default function AIInsightsPage() {
       )}
     </div>
   )
+}

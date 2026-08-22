@@ -104,3 +104,4 @@ export default function GoalAchievementPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

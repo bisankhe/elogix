@@ -117,3 +117,4 @@ export default function EmergencyContactPage() {
       {showExcel&&<ExcelModal title="Emergency Contacts" columns={['Name','Relationship','Phone','Alt Phone','Address','Primary','Last Verified']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

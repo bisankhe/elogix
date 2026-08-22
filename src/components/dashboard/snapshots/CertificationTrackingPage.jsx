@@ -23,6 +23,7 @@ const PERSONAS = {
     data: ['Team expiry pipeline (90/60/30d)', 'Escalation queue', 'Non-compliant staff flag'] },
   employee: { label: 'Employee (ESS)', icon:'🙋',
     data: ['My Credentials', 'Upload renewal document', 'Renew Now action', 'Expiry countdown'] },
+}
 
 const COMPLIANCE_PIE = { compliant:284, expiring_90:9, expiring_30:5, expired:0 }
 
@@ -154,3 +155,4 @@ export default function CertificationTrackingPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

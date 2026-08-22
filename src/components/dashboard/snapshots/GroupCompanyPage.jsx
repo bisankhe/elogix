@@ -15,6 +15,7 @@ const THEME = {
   muted:    '#94a3b8',
   border:   '#e2e8f0',
   glass:    'rgba(255,255,255,0.95)',
+}
 
 
 // ── Shared tenant data hook ─────────────────────────────────
@@ -27,6 +28,7 @@ function useTenantCompany() {
       // 1. Try real API
       try {
         const token = localStorage.getItem('elogix_token') ||
+          JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')?.access_token ||
           JSON.parse(localStorage.getItem('elogix_auth')||'{}').token
         if (token) {
           const res = await fetch('/api/v1/companies/me', {
@@ -37,7 +39,9 @@ function useTenantCompany() {
             setCompany(d.data || d.company || d)
             setLoading(false)
             return
-      } catch {}
+          }
+        }
+      } catch(_e) {}
       // 2. Fallback: localStorage auth
       try {
         const auth = JSON.parse(localStorage.getItem('elogix_auth')||'{}')
@@ -63,8 +67,9 @@ function useTenantCompany() {
           phone: regData.phone || '', email: regData.admin_email || co.admin_email || '',
           province:'', district:'', municipality:'', registered_address:'', website:'',
         })
-      } catch {}
+      } catch(_e) {}
       setLoading(false)
+    }
     load()
   }, [])
 
@@ -75,7 +80,7 @@ function useTenantCompany() {
       auth.company = { ...(auth.company||{}), ...updates }
       localStorage.setItem('elogix_auth', JSON.stringify(auth))
       setCompany(p => ({...p, ...updates}))
-    } catch {}
+    } catch(_e) {}
     // Try API
     try {
       const token = localStorage.getItem('elogix_token') ||
@@ -86,9 +91,12 @@ function useTenantCompany() {
           headers: { 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
           body: JSON.stringify(updates)
         })
-    } catch {}
+      }
+    } catch(_e) {}
+  }
 
   return { company, loading, saveTenantCompany }
+}
 
 
 function ContextMenu({ x, y, item, onClose, onAction }) {
@@ -133,6 +141,7 @@ function ContextMenu({ x, y, item, onClose, onAction }) {
       ))}
     </div>
   )
+}
 
 // -- Excel Upload Panel ----------------------------------------
 function ExcelUploadPanel({ onClose, onUpload }) {
@@ -147,6 +156,7 @@ function ExcelUploadPanel({ onClose, onUpload }) {
   const handleFile = (f) => {
     setFile(f)
     setPreview({ name: f.name, size: (f.size/1024).toFixed(1)+'KB', rows: Math.floor(Math.random()*10)+2 })
+  }
 
   return (
     <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)',
@@ -240,6 +250,7 @@ function ExcelUploadPanel({ onClose, onUpload }) {
       </div>
     </div>
   )
+}
 
 // -- Audio Input Hook ------------------------------------------
 function useAudioInput(onTranscript) {
@@ -250,6 +261,7 @@ function useAudioInput(onTranscript) {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
       alert('Speech recognition not supported. Use Chrome browser.')
       return
+    }
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition
     const r = new SR()
     r.lang = 'en-US'; r.continuous = false; r.interimResults = false
@@ -267,6 +279,7 @@ function useAudioInput(onTranscript) {
   }, [])
 
   return { listening, start, stop }
+}
 
 // -- Luxury Field ----------------------------------------------
 function LuxField({ label, value, onChange, type='text', options, required, hint, fieldKey }) {
@@ -277,7 +290,9 @@ function LuxField({ label, value, onChange, type='text', options, required, hint
     width:'100%', padding:'10px 80px 10px 12px', borderRadius:10,
     border: `1.5px solid ${focused ? '#667eea' : '#e2e8f0'}`,
     fontSize:13, outline:'none', boxSizing:'border-box', background:'#fff',
+    transition:'border-color .2s',
     boxShadow: focused ? '0 0 0 3px rgba(102,126,234,0.1)' : 'none',
+  }
 
   return (
     <div style={{ marginBottom:14 }}>
@@ -318,11 +333,13 @@ function LuxField({ label, value, onChange, type='text', options, required, hint
       {hint && <div style={{ fontSize:10, color:'#94a3b8', marginTop:3 }}>{hint}</div>}
     </div>
   )
+}
 
 // -- Group Company Card ----------------------------------------
 function GroupCard({ group, onContextMenu, onClick }) {
   const typeColor = {
     'Holding Company': '#667eea', 'Subsidiary': '#10b981', 'Associate': '#f59e0b'
+  }
   const c = typeColor[group.type] || '#64748b'
 
   return (
@@ -397,6 +414,7 @@ function GroupCard({ group, onContextMenu, onClick }) {
       </div>
     </div>
   )
+}
 
 // -- Add Group Modal -------------------------------------------
 function AddGroupModal({ onClose, onSave }) {
@@ -470,6 +488,11 @@ function AddGroupModal({ onClose, onSave }) {
       </div>
     </div>
   )
+}
+
+
+// ── Empty initial groups (tenant adds their own) ─────────────
+const MOCK_GROUPS = []
 
 // -- Main Page -------------------------------------------------
 export default function GroupCompanyPage() {
@@ -489,6 +512,7 @@ export default function GroupCompanyPage() {
     if (action === 'view')   setSelected(item)
     if (action === 'export') alert(`Exporting ${item.name} to Excel...`)
     if (action === 'sync')   alert(`Syncing ${item.name} data...`)
+  }
 
   const closeContextMenu = () => setContextMenu(null)
 
@@ -651,3 +675,4 @@ export default function GroupCompanyPage() {
       )}
     </div>
   )
+}

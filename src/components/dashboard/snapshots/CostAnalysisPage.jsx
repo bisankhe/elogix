@@ -73,3 +73,4 @@ export default function CostAnalysisPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

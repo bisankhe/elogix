@@ -11,6 +11,7 @@ const KPIS = {
   total_headcount:248, active_employees:236, total_exits_ytd:18,
   attrition_rate_pct:7.3, voluntary_pct:83, involuntary_pct:17,
   avg_tenure_years:2.4, regrettable_exits:6,
+}
 
 const TREND = [
   {month:'Jan',rate:5.2},{month:'Feb',rate:4.8},{month:'Mar',rate:6.1},{month:'Apr',rate:5.9},
@@ -29,6 +30,7 @@ const DEMOGRAPHICS = {
   age_band:[{label:'18-25',pct:32},{label:'26-35',pct:41},{label:'36-45',pct:19},{label:'46+',pct:8}],
   tenure_band:[{label:'0-1yr',pct:38},{label:'1-3yr',pct:29},{label:'3-5yr',pct:22},{label:'5yr+',pct:11}],
   gender:[{label:'Male',pct:58},{label:'Female',pct:42}],
+}
 
 const RISK_CFG = {high:{c:'#ef4444',bg:'#fef2f2'},medium:{c:'#f59e0b',bg:'#fffbeb'},low:{c:'#10b981',bg:'#f0fdf4'}}
 
@@ -44,6 +46,7 @@ function MiniBarChart({data,color}) {
       ))}
     </div>
   )
+}
 
 export default function AttritionDashboardPage() {
   const [filterDept, setFilterDept] = useState('all')
@@ -152,3 +155,4 @@ export default function AttritionDashboardPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

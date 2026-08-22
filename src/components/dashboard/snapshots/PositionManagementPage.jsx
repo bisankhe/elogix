@@ -18,7 +18,7 @@
 //          org chart, span-of-control analysis
 // ============================================================
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useApp } from '../../../context/AppContext.jsx'
 
 // ── Mock Data ─────────────────────────────────────────────────
@@ -84,6 +84,7 @@ function Pill({ children, color='blue' }) {
     purple:{bg:'#f5f3ff',text:'#6d28d9',border:'#ddd6fe'},
     orange:{bg:'#fff7ed',text:'#c2410c',border:'#fed7aa'},
     cyan: {bg:'#ecfeff',text:'#0e7490',border:'#a5f3fc'},
+  }
   const c = m[color]||m.blue
   return (
     <span style={{background:c.bg,color:c.text,border:`1px solid ${c.border}`,
@@ -92,6 +93,7 @@ function Pill({ children, color='blue' }) {
       {children}
     </span>
   )
+}
 
 function StatCard({ icon, label, value, color='#3b82f6', sub }) {
   return (
@@ -103,6 +105,7 @@ function StatCard({ icon, label, value, color='#3b82f6', sub }) {
       {sub && <div style={{fontSize:10,color:color,marginTop:3,fontWeight:600}}>{sub}</div>}
     </div>
   )
+}
 
 // ── Tab 1: Grade & Level (Grade Matrix) ──────────────────────
 function GradeMatrix() {
@@ -196,6 +199,7 @@ function GradeMatrix() {
       </div>
     </div>
   )
+}
 
 // ── Tab 2: Designation Setup ──────────────────────────────────
 function DesignationSetup() {
@@ -207,6 +211,7 @@ function DesignationSetup() {
   const gradeColor = {
     L1:'#94a3b8',L2:'#64748b',L3:'#3b82f6',L4:'#8b5cf6',L5:'#6d28d9',
     M1:'#f59e0b',M2:'#ef4444',M3:'#dc2626',E1:'#0ea5e9',E2:'#0369a1'
+  }
 
   const fam = JOB_FAMILIES.reduce((acc,f)=>{acc[f.code]=f; return acc},{})
 
@@ -384,6 +389,7 @@ function DesignationSetup() {
       )}
     </div>
   )
+}
 
 // ── Tab 3: Position Management ────────────────────────────────
 function PositionManagement() {
@@ -407,12 +413,14 @@ function PositionManagement() {
     vacant:  {bg:'#fff',   border:'#e2e8f0',text:'#475569',label:'○ Vacant'},
     frozen:  {bg:'#f1f5f9',border:'#cbd5e1',text:'#64748b',label:'❄ Frozen'},
     pending_approval:{bg:'#fffbeb',border:'#fde68a',text:'#b45309',label:'⏳ Pending'},
+  }
 
   const riskCfg = {
     low:     {color:'#10b981',bg:'#f0fdf4',border:'#bbf7d0'},
     medium:  {color:'#f59e0b',bg:'#fffbeb',border:'#fde68a'},
     high:    {color:'#ef4444',bg:'#fef2f2',border:'#fecaca'},
     critical:{color:'#dc2626',bg:'#fef2f2',border:'#fecaca'},
+  }
 
   return (
     <div>
@@ -591,6 +599,7 @@ function PositionManagement() {
       </div>
     </div>
   )
+}
 
 // ── Tab 4: Reporting Hierarchy / Org Chart ────────────────────
 function ReportingHierarchy() {
@@ -599,8 +608,10 @@ function ReportingHierarchy() {
     const [expanded, setExpanded] = useState(depth < 2)
     const statusColor = {
       filled:'#10b981',vacant:'#f59e0b',frozen:'#94a3b8'
+    }
     const riskColor = {
       low:'#10b981',medium:'#f59e0b',high:'#ef4444',critical:'#dc2626'
+    }
 
     // Find direct reports
     const children = POSITIONS.filter(p => {
@@ -654,6 +665,7 @@ function ReportingHierarchy() {
         ))}
       </div>
     )
+  }
 
   const roots = POSITIONS.filter(p=>!p.reports_to||p.level===1)
   const spans = POSITIONS.filter(p=>p.status==='filled'&&p.direct_reports>0)
@@ -715,25 +727,10 @@ function ReportingHierarchy() {
       </div>
     </div>
   )
+}
 
-// ── Main Page ───────────────────────────────────────
-// ── Tenant context ────────────────────────────────────────────
-function useCompanyCtx() {
-  const auth    = (() => { try { return JSON.parse(localStorage.getItem('elogix_auth')||'{}') } catch { return {} } })()
-  const regCos  = (() => { try { return JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}') } catch { return {} } })()
-  const slug    = auth.company?.slug || auth.user?.company || 'demo'
-  return {
-    company_id:   auth.company?.id || slug,
-    company_name: auth.company?.name || regCos[slug]?.name || 'Your Company',
-    company_slug: slug,
-    plan:         auth.company?.plan || 'trial',
-    currency:     auth.company?.currency || 'NPR',
-    country:      auth.company?.country || 'Nepal',
-    token:        localStorage.getItem('elogix_token') || auth.token || '',
-
+// ── Main Page ─────────────────────────────────────────────────
 export default function PositionManagementPage() {
-  const ctx = useCompanyCtx()  // Tenant scope
-
   const [activeTab, setActiveTab] = useState('positions')
 
   const TABS = [
@@ -782,3 +779,4 @@ export default function PositionManagementPage() {
       {activeTab==='hierarchy' && <ReportingHierarchy/>}
     </div>
   )
+}

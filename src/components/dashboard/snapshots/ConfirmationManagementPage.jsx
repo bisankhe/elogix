@@ -24,6 +24,7 @@ const RISK_CFG = {
   urgent:{c:'#ef4444',bg:'#fef2f2',label:'Decision Needed Now'},
   medium:{c:'#f59e0b',bg:'#fffbeb',label:'Action Needed Soon'},
   low:{c:'#10b981',bg:'#f0fdf4',label:'On Track'},
+}
 const CHECKLIST_LABELS = {performance_feedback:'Performance Feedback Collected',goals_achieved:'Goals Achieved',manager_recommendation:'Manager Recommendation',confirmation_letter:'Confirmation Letter Issued'}
 
 export default function ConfirmationManagementPage() {
@@ -115,3 +116,4 @@ export default function ConfirmationManagementPage() {
       {showExcel&&<ExcelModal title="Confirmation Management" columns={['Employee','Position','Manager','Join Date','Probation End','Days Remaining','Checklist Complete','Risk Level']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

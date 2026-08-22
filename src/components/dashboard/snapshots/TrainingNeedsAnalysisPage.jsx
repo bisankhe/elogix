@@ -106,3 +106,4 @@ export default function TrainingNeedsAnalysisPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

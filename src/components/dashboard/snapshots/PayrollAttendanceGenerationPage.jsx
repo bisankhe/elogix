@@ -106,3 +106,4 @@ export default function PayrollAttendanceGenerationPage() {
       {showExcel&&<ExcelModal title="Payroll Attendance Batch" columns={['Employee','Department','Payable Days','LOP Days','OT Hours','OT Amount NPR','SSF Contribution NPR','Ready']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

@@ -27,6 +27,7 @@ const PAY_STATUS  = {
   synced:    { c:'#7c3aed', bg:'#f5f3ff', b:'#ddd6fe', icon:'💳', l:'Payroll Synced' },
   paid:      { c:'#065f46', bg:'#ecfdf5', b:'#6ee7b7', icon:'💰', l:'Paid' },
   rejected:  { c:'#dc2626', bg:'#fef2f2', b:'#fecaca', icon:'❌', l:'Rejected' },
+}
 
 const rand   = a => a[Math.floor(Math.random()*a.length)]
 const pad2   = n => String(n).padStart(2,'0')
@@ -46,6 +47,7 @@ const calcNightHrs = (start, end) => {
   // Handle cross-midnight
   if (endMins < startMins) endMins += 24 * 60
   return Math.max(0, (endMins - startMins) / 60)
+}
 
 const calcAllowance = (hrs, baseSalary, payMode, fixedRate, customAmt) => {
   switch (payMode) {
@@ -54,6 +56,8 @@ const calcAllowance = (hrs, baseSalary, payMode, fixedRate, customAmt) => {
     case '% of Basic Salary':  return Math.round(baseSalary * ((fixedRate || 10) / 100) / 22)
     case 'Custom Amount':      return customAmt || 0
     default:                   return 500
+  }
+}
 
 function genNightRows(n = 70) {
   const rows = []
@@ -119,7 +123,9 @@ function genNightRows(n = 70) {
       payrollRef:  ['synced','paid'].includes(status) ? `PR-${d.getFullYear()}${pad2(d.getMonth()+1)}-${String(i).padStart(4,'0')}` : '—',
       remarks:     status === 'rejected' ? 'Night duty not pre-approved' : '—',
     })
+  }
   return rows
+}
 
 const INIT_ROWS = genNightRows(70)
 const inp = { padding:'7px 10px', borderRadius:8, border:'1.5px solid #e2e8f0', fontSize:10,
@@ -192,6 +198,7 @@ export default function NightDutyAllowancePage() {
       ? { ...r, status: 'approved', approvedBy: 'HR Manager' } : r))
     notify(`✅ ${bulkSel.length} night duty allowances approved`)
     setBulkSel([])
+  }
   const bulkSyncPayroll = () => {
     const period = filtered[0]?.payrollPeriod || today.slice(0,7)
     setRows(p => p.map(r => bulkSel.includes(r.sl) && r.status === 'approved'
@@ -199,6 +206,7 @@ export default function NightDutyAllowancePage() {
     notify(`💳 ${bulkSel.length} night duty allowances synced to payroll ${period}`)
     setBulkSel([])
     setShowSync(false)
+  }
 
   const handleSave = () => {
     if (!form.name || !form.empId) { notify('⚠️ Name and Employee ID required'); return }
@@ -219,16 +227,19 @@ export default function NightDutyAllowancePage() {
       payrollPeriod: form.date.slice(0,7),
       status: 'pending',
       approvedBy: '—', payrollRef: '—',
+    }
     if (editSl !== null) {
       setRows(p => p.map(r => r.sl === editSl ? entry : r))
       notify('✅ Night duty record updated')
     } else {
       setRows(p => [...p, entry])
       notify('🌙 Night duty allowance entry added — status: Pending Approval → Payroll')
+    }
     setShowAdd(false); setEditSl(null)
     setForm({ name:'',empId:'',designation:'',dept:'',shift:'Night',empStatus:'Permanent',
       date:today,ndType:'Night Shift Allowance',nightStart:'21:00',nightEnd:'06:00',
       payMode:'Fixed Per Night',fixedRate:'500',baseSalary:'',remarks:'' })
+  }
 
   const exportCSV = () => {
     const h = ['Sl.No','Emp ID','Name','Designation','Department','Shift','Emp Status',
@@ -248,6 +259,7 @@ export default function NightDutyAllowancePage() {
     a.download = `NightDutyAllowance_${dateFrom}_${dateTo}.csv`
     a.click()
     notify('📤 Night Duty Allowance register exported to CSV')
+  }
 
   // Live preview in Add modal
   const previewHrs      = calcNightHrs(form.nightStart, form.nightEnd)
@@ -799,3 +811,4 @@ export default function NightDutyAllowancePage() {
       )}
     </div>
   )
+}

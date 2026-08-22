@@ -90,3 +90,4 @@ export default function RolePermissionPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

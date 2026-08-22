@@ -139,6 +139,7 @@ function AddSLAModal({ onClose, onSave }) {
       </div>
     </div>
   )
+}
 
 export default function OutsourceSLAPage() {
   const [contracts, setContracts] = useState(MOCK_CONTRACTS)
@@ -315,3 +316,4 @@ export default function OutsourceSLAPage() {
       </Drawer>
     </div>
   )
+}

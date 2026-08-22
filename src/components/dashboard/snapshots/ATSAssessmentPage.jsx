@@ -17,6 +17,7 @@ async function callAI(prompt, sys = 'You are a world-class assessment expert.') 
     if (r.ok) { const d = await r.json(); return d.content?.map(c => c.text).join('') || '' }
   } catch {}
   return null
+}
 
 // ── QUESTION BANK (built-in) ─────────────────────────────────
 const QB = {
@@ -46,6 +47,7 @@ const QB = {
     { id:'p4', q:'My decision-making style is best described as:', opts:['Data-driven always','Intuition-led','Collaborative consensus','Situational mix'], marks:0, topic:'Decision Making' },
     { id:'p5', q:'I handle ambiguity best by:', opts:['Creating structure immediately','Embracing and exploring','Seeking guidance','Depends on the context'], marks:0, topic:'Ambiguity' },
   ],
+}
 
 const TESTS = [
   { id:'t1', name:'Senior React Developer — Full Stack Assessment', job:'Senior React Developer', duration:90, status:'Active', candidates:14, submitted:8, avgScore:78, sections:['MCQ','CODING','ESSAY'], mcq:8, coding:2, essay:1, psych:0, passMark:65 },
@@ -121,6 +123,9 @@ function LiveExam({ test, onSubmit, onExit }) {
           const sm = fb.match(/SCORE:\s*(\d+)/i)
           essayScore += sm ? parseInt(sm[1]) : Math.floor(eq.marks * 0.6)
           essayFeedback += fb + '\n'
+        }
+      }
+    }
     // Score coding (simplified)
     const codingTotal = allQs.filter(q => q.type === 'CODING').reduce((s, q) => s + q.marks, 0)
     const codingScore = Math.floor(codingTotal * 0.72)
@@ -202,6 +207,7 @@ function LiveExam({ test, onSubmit, onExit }) {
         <style>{`@keyframes evalSlide{0%{transform:translateX(-100%)}50%{transform:translateX(50%)}100%{transform:translateX(200%)}}`}</style>
       </div>
     )
+  }
 
   return (
     <div style={{ background: '#f1f5f9', minHeight: '100vh', fontFamily: 'system-ui,sans-serif' }}>
@@ -310,6 +316,7 @@ function LiveExam({ test, onSubmit, onExit }) {
       </div>
     </div>
   )
+}
 
 // ── MAIN COMPONENT ────────────────────────────────────────────
 export default function ATSAssessmentPage() {
@@ -327,9 +334,11 @@ export default function ATSAssessmentPage() {
     await new Promise(r => setTimeout(r, 1800))
     setGenMsg('✅ Question bank generated! MCQ × ' + form.mcq + ', Coding × ' + form.coding + ', Essay × ' + form.essay + ', Psychometric × ' + form.psych)
     setAiGenerating(false)
+  }
 
   if (view === 'exam' && selTest) {
     return <LiveExam test={selTest} onSubmit={() => { }} onExit={() => { setView('library'); setSelTest(null) }} />
+  }
 
   return (
     <div style={{ fontFamily: 'system-ui,sans-serif' }}>
@@ -518,3 +527,4 @@ export default function ATSAssessmentPage() {
       )}
     </div>
   )
+}

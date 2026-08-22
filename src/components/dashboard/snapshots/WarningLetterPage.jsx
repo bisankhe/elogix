@@ -111,3 +111,4 @@ export default function WarningLetterPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

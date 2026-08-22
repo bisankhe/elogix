@@ -28,6 +28,7 @@ const SHIFT_CODES = {
   R:  { label:'Rotational',     bg:'#f0f9ff', text:'#075985', border:'#7dd3fc', dot:'#0ea5e9' },
   S:  { label:'Split',          bg:'#fafafa', text:'#374151', border:'#d1d5db', dot:'#6b7280' },
   OT: { label:'Overtime',       bg:'#fffbeb', text:'#92400e', border:'#fcd34d', dot:'#f59e0b' },
+}
 
 const DEPTS   = ['All','Management','Human Resources','Finance','IT','Sales','Operations','Procurement']
 const PERIODS = ['Daily','Weekly','Bi-Monthly','Monthly']
@@ -54,6 +55,7 @@ function genRoster(month, year, dept) {
     Operations: ['M','D','E','N','W','W','D'],
     Procurement: ['D','D','D','D','W','W','SL'],
     All: ['M','D','E','N','W','CL','EL'],
+  }
   const pool = shiftPools[dept] || shiftPools.All
   return names.map(([ name, desig ], idx) => {
     const empId = `EMP-${String(idx+1).padStart(4,'0')}`
@@ -63,17 +65,22 @@ function genRoster(month, year, dept) {
       if (dow === 0) { days.push('W') }
       else if (dow === 6) { days.push('W') }
       else { days.push(pool[(idx * 3 + d) % pool.length]) }
+    }
     // sprinkle some night duties
     if (['IT','Operations'].includes(dept) || dept==='All') {
       for (let d = 0; d < daysInMonth; d++) {
         if ((idx + d) % 9 === 0 && days[d] !== 'W') days[d] = 'N'
+      }
+    }
     return { sn: idx+1, empId, name, desig, dept: dept==='All'?DEPTS[1+(idx%7)]:dept, days }
   })
+}
 
 const inp = {
   padding:'7px 10px', borderRadius:8, border:'1.5px solid #e2e8f0',
   fontSize:10, outline:'none', fontFamily:'inherit',
   width:'100%', boxSizing:'border-box', background:'#fff'
+}
 
 const ShiftCell = ({ code }) => {
   const s = SHIFT_CODES[code] || SHIFT_CODES.D
@@ -93,6 +100,7 @@ const ShiftCell = ({ code }) => {
       </span>
     </td>
   )
+}
 
 export default function DutyRosterPage() {
   const today = new Date()
@@ -118,6 +126,7 @@ export default function DutyRosterPage() {
     const dow = new Date(year, month-1, d).getDay()
     const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
     dayHeaders.push({ d, day: dayNames[dow], isWeekend: dow===0||dow===6 })
+  }
 
   const monthName = new Date(year, month-1, 1).toLocaleString('default',{month:'long'})
 
@@ -164,6 +173,7 @@ export default function DutyRosterPage() {
         )}
       </div>
     )
+  }
 
   return (
     <div style={{fontFamily:'system-ui,sans-serif',minHeight:'100vh',background:'#f0f7ff'}}>
@@ -408,3 +418,4 @@ export default function DutyRosterPage() {
       )}
     </div>
   )
+}

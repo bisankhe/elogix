@@ -26,7 +26,9 @@ const RECOMMENDED = [
 
 const PLAYER_SIDEBAR = {
   outline:['Module 1: Foundations','Module 2: Networking','Module 3: Security','Module 4: Hands-On Lab'],
+  notes:'Remember: VPC peering does NOT support transitive routing.',
   discussion:[{from:'Bikash Rai',message:'Anyone else stuck on the Lab 3 IAM policy?'},{from:'Instructor',message:'Check the troubleshooting doc - common typo in the resource ARN.'}],
+}
 
 export default function LearningPortalPage() {
   const [search, setSearch] = useState('')
@@ -121,3 +123,4 @@ export default function LearningPortalPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

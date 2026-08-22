@@ -112,3 +112,4 @@ export default function TrainingPortfolioPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

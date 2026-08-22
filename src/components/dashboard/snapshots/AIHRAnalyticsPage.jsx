@@ -20,7 +20,9 @@ async function callAI(prompt){
       const d=await r.json()
       if(r.ok&&d?.content?.[0]?.text)return d.content[0].text
     }catch{}
+  }
   return null
+}
 
 const W=({children,title,subtitle,extra,span=1})=>(
   <div style={{background:'#fff',borderRadius:16,padding:'18px 20px',border:'1px solid #e2e8f0',boxShadow:'0 1px 8px rgba(0,0,0,.05)',gridColumn:`span ${span}`,display:'flex',flexDirection:'column',gap:10}}>
@@ -60,6 +62,7 @@ export default function AIHRAnalyticsPage(){
     const result=await callAI(`Analyse our HR data and give strategic insights on: ${topic}. Company has 312 employees, 8.2% attrition, Engineering 34% flight risk, NPR 4.8M monthly payroll, SSF compliant.`)
     setInsight(result||`**AI Analytics Insight — ${topic}:**\n\n- Headcount grew 8.3% YoY (289 to 312)\n- Attrition 8.2% below industry avg 12%\n- Engineering dept highest flight risk at 34%\n- Time-to-fill improved from 31 to 28 days\n- Recommend salary benchmarking for Engineering within 30 days`)
     setLoading(false)
+  }
 
   useEffect(()=>{getInsight('overall workforce health and key trends')},[])
 
@@ -190,3 +193,4 @@ export default function AIHRAnalyticsPage(){
       </div>
     </div>
   )
+}

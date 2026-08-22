@@ -12,6 +12,7 @@ async function callAI(q){
   try{const r=await fetch('/api/v1/ai-proxy/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:sys,messages:[{role:'user',content:q}],model:'claude-sonnet-4-6',max_tokens:512}),signal:AbortSignal.timeout(8000)});if(r.ok){const d=await r.json();if(d.content)return d.content}}catch{}
   if(VITE_KEY&&VITE_KEY.startsWith('sk-ant')&&VITE_KEY!=='sk-ant-your-key-here'){try{const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':VITE_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-only-beta':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:512,system:sys,messages:[{role:'user',content:q}]})});const d=await r.json();if(r.ok&&d?.content?.[0]?.text)return d.content[0].text}catch{}}
   return null
+}
 
 const W=({children,title,subtitle,extra,span=1})=>(
   <div style={{background:'#fff',borderRadius:16,padding:'18px 20px',border:'1px solid #e2e8f0',boxShadow:'0 1px 8px rgba(0,0,0,.05)',gridColumn:`span ${span}`,display:'flex',flexDirection:'column',gap:10}}>
@@ -64,6 +65,7 @@ export default function AIAttritionPredictionPage(){
       const r=await callAI('Engineering team has 34% attrition risk. Salary gap NPR 13K/month below market. 8 employees at high risk. What are the top 5 retention interventions with ROI?')
       setInsight(r||`**AI Retention Strategy — Engineering Team:**\n\n- **Immediate salary review** for 8 at-risk engineers (NPR 13K gap) — estimated NPR 156K/month, saves NPR 1.76M in replacement costs. ROI: 11x\n- **1:1 retention conversations** with all 16 high-risk employees by Jul 30 — zero cost, -20% departure probability\n- **Career pathing sessions** — map promotion timelines for engineers with 3+ years no growth\n- **Flexible WFH policy** — 2-day WFH reduces commute stress, improves satisfaction +14 points\n- **Stay bonuses** for critical roles — NPR 50K-100K for 12-month commitment`)
       setLoading(false)
+    }
     go()
   },[])
 
@@ -72,6 +74,7 @@ export default function AIAttritionPredictionPage(){
     setRetention('')
     const r=await callAI(`Employee ${emp.name} (${emp.dept}) has ${emp.risk}% attrition risk. Reason: ${emp.reason}. Generate a personalised retention action plan in 4 specific steps.`)
     setRetention(r||`**Retention Plan — ${emp.name}:**\n\n- Schedule urgent 1:1 with direct manager this week\n- Review compensation vs market benchmark\n- Identify next promotion or growth opportunity\n- Offer skill development programme or certification budget`)
+  }
 
   return(
     <div style={{display:'flex',flexDirection:'column',gap:16}}>
@@ -189,3 +192,4 @@ export default function AIAttritionPredictionPage(){
       </div>
     </div>
   )
+}

@@ -98,6 +98,7 @@ function StatusPill({ status }) {
     overdue:     { bg:'#fef2f2', color:'#dc2626', label:'⚠ Overdue'       },
     pending:     { bg:'#f1f5f9', color:'#475569', label:'Not started'      },
     not_started: { bg:'#f1f5f9', color:'#475569', label:'Not started'      },
+  }
   const c = cfg[status] || cfg.pending
   return (
     <span style={{ background:c.bg, color:c.color, fontSize:11, fontWeight:700,
@@ -105,6 +106,7 @@ function StatusPill({ status }) {
       {c.label}
     </span>
   )
+}
 
 // ── Policy Card ────────────────────────────────────────────────
 function PolicyCard({ policy, ackStatus, onOpen }) {
@@ -144,6 +146,7 @@ function PolicyCard({ policy, ackStatus, onOpen }) {
       <span style={{ fontSize: 16, color: '#94a3b8', flexShrink: 0 }}>→</span>
     </div>
   )
+}
 
 // ── Policy Reader Modal ────────────────────────────────────────
 function PolicyReader({ policy, ackStatus, onClose, onSign, onProgressUpdate }) {
@@ -196,6 +199,7 @@ function PolicyReader({ policy, ackStatus, onClose, onSign, onProgressUpdate }) 
       ]
     })
     setAiLoading(false)
+  }
 
   const handleSign = async () => {
     if (!signText.trim() || signText.length < 10) return
@@ -203,6 +207,7 @@ function PolicyReader({ policy, ackStatus, onClose, onSign, onProgressUpdate }) 
     await new Promise(r => setTimeout(r, 800))
     onSign(policy.id)
     setSigning(false)
+  }
 
   const handleQuizAnswer = (qi, answer) => {
     const answers = { ...quizAnswers, [qi]: answer }
@@ -210,6 +215,8 @@ function PolicyReader({ policy, ackStatus, onClose, onSign, onProgressUpdate }) 
     if (Object.keys(answers).length === 3) {
       const score = Object.values(answers).filter(a => a === 'A').length
       setQuizResult({ score, passed: score >= 2 })
+    }
+  }
 
   // Policy body content (abbreviated - in production: full HTML from backend)
   const getPolicyBody = () => `
@@ -409,6 +416,7 @@ function PolicyReader({ policy, ackStatus, onClose, onSign, onProgressUpdate }) 
       </div>
     </div>
   )
+}
 
 // ── Compliance Dashboard (HR view) ────────────────────────────
 function ComplianceDashboard({ acknowledgments }) {
@@ -459,6 +467,7 @@ function ComplianceDashboard({ acknowledgments }) {
       )}
     </div>
   )
+}
 
 // ── Main HR Policies Page ─────────────────────────────────────
 export default function HRPoliciesPage() {
@@ -476,18 +485,22 @@ export default function HRPoliciesPage() {
 
   const saveAck = (data) => {
     localStorage.setItem('elogix_policy_acks', JSON.stringify(data))
+  }
 
   const handleSign = (policyId) => {
     const updated = { ...acknowledgments, [policyId]: 'signed' }
     setAcknowledgments(updated)
     saveAck(updated)
     setOpenPolicy(null)
+  }
 
   const handleProgressUpdate = (policyId, scrollPct) => {
     if ((acknowledgments[policyId] || 'pending') !== 'signed') {
       const status = scrollPct >= 95 ? 'completed' : scrollPct > 5 ? 'reading' : 'opened'
       setAcknowledgments(updated)
       saveAck(updated)
+    }
+  }
 
   // Filter policies
   const filtered = ALL_POLICIES.filter(p => {
@@ -604,3 +617,4 @@ export default function HRPoliciesPage() {
       `}</style>
     </div>
   )
+}

@@ -74,3 +74,4 @@ export default function BIDashboardPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

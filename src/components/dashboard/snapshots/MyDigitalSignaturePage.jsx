@@ -117,3 +117,4 @@ export default function MyDigitalSignaturePage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

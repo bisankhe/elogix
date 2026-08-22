@@ -37,6 +37,7 @@ const CAMPAIGNS = [
 const STATUS_CFG = {
   active:{c:'#10b981',bg:'#f0fdf4',icon:'🟢'}, draft:{c:'#94a3b8',bg:'#f8fafc',icon:'📝'},
   completed:{c:'#3b82f6',bg:'#eff6ff',icon:'✓'}, paused:{c:'#f59e0b',bg:'#fffbeb',icon:'⏸'},
+}
 const CTX = [
   {icon:'👁',label:'View Campaign',     key:'view'},
   {icon:'📊',label:'ROI Report',        key:'roi'},
@@ -190,3 +191,4 @@ export default function RecruitmentCampaignPage() {
       {showExcel&&<ExcelModal title="Recruitment Campaigns" columns={['Name','Channels','Budget NPR','Spent NPR','Status','Impressions','Clicks','Applications','Hires','Cost Per Hire']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

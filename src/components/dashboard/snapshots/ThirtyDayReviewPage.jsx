@@ -15,6 +15,8 @@ const REVIEWS = [
       {goal:'Build relationship with cross-dept stakeholders',met:true},
     ],
     survey:{role_clarity:5,team_integration:5,manager_support:5,tools_access:5,overall_satisfaction:5},
+    manager_note:'Outstanding integration. Already leading initiatives independently. No concerns.',
+    employee_feedback:'Great team, clear expectations, excellent support from CFO and team.',
     status:'completed', red_flags:0,
     impact_links:['60 Days Review','7 Days Review'] },
   { id:'thr2', employee:'Hari Thapa', position:'DevOps Engineer', dept:'IT', join_date:'2025-05-20', review_date:'2025-06-20',
@@ -24,6 +26,8 @@ const REVIEWS = [
       {goal:'Pair with senior engineer 3x/week',met:true},
     ],
     survey:{role_clarity:3,team_integration:4,manager_support:4,tools_access:2,overall_satisfaction:3},
+    manager_note:'Solid technical progress but tool access delays hampered productivity. Security training overdue - schedule immediately.',
+    employee_feedback:'Still waiting on VPN access for production systems. Otherwise team has been welcoming.',
     status:'completed', red_flags:1,
     impact_links:['60 Days Review','Account Creation'] },
   { id:'thr3', employee:'Priya Khadka', position:'Sales Executive', dept:'Sales', join_date:'2025-07-05', review_date:'2025-08-04',
@@ -177,3 +181,4 @@ export default function ThirtyDayReviewPage() {
       {showExcel&&<ExcelModal title="30 Days Review" columns={['Employee','Position','Department','Review Date','Goals Met','Survey Avg','Red Flags','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

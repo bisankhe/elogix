@@ -90,3 +90,4 @@ export default function MobileFuelClaimPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}

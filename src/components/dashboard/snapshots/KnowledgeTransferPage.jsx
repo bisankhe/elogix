@@ -46,6 +46,7 @@ export default function KnowledgeTransferPage() {
       const checklist = p.checklist.map((c,i)=>i===idx?{...c,[field]:!c[field]}:c)
       return {...p, checklist}
     }))
+  }
 
   return (
     <div onClick={()=>setCtx(null)}>
@@ -157,3 +158,4 @@ export default function KnowledgeTransferPage() {
       {showExcel&&<ExcelModal title="Knowledge Transfer" columns={['Employee','Position','LWD','Successor','Overlap Days','Tasks Reassigned','SOPs Captured','Manager Signoff']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
     </div>
   )
+}

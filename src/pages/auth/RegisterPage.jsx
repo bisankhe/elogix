@@ -272,7 +272,7 @@ export default function RegisterPage({ onSuccess }) {
     setLoading(true); setError('')
     try {
       let data
-      try { data = await eLogixAPI.createCompany(form) } catch {}
+      try { data = await eLogixAPI.createCompany(form) } catch(_e) {}
 
       // ── Always save to localStorage (works with or without API) ──
       const slugKey = (form.slug||'COMP').toUpperCase().replace(/[^A-Z]/g,'').slice(0,4)||'COMP'
@@ -319,12 +319,12 @@ export default function RegisterPage({ onSuccess }) {
           success:true, emp_id:empId,
           portal_url:`https://${form.slug}.elogix.com.np`,
           company_name:form.company_name, plan:form.plan,
-          note:`✅ Your eLogix HRMS is ready! Login with ${form.admin_email}`,
+          note:`✅ Registration complete! Awaiting SuperAdmin approval. You will be notified via ${form.admin_email}`,
         }
       }
       try { sessionStorage.setItem('elogix_pending_login', JSON.stringify({
         slug:form.slug, business_type:form.business_type, landing:form.landing,
-      })) } catch {}
+      })) } catch(_e) {}
       setDone(data)
     } catch(err) {
       setError(err.message||'Registration failed. Try again.')
@@ -332,8 +332,21 @@ export default function RegisterPage({ onSuccess }) {
   }
   // ── SUCCESS ──────────────────────────────────────────────
   if (done) return (
-    <div style={{ minHeight:'100vh',background:'#f0fdf4',display:'flex',alignItems:'center',
-      justifyContent:'center',fontFamily:'system-ui,sans-serif',padding:24 }}>
+    <div style={{
+      position:'fixed', inset:0,
+      background:'#f0fdf4',
+      fontFamily:'system-ui,sans-serif',
+      overflowY:'scroll',
+      overflowX:'hidden',
+      WebkitOverflowScrolling:'touch',
+      display:'flex',
+      alignItems:'flex-start',
+      justifyContent:'center',
+      padding:'32px 16px',
+      zIndex:10,
+      scrollbarWidth:'thin',
+      scrollbarColor:'#94a3b8 #e2e8f0',
+    }}>
       <div style={{ textAlign:'center',maxWidth:520 }}>
         <div style={{ fontSize:72,marginBottom:12 }}>🎉</div>
         <div style={{ fontSize:26,fontWeight:900,color:'#065f46',marginBottom:6 }}>Registration Complete! 🎉</div>
@@ -351,7 +364,7 @@ export default function RegisterPage({ onSuccess }) {
             <div style={{ fontSize:11,color:'#065f46',lineHeight:1.8 }}>
               ✅ {form.modules.length} modules pre-configured<br/>
               📧 Login credentials: <b>{form.admin_email}</b><br/>
-              🚀 <b>Your account is active!</b> Login now with your email and password<br/>
+              ⏳ <b>Pending SuperAdmin approval</b> — eLogix team will review and activate your account within 24 hours<br/>
               📞 Questions? <a href="mailto:support@elogix.com.np" style={{color:'#0369a1'}}>support@elogix.com.np</a>
             </div>
           </div>
@@ -369,10 +382,20 @@ export default function RegisterPage({ onSuccess }) {
   )
 
   return (
-    <div style={{ minHeight:'100vh',background:'#f0f7ff',fontFamily:'system-ui,sans-serif',overflowY:'auto',WebkitOverflowScrolling:'touch' }}>
+    <div style={{
+      position:'fixed', inset:0,
+      background:'#f0f7ff',
+      fontFamily:'system-ui,sans-serif',
+      overflowY:'scroll',
+      overflowX:'hidden',
+      WebkitOverflowScrolling:'touch',
+      zIndex:10,
+      scrollbarWidth:'thin',
+      scrollbarColor:'#94a3b8 #e2e8f0',
+    }}>
       {/* Header */}
       <div style={{ background:G,padding:'14px 24px',color:'#fff',
-        display:'flex',justifyContent:'space-between',alignItems:'center' }}>
+        display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:8 }}>
         <div>
           <div style={{ fontSize:18,fontWeight:900 }}>🏢 eLogix HRMS</div>
           <div style={{ fontSize:10,opacity:.75 }}>Start your 14-day free trial · No credit card needed</div>
@@ -382,7 +405,7 @@ export default function RegisterPage({ onSuccess }) {
         </a>
       </div>
 
-      <div style={{ maxWidth: step===4 ? 920 : 660, margin:'0 auto', padding:'28px 24px' }}>
+      <div style={{ maxWidth: step===4 ? 920 : 660, margin:'0 auto', padding:'24px 16px', width:'100%', boxSizing:'border-box' }}>
 
         {/* ── STEP PROGRESS BAR ── */}
         <div style={{ display:'flex',gap:0,marginBottom:28 }}>
@@ -402,7 +425,7 @@ export default function RegisterPage({ onSuccess }) {
                   {n<STEPS.length&&<div style={{ flex:1,height:2,background:done_s?A:'#e2e8f0',transition:'background .3s' }}/>}
                 </div>
                 <div style={{ fontSize:8,marginTop:4,textAlign:'center',whiteSpace:'nowrap',
-                  color:active?A:'#94a3b8',fontWeight:active?700:400 }}>{label}</div>
+                  color:active?A:'#94a3b8',fontWeight:active?700:400,overflow:'hidden',maxWidth:60,textOverflow:'ellipsis' }}>{label}</div>
               </div>
             )
           })}
@@ -425,7 +448,7 @@ export default function RegisterPage({ onSuccess }) {
                 ⚠️ {error}
               </div>
             )}
-            <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(255px,1fr))',gap:12,marginBottom:20 }}>
+            <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:12,marginBottom:20 }}>
               {BUSINESS_TYPES.map(bt=>{
                 const sel = form.business_type === bt.id
                 return (
@@ -482,7 +505,7 @@ export default function RegisterPage({ onSuccess }) {
 
         {/* ══ ALL OTHER STEPS: White card ══ */}
         {step !== 4 && (
-          <div style={{ background:'#fff',borderRadius:16,padding:'28px 32px',
+          <div style={{ background:'#fff',borderRadius:16,padding:'20px 18px',
             boxShadow:'0 2px 16px rgba(0,0,0,.07)' }}>
 
             {error&&(
@@ -595,7 +618,7 @@ export default function RegisterPage({ onSuccess }) {
                   <Inp label="Address Line 2" k="address_line2"
                     placeholder="Landmark, Building, Floor (optional)"
                     value={form.address_line2} onChange={e=>sf('address_line2',e.target.value)}/>
-                  <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(min(200px,100%),1fr))',gap:10 }}>
+                  <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))',gap:12 }}>
                     <Inp label="City / VDC / Municipality" k="city"
                       placeholder="e.g. Kathmandu"
                       value={form.city} onChange={e=>sf('city',e.target.value)}/>
@@ -603,7 +626,7 @@ export default function RegisterPage({ onSuccess }) {
                       placeholder="e.g. Kathmandu"
                       value={form.district} onChange={e=>sf('district',e.target.value)}/>
                   </div>
-                  <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(min(200px,100%),1fr))',gap:10 }}>
+                  <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))',gap:12 }}>
                     <Inp label="Province / State" k="province"
                       placeholder="e.g. Bagmati Province"
                       value={form.province} onChange={e=>sf('province',e.target.value)}/>
@@ -651,7 +674,7 @@ export default function RegisterPage({ onSuccess }) {
                   <div style={{ fontSize:10,color:'#64748b',marginBottom:14 }}>
                     Nepal standard: Shrawan (4) to Asar (3) · International: January (1) to December (12)
                   </div>
-                  <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(min(200px,100%),1fr))',gap:10 }}>
+                  <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))',gap:12 }}>
                     <Sel label="FY Start Month" required value={form.fy_start_month}
                       onChange={e=>sf('fy_start_month',e.target.value)}>
                       {calMonths.map((m,i)=><option key={i} value={String(i+1)}>{m}</option>)}
@@ -678,7 +701,7 @@ export default function RegisterPage({ onSuccess }) {
                   <div style={{ fontSize:10,color:'#64748b',marginBottom:14 }}>
                     When does the leave year begin and end? Usually same as financial year.
                   </div>
-                  <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(min(200px,100%),1fr))',gap:10 }}>
+                  <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))',gap:12 }}>
                     <Sel label="Leave Year Start" required value={form.leave_start_month}
                       onChange={e=>sf('leave_start_month',e.target.value)}>
                       {calMonths.map((m,i)=><option key={i} value={String(i+1)}>{m}</option>)}
@@ -754,7 +777,7 @@ export default function RegisterPage({ onSuccess }) {
                     </span>
                   </div>
                 )}
-                <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(min(200px,100%),1fr))',gap:10 }}>
+                <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12 }}>
                   {PLANS.map(plan=>(
                     <div key={plan.id} onClick={()=>sf('plan',plan.id)}
                       style={{ borderRadius:12,padding:16,cursor:'pointer',position:'relative',

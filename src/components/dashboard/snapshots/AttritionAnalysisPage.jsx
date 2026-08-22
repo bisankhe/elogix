@@ -84,3 +84,4 @@ export default function AttritionAnalysisPage() {
       ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
     </div>
   )
+}
