@@ -45,6 +45,7 @@ jobs:
       - name: Build and push backend
         uses: docker/build-push-action@v6
         with:
+<<<<<<< HEAD
           # ✅ FIX: context = project root (.) so alembic.ini, alembic/, and backend/
           # are ALL available inside the build. Previously was ./backend which excluded
           # alembic.ini and the alembic/ folder, causing "alembic.ini not found".
@@ -52,6 +53,11 @@ jobs:
           # ✅ FIX: explicitly point to backend/Dockerfile since context is now root
           file: backend/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
+=======
+          context: .
+          file: ./backend/Dockerfile
+          push: true
+>>>>>>> c115c51d1f3c9a15ee6c2f5d95043595b15871c8
           tags: |
             ${{ env.BACKEND_IMAGE }}:latest
             ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
