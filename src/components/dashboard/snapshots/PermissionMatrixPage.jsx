@@ -2,7 +2,7 @@
 // Permission Matrix with submodule-level granularity:
 // Role -> expand -> Module -> expand (+) -> Submodule rows
 // Each row: View / Edit / Delete / Create / Forward / Approve / Report + Scope
-import { resolveTenantAccess, getSessionSlug } from '../../../utils/tenantPermissions.js'
+import { resolveTenantAccess, getSessionSlug, getTenantPermissionRecord, getTenantModules } from '../../../utils/tenantPermissions.js'
 import AccessDenied from '../../shared/AccessDenied.jsx'
 import { useState, useEffect, useCallback } from 'react'
 import { PageHeader, AIImpact, SearchBar } from './DeptSetupShared.jsx'
@@ -382,6 +382,31 @@ function PermRow({ label, cellKey, matrix, onToggle, onScope, isEditor, isSub })
 }
 
 export default function PermissionMatrixPage(){
+  // ── Tenant permission gate ─────────────────────────────────────
+  const slug   = getSessionSlug()
+  const access = resolveTenantAccess(slug)
+  if (!access.hasAccess('permissions')) {
+    return <AccessDenied moduleName="Permission Matrix" />
+  }
+  const sess    = (() => { try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}} })()
+  const company = sess.company || {}
+  const plan    = (company.plan||'trial').toLowerCase()
+  const grantedMods = new Set(access.modules)
+  const permRec = getTenantPermissionRecord(slug)
+
+  // Only show modules that eLogix SuperAdmin has activated
+  // Map tenantPermissions module keys to MODULES keys
+  const MOD_KEY_MAP = {
+    employee:'employee_database', org_setup:'dashboard', attendance:'attendance',
+    leave:'leave', payroll:'payroll', ats:'recruitment', performance:'performance',
+    training:'learning_development', announcements:'employee_experience',
+    finance:'finance_assets', compliance:'compliance_risk', reports:'reports_analytics',
+    self_service:'hr_services', permissions:'system_admin', ai_chatbot:'dashboard',
+  }
+  const grantedModuleKeys = new Set(
+    access.modules.flatMap(m => [m, MOD_KEY_MAP[m]].filter(Boolean))
+  )
+
   const [matrix, setMatrix] = useState(() => buildMatrix())
   const [expandedRole, setExpandedRole] = useState(null)
   const [expandedModules, setExpandedModules] = useState({}) // `${roleKey}::${moduleKey}` -> bool
@@ -403,7 +428,9 @@ export default function PermissionMatrixPage(){
 
   const setScope = useCallback((cellKey, scope) => {
     if (!isEditor) return
+    const roleKey = cellKey.split('::')[0]
     setMatrix(prev => {
+      const cur = prev[cellKey] || { ...EMPTY_CELL }
       return { ...prev, [cellKey]: { ...cur, scope } }
     })
     setDirty(prev => ({ ...prev, [roleKey]: true }))
@@ -453,6 +480,13 @@ export default function PermissionMatrixPage(){
           {icon:'✅',label:'Actions per Row', value:ACTIONS.length},
         ]}
         onAdd={()=>{}} addLabel=""/>
+
+      <div style={{background:'#fefce8',border:'1px solid #fde68a',borderRadius:10,padding:'10px 14px',marginBottom:10,fontSize:10,color:'#92400e',display:'flex',gap:8,alignItems:'center'}}>
+        <span>📦</span>
+        <span><strong>{plan.charAt(0).toUpperCase()+plan.slice(1)} Plan</strong> · {access.modules.length} modules activated by eLogix SuperAdmin.
+        Modules not in your plan are shown locked (🔒) and cannot have permissions assigned.</span>
+        {permRec && <span style={{marginLeft:'auto',fontSize:9,color:'#b45309'}}>Updated: {new Date(permRec.granted_at).toLocaleDateString()}</span>}
+      </div>
 
       <div style={{background:'#eef2ff',border:'1px solid #c7d2fe',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#3730a3',display:'flex',gap:10,flexWrap:'wrap'}}>
         <span style={{fontSize:18}}>🛡</span>

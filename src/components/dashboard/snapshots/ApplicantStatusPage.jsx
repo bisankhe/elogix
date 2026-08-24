@@ -499,7 +499,7 @@ export default function ApplicantStatusPage() {
               { label:'➕ Add Row',  action: () => addRow(rows.length-1, false), bg:'#0369a1' },
             ].map(btn => (
               <button key={btn.label} onClick={btn.action}
-                style={{ padding:'8px 16px', borderRadius:9, border:'none',
+                style={{ padding:'8px 16px', borderRadius:9,
                   background:'rgba(255,255,255,.18)', color:'#fff',
                   fontSize:12, fontWeight:700, cursor:'pointer',
                   backdropFilter:'blur(4px)', transition:'background .15s',

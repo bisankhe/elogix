@@ -17,7 +17,13 @@
 //   • Print option — professional printable roster sheet
 
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
-import { useApp } from '../../../context/AppContext.jsx'
+import { resolveTenantAccess, getSessionSlug } from '../../../utils/tenantPermissions.js'
+import AccessDenied from '../../shared/AccessDenied.jsx'
+
+function getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} }
+  catch(_e){ return {} }
+}
 
 const G  = 'linear-gradient(135deg,#1e1b4b 0%,#4338ca 60%,#818cf8 100%)'
 const P  = '#4338ca'
@@ -77,7 +83,7 @@ function sendNotification({ type, employee, message, channels, supervisor }) {
     const gl = JSON.parse(localStorage.getItem('elogix_hris_notifications')||'[]')
     gl.unshift({ id:notif.id, cat:type==='missing_roster'?'Action Required':'FYI', icon:type==='missing_roster'?'🔴':type==='shift_change'?'🔄':'✅', title:message, body:`${employee?.name||''} · ${employee?.dept||''} · ${new Date().toLocaleString()}`, action:'View Roster', time:'Just now', unread:true })
     localStorage.setItem('elogix_hris_notifications', JSON.stringify(gl.slice(0,100)))
-  } catch {}
+  } catch(_e) {}
   console.log('[eLogix Roster Notif]', type, message, channels.join(', '))
   return notif
 }
@@ -109,8 +115,23 @@ function ShiftCell({ shift, dayIdx, empId, canEdit, onChange, isToday, isChanged
 
 // ── MAIN COMPONENT ─────────────────────────────────────────────
 export default function RosterManagementPage() {
-  const { currentPersona, navTo } = useApp()
-  const personaId = currentPersona?.id || 'employee'
+  const slug    = getSessionSlug()
+  const access  = resolveTenantAccess(slug)
+  const sess    = getSession()
+  const company = sess.company || {}
+
+  // Tenant access gate
+  if (!access.hasAccess('attendance')) {
+    return <AccessDenied moduleName="Roster Management" />
+  }
+
+  // Persona from session
+  const personaId = sess.user?.role || 'employee'
+  const navTo = (page) => {
+    // Simple navigation — set active page in session
+    try { sessionStorage.setItem('elogix_active_page', page) } catch(_e) {}
+    window.dispatchEvent(new CustomEvent('elogix-nav', { detail: { page } }))
+  }
 
   // ── ROLE-BASED PERMISSION ──────────────────────────────────
   const canEditAll  = CAN_EDIT_ALL.has(personaId)
@@ -137,7 +158,7 @@ export default function RosterManagementPage() {
     try {
       const saved = localStorage.getItem('elogix_roster_draft')
       if (saved) return JSON.parse(saved).employees
-    } catch {}
+    } catch(_e) {}
     return BASE_EMPLOYEES
   })
   const savedRef    = useRef(employees)        // last saved state
@@ -218,7 +239,7 @@ export default function RosterManagementPage() {
         body: JSON.stringify({ employees, savedAt:new Date().toISOString(), savedBy:personaId }),
         signal: AbortSignal.timeout(6000),
       })
-    } catch {}
+    } catch(_e) {}
     localStorage.setItem('elogix_roster_draft', JSON.stringify({ employees, savedAt:new Date().toISOString() }))
     savedRef.current = employees
     setSaving(false)
@@ -274,6 +295,7 @@ export default function RosterManagementPage() {
 
   const applyBulkShift = (shift, scope) => {
     if (!shift) return
+    const dates = scope==='week' ? weekDates : monthDates  // ✅ FIX: was undefined
     setEmployees(prev => prev.map(emp => {
       if (!selectedEmps.has(emp.id) || !canEditEmployee(emp)) return emp
       const nr = [...emp.roster]
@@ -289,8 +311,10 @@ export default function RosterManagementPage() {
 
   const applyRowShift = (empId, shift, scope) => {
     if (!shift) return
+    const dates = scope==='week' ? weekDates : monthDates  // ✅ FIX: was undefined
     setEmployees(prev => prev.map(emp => {
       if (emp.id!==empId || !canEditEmployee(emp)) return emp
+      const nr = [...emp.roster]
       dates.forEach(d => {
         const idx=getDayIdx(d), dow=d.getDay()
         nr[idx] = (dow===0||dow===6) && shift!=='Off' && shift!=='Holiday' ? 'Off' : shift
@@ -321,7 +345,7 @@ export default function RosterManagementPage() {
         body: JSON.stringify({ employees, weekOffset }),
         signal: AbortSignal.timeout(6000),
       })
-    } catch {}
+    } catch(_e) {}
     localStorage.setItem('elogix_published_roster', JSON.stringify({ published_at:new Date().toISOString(), week_offset:weekOffset, employees }))
     setPublishing(false); setPublished(true)
     setTimeout(() => setPublished(false), 3000)
@@ -438,6 +462,7 @@ tr:nth-child(even) td{background:#f8fafc}
                       <div style={{ display:'flex', gap:2, marginTop:3, flexWrap:'wrap' }}>
                         {['GEN','MRN','EVN','NGT','OFF'].map(sh=>{
                           const key = Object.keys(SHIFTS).find(k=>SHIFTS[k].short===sh)
+                          const cfg = SHIFTS[key] || SHIFTS.General  // ✅ FIX: was missing
                           return (
                             <button key={sh} onClick={()=>applyRowShift(emp.id, key, 'week')}
                               title={`Set all days to ${cfg.label}`}
@@ -486,6 +511,7 @@ tr:nth-child(even) td{background:#f8fafc}
         </div>
         {SHIFT_KEYS.filter(sk=>sk!=='Off'&&sk!=='Holiday').map(sk => {
           const onShift = filtered.filter(e=>e.roster[idx]===sk)
+          const cfg = SHIFTS[sk] || SHIFTS.General  // ✅ FIX: was missing
           if (onShift.length===0) return null
           return (
             <div key={sk} style={{ background:cfg.bg, borderRadius:12, padding:'12px 16px', border:`1px solid ${cfg.color}30`, marginBottom:10 }}>
@@ -497,6 +523,7 @@ tr:nth-child(even) td{background:#f8fafc}
               </div>
               <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
                 {onShift.map(emp=>{
+                  const orig = savedRef.current.find(e=>e.id===emp.id)?.roster[idx]  // ✅ FIX
                   const isC  = emp.roster[idx] !== orig
                   return (
                     <div key={emp.id} style={{ display:'flex', alignItems:'center', gap:6, background:'#fff', borderRadius:9, padding:'6px 10px', border:`1px solid ${isC?'#fca5a5':cfg.color+'25'}` }}>
@@ -505,7 +532,7 @@ tr:nth-child(even) td{background:#f8fafc}
                         <div style={{ fontSize:9, fontWeight:700, color:'#0f172a' }}>{emp.name}</div>
                         <div style={{ fontSize:7, color:'#94a3b8' }}>{emp.dept}</div>
                       </div>
-                      {canEdit && (
+                      {canEditEmployee(emp) && ( // ✅ FIX: was bare `canEdit` (undefined here)
                         <select value={emp.roster[idx]||''} onChange={e=>handleCellChange(emp.id,idx,e.target.value||null)}
                           style={{ padding:'2px 4px', borderRadius:5, border:`1px solid ${cfg.color}`, fontSize:7, background:cfg.bg, color:cfg.color, fontWeight:700, outline:'none', marginLeft:4 }}>
                           <option value="">—</option>
@@ -607,7 +634,8 @@ tr:nth-child(even) td{background:#f8fafc}
                       totalHrs  += sh?SHIFTS[sh]?.hrs||0:0
                       const isT  = date.toDateString()===today.toDateString()
                       const isW  = date.getDay()===0||date.getDay()===6
-                      const isC  = sh !== (orig?.roster[idx]||null)
+                      const origEmp = savedRef.current.find(e=>e.id===emp.id)  // ✅ FIX: orig
+                      const isC  = sh !== (origEmp?.roster[idx]||null)  // ✅ FIX: was orig (undefined)
                       if (!canEdit) return (
                         <td key={d} style={{ padding:'2px', textAlign:'center', background:isT?'#fef2f2':isW?'#f8fafc':'transparent' }}>
                           {cfg?<span style={{ fontSize:7, color:cfg.color, fontWeight:700 }}>{cfg.short}</span>:<span style={{ color:'#e2e8f0', fontSize:9 }}>·</span>}
@@ -639,20 +667,31 @@ tr:nth-child(even) td{background:#f8fafc}
 
   // ── NOTIFICATION HISTORY ───────────────────────────────────
   const allNotifs = useMemo(()=>{
-    try { return JSON.parse(localStorage.getItem('elogix_roster_notifications')||'[]').slice(0,30) } catch { return [] }
+    try { return JSON.parse(localStorage.getItem('elogix_roster_notifications')||'[]').slice(0,30) } catch(_e) { return [] }
   },[notifPanel])
   const unread = allNotifs.filter(n=>!n.read).length
 
   // ── PERMISSION BANNER ──────────────────────────────────────
   const roleBanner = () => {
-    if (canEditAll)  return { bg:'#f0fdf4', color:'#15803d', icon:'✅', text:`Edit mode: Full access — you can edit all departments (${currentPersona?.label||'HR/Admin'})` }
-    if (canEditDept) return { bg:'#eff6ff', color:'#1e40af', icon:'🏢', text:`Edit mode: Department scope — you can only edit ${myDept||'your department'} employees (${currentPersona?.label||'Dept Head'})` }
-    return { bg:'#f8fafc', color:'#64748b', icon:'👁️', text:`View only — your role (${currentPersona?.label||'Employee'}) does not have roster edit permission. Contact HR or your supervisor.` }
+    if (canEditAll)  return { bg:'#f0fdf4', color:'#15803d', icon:'✅', text:`Edit mode: Full access — you can edit all departments (${sess.user?.name||'HR/Admin'})` }
+    if (canEditDept) return { bg:'#eff6ff', color:'#1e40af', icon:'🏢', text:`Edit mode: Department scope — you can only edit ${myDept||'your department'} employees (${sess.user?.name||'Dept Head'})` }
+    return { bg:'#f8fafc', color:'#64748b', icon:'👁️', text:`View only — your role (${sess.user?.name||'Employee'}) does not have roster edit permission. Contact HR or your supervisor.` }
   }
   const banner = roleBanner()
 
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:16, fontFamily:'system-ui,sans-serif' }}>
+    <div style={{ position:'fixed', inset:0, display:'flex', flexDirection:'column',
+      fontFamily:"'Segoe UI',system-ui,sans-serif", background:'#f5f3ff', overflow:'hidden' }}>
+      <style>{`
+        ::-webkit-scrollbar{width:8px;height:8px}
+        ::-webkit-scrollbar-track{background:#f1f5f9;border-radius:4px}
+        ::-webkit-scrollbar-thumb{background:#94a3b8;border-radius:4px}
+        ::-webkit-scrollbar-thumb:hover{background:#475569}
+      `}</style>
+      <div style={{ flex:1, overflowY:'auto', overflowX:'hidden',
+        scrollbarWidth:'thin', scrollbarColor:'#94a3b8 #f1f5f9',
+        WebkitOverflowScrolling:'touch', padding:'0 0 20px' }}>
+      <div style={{ display:'flex', flexDirection:'column', gap:16, padding:'16px' }}>
 
       {/* ── DISCARD CONFIRM DIALOG ────────────────────────────── */}
       {showDiscardWarn && (
@@ -672,7 +711,7 @@ tr:nth-child(even) td{background:#f8fafc}
       {/* ── HEADER ────────────────────────────────────────────── */}
       <div style={{ background:G, borderRadius:16, padding:'20px 24px', boxShadow:'0 4px 24px rgba(67,56,202,.25)' }}>
         <div style={{ fontSize:8, color:'rgba(255,255,255,.5)', marginBottom:3 }}>Workforce Operations › Attendance Management › Attendance Setup</div>
-        <div style={{ fontSize:18, fontWeight:900, color:'#fff' }}>🗓️ Roster Management</div>
+        <div style={{ fontSize:18, fontWeight:900, color:'#fff' }}>🗓️ Roster Management{company.name ? ' — '+company.name : ''}</div>
         <div style={{ fontSize:10, color:'rgba(255,255,255,.7)', marginTop:2 }}>Department-wise · Daily / Weekly / Monthly · Role-based Edit · Save & Publish · Multi-channel Notifications · Print</div>
         <div style={{ display:'flex', gap:8, marginTop:14, flexWrap:'wrap', alignItems:'center' }}>
           {[
@@ -913,6 +952,8 @@ tr:nth-child(even) td{background:#f8fafc}
           </div>
         </div>
       )}
+    </div>
+      </div>
     </div>
   )
 }

@@ -190,18 +190,45 @@ const BUSINESS_TYPES = [
 ]
 
 // ── DEMO TENANTS ──────────────────────────────────────────────
-const DEMO_TENANTS = [
-  { id:'t1', name:'Himalayan Bank Ltd.',    type:'bank_finance',       plan:'Enterprise', employees:1200, status:'active',  joined:'2083-01-15' },
-  { id:'t2', name:'ManPower Nepal Pvt Ltd', type:'recruitment_agency',  plan:'Business',   employees:45,  status:'active',  joined:'2082-09-20' },
-  { id:'t3', name:'Grande Hospital',        type:'hospital_health',    plan:'Business',   employees:680, status:'active',  joined:'2082-11-03' },
-  { id:'t4', name:'Room to Read Nepal',     type:'ngo_ingo',           plan:'Growth',     employees:120, status:'active',  joined:'2083-02-28' },
-  { id:'t5', name:'Leapfrog Technology',    type:'it_software',        plan:'Growth',     employees:180, status:'active',  joined:'2082-07-14' },
-  { id:'t6', name:'Surya Nepal Pvt Ltd',    type:'manufacturing',      plan:'Business',   employees:2400,status:'active',  joined:'2081-05-10' },
-  { id:'t7', name:'Tara Gaon Resort',       type:'hotel_hospitality',  plan:'Starter',    employees:85,  status:'active',  joined:'2083-03-01' },
-  { id:'t8', name:'Kathmandu University',   type:'school_university',  plan:'Growth',     employees:340, status:'active',  joined:'2082-06-22' },
-  { id:'t9', name:'Department of Labour',   type:'government',         plan:'Enterprise', employees:890, status:'trial',   joined:'2083-04-10' },
-  { id:'t10',name:'TechBridge Nepal',       type:'it_software',        plan:'Trial',      employees:12,  status:'trial',   joined:'2083-04-14' },
-]
+// ── Load real approved tenants from localStorage ──────────────────────
+function loadAllTenants() {
+  try {
+    const sources = []
+    const active = JSON.parse(localStorage.getItem('elogix_active_companies') || '[]')
+    active.forEach((t, i) => sources.push({
+      id: t.id || `live-${t.slug || i}`,
+      name: t.name, slug: t.slug,
+      type: t.business_type || 'custom',
+      plan: (t.plan||'trial').charAt(0).toUpperCase()+(t.plan||'trial').slice(1),
+      employees: t.employee_count || 0,
+      status: t.status || 'active',
+      joined: (t.approved_at||new Date().toISOString()).split('T')[0],
+      admin_email: t.admin_email||'',
+    }))
+    const registry = JSON.parse(localStorage.getItem('elogix_approved_tenants') || '{}')
+    Object.values(registry).forEach((t, i) => {
+      if (!sources.find(s => s.slug === t.slug)) sources.push({
+        id: t.id || `reg-${t.slug||i}`,
+        name: t.name, slug: t.slug,
+        type: t.business_type || 'custom',
+        plan: (t.plan||'trial').charAt(0).toUpperCase()+(t.plan||'trial').slice(1),
+        employees: t.employee_count || 0,
+        status: t.status || 'active',
+        joined: (t.approved_at||new Date().toISOString()).split('T')[0],
+        admin_email: t.admin_email||'',
+      })
+    })
+    if (sources.length > 0) return sources
+  } catch(_e) {}
+  // Default: real eLogix tenants
+  return [
+    { id:'c1', name:'Abasar Nepal',              slug:'abasarnepal',     type:'recruitment_agency', plan:'Starter', employees:0, status:'active', joined:'2083-05-04' },
+    { id:'c2', name:'Subisu Cablenet Pvt. Ltd.', slug:'subisu',          type:'it_software',        plan:'Growth',  employees:0, status:'active', joined:'2083-05-05' },
+    { id:'c3', name:'Mainawati Steels',           slug:'mainawatisteels', type:'manufacturing',      plan:'Starter', employees:0, status:'active', joined:'2083-05-05' },
+    { id:'c4', name:'HR Hub',                     slug:'hrhub',           type:'custom',             plan:'Trial',   employees:0, status:'trial',  joined:'2083-05-05' },
+  ]
+}
+const DEMO_TENANTS = loadAllTenants()
 
 const GROUP_ORDER = ['Core HR','Recruitment','Performance','Training','Finance','AI & Analytics','Workforce','Communication','Integrations','Admin']
 const PLAN_COLORS = { Enterprise:'#7c3aed', Business:'#0369a1', Growth:'#059669', Starter:'#d97706', Trial:'#64748b' }
@@ -258,7 +285,7 @@ export default function TenantModulePermissionPage() {
   })
 
   return (
-    <div style={{fontFamily:'system-ui,sans-serif',paddingBottom:60,minHeight:'100%',background:'#f8f5ff'}}>
+    <div style={{fontFamily:'system-ui,sans-serif',paddingBottom:60,minHeight:'100%',paddingBottom:60,background:'#f8f5ff'}}>
       {toast && (
         <div style={{ position:'fixed',bottom:20,right:20,zIndex:9999,background:'#f5f3ff',
           border:'1px solid #ddd6fe',borderRadius:12,padding:'12px 20px',

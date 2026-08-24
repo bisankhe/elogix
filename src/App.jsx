@@ -672,6 +672,9 @@ import ATSHRChatPage            from './components/dashboard/snapshots/ATSHRChat
 import ATSRBACPage              from './components/dashboard/snapshots/ATSRBACPage.jsx'
 import ATSRecruiterDashPage     from './components/dashboard/snapshots/ATSRecruiterDashPage.jsx'
 import HRISBulkCVSubmitPage from './components/dashboard/snapshots/HRISBulkCVSubmitPage.jsx'
+import MasterDatabasePage      from './components/dashboard/snapshots/MasterDatabasePage.jsx'
+import ApplicantStatusPage     from './components/dashboard/snapshots/ApplicantStatusPage.jsx'
+import VacancyStatusPage       from './components/dashboard/snapshots/VacancyStatusPage.jsx'
 import CandidateDatabasePage    from './components/dashboard/snapshots/CandidateDatabasePage.jsx'
 import CreateJobDescriptionPage from './components/dashboard/snapshots/CreateJobDescriptionPage.jsx'
 import JDLibraryPage            from './components/dashboard/snapshots/JDLibraryPage.jsx'
@@ -1351,6 +1354,13 @@ const ROUTES = {
   'buddy-assignment':              BuddyAssignmentPage,
   'campus-hiring':                 CampusHiringPage,
   'candidate-database':            CandidateDatabasePage,
+  // ── Recruitment Management: Master Database & Tracking ──────────
+  'master-database':             MasterDatabasePage,
+  'mdb':                         MasterDatabasePage,     // short alias
+  'employee-master-db':          MasterDatabasePage,     // long alias
+  'applicant-status':            ApplicantStatusPage,
+  'vacancy-status':              VacancyStatusPage,
+  'recruitment-mdb':             MasterDatabasePage,     // nav alias
   'career-page':                   CareerPageBuilderPage,
   'career-portal':                 CareerPortalPage,
   'cit-letters':                   CITLettersPage,
@@ -1551,7 +1561,7 @@ export default function App({ initialPage, onLogout }) {
           sessionStorage.getItem('elogix_user') ||
           localStorage.getItem('elogix_user') || '{}'
         )
-      } catch { return {} }
+      } catch(_e) { return {} }
     })()
     const role = session?.user?.role || session?.role
     if (role) setPersonaState(ROLE_TO_PERSONA[role] || 'super-admin')
@@ -1618,7 +1628,7 @@ export default function App({ initialPage, onLogout }) {
                   )
                   const role = sess?.user?.role
                   if (role) return role.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())
-                } catch {}
+                } catch(_e) {}
                 return t(currentPersona?.labelKey) || currentPersona?.label
               })()}
             </span>

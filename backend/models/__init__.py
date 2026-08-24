@@ -1,55 +1,66 @@
-"""
-FILE: backend/models/__init__.py
-Exports all SQLAlchemy models so they are registered with db.create_all().
-Import this in app.py before calling db.create_all().
-"""
-# Org Setup
+# FILE: backend/models/__init__.py
+# eLogix HRMS — Model Package Init
+# Fixed: Base added to __all__ so alembic/env.py can import it
+# eLogix Technologies · www.elogix.com.np
+
 from .org_models import (
     Base, GroupCompany, Company, CompanyLegalDocument,
     Branch, BusinessUnit, Department, Section, Unit,
     Team, CostCenter, WorkLocation,
 )
-# Structure & Hierarchy
-from .structure_models import (
-    EmploymentCategory, EMPLOYMENT_CATEGORY_SEEDS,
-    JobFamily, GradeLevel, Designation,
-    ReportingRelationship, OrgChartNode, Position,
-)
-# Recruitment & Hiring Module
-from .recruitment_models import (
-    JobRequisition, Vacancy, JobPosting, Candidate, Application,
-    ResumeScreeningResult, Interview, InterviewPanelMember, InterviewScorecard,
-    Offer, BackgroundCheck, HiringApproval,
-)
-# Employee & Policy Acknowledgements
-from .employee_models import (
-    Employee, PolicyAcknowledgement, PolicyAuditLog,
-)
-# Shift / Holiday / Weekend
-from .shift_holiday_models import (
-    ShiftType, HolidayCalendar, WeekendPolicy,
-)
-# Workforce / Outsource
-from .workforce_config_models import (
-    EmploymentTypeConfig, OutsourceVendor, SLAContract,
-    SLAKPIResult, VendorEmployee, VendorInvoice,
-    VendorAttendance, VendorPerformanceCard,
-)
 
+# Import all other models so Base.metadata is fully populated
+# (SQLAlchemy only registers tables when the model class is imported)
+try: from .saas_models        import *
+except ImportError: pass
+try: from .employee_models    import *
+except ImportError: pass
+try: from .recruitment_models import *
+except ImportError: pass
+try: from .ats_models         import *
+except ImportError: pass
+try: from .attendance_log     import *
+except ImportError: pass
+try: from .payroll_tax_models import *
+except ImportError: pass
+try: from .hr_policy_models   import *
+except ImportError: pass
+try: from .audit_models       import *
+except ImportError: pass
+try: from .billing_models     import *
+except ImportError: pass
+try: from .ai_models          import *
+except ImportError: pass
+try: from .company_setup_models import *
+except ImportError: pass
+try: from .dept_team_models   import *
+except ImportError: pass
+try: from .group_branch_models import *
+except ImportError: pass
+try: from .org_setup_models   import *
+except ImportError: pass
+try: from .org_structure_models import *
+except ImportError: pass
+try: from .structure_models   import *
+except ImportError: pass
+try: from .structure_hierarchy_models import *
+except ImportError: pass
+try: from .position_management_models import *
+except ImportError: pass
+try: from .employment_category_models import *
+except ImportError: pass
+try: from .shift_holiday_models import *
+except ImportError: pass
+try: from .workforce_config_models import *
+except ImportError: pass
+try: from .attendance_reports_models import *
+except ImportError: pass
+
+# ── PUBLIC API ────────────────────────────────────────────────────────
+# Base MUST be first so alembic/env.py can do: from backend.models import Base
 __all__ = [
+    "Base",                        # ← KEY: was missing, caused alembic to see no tables
     "GroupCompany", "Company", "CompanyLegalDocument",
-    "Branch", "BusinessUnit", "Department",
-    "Section", "Unit", "Team", "CostCenter", "WorkLocation",
-    "EmploymentCategory", "JobFamily", "GradeLevel",
-    "Designation", "ReportingRelationship", "OrgChartNode", "Position",
-    "EmploymentTypeConfig", "OutsourceVendor", "SLAContract",
-    "SLAKPIResult", "VendorEmployee", "VendorInvoice",
-    "VendorAttendance", "VendorPerformanceCard",
-    "ShiftType", "HolidayCalendar", "WeekendPolicy",
-    "Employee", "PolicyAcknowledgement", "PolicyAuditLog",
-    "JobRequisition", "Vacancy", "JobPosting", "Candidate", "Application",
-    "ResumeScreeningResult", "Interview", "InterviewPanelMember", "InterviewScorecard",
-    "Offer", "BackgroundCheck", "HiringApproval",
+    "Branch", "BusinessUnit", "Department", "Section", "Unit",
+    "Team", "CostCenter", "WorkLocation",
 ]
-
-from .ai_models import AIChatSession, AIChatMessage, AIUsageLog, AIKnowledgeBase

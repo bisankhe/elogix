@@ -61,6 +61,28 @@ export default function PermissionManagementPage() {
   if (!access.hasAccess('permissions')) {
     return <AccessDenied moduleName="Permission Management" />
   }
+  // ── Tenant context ────────────────────────────────────────────
+  const sess        = (() => { try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}} })()
+  const company     = sess.company || {}
+  const plan        = (company.plan||'trial').toLowerCase()
+  const bizType     = company.business_type || 'custom'
+  const grantedMods = new Set(access.modules)
+  const permRec     = getTenantPermissionRecord(slug)
+
+  // Only show modules that eLogix SuperAdmin has granted to this tenant
+  const VISIBLE_MODULES = ALL_MODULES.filter(m => {
+    // Map sidebar module IDs to permission module keys
+    const modMap = {
+      'dashboard':'employee','ai-assistant':'ai_chatbot','org-mgmt':'org_setup',
+      'emp-lifecycle':'ats','workforce-ops':'attendance','perf-talent':'performance',
+      'emp-experience':'announcements','hr-services':'self_service',
+      'finance-assets':'finance','compliance':'compliance','reports':'reports',
+      'sys-admin':'permissions',
+    }
+    const permKey = modMap[m.id] || m.id
+    return grantedMods.has(permKey) || grantedMods.has(m.id)
+  })
+
   const [tab,        setTab]        = useState('roles')     // roles | users | matrix
   const [roles,      setRoles]      = useState({...ROLE_TEMPLATES})
   const [users,      setUsers]      = useState(DEMO_USERS)
@@ -143,7 +165,15 @@ export default function PermissionManagementPage() {
         <div style={{fontSize:11,opacity:.75}}>
           Assign · Revoke · Configure module access per role and user · eLogix HRMS
         </div>
-        <div style={{display:'flex',gap:4,marginTop:14,flexWrap:'wrap'}}>
+        <div style={{display:'flex',gap:6,marginTop:10,flexWrap:'wrap',alignItems:'center'}}>
+        <span style={{fontSize:10,background:'rgba(255,255,255,.2)',padding:'4px 12px',borderRadius:20,border:'1px solid rgba(255,255,255,.3)'}}>
+          📦 {plan.charAt(0).toUpperCase()+plan.slice(1)} Plan · {access.modules.length} Modules Activated
+        </span>
+        {permRec && <span style={{fontSize:9,background:'rgba(255,255,255,.15)',padding:'3px 10px',borderRadius:20}}>
+          Last updated by eLogix SuperAdmin: {new Date(permRec.granted_at).toLocaleDateString()}
+        </span>}
+      </div>
+      <div style={{display:'flex',gap:4,marginTop:10,flexWrap:'wrap'}}>
           {[
             {id:'roles',  label:'⚙️ Role Permissions'},
             {id:'users',  label:'👥 User Management'},
@@ -250,7 +280,7 @@ export default function PermissionManagementPage() {
                     📦 Module Access — click to toggle
                   </div>
                   <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:8}}>
-                    {ALL_MODULES.map(mod=>{
+                    {VISIBLE_MODULES.map(mod=>{
                       const on = hasModule(mod.id)
                       return (
                         <div key={mod.id} onClick={()=>toggleModule(mod.id)}

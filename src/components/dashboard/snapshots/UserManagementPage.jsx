@@ -2,7 +2,8 @@
 // eLogix HRMS — Company User & Role Management
 // HR Admins create users, assign roles, set department/branch hierarchy
 // eLogix Technologies · www.elogix.com.np
-import { resolveTenantAccess, getSessionSlug } from '../../../utils/tenantPermissions.js'
+import { useState } from 'react'
+import { resolveTenantAccess, getSessionSlug, getTenantPermissionRecord } from '../../../utils/tenantPermissions.js'
 import AccessDenied from '../../shared/AccessDenied.jsx'
 
 const G  = 'linear-gradient(135deg,#1e3a5f 0%,#0369a1 60%,#38bdf8 100%)'
@@ -46,7 +47,32 @@ export default function UserManagementPage() {
   if (!access.hasAccess('permissions')) {
     return <AccessDenied moduleName="User Management" />
   }
-  const { level:myLevel, role:myRole, can } = useAuth()
+  // Read current user level from session (no useAuth hook needed outside App context)
+  const myLevel = (() => {
+    try {
+      const sess = JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{}
+      const role = sess?.user?.role || 'employee'
+      const levelMap = {super_admin:1,executive:2,hr_manager:3,payroll_officer:3,
+        hod:4,hr_officer:4,department_head:4,branch_manager:4,finance_officer:5,
+        recruiter:5,team_lead:5,supervisor:6,manager:6,employee:10}
+      return levelMap[role] || 10
+    } catch(_e) { return 10 }
+  })()
+  const can = () => true  // permission check done at module level by resolveTenantAccess
+  const sess    = (() => { try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}} })()
+  const company = sess.company || {}
+  const plan    = (company.plan||'trial').toLowerCase()
+  const permRec = getTenantPermissionRecord(slug)
+
+  // Filter available roles by plan (trial gets minimal roles)
+  const PLAN_ROLE_KEYS = {
+    trial:['super_admin','employee'],
+    starter:['super_admin','hr_officer','finance_officer','employee'],
+    growth:['super_admin','executive','hr_manager','hr_officer','finance_officer','hod','team_lead','employee'],
+  }
+  const planRoles = PLAN_ROLE_KEYS[plan] || SYSTEM_ROLES.map(r=>r.slug)
+  const availableRoles = SYSTEM_ROLES.filter(r => planRoles.includes(r.slug) || !PLAN_ROLE_KEYS[plan])
+
   const [tab, setTab]         = useState('users')
   const [users, setUsers]     = useState(MOCK_USERS)
   const [search, setSearch]   = useState('')
@@ -259,7 +285,7 @@ export default function UserManagementPage() {
           </div>
         ):(
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))',gap:14}}>
-            {SYSTEM_ROLES.map(role=>(
+            {availableRoles.map(role=>(
               <div key={role.slug} style={{background:'#fff',borderRadius:12,padding:'16px',
                 boxShadow:'0 1px 6px rgba(0,0,0,.06)',borderLeft:`4px solid ${role.color}`}}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
@@ -341,7 +367,7 @@ export default function UserManagementPage() {
                 <div>
                   <label style={{fontSize:9,fontWeight:700,color:'#374151',display:'block',marginBottom:3}}>Role *</label>
                   <select value={form.role_slug} onChange={e=>sf('role_slug',e.target.value)} style={inp}>
-                    {SYSTEM_ROLES.filter(r=>r.level > myLevel).map(r=>(
+                    {availableRoles.filter(r=>r.level > myLevel).map(r=>(
                       <option key={r.slug} value={r.slug}>{r.name} (L{r.level})</option>
                     ))}
                   </select>

@@ -106,22 +106,42 @@ export default function ELogixAdminPage({ onLogout }) {
   const [tab, setTab] = useState('dashboard')
   const [companies, setCompanies] = useState(MOCK_COMPANIES)
 
-  // Merge any NEW self-registered tenants from localStorage on mount
-  // Real companies (Abasar Nepal, Subisu, Mainawati, HR Hub) live in MOCK_COMPANIES above
-  // and will NEVER disappear — localStorage is only additive for new signups
+  // Load companies on mount:
+  // 1. Start with MOCK_COMPANIES (real known tenants — never disappear)
+  // 2. Merge approved companies from localStorage (self-registered + approved)
+  // 3. Load pending tenants from localStorage
   useEffect(() => {
     try {
-      const pending  = JSON.parse(localStorage.getItem('elogix_pending_tenants') || '[]')
-      const approved = JSON.parse(localStorage.getItem('elogix_approved_tenants') || '{}')
-      const existing_slugs = new Set(MOCK_COMPANIES.map(c => c.slug))
-      // Only add approved tenants that aren't already in the real list
-      const new_approved = pending.filter(t =>
-        !existing_slugs.has(t.slug) && approved[t.slug]
-      )
-      if (new_approved.length > 0) {
+      // Load previously approved companies (persisted by approveTenant)
+      const savedActive = JSON.parse(localStorage.getItem('elogix_active_companies') || '[]')
+      if (savedActive.length > 0) {
         setCompanies(prev => {
-          const existing = new Set(prev.map(c => c.slug))
-          const toAdd = new_approved.filter(t => !existing.has(t.slug))
+          const existingSlugs = new Set(prev.map(c => c.slug))
+          const toAdd = savedActive.filter(t => !existingSlugs.has(t.slug))
+          return toAdd.length ? [...prev, ...toAdd] : prev
+        })
+      }
+
+      // Also check approved registry for any that slipped through
+      const approvedRegistry = JSON.parse(localStorage.getItem('elogix_approved_tenants') || '{}')
+      const approvedList = Object.values(approvedRegistry)
+      if (approvedList.length > 0) {
+        setCompanies(prev => {
+          const existingSlugs = new Set(prev.map(c => c.slug))
+          const toAdd = approvedList.filter(t => t.slug && !existingSlugs.has(t.slug))
+          return toAdd.length ? [...prev, ...toAdd] : prev
+        })
+      }
+
+      // Load pending self-registrations
+      const pending = JSON.parse(localStorage.getItem('elogix_pending_tenants') || '[]')
+      if (pending.length > 0) {
+        // Filter out any that were already approved
+        const approvedSlugs = new Set(Object.keys(approvedRegistry))
+        const stillPending = pending.filter(t => !approvedSlugs.has(t.slug))
+        setPendingTenants(prev => {
+          const existing = new Set(prev.map(t => t.slug))
+          const toAdd = stillPending.filter(t => !existing.has(t.slug))
           return toAdd.length ? [...prev, ...toAdd] : prev
         })
       }
@@ -217,28 +237,46 @@ export default function ELogixAdminPage({ onLogout }) {
     } catch(e) { notify('⚠️ Could not load tenants') }
   }
 
-  const approveTenant = (tenant) => {
+  const approveTenant = (tenant, withPassword=false) => {
+    const approvedTenant = {
+      ...tenant,
+      status:      tenant.plan === 'trial' ? 'trial' : 'active',
+      approved_at: new Date().toISOString(),
+      approved_by: 'eLogix SuperAdmin',
+    }
+
+    // 1. Add to active companies list (persisted in localStorage)
     setCompanies(prev => {
-      if (prev.find(c => c.slug === tenant.slug)) return prev
-      return [...prev, { ...tenant, status: tenant.plan==='trial'?'trial':'active' }]
+      const without = prev.filter(c => c.slug !== tenant.slug)
+      const next = [...without, approvedTenant]
+      // ✅ KEY FIX: persist active companies so they survive page refresh
+      localStorage.setItem('elogix_active_companies', JSON.stringify(next))
+      return next
     })
-    const updated = pendingTenants.filter(t => t.slug !== tenant.slug)
-    setPendingTenants(updated)
-    localStorage.setItem('elogix_pending_tenants', JSON.stringify(updated))
-    const approved = JSON.parse(localStorage.getItem('elogix_approved_tenants') || '{}')
-    approved[tenant.slug] = { approved_at: new Date().toISOString(), approved_by: 'SuperAdmin' }
-    localStorage.setItem('elogix_approved_tenants', JSON.stringify(approved))
-    // ✅ AUTO-PROVISION module permissions based on plan + business type
-    // This writes to elogix_tenant_permissions:{slug} — the key that
-    // Sidebar.jsx, App.jsx and all page guards read to filter access
+
+    // 2. Remove from pending
+    const updatedPending = pendingTenants.filter(t => t.slug !== tenant.slug)
+    setPendingTenants(updatedPending)
+    localStorage.setItem('elogix_pending_tenants', JSON.stringify(updatedPending))
+
+    // 3. Write to approved registry (used by TenantModulePermissionPage)
+    const approvedRegistry = JSON.parse(localStorage.getItem('elogix_approved_tenants') || '{}')
+    approvedRegistry[tenant.slug] = {
+      ...approvedTenant,
+      approved_at: new Date().toISOString(),
+    }
+    localStorage.setItem('elogix_approved_tenants', JSON.stringify(approvedRegistry))
+
+    // 4. Auto-provision module permissions based on plan + business type
     provisionTenantPermissions(
       tenant.slug,
-      tenant.plan        || 'trial',
+      tenant.plan          || 'trial',
       tenant.business_type || 'custom',
       'elogix_superadmin'
     )
+
     const modCount = (PLAN_DEFAULT_MODULES[tenant.plan||'trial']||[]).length
-    notify(`✅ ${tenant.name} approved! ${modCount}+ modules activated. They can now login with ${tenant.admin_email}`)
+    notify(`✅ ${tenant.name} approved! ${modCount}+ modules activated. Login: ${tenant.admin_email}`)
   }
 
   const rejectTenant = (tenant) => {
