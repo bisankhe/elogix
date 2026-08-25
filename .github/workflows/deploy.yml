@@ -2,9 +2,11 @@ name: eLogix CI/CD
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   pull_request:
-    branches: [main]
+    branches:
+      - main
 
 env:
   REGISTRY: ghcr.io
@@ -13,6 +15,9 @@ env:
 
 jobs:
 
+  # =========================
+  # BACKEND BUILD
+  # =========================
   build-backend:
     runs-on: ubuntu-latest
 
@@ -29,7 +34,7 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GHCR_PAT }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -46,6 +51,10 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+
+  # =========================
+  # FRONTEND BUILD
+  # =========================
   build-frontend:
     runs-on: ubuntu-latest
 
@@ -62,7 +71,7 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GHCR_PAT }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -79,6 +88,10 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+
+  # =========================
+  # DEPLOY
+  # =========================
   deploy:
     runs-on: ubuntu-latest
 
@@ -89,18 +102,50 @@ jobs:
     if: github.event_name != 'pull_request'
 
     steps:
+
+      # Check that the SSH private key secret exists
+      - name: Check SSH secret
+        env:
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          if [ -z "$SSH_KEY" ]; then
+            echo "ERROR: SSH_PRIVATE_KEY secret is empty"
+            exit 1
+          fi
+
+          echo "SSH_PRIVATE_KEY is present"
+          echo "$SSH_KEY" | head -n 1
+          echo "$SSH_KEY" | tail -n 1
+
+      # Deploy to server
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
+          username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
+          timeout: 60s
+          command_timeout: 10m
+          debug: true
 
           script: |
             set -e
 
-            cd /opt/elogix
+            echo "================================"
+            echo "Connected to deployment server"
+            echo "================================"
+
+            echo "User:"
+            whoami
+
+            echo "Hostname:"
+            hostname
+
+            echo "Docker version:"
+            docker --version
+
+            cd "${{ secrets.REMOTE_PATH }}"
 
             echo "--- Pulling latest images ---"
             docker compose pull
@@ -133,4 +178,6 @@ jobs:
               exit 1
             fi
 
+            echo "================================"
             echo "Deploy complete"
+            echo "================================"
