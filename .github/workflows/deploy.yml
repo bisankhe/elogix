@@ -1,38 +1,24 @@
-<<<<<<< HEAD
-# FILE: .github/workflows/deploy.yml
-# eLogix HRMS — CI/CD Pipeline
-# eLogix Technologies · www.elogix.com.np
-
-=======
->>>>>>> c2e24cd4cbc6f9acbf9ce32c295bc2134b73d757
 name: eLogix CI/CD
 
 on:
   push:
     branches:
       - main
+
   pull_request:
     branches:
       - main
 
 env:
-<<<<<<< HEAD
-  REGISTRY:       ghcr.io
-  BACKEND_IMAGE:  ghcr.io/${{ github.repository_owner }}/elogix/backend
-  FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/elogix/frontend
-
-jobs:
-=======
   REGISTRY: ghcr.io
   BACKEND_IMAGE: ghcr.io/${{ github.repository_owner }}/elogix/backend
   FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/elogix/frontend
 
 jobs:
 
-  # =========================
-  # BACKEND BUILD
-  # =========================
->>>>>>> c2e24cd4cbc6f9acbf9ce32c295bc2134b73d757
+  # ============================================================
+  # BUILD AND PUSH BACKEND
+  # ============================================================
   build-backend:
     runs-on: ubuntu-latest
 
@@ -41,15 +27,16 @@ jobs:
       packages: write
 
     steps:
+
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Log in to GHCR
+      - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -64,15 +51,12 @@ jobs:
             ${{ env.BACKEND_IMAGE }}:latest
             ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
           cache-from: type=gha
-          cache-to:   type=gha,mode=max
+          cache-to: type=gha,mode=max
 
-<<<<<<< HEAD
-=======
 
-  # =========================
-  # FRONTEND BUILD
-  # =========================
->>>>>>> c2e24cd4cbc6f9acbf9ce32c295bc2134b73d757
+  # ============================================================
+  # BUILD AND PUSH FRONTEND
+  # ============================================================
   build-frontend:
     runs-on: ubuntu-latest
 
@@ -81,15 +65,16 @@ jobs:
       packages: write
 
     steps:
+
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Log in to GHCR
+      - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -104,15 +89,12 @@ jobs:
             ${{ env.FRONTEND_IMAGE }}:latest
             ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
           cache-from: type=gha
-          cache-to:   type=gha,mode=max
+          cache-to: type=gha,mode=max
 
-<<<<<<< HEAD
-=======
 
-  # =========================
-  # DEPLOY
-  # =========================
->>>>>>> c2e24cd4cbc6f9acbf9ce32c295bc2134b73d757
+  # ============================================================
+  # DEPLOY TO SERVER
+  # ============================================================
   deploy:
     runs-on: ubuntu-latest
 
@@ -120,12 +102,15 @@ jobs:
       - build-backend
       - build-frontend
 
-    if: github.event_name != 'pull_request'
+    # Deploy only after push to main, not pull requests
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
 
-      # Check that the SSH private key secret exists
-      - name: Check SSH secret
+      # ----------------------------------------------------------
+      # Check SSH secret
+      # ----------------------------------------------------------
+      - name: Check SSH private key
         env:
           SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
@@ -135,86 +120,104 @@ jobs:
           fi
 
           echo "SSH_PRIVATE_KEY is present"
-          echo "$SSH_KEY" | head -n 1
-          echo "$SSH_KEY" | tail -n 1
 
-      # Deploy to server
+          FIRST_LINE=$(echo "$SSH_KEY" | head -n 1)
+          LAST_LINE=$(echo "$SSH_KEY" | tail -n 1)
+
+          echo "Key starts with: $FIRST_LINE"
+          echo "Key ends with: $LAST_LINE"
+
+
+      # ----------------------------------------------------------
+      # Deploy using SSH
+      # ----------------------------------------------------------
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
-<<<<<<< HEAD
-          host:     ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key:      ${{ secrets.SERVER_SSH_KEY }}
-          port:     22
-          script: |
-            set -e
-            cd /opt/elogix
-=======
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
+
           timeout: 60s
           command_timeout: 10m
-          debug: true
 
           script: |
             set -e
 
-            echo "================================"
+            echo "=========================================="
             echo "Connected to deployment server"
-            echo "================================"
+            echo "=========================================="
 
-            echo "User:"
+            echo "--- Current user ---"
             whoami
 
-            echo "Hostname:"
+            echo "--- Hostname ---"
             hostname
 
-            echo "Docker version:"
+            echo "--- Docker version ---"
             docker --version
 
+            echo "--- Docker Compose version ---"
+            docker compose version
+
+            echo "--- Deployment directory ---"
             cd "${{ secrets.REMOTE_PATH }}"
 
-            echo "--- Pulling latest images ---"
->>>>>>> c2e24cd4cbc6f9acbf9ce32c295bc2134b73d757
-            docker compose pull
-            docker compose up -d --remove-orphans
-<<<<<<< HEAD
-            docker ps
-            sleep 15
-            curl -sf http://localhost/api/health && echo "✅ Backend healthy" || (docker logs elogix_backend --tail 30 && exit 1)
-            curl -sf http://localhost/ > /dev/null && echo "✅ Frontend healthy" || (docker logs elogix_frontend --tail 20 && exit 1)
-            echo "✅ Deploy complete"
-=======
+            pwd
 
-            echo "--- Container status ---"
+            echo "=========================================="
+            echo "Pulling latest Docker images"
+            echo "=========================================="
+
+            docker compose pull
+
+            echo "=========================================="
+            echo "Starting containers"
+            echo "=========================================="
+
+            docker compose up -d --remove-orphans
+
+            echo "=========================================="
+            echo "Container status"
+            echo "=========================================="
+
             docker compose ps
 
-            echo "--- Frontend health ---"
+            echo "=========================================="
+            echo "Waiting for frontend"
+            echo "=========================================="
+
             sleep 10
 
             if curl -sf http://localhost:80 > /dev/null; then
-              echo "Frontend responding"
+              echo "Frontend responding successfully"
             else
-              echo "Frontend not responding"
+              echo "ERROR: Frontend is not responding"
+
+              echo "--- Frontend logs ---"
               docker compose logs --tail 30 frontend
+
               exit 1
             fi
 
-            echo "--- Backend health ---"
+            echo "=========================================="
+            echo "Waiting for backend"
+            echo "=========================================="
+
             sleep 5
 
             if curl -sf http://localhost:5000/api/health > /dev/null; then
-              echo "Backend responding"
+              echo "Backend responding successfully"
             else
-              echo "Backend not responding"
+              echo "ERROR: Backend is not responding"
+
+              echo "--- Backend logs ---"
               docker compose logs --tail 50 backend
+
               exit 1
             fi
 
-            echo "================================"
-            echo "Deploy complete"
-            echo "================================"
->>>>>>> c2e24cd4cbc6f9acbf9ce32c295bc2134b73d757
+            echo "=========================================="
+            echo "Deployment completed successfully"
+            echo "=========================================="
