@@ -1,10 +1,5 @@
 # FILE: .github/workflows/deploy.yml
 # eLogix HRMS — CI/CD Pipeline
-# Fixed:
-#   1. Frontend build context: ./frontend → . (frontend is at project root, no frontend/ folder)
-#   2. Backend build context: ./backend → . (Dockerfile is in backend/ but context must be root)
-#   3. Backend Dockerfile path: explicitly set to backend/Dockerfile
-#   4. DB_PASSWORD env var name (was DB_PASS in some steps)
 # eLogix Technologies · www.elogix.com.np
 
 name: eLogix CI/CD
@@ -16,12 +11,11 @@ on:
     branches: [ main ]
 
 env:
-  REGISTRY: ghcr.io
+  REGISTRY:       ghcr.io
   BACKEND_IMAGE:  ghcr.io/${{ github.repository_owner }}/elogix/backend
   FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/elogix/frontend
 
 jobs:
-  # ── Build & push backend image ──────────────────────────────────────
   build-backend:
     runs-on: ubuntu-latest
     permissions:
@@ -32,7 +26,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Log in to GitHub Container Registry
+      - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -45,26 +39,15 @@ jobs:
       - name: Build and push backend
         uses: docker/build-push-action@v6
         with:
-<<<<<<< HEAD
-          # ✅ FIX: context = project root (.) so alembic.ini, alembic/, and backend/
-          # are ALL available inside the build. Previously was ./backend which excluded
-          # alembic.ini and the alembic/ folder, causing "alembic.ini not found".
           context: .
-          # ✅ FIX: explicitly point to backend/Dockerfile since context is now root
           file: backend/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-=======
-          context: .
-          file: ./backend/Dockerfile
-          push: true
->>>>>>> c115c51d1f3c9a15ee6c2f5d95043595b15871c8
           tags: |
             ${{ env.BACKEND_IMAGE }}:latest
             ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
           cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-to:   type=gha,mode=max
 
-  # ── Build & push frontend image ────────────────────────────────────
   build-frontend:
     runs-on: ubuntu-latest
     permissions:
@@ -75,7 +58,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Log in to GitHub Container Registry
+      - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -88,9 +71,6 @@ jobs:
       - name: Build and push frontend
         uses: docker/build-push-action@v6
         with:
-          # ✅ FIX: was ./frontend — there is NO frontend/ folder.
-          # The React app (package.json, src/, vite.config.js) is at the project root.
-          # The frontend Dockerfile (if separate) would also be at root.
           context: .
           file: Dockerfile.frontend
           push: ${{ github.event_name != 'pull_request' }}
@@ -98,9 +78,8 @@ jobs:
             ${{ env.FRONTEND_IMAGE }}:latest
             ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
           cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-to:   type=gha,mode=max
 
-  # ── Deploy to VPS ───────────────────────────────────────────────────
   deploy:
     runs-on: ubuntu-latest
     needs: [ build-backend, build-frontend ]
@@ -110,41 +89,17 @@ jobs:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host:     ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key:      ${{ secrets.SSH_PRIVATE_KEY }}
-          port:     ${{ secrets.SSH_PORT || 22 }}
+          host:     ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key:      ${{ secrets.SERVER_SSH_KEY }}
+          port:     22
           script: |
             set -e
             cd /opt/elogix
-
-            echo "--- Pulling latest images ---"
             docker compose pull
-
-            echo "--- Restarting containers ---"
             docker compose up -d --remove-orphans
-
-            echo "--- Container status ---"
             docker ps
-
-            echo "--- Frontend health ---"
-            sleep 10
-            if curl -sf http://localhost:80 > /dev/null; then
-              echo "✅ Frontend responding"
-            else
-              echo "❌ Frontend not responding"
-              docker logs elogix_frontend --tail 30
-              exit 1
-            fi
-
-            echo "--- Backend health ---"
-            sleep 5
-            if curl -sf http://localhost:5000/api/health > /dev/null; then
-              echo "✅ Backend responding"
-            else
-              echo "❌ Backend not responding — showing logs:"
-              docker logs elogix_backend --tail 50
-              exit 1
-            fi
-
+            sleep 15
+            curl -sf http://localhost/api/health && echo "✅ Backend healthy" || (docker logs elogix_backend --tail 30 && exit 1)
+            curl -sf http://localhost/ > /dev/null && echo "✅ Frontend healthy" || (docker logs elogix_frontend --tail 20 && exit 1)
             echo "✅ Deploy complete"
