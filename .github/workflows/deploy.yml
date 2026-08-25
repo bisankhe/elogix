@@ -1,26 +1,44 @@
+<<<<<<< HEAD
 # FILE: .github/workflows/deploy.yml
 # eLogix HRMS — CI/CD Pipeline
 # eLogix Technologies · www.elogix.com.np
 
+=======
+>>>>>>> c2e24cd4cbc6f9acbf9ce32c295bc2134b73d757
 name: eLogix CI/CD
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
 env:
+<<<<<<< HEAD
   REGISTRY:       ghcr.io
   BACKEND_IMAGE:  ghcr.io/${{ github.repository_owner }}/elogix/backend
   FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/elogix/frontend
 
 jobs:
+=======
+  REGISTRY: ghcr.io
+  BACKEND_IMAGE: ghcr.io/${{ github.repository_owner }}/elogix/backend
+  FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/elogix/frontend
+
+jobs:
+
+  # =========================
+  # BACKEND BUILD
+  # =========================
+>>>>>>> c2e24cd4cbc6f9acbf9ce32c295bc2134b73d757
   build-backend:
     runs-on: ubuntu-latest
+
     permissions:
       contents: read
-      packages:  write
+      packages: write
 
     steps:
       - name: Checkout
@@ -31,7 +49,7 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GHCR_PAT }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -48,11 +66,19 @@ jobs:
           cache-from: type=gha
           cache-to:   type=gha,mode=max
 
+<<<<<<< HEAD
+=======
+
+  # =========================
+  # FRONTEND BUILD
+  # =========================
+>>>>>>> c2e24cd4cbc6f9acbf9ce32c295bc2134b73d757
   build-frontend:
     runs-on: ubuntu-latest
+
     permissions:
       contents: read
-      packages:  write
+      packages: write
 
     steps:
       - name: Checkout
@@ -63,7 +89,7 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GHCR_PAT }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -72,7 +98,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: Dockerfile.frontend
+          file: Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
             ${{ env.FRONTEND_IMAGE }}:latest
@@ -80,15 +106,43 @@ jobs:
           cache-from: type=gha
           cache-to:   type=gha,mode=max
 
+<<<<<<< HEAD
+=======
+
+  # =========================
+  # DEPLOY
+  # =========================
+>>>>>>> c2e24cd4cbc6f9acbf9ce32c295bc2134b73d757
   deploy:
     runs-on: ubuntu-latest
-    needs: [ build-backend, build-frontend ]
+
+    needs:
+      - build-backend
+      - build-frontend
+
     if: github.event_name != 'pull_request'
 
     steps:
+
+      # Check that the SSH private key secret exists
+      - name: Check SSH secret
+        env:
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          if [ -z "$SSH_KEY" ]; then
+            echo "ERROR: SSH_PRIVATE_KEY secret is empty"
+            exit 1
+          fi
+
+          echo "SSH_PRIVATE_KEY is present"
+          echo "$SSH_KEY" | head -n 1
+          echo "$SSH_KEY" | tail -n 1
+
+      # Deploy to server
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
+<<<<<<< HEAD
           host:     ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key:      ${{ secrets.SERVER_SSH_KEY }}
@@ -96,10 +150,71 @@ jobs:
           script: |
             set -e
             cd /opt/elogix
+=======
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          timeout: 60s
+          command_timeout: 10m
+          debug: true
+
+          script: |
+            set -e
+
+            echo "================================"
+            echo "Connected to deployment server"
+            echo "================================"
+
+            echo "User:"
+            whoami
+
+            echo "Hostname:"
+            hostname
+
+            echo "Docker version:"
+            docker --version
+
+            cd "${{ secrets.REMOTE_PATH }}"
+
+            echo "--- Pulling latest images ---"
+>>>>>>> c2e24cd4cbc6f9acbf9ce32c295bc2134b73d757
             docker compose pull
             docker compose up -d --remove-orphans
+<<<<<<< HEAD
             docker ps
             sleep 15
             curl -sf http://localhost/api/health && echo "✅ Backend healthy" || (docker logs elogix_backend --tail 30 && exit 1)
             curl -sf http://localhost/ > /dev/null && echo "✅ Frontend healthy" || (docker logs elogix_frontend --tail 20 && exit 1)
             echo "✅ Deploy complete"
+=======
+
+            echo "--- Container status ---"
+            docker compose ps
+
+            echo "--- Frontend health ---"
+            sleep 10
+
+            if curl -sf http://localhost:80 > /dev/null; then
+              echo "Frontend responding"
+            else
+              echo "Frontend not responding"
+              docker compose logs --tail 30 frontend
+              exit 1
+            fi
+
+            echo "--- Backend health ---"
+            sleep 5
+
+            if curl -sf http://localhost:5000/api/health > /dev/null; then
+              echo "Backend responding"
+            else
+              echo "Backend not responding"
+              docker compose logs --tail 50 backend
+              exit 1
+            fi
+
+            echo "================================"
+            echo "Deploy complete"
+            echo "================================"
+>>>>>>> c2e24cd4cbc6f9acbf9ce32c295bc2134b73d757
