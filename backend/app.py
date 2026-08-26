@@ -48,7 +48,9 @@ def create_app(config_name=None):
     )
 
     # ── Database ──────────────────────────────────────────────────────
-    from config.database import db, migrate
+    from config.database import db_session, init_schema
+# or if using full package path:
+# from backend.config.database import db_session
     db.init_app(app)
     migrate.init_app(app, db)
 
