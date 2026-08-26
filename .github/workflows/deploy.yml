@@ -91,8 +91,8 @@ jobs:
         with:
           context: .
           # FIX 1: was "Dockerfile" (does not exist at root)
-          # Dockerfile.frontend was created — runs npm build then serves via nginx
-          file: Dockerfile.frontend
+          # Dockerfile was created — runs npm build then serves via nginx
+          file: Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
             ${{ env.FRONTEND_IMAGE }}:latest
