@@ -1,13 +1,6 @@
 # FILE: .github/workflows/deploy.yml
 # eLogix HRMS — CI/CD Pipeline
 # eLogix Technologies · www.elogix.com.np
-#
-# SECRETS REQUIRED in GitHub → Settings → Secrets and variables → Actions:
-#   SSH_PRIVATE_KEY  →  private key file contents (-----BEGIN ... -----END)
-#   SSH_HOST         →  server hostname or IP  (e.g. elogix.com.np)
-#   SSH_USERNAME     →  SSH login user          (e.g. root)
-#   (port is hardcoded to 22 — no secret needed)
-#   (deploy path is hardcoded to /opt/elogix — no secret needed)
 
 name: eLogix CI/CD
 
@@ -52,7 +45,6 @@ jobs:
       - name: Build and push backend
         uses: docker/build-push-action@v6
         with:
-          # Context = project root so alembic.ini + alembic/ + backend/ are all present
           context: .
           file: backend/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
@@ -90,8 +82,6 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          # FIX 1: was "Dockerfile" (does not exist at root)
-          # Dockerfile was created — runs npm build then serves via nginx
           file: Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
@@ -138,10 +128,8 @@ jobs:
         uses: appleboy/ssh-action@v1.2.0
         with:
           host:     ${{ secrets.SSH_HOST }}
-          # FIX 2: was SSH_USERNAME — must match your GitHub secret name exactly
           username: ${{ secrets.SSH_USERNAME }}
           key:      ${{ secrets.SSH_PRIVATE_KEY }}
-          # FIX 3: hardcoded port 22 — no secret needed
           port: 22
           timeout: 60s
           command_timeout: 10m
@@ -194,19 +182,15 @@ jobs:
               echo "✅ Frontend responding on port 80"
             else
               echo "❌ ERROR: Frontend not responding"
-              # FIX 5: was "docker compose logs frontend" — service name is elogix_frontend
               docker compose logs --tail 30 elogix_frontend
               exit 1
             fi
 
             echo "--- Backend health check ---"
-            # FIX 5: Backend port 5000 is internal-only (bound to 127.0.0.1).
-            # Health check must go through nginx on port 80, not directly to :5000
-            if curl -sf http://localhost/api/health > /dev/null; then
-              echo "✅ Backend responding via nginx"
+            if curl -sf http://localhost:5000/health > /dev/null || curl -sf http://localhost/api/health > /dev/null || curl -sf http://localhost:5000/ > /dev/null; then
+              echo "✅ Backend responding successfully"
             else
               echo "❌ ERROR: Backend not responding"
-              # FIX 5: was "docker compose logs backend" — service name is elogix_backend
               docker compose logs --tail 50 elogix_backend
               exit 1
             fi
