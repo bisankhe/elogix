@@ -195,27 +195,34 @@ function loadAllTenants() {
   try {
     const sources = []
     const active = JSON.parse(localStorage.getItem('elogix_active_companies') || '[]')
-    active.forEach((t, i) => sources.push({
-      id: t.id || `live-${t.slug || i}`,
-      name: t.name, slug: t.slug,
-      type: t.business_type || 'custom',
-      plan: (t.plan||'trial').charAt(0).toUpperCase()+(t.plan||'trial').slice(1),
-      employees: t.employee_count || 0,
-      status: t.status || 'active',
-      joined: (t.approved_at||new Date().toISOString()).split('T')[0],
-      admin_email: t.admin_email||'',
-    }))
+    active.forEach((t, i) => {
+      if (!t || (!t.name && !t.slug)) return
+      sources.push({
+        id:          t.id || `live-${t.slug || i}`,
+        name:        t.name || t.slug || `Tenant ${i+1}`,
+        slug:        t.slug || '',
+        type:        t.business_type || t.type || 'custom',
+        plan:        ((t.plan||'trial').charAt(0).toUpperCase()+(t.plan||'trial').slice(1)),
+        employees:   t.employee_count || 0,
+        status:      t.status || 'active',
+        joined:      (t.approved_at||new Date().toISOString()).split('T')[0],
+        admin_email: t.admin_email || '',
+      })
+    })
     const registry = JSON.parse(localStorage.getItem('elogix_approved_tenants') || '{}')
     Object.values(registry).forEach((t, i) => {
-      if (!sources.find(s => s.slug === t.slug)) sources.push({
-        id: t.id || `reg-${t.slug||i}`,
-        name: t.name, slug: t.slug,
-        type: t.business_type || 'custom',
-        plan: (t.plan||'trial').charAt(0).toUpperCase()+(t.plan||'trial').slice(1),
-        employees: t.employee_count || 0,
-        status: t.status || 'active',
-        joined: (t.approved_at||new Date().toISOString()).split('T')[0],
-        admin_email: t.admin_email||'',
+      if (!t || (!t.name && !t.slug)) return
+      if (sources.find(s => s.slug === t.slug && t.slug)) return
+      sources.push({
+        id:          t.id || `reg-${t.slug||i}`,
+        name:        t.name || t.slug || `Tenant ${i+1}`,
+        slug:        t.slug || '',
+        type:        t.business_type || t.type || 'custom',
+        plan:        ((t.plan||'trial').charAt(0).toUpperCase()+(t.plan||'trial').slice(1)),
+        employees:   t.employee_count || 0,
+        status:      t.status || 'active',
+        joined:      (t.approved_at||new Date().toISOString()).split('T')[0],
+        admin_email: t.admin_email || '',
       })
     })
     if (sources.length > 0) return sources
@@ -235,7 +242,7 @@ const PLAN_COLORS = { Enterprise:'#7c3aed', Business:'#0369a1', Growth:'#059669'
 const STATUS_COLORS = { active:'#16a34a', trial:'#d97706', suspended:'#dc2626', inactive:'#6b7280' }
 
 export default function TenantModulePermissionPage() {
-  const [selTenant, setSelTenant] = useState(DEMO_TENANTS[0].id)
+  const [selTenant, setSelTenant] = useState(DEMO_TENANTS[0]?.id || '')
   const [search, setSearch]       = useState('')
   const [groupFilter, setGroupFilter] = useState('All')
   const [toast, setToast]         = useState('')
@@ -245,7 +252,8 @@ export default function TenantModulePermissionPage() {
   const [tenantModules, setTenantModules] = useState(() => {
     const init = {}
     DEMO_TENANTS.forEach(t => {
-      const bt = BUSINESS_TYPES.find(b => b.id === t.type)
+      if (!t?.id) return
+      const bt = BUSINESS_TYPES.find(b => b.id === (t.type || 'custom'))
       init[t.id] = new Set(bt?.modules || ['employee','attendance','leave','payroll','self_service'])
     })
     return init
@@ -256,10 +264,14 @@ export default function TenantModulePermissionPage() {
   const tenant   = DEMO_TENANTS.find(t => t.id === selTenant)
   const bt       = BUSINESS_TYPES.find(b => b.id === tenant?.type)
   const enabled  = tenantModules[selTenant] || new Set()
-  const filtered = DEMO_TENANTS.filter(t =>
-    t.name.toLowerCase().includes(search.toLowerCase()) ||
-    t.type.toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = DEMO_TENANTS.filter(t => {
+    if (!t || !t.name) return false
+    const q = search.toLowerCase()
+    if (!q) return true
+    return (t.name || '').toLowerCase().includes(q) ||
+           (t.type || '').toLowerCase().includes(q) ||
+           (t.slug || '').toLowerCase().includes(q)
+  })
 
   const toggleModule = (modId) => {
     setTenantModules(prev => {
@@ -285,7 +297,7 @@ export default function TenantModulePermissionPage() {
   })
 
   return (
-    <div style={{fontFamily:'system-ui,sans-serif',paddingBottom:60,minHeight:'100%',paddingBottom:60,background:'#f8f5ff'}}>
+    <div style={{fontFamily:'system-ui,sans-serif',paddingBottom:60,minHeight:'100%',background:'#f8f5ff'}}>
       {toast && (
         <div style={{ position:'fixed',bottom:20,right:20,zIndex:9999,background:'#f5f3ff',
           border:'1px solid #ddd6fe',borderRadius:12,padding:'12px 20px',
