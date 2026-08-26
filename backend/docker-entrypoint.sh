@@ -1,9 +1,7 @@
 #!/bin/bash
 # FILE: backend/docker-entrypoint.sh
 # eLogix HRMS — Docker Entrypoint
-# Fixed: $DB_PASS → $DB_PASSWORD (variable name mismatch)
-# Fixed: Default credentials match NepHR-Pro DB
-# eLogix Technologies · www.elogix.com.np
+# Fixed: App path, Gunicorn chdir, and uniform DB env loading
 
 set -euo pipefail
 
@@ -31,13 +29,12 @@ for env_file in ".env" "backend/.env"; do
     fi
 done
 
-# ── DB connection vars (fixed: use DB_PASSWORD not DB_PASS) ──────────
+# ── DB connection vars ────────────────────────────────────────────────
 DB_HOST="${DB_HOST:-${POSTGRES_HOST:-elogix_db}}"
 DB_PORT="${DB_PORT:-${POSTGRES_PORT:-5432}}"
-DB_USER="${DB_USER:-${POSTGRES_USER:-postgres}}"
-DB_NAME="${DB_NAME:-${POSTGRES_DB:-postgres}}"
-# FIX: was $DB_PASS — must be $DB_PASSWORD to match .env
-DB_PASSWORD="${DB_PASSWORD:-${POSTGRES_PASSWORD:-NeoHRMS@2026}}"
+DB_USER="${POSTGRES_USER:-${DB_USER:-nephr_user}}"
+DB_NAME="${POSTGRES_DB:-${DB_NAME:-nephr_pro}}"
+DB_PASSWORD="${POSTGRES_PASSWORD:-${DB_PASSWORD:-NeoHRMS2026!}}"
 
 log "Database: $DB_USER@$DB_HOST:$DB_PORT/$DB_NAME"
 
@@ -71,7 +68,6 @@ if python -m alembic upgrade head 2>&1; then
     log "✅ Migrations complete"
 else
     warn "alembic upgrade head failed — trying to autogenerate initial migration"
-    # If no migration files exist, generate them first
     if [ -z "$(ls -A alembic/versions/ 2>/dev/null)" ]; then
         log "No migration files found — generating initial schema..."
         python -m alembic revision --autogenerate -m "initial_schema" && \
@@ -117,11 +113,10 @@ case "$COMMAND" in
             --error-logfile "-" \
             --log-level "info" \
             --forwarded-allow-ips "*" \
-            --chdir backend \
-            "app:app"
+            "run:app"
         ;;
     flask)
-        exec python backend/app.py ;;
+        exec python run.py ;;
     migrate-only)
         log "Migration-only mode complete"; exit 0 ;;
     *)
