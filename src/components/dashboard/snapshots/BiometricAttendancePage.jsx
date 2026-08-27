@@ -217,7 +217,7 @@ export default function BiometricAttendancePage() {
   const totalPunches = devices.reduce((s, d) => s+(d.punches_today||0), 0)
 
   return (
-    <div style={{position:'fixed', inset:0, fontFamily:"'Segoe UI',system-ui,sans-serif",
+    <div style={{position:'relative', width:'100%', minHeight:'100vh', fontFamily:"'Segoe UI',system-ui,sans-serif",
       background:'#f0f9ff', display:'flex', flexDirection:'column', overflow:'hidden'}}>
 
       <style>{`

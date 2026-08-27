@@ -99,7 +99,7 @@ export default function LiveAttendancePage() {
   const anomalies = feed.filter(e => e.status === 'missed_checkout').length
 
   return (
-    <div style={{position:'fixed', inset:0, fontFamily:"'Segoe UI',system-ui,sans-serif",
+    <div style={{position:'relative', width:'100%', minHeight:'100vh', fontFamily:"'Segoe UI',system-ui,sans-serif",
       background:'#f0fdf4', display:'flex', flexDirection:'column', overflow:'hidden'}}
       onClick={() => setCtx(null)}>
 

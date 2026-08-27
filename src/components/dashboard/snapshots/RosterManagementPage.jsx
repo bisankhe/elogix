@@ -680,7 +680,7 @@ tr:nth-child(even) td{background:#f8fafc}
   const banner = roleBanner()
 
   return (
-    <div style={{ position:'fixed', inset:0, display:'flex', flexDirection:'column',
+    <div style={{ position:'relative', width:'100%', minHeight:'100vh', display:'flex', flexDirection:'column',
       fontFamily:"'Segoe UI',system-ui,sans-serif", background:'#f5f3ff', overflow:'hidden' }}>
       <style>{`
         ::-webkit-scrollbar{width:8px;height:8px}

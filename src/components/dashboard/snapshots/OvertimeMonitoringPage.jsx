@@ -97,10 +97,16 @@ export default function OvertimeMonitoringPage() {
   const totalOTHours = deptOT.reduce((s, d) => s + d.ot_hours, 0)
 
   return (
-    <div style={{position:'fixed', inset:0, fontFamily:"'Segoe UI',system-ui,sans-serif",
+    <div style={{position:'relative', width:'100%', minHeight:'100vh', fontFamily:"'Segoe UI',system-ui,sans-serif",
       background:'#fff7ed', display:'flex', flexDirection:'column', overflow:'hidden'}}
       onClick={() => setCtx(null)}>
 
+      <style>{`
+        ::-webkit-scrollbar{width:8px;height:8px}
+        ::-webkit-scrollbar-track{background:#f1f5f9;border-radius:4px}
+        ::-webkit-scrollbar-thumb{background:#94a3b8;border-radius:4px}
+        ::-webkit-scrollbar-thumb:hover{background:#475569}
+      `}</style>
       {/* Toast */}
       {msg && <div style={{position:'fixed', bottom:20, right:20, zIndex:9999,
         background:msg.startsWith('❌')?'#fef2f2':'#f0fdf4',
