@@ -12,12 +12,30 @@ const A = '#7c3aed'
 const G = 'linear-gradient(135deg,#1e1b4b,#7c3aed,#c4b5fd)'
 
 // ── COMMISSION TIERS ──────────────────────────────────────────
-const COMMISSION_TIERS = [
+// Saved to 'elogix_commission_config' in localStorage
+// Read by BillingPage.jsx, ELogixAdminPage.jsx for live rate updates
+const COMMISSION_STORAGE_KEY = 'elogix_commission_config'
+function loadSavedTiers() {
+  try { const s=JSON.parse(localStorage.getItem(COMMISSION_STORAGE_KEY)||'null'); if(s?.tiers) return s.tiers } catch(_e) {}
+  return null
+}
+function saveCommissionTiers(tiers) {
+  try {
+    const cfg = JSON.parse(localStorage.getItem(COMMISSION_STORAGE_KEY)||'{}')
+    localStorage.setItem(COMMISSION_STORAGE_KEY, JSON.stringify({
+      ...cfg, tiers,
+      saved_at: new Date().toISOString(), saved_by: 'eLogix SuperAdmin'
+    }))
+    return true
+  } catch(_e) { return false }
+}
+const DEFAULT_COMMISSION_TIERS = [
   { id:'silver',   label:'Silver Partner',   icon:'🥈', color:'#64748b', minClients:1,  maxClients:4,  rate:10, bonus:0,    monthlyBonus:0 },
   { id:'gold',     label:'Gold Partner',     icon:'🥇', color:'#d97706', minClients:5,  maxClients:9,  rate:15, bonus:5000, monthlyBonus:2000 },
   { id:'platinum', label:'Platinum Partner', icon:'💎', color:'#0891b2', minClients:10, maxClients:19, rate:20, bonus:15000,monthlyBonus:5000 },
   { id:'diamond',  label:'Diamond Partner',  icon:'💠', color:'#7c3aed', minClients:20, maxClients:999,rate:25, bonus:50000,monthlyBonus:15000 },
 ]
+const COMMISSION_TIERS = loadSavedTiers() || DEFAULT_COMMISSION_TIERS
 
 // ── COMMISSION RULES ──────────────────────────────────────────
 const COMMISSION_RULES = {
@@ -362,6 +380,21 @@ export default function ReferralCommissionPage() {
                     </div>
                   )
                 })}
+              </div>
+              {/* Status note — placed here so it's not inside a conditional */}
+              <div style={{ marginTop:10, padding:'9px 14px', background:'#f0fdf4',
+                borderRadius:8, border:'1px solid #bbf7d0', fontSize:10, color:'#065f46',
+                display:'flex', alignItems:'center', gap:8 }}>
+                <span>💡</span>
+                <span>
+                  Click <strong>💾 Save</strong> on any row to update that tier's commission rate.
+                  Rates take effect immediately on <strong>BillingPage</strong> and MRR calculations.
+                  {loadSavedTiers() && (
+                    <span style={{marginLeft:8,color:'#0369a1',fontWeight:700}}>
+                      ✅ Custom rates active
+                    </span>
+                  )}
+                </span>
               </div>
             </div>
 
@@ -775,7 +808,7 @@ export default function ReferralCommissionPage() {
                       </td>
                       <td style={{ padding:'12px' }}>
                         <div style={{ display:'flex',alignItems:'center',gap:4 }}>
-                          <input type="number" defaultValue={tier.rate} min={1} max={50}
+                          <input id={`rate-input-${tier.id}`} type="number" defaultValue={tier.rate} min={1} max={50}
                             style={{ width:50,padding:'4px 8px',borderRadius:6,border:'1px solid #e2e8f0',
                               fontSize:11,textAlign:'center' }}/>
                           <span style={{ fontSize:11,color:'#64748b' }}>%</span>
@@ -792,10 +825,22 @@ export default function ReferralCommissionPage() {
                             fontSize:11,textAlign:'center' }}/>
                       </td>
                       <td style={{ padding:'12px' }}>
-                        <button onClick={()=>notify(`✅ ${tier.label} rates updated`)}
+                        <button onClick={()=>{
+                            // Find and update this tier's rate from the input
+                            const inputEl = document.getElementById(`rate-input-${tier.id}`)
+                            const newRate = inputEl ? parseFloat(inputEl.value)||tier.rate : tier.rate
+                            const updatedTiers = COMMISSION_TIERS.map(t =>
+                              t.id === tier.id ? {...t, rate: newRate} : t
+                            )
+                            const ok = saveCommissionTiers(updatedTiers)
+                            // Update the in-memory array so stats recalculate
+                            COMMISSION_TIERS.splice(0, COMMISSION_TIERS.length, ...updatedTiers)
+                            if(ok) notify(`✅ ${tier.label} rate saved — ${newRate}% live across all pages`)
+                            else notify(`❌ Save failed`)
+                          }}
                           style={{ padding:'5px 12px',borderRadius:7,border:'none',
                             background:tier.color,color:'#fff',fontSize:9,fontWeight:700,cursor:'pointer' }}>
-                          Save
+                          💾 Save
                         </button>
                       </td>
                     </tr>

@@ -17,13 +17,26 @@ function getSession() {
   } catch(_e) { return { user:{}, company:{} } }
 }
 
-const PLAN_PRICES = {
+// ── Shared commission / plan config ─────────────────────────────────
+// Reads from localStorage key set by ReferralCommissionPage
+// Falls back to defaults if not configured
+function getCommissionConfig() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('elogix_commission_config') || 'null')
+    if (saved?.plan_prices) return saved.plan_prices
+  } catch(_e) {}
+  return null
+}
+
+const DEFAULT_PLAN_PRICES = {
   trial:      { label:'Free Trial',  monthly:0,      annual:0,       color:'#0891b2', employees:10  },
   starter:    { label:'Starter',     monthly:5000,   annual:54000,   color:'#059669', employees:50  },
   growth:     { label:'Growth',      monthly:12000,  annual:130000,  color:'#7c3aed', employees:200 },
   business:   { label:'Business',    monthly:25000,  annual:270000,  color:'#d97706', employees:500 },
   enterprise: { label:'Enterprise',  monthly:50000,  annual:540000,  color:'#dc2626', employees:'∞' },
 }
+
+const PLAN_PRICES = { ...DEFAULT_PLAN_PRICES, ...(getCommissionConfig() || {}) }
 
 export default function BillingPage() {
   const [sess]     = useState(getSession)
