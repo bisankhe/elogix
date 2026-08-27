@@ -213,9 +213,19 @@ export default function ELogixAdminPage({ onLogout }) {
           return toAdd.length ? [...prev, ...toAdd] : prev
         })
       }
-      const pending = JSON.parse(localStorage.getItem('elogix_pending_tenants') || '[]')
+      // Merge from ALL pending sources
+      const pending1 = JSON.parse(localStorage.getItem('elogix_pending_tenants') || '[]')
+      const pending2 = JSON.parse(localStorage.getItem('elogix_global_pending') || '[]')
+      const pending3 = JSON.parse(localStorage.getItem('elogix_registered_companies') ? 
+        Object.values(JSON.parse(localStorage.getItem('elogix_registered_companies'))).filter(c=>c.status!=='active') : '[]')
+      
+      // Merge all pending sources into one list, dedup by slug
+      const allPending = [...pending1]
+      for (const t of [...pending2, ...pending3]) {
+        if (t.slug && !allPending.find(p => p.slug === t.slug)) allPending.push(t)
+      }
       const approvedSlugs = new Set(Object.keys(approvedRegistry))
-      const stillPending = pending.filter(t => !approvedSlugs.has(t.slug))
+      const stillPending = allPending.filter(t => t.slug && !approvedSlugs.has(t.slug))
       setPendingTenants(prev => {
         const existing = new Set(prev.map(t => t.slug))
         const toAdd = stillPending.filter(t => t.slug && !existing.has(t.slug))
@@ -228,9 +238,27 @@ export default function ELogixAdminPage({ onLogout }) {
     // Try API first (works on live server, sees ALL registrations)
     // Then merge localStorage (works offline/dev, sees same-browser data)
     loadFromAPI().then(() => mergeFromLocalStorage())
-    // Poll every 30 seconds to catch new registrations in real time
-    const interval = setInterval(() => loadFromAPI(), 30000)
-    return () => clearInterval(interval)
+
+    // Poll every 30 seconds to catch new registrations from API
+    const interval = setInterval(() => {
+      loadFromAPI().then(() => mergeFromLocalStorage())
+    }, 30000)
+
+    // Listen for localStorage storage events (fires when RegisterPage writes on SAME browser)
+    // This gives INSTANT notification when someone registers in another tab on same browser
+    const onStorage = (e) => {
+      if (e.key === 'elogix_global_pending' || e.key === 'elogix_pending_tenants' ||
+          e.key === 'elogix_registered_companies') {
+        mergeFromLocalStorage()
+        notify('🔔 New registration detected — refreshing...')
+      }
+    }
+    window.addEventListener('storage', onStorage)
+
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('storage', onStorage)
+    }
   }, [])
 
 
@@ -317,7 +345,15 @@ export default function ELogixAdminPage({ onLogout }) {
       const without = prev.filter(c => c.slug !== tenant.slug)
       const next = [...without, approvedTenant]
       // ✅ KEY FIX: persist active companies so they survive page refresh
+      // Written to ALL keys that BillingPage + TenantModulePermissionPage read
       localStorage.setItem('elogix_active_companies', JSON.stringify(next))
+      // Also update elogix_approved_tenants registry
+      const currentApproved = JSON.parse(localStorage.getItem('elogix_approved_tenants')||'{}')
+      currentApproved[tenant.slug] = approvedTenant
+      localStorage.setItem('elogix_approved_tenants', JSON.stringify(currentApproved))
+      // Remove from global_pending
+      const gp = JSON.parse(localStorage.getItem('elogix_global_pending')||'[]')
+      localStorage.setItem('elogix_global_pending', JSON.stringify(gp.filter(t=>t.slug!==tenant.slug)))
       return next
     })
 

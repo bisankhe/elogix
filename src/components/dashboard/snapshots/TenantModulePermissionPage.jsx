@@ -194,37 +194,38 @@ const BUSINESS_TYPES = [
 function loadAllTenants() {
   try {
     const sources = []
+    const slugSeen = new Set()
+
+    const pushTenant = (t, i, prefix='t') => {
+      if (!t || (!t.name && !t.slug)) return
+      if (slugSeen.has(t.slug)) return
+      slugSeen.add(t.slug)
+      sources.push({
+        id:          t.id || `${prefix}-${t.slug || i}`,
+        name:        t.name || t.slug || `Tenant ${i+1}`,
+        slug:        t.slug || '',
+        type:        t.business_type || t.type || 'custom',
+        plan:        ((t.plan||'trial').charAt(0).toUpperCase()+(t.plan||'trial').slice(1)),
+        employees:   t.employee_count || 0,
+        status:      t.status || 'active',
+        joined:      (t.approved_at||t.created_at||new Date().toISOString()).split('T')[0],
+        admin_email: t.admin_email || '',
+      })
+    }
+
+    // 1. Approved active companies (set by ELogixAdminPage.approveTenant)
     const active = JSON.parse(localStorage.getItem('elogix_active_companies') || '[]')
-    active.forEach((t, i) => {
-      if (!t || (!t.name && !t.slug)) return
-      sources.push({
-        id:          t.id || `live-${t.slug || i}`,
-        name:        t.name || t.slug || `Tenant ${i+1}`,
-        slug:        t.slug || '',
-        type:        t.business_type || t.type || 'custom',
-        plan:        ((t.plan||'trial').charAt(0).toUpperCase()+(t.plan||'trial').slice(1)),
-        employees:   t.employee_count || 0,
-        status:      t.status || 'active',
-        joined:      (t.approved_at||new Date().toISOString()).split('T')[0],
-        admin_email: t.admin_email || '',
-      })
-    })
+    active.forEach((t, i) => pushTenant(t, i, 'active'))
+
+    // 2. Approved tenants registry (also set by ELogixAdminPage.approveTenant)
     const registry = JSON.parse(localStorage.getItem('elogix_approved_tenants') || '{}')
-    Object.values(registry).forEach((t, i) => {
-      if (!t || (!t.name && !t.slug)) return
-      if (sources.find(s => s.slug === t.slug && t.slug)) return
-      sources.push({
-        id:          t.id || `reg-${t.slug||i}`,
-        name:        t.name || t.slug || `Tenant ${i+1}`,
-        slug:        t.slug || '',
-        type:        t.business_type || t.type || 'custom',
-        plan:        ((t.plan||'trial').charAt(0).toUpperCase()+(t.plan||'trial').slice(1)),
-        employees:   t.employee_count || 0,
-        status:      t.status || 'active',
-        joined:      (t.approved_at||new Date().toISOString()).split('T')[0],
-        admin_email: t.admin_email || '',
-      })
-    })
+    Object.values(registry).forEach((t, i) => pushTenant(t, i, 'reg'))
+
+    // 3. Registered companies (set by RegisterPage before approval)
+    // These appear as 'pending' status until admin approves
+    const regCos = JSON.parse(localStorage.getItem('elogix_registered_companies') || '{}')
+    Object.values(regCos).forEach((t, i) => pushTenant(t, i, 'reg2'))
+
     if (sources.length > 0) return sources
   } catch(_e) {}
   // Default: real eLogix tenants

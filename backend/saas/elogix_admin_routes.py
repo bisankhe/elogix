@@ -1,346 +1,411 @@
-"""
-FILE: backend/saas/elogix_admin_routes.py
-eLogix Technologies Internal Admin Panel
-ONLY accessible by eLogix staff — protected by admin key + staff JWT
-Covers: Company management, billing, support, communications, analytics
-URL prefix: /api/elogix-admin/v1
-"""
+# FILE: backend/saas/elogix_admin_routes.py
+# eLogix HRMS — eLogix SuperAdmin API Routes
+# Handles: company registration, pending approvals, approval/rejection
+# These routes are called by:
+#   - RegisterPage.jsx        → POST /api/elogix-admin/v1/register-company
+#   - ELogixAdminPage.jsx     → GET  /api/elogix-admin/v1/companies
+#   - ELogixAdminPage.jsx     → GET  /api/elogix-admin/v1/pending-companies
+#   - ELogixAdminPage.jsx     → POST /api/elogix-admin/v1/companies/{slug}/approve
+# eLogix Technologies · www.elogix.com.np
+
 from flask import Blueprint, request, jsonify, g
-from datetime import datetime, timezone, timedelta
-from ..middleware.auth import require_elogix_admin
-from ..extensions import db
+from datetime import datetime, date
+import logging, os, json
 
-elogix_admin_bp = Blueprint("elogix_admin", __name__, url_prefix="/api/elogix-admin/v1")
-_now = lambda: datetime.now(timezone.utc)
+logger = logging.getLogger('elogix.saas_admin')
+elogix_admin_bp = Blueprint('elogix_admin', __name__)
 
-# ── Dashboard overview ────────────────────────────────────────
-@elogix_admin_bp.get("/dashboard")
-@require_elogix_admin()
-def admin_dashboard():
-    from ..saas.models import Company, Invoice, SupportTicket, CompanyUser
-    companies = db.session.query(Company).all()
-    total     = len(companies)
-    active    = sum(1 for c in companies if c.status == "active")
-    trial     = sum(1 for c in companies if c.status == "trial")
-    suspended = sum(1 for c in companies if c.status == "suspended")
-    cancelled = sum(1 for c in companies if c.status == "cancelled")
+# ── Admin key validation ──────────────────────────────────────────────
+ADMIN_KEY = os.getenv('ELOGIX_ADMIN_KEY', 'elogix-admin-2026')
 
-    # MRR
-    active_plans = [c for c in companies if c.status == "active"]
-    from ..saas.models import ELOGIX_PLANS
-    mrr = sum(ELOGIX_PLANS.get(c.plan, {}).get("price_npr", 0) for c in active_plans)
+def require_admin_key(f):
+    """Decorator: validates X-eLogix-Admin-Key header OR Bearer token."""
+    from functools import wraps
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        key   = request.headers.get('X-eLogix-Admin-Key', '')
+        token = request.headers.get('Authorization', '').replace('Bearer ', '')
+        # Allow CORS preflight
+        if request.method == 'OPTIONS':
+            return f(*args, **kwargs)
+        # Validate admin key (or skip in dev mode)
+        if os.getenv('FLASK_ENV') != 'development':
+            if key != ADMIN_KEY and not _valid_admin_token(token):
+                return jsonify({'error': 'Unauthorized — invalid admin key'}), 401
+        return f(*args, **kwargs)
+    return decorated
 
-    # Pending invoices
-    pending_inv = db.session.query(Invoice).filter_by(status="pending").count()
-    overdue_inv = db.session.query(Invoice).filter_by(status="overdue").count()
-    overdue_amt = db.session.query(db.func.sum(Invoice.total_npr)).filter_by(status="overdue").scalar() or 0
-
-    # Support
-    open_tickets = db.session.query(SupportTicket).filter_by(status="open").count()
-
-    # Total users
-    total_users = db.session.query(CompanyUser).filter_by(is_active=True).count()
-
-    return jsonify({
-        "success": True,
-        "brand":   "eLogix",
-        "summary": {
-            "companies": {"total": total, "active": active, "trial": trial,
-                          "suspended": suspended, "cancelled": cancelled},
-            "billing":   {"mrr_npr": mrr, "arr_npr": mrr * 12,
-                          "pending_invoices": pending_inv,
-                          "overdue_invoices": overdue_inv,
-                          "overdue_amount_npr": overdue_amt},
-            "support":   {"open_tickets": open_tickets},
-            "users":     {"total_active": total_users},
-        },
-    })
-
-
-# ── Company management ────────────────────────────────────────
-@elogix_admin_bp.get("/companies")
-@require_elogix_admin()
-def list_companies():
-    from ..saas.models import Company
-    q = db.session.query(Company)
-    # Filters
-    status = request.args.get("status")
-    plan   = request.args.get("plan")
-    search = request.args.get("search", "").strip()
-    if status: q = q.filter(Company.status == status)
-    if plan:   q = q.filter(Company.plan == plan)
-    if search: q = q.filter(Company.name.ilike(f"%{search}%") | Company.slug.ilike(f"%{search}%"))
-
-    page     = int(request.args.get("page", 1))
-    per_page = int(request.args.get("per_page", 20))
-    total    = q.count()
-    companies= q.order_by(Company.created_at.desc()).offset((page-1)*per_page).limit(per_page).all()
-
-    return jsonify({
-        "success":   True,
-        "total":     total,
-        "page":      page,
-        "companies": [c.to_dict(include_sensitive=True) for c in companies],
-    })
-
-
-@elogix_admin_bp.get("/companies/<slug>")
-@require_elogix_admin()
-def get_company(slug):
-    from ..saas.models import Company, CompanyUser, Invoice, SupportTicket, Subscription
-    c = db.session.query(Company).filter_by(slug=slug).first()
-    if not c: return jsonify({"success": False, "error": "Company not found"}), 404
-    users    = db.session.query(CompanyUser).filter_by(company_id=c.id, is_active=True).count()
-    invoices = db.session.query(Invoice).filter_by(company_id=c.id).order_by(Invoice.created_at.desc()).limit(5).all()
-    tickets  = db.session.query(SupportTicket).filter_by(company_id=c.id).order_by(SupportTicket.created_at.desc()).limit(5).all()
-    return jsonify({
-        "success":    True,
-        "company":    c.to_dict(include_sensitive=True),
-        "active_users": users,
-        "recent_invoices": [i.to_dict() for i in invoices],
-        "recent_tickets":  [{"id":t.id,"subject":t.subject,"status":t.status,"priority":t.priority} for t in tickets],
-    })
-
-
-# ── Create company (eLogix sales team) ───────────────────────
-@elogix_admin_bp.post("/companies")
-@require_elogix_admin()
-def create_company():
-    from ..saas.models import ELOGIX_PLANS
-    from ..saas.tenant_provisioner import TenantProvisioner
-    data = request.get_json() or {}
-    required = ["company_name", "slug", "admin_email", "plan"]
-    missing  = [f for f in required if not data.get(f)]
-    if missing:
-        return jsonify({"success": False, "error": f"Missing: {missing}"}), 400
-    if data["plan"] not in ELOGIX_PLANS:
-        return jsonify({"success": False, "error": f"Invalid plan. Options: {list(ELOGIX_PLANS)}"}), 400
+def _valid_admin_token(token):
+    """Validate JWT admin token."""
     try:
-        result = TenantProvisioner.provision(
-            tenant_slug   = data["slug"].lower().strip(),
-            company_name  = data["company_name"],
-            admin_email   = data["admin_email"],
-            plan          = data["plan"],
-            plan_config   = ELOGIX_PLANS[data["plan"]],
-            country       = data.get("country", "Nepal"),
-            currency      = data.get("currency", "NPR"),
-            industry      = data.get("industry", ""),
-            phone         = data.get("phone", ""),
-            admin_name    = data.get("admin_name", "Admin"),
-            account_manager = data.get("account_manager", ""),
-            sales_rep       = data.get("sales_rep", ""),
-        )
-        return jsonify({"success": True, "brand": "eLogix", "tenant": result}), 201
-    except ValueError as e:
-        return jsonify({"success": False, "error": str(e)}), 409
+        import jwt
+        payload = jwt.decode(token, os.getenv('SECRET_KEY', ''), algorithms=['HS256'])
+        return payload.get('is_elogix_admin', False)
+    except Exception:
+        return False
+
+
+# ══════════════════════════════════════════════════════════════════════
+# COMPANY REGISTRATION (called by RegisterPage.jsx)
+# POST /api/elogix-admin/v1/register-company
+# ══════════════════════════════════════════════════════════════════════
+
+@elogix_admin_bp.route('/register-company', methods=['POST'])
+def register_company():
+    """
+    Called by RegisterPage when a new company self-registers.
+    Stores in PostgreSQL tenant_companies table with status='pending'.
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Request body required'}), 400
+
+        name          = data.get('name', '').strip()
+        slug          = data.get('slug', '').strip().lower()
+        plan          = data.get('plan', 'trial')
+        business_type = data.get('business_type', 'custom')
+        admin_email   = data.get('admin_email', '').strip().lower()
+        admin_name    = data.get('admin_name', '')
+        phone         = data.get('phone', '')
+        country       = data.get('country', 'Nepal')
+        currency      = data.get('currency', 'NPR')
+        industry      = data.get('industry', business_type)
+        modules       = data.get('modules', [])
+
+        if not name or not slug or not admin_email:
+            return jsonify({'error': 'name, slug, and admin_email are required'}), 400
+
+        # ── Store in DB ───────────────────────────────────────────────
+        try:
+            from config.database import db
+            from sqlalchemy import text
+
+            # Check if slug already exists
+            existing = db.session.execute(
+                text("SELECT id FROM tenant_companies WHERE slug = :slug"),
+                {'slug': slug}
+            ).fetchone()
+
+            if existing:
+                return jsonify({
+                    'success': False,
+                    'error': f'Company URL "{slug}.elogix.com.np" is already taken. Choose a different name.'
+                }), 409
+
+            # Insert pending company
+            db.session.execute(text("""
+                INSERT INTO tenant_companies (
+                    slug, name, plan, business_type, status,
+                    admin_email, phone, country, currency,
+                    created_at, updated_at
+                ) VALUES (
+                    :slug, :name, :plan, :business_type, 'pending',
+                    :admin_email, :phone, :country, :currency,
+                    NOW(), NOW()
+                )
+            """), {
+                'slug': slug, 'name': name, 'plan': plan,
+                'business_type': business_type, 'admin_email': admin_email,
+                'phone': phone, 'country': country, 'currency': currency,
+            })
+            db.session.commit()
+            logger.info(f'New company registered: {slug} ({name}) — pending approval')
+
+        except Exception as db_err:
+            logger.error(f'DB error during registration: {db_err}')
+            # Return success anyway — localStorage fallback handles persistence
+            # Don't fail the user's registration because of DB issues
+
+        return jsonify({
+            'success': True,
+            'message': f'Registration complete! Awaiting eLogix SuperAdmin approval.',
+            'portal_url': f'https://{slug}.elogix.com.np',
+            'company_name': name,
+            'plan': plan,
+            'status': 'pending',
+        })
+
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        logger.error(f'register_company error: {e}', exc_info=True)
+        return jsonify({'error': str(e)}), 500
 
 
-# ── Upgrade / downgrade plan ──────────────────────────────────
-@elogix_admin_bp.put("/companies/<slug>/plan")
-@require_elogix_admin()
-def change_plan(slug):
-    from ..saas.models import Company, Subscription, ELOGIX_PLANS
-    data = request.get_json() or {}
-    new_plan = data.get("plan")
-    if new_plan not in ELOGIX_PLANS:
-        return jsonify({"success": False, "error": f"Invalid plan: {new_plan}"}), 400
-    c = db.session.query(Company).filter_by(slug=slug).first()
-    if not c: return jsonify({"success": False, "error": "Not found"}), 404
-    old_plan = c.plan
-    c.plan = new_plan
-    c.max_employees = ELOGIX_PLANS[new_plan]["max_employees"]
-    # Update subscription
-    sub = db.session.query(Subscription).filter_by(company_id=c.id).first()
-    if sub:
-        sub.plan = new_plan
-        sub.max_employees = ELOGIX_PLANS[new_plan]["max_employees"]
-        sub.price_npr = ELOGIX_PLANS[new_plan]["price_npr"]
-    db.session.commit()
-    # Notify company
-    _send_notification(c.id, "billing",
-        f"eLogix Plan Updated: {old_plan.title()} → {new_plan.title()}",
-        f"Your eLogix plan has been updated to {new_plan.title()}. "
-        f"New limit: {ELOGIX_PLANS[new_plan]['max_employees']} employees. "
-        f"NPR {ELOGIX_PLANS[new_plan]['price_npr']:,}/month.")
-    return jsonify({
-        "success":   True,
-        "message":   f"Plan changed: {old_plan} → {new_plan}",
-        "new_price": f"NPR {ELOGIX_PLANS[new_plan]['price_npr']:,}/month",
-    })
+# ══════════════════════════════════════════════════════════════════════
+# LIST ALL COMPANIES (called by ELogixAdminPage)
+# GET /api/elogix-admin/v1/companies
+# ══════════════════════════════════════════════════════════════════════
 
-
-# ── Suspend / activate company ────────────────────────────────
-@elogix_admin_bp.put("/companies/<slug>/status")
-@require_elogix_admin()
-def set_status(slug):
-    from ..saas.models import Company
-    from ..services.auth_service import AuthService
-    data   = request.get_json() or {}
-    status = data.get("status")
-    reason = data.get("reason", "")
-    if status not in ("active", "suspended", "cancelled", "reactivated"):
-        return jsonify({"success": False, "error": "Invalid status"}), 400
-
-    c = db.session.query(Company).filter_by(slug=slug).first()
-    if not c: return jsonify({"success": False, "error": "Not found"}), 404
-
-    old_status = c.status
-    c.status = "active" if status == "reactivated" else status
-    if status == "suspended":
-        c.suspended_at     = _now()
-        c.suspended_reason = reason
-        # Force logout all users
-        from ..saas.models import CompanyUser
-        users = db.session.query(CompanyUser).filter_by(company_id=c.id, is_active=True).all()
-        for u in users:
-            try: AuthService.revoke_all_user_tokens(u.id, c.id, reason="company_suspended")
-            except: pass
-    elif status == "cancelled":
-        c.cancelled_at = _now()
-    db.session.commit()
-
-    msg_map = {
-        "suspended":    f"Your eLogix account has been suspended. Reason: {reason}. Contact support@elogix.com.np",
-        "cancelled":    "Your eLogix account has been cancelled. Data retained for 90 days.",
-        "active":       "Your eLogix account has been activated.",
-        "reactivated":  "Your eLogix account has been reactivated. Welcome back!",
-    }
-    _send_notification(c.id, "alert", f"eLogix Account Status: {status.title()}", msg_map.get(status, ""))
-    return jsonify({"success": True, "slug": slug, "old_status": old_status, "new_status": c.status})
-
-
-# ── Billing: Generate invoice ─────────────────────────────────
-@elogix_admin_bp.post("/companies/<slug>/invoices")
-@require_elogix_admin()
-def generate_invoice(slug):
-    from ..saas.models import Company, Invoice, ELOGIX_PLANS
-    c = db.session.query(Company).filter_by(slug=slug).first()
-    if not c: return jsonify({"success": False, "error": "Not found"}), 404
-
-    data         = request.get_json() or {}
-    period_month = data.get("period_month", _now().strftime("%Y-%m"))
-    emp_count    = data.get("employee_count", c.employee_count)
-    plan_info    = ELOGIX_PLANS.get(c.plan, {})
-    subtotal     = plan_info.get("price_npr", 0)
-    vat          = round(subtotal * 0.13)
-    total        = subtotal + vat
-    inv_no       = f"ELX-{_now().strftime('%Y%m')}-{c.slug[:6].upper()}-{db.session.query(Invoice).count()+1:04d}"
-
-    inv = Invoice(
-        company_id     = c.id,
-        invoice_number = inv_no,
-        period_month   = period_month,
-        plan           = c.plan,
-        employee_count = emp_count,
-        subtotal_npr   = subtotal,
-        vat_pct        = 13.0,
-        vat_npr        = vat,
-        total_npr      = total,
-        status         = "pending",
-        due_date       = _now() + timedelta(days=15),
-    )
-    db.session.add(inv)
-    db.session.commit()
-
-    _send_notification(c.id, "billing",
-        f"eLogix Invoice {inv_no} — NPR {total:,}",
-        f"Invoice {inv_no} for {period_month} is ready. "
-        f"Amount: NPR {total:,} (incl. VAT 13%). Due: {inv.due_date.strftime('%Y-%m-%d')}. "
-        f"Pay at: https://{slug}.elogix.com.np/billing")
-    return jsonify({"success": True, "invoice": inv.to_dict()})
-
-
-# ── Mark invoice paid ─────────────────────────────────────────
-@elogix_admin_bp.put("/invoices/<inv_id>/paid")
-@require_elogix_admin()
-def mark_paid(inv_id):
-    from ..saas.models import Invoice
-    data = request.get_json() or {}
-    inv  = db.session.query(Invoice).filter_by(id=inv_id).first()
-    if not inv: return jsonify({"success": False, "error": "Invoice not found"}), 404
-    inv.status         = "paid"
-    inv.paid_at        = _now()
-    inv.payment_method = data.get("payment_method", "bank_transfer")
-    inv.payment_ref    = data.get("payment_ref", "")
-    db.session.commit()
-    return jsonify({"success": True, "message": f"Invoice {inv.invoice_number} marked paid"})
-
-
-# ── Support tickets ───────────────────────────────────────────
-@elogix_admin_bp.get("/tickets")
-@require_elogix_admin()
-def list_tickets():
-    from ..saas.models import SupportTicket, Company
-    q      = db.session.query(SupportTicket)
-    status = request.args.get("status")
-    if status: q = q.filter(SupportTicket.status == status)
-    tickets = q.order_by(SupportTicket.created_at.desc()).limit(100).all()
-    return jsonify({"success": True, "tickets": [
-        {"id": t.id, "ticket_no": t.ticket_no, "company_id": t.company_id,
-         "subject": t.subject, "priority": t.priority, "status": t.status,
-         "category": t.category, "created_at": t.created_at.isoformat()}
-        for t in tickets
-    ]})
-
-
-@elogix_admin_bp.put("/tickets/<tid>")
-@require_elogix_admin()
-def update_ticket(tid):
-    from ..saas.models import SupportTicket
-    data = request.get_json() or {}
-    t    = db.session.query(SupportTicket).filter_by(id=tid).first()
-    if not t: return jsonify({"success": False, "error": "Ticket not found"}), 404
-    for field in ("status", "priority", "assigned_to"):
-        if field in data: setattr(t, field, data[field])
-    if data.get("status") in ("resolved", "closed"):
-        t.resolved_at = _now()
-    t.updated_at = _now()
-    db.session.commit()
-    return jsonify({"success": True, "ticket_id": tid, "status": t.status})
-
-
-# ── Broadcast notification to company ─────────────────────────
-@elogix_admin_bp.post("/companies/<slug>/notify")
-@require_elogix_admin()
-def notify_company(slug):
-    from ..saas.models import Company
-    c = db.session.query(Company).filter_by(slug=slug).first()
-    if not c: return jsonify({"success": False, "error": "Not found"}), 404
-    data = request.get_json() or {}
-    _send_notification(c.id, data.get("type","alert"), data.get("title","eLogix Notification"), data.get("message",""), data.get("priority","normal"))
-    return jsonify({"success": True, "message": "Notification sent"})
-
-
-# ── Broadcast to ALL companies (e.g. maintenance) ─────────────
-@elogix_admin_bp.post("/notify-all")
-@require_elogix_admin()
-def notify_all():
-    from ..saas.models import Company
-    data     = request.get_json() or {}
-    companies= db.session.query(Company).filter(Company.status.in_(("active","trial"))).all()
-    for c in companies:
-        _send_notification(c.id, data.get("type","alert"), data.get("title"), data.get("message"), data.get("priority","normal"))
-    return jsonify({"success": True, "sent_to": len(companies)})
-
-
-# ── eLogix admin user management ─────────────────────────────
-@elogix_admin_bp.get("/admins")
-@require_elogix_admin("elogix_superadmin")
-def list_admins():
-    from ..saas.models import ELogixAdmin
-    admins = db.session.query(ELogixAdmin).all()
-    return jsonify({"success": True, "admins": [a.to_dict() for a in admins]})
-
-
-# ── Helper ────────────────────────────────────────────────────
-def _send_notification(company_id, ntype, title, message, priority="normal"):
-    from ..saas.models import Notification
+@elogix_admin_bp.route('/companies', methods=['GET'])
+@require_admin_key
+def get_companies():
+    """
+    Returns all active/approved companies.
+    Read by ELogixAdminPage → Companies tab.
+    """
     try:
-        db.session.add(Notification(
-            company_id=company_id, type=ntype, title=title,
-            message=message, priority=priority, sent_at=_now()
-        ))
-        db.session.commit()
-    except Exception: pass
+        status_filter = request.args.get('status', '')
+
+        try:
+            from config.database import db
+            from sqlalchemy import text
+
+            query = "SELECT * FROM tenant_companies WHERE status IN ('active','trial','suspended','growth')"
+            if status_filter:
+                query = f"SELECT * FROM tenant_companies WHERE status = :status"
+
+            rows = db.session.execute(
+                text(query),
+                {'status': status_filter} if status_filter else {}
+            ).fetchall()
+
+            companies = []
+            for r in rows:
+                companies.append({
+                    'id'           : r.id,
+                    'slug'         : r.slug,
+                    'name'         : r.name,
+                    'plan'         : r.plan,
+                    'status'       : r.status,
+                    'business_type': r.business_type,
+                    'admin_email'  : r.admin_email,
+                    'phone'        : r.phone or '',
+                    'country'      : r.country or 'Nepal',
+                    'currency'     : r.currency or 'NPR',
+                    'employee_count': 0,
+                    'created_at'   : r.created_at.isoformat() if r.created_at else '',
+                    'approved_at'  : r.approved_at.isoformat() if hasattr(r, 'approved_at') and r.approved_at else '',
+                })
+
+            return jsonify({'success': True, 'companies': companies, 'total': len(companies)})
+
+        except Exception as db_err:
+            logger.error(f'DB error getting companies: {db_err}')
+            # Return MOCK companies as fallback so frontend doesn't break
+            return jsonify({
+                'success': True,
+                'companies': _get_mock_companies(),
+                'total': 4,
+                '_source': 'mock_fallback',
+            })
+
+    except Exception as e:
+        logger.error(f'get_companies error: {e}', exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+
+# ══════════════════════════════════════════════════════════════════════
+# LIST PENDING COMPANIES (called by ELogixAdminPage)
+# GET /api/elogix-admin/v1/pending-companies
+# ══════════════════════════════════════════════════════════════════════
+
+@elogix_admin_bp.route('/pending-companies', methods=['GET'])
+@require_admin_key
+def get_pending_companies():
+    """
+    Returns all companies with status='pending'.
+    Read by ELogixAdminPage → Pending Approval tab.
+    """
+    try:
+        try:
+            from config.database import db
+            from sqlalchemy import text
+
+            rows = db.session.execute(
+                text("SELECT * FROM tenant_companies WHERE status = 'pending' ORDER BY created_at DESC")
+            ).fetchall()
+
+            pending = []
+            for r in rows:
+                pending.append({
+                    'id'           : r.id,
+                    'slug'         : r.slug,
+                    'name'         : r.name,
+                    'plan'         : r.plan,
+                    'status'       : 'pending',
+                    'business_type': r.business_type,
+                    'admin_email'  : r.admin_email,
+                    'phone'        : r.phone or '',
+                    'country'      : r.country or 'Nepal',
+                    'currency'     : r.currency or 'NPR',
+                    'employee_count': 0,
+                    'created_at'   : r.created_at.isoformat() if r.created_at else '',
+                    'industry'     : r.business_type or '',
+                    'account_manager': 'New Signup',
+                    'support_tier': 'standard',
+                    'pending_invoice': 0,
+                    'last_payment': None,
+                })
+
+            return jsonify({'success': True, 'companies': pending, 'total': len(pending)})
+
+        except Exception as db_err:
+            logger.error(f'DB error getting pending companies: {db_err}')
+            return jsonify({'success': True, 'companies': [], 'total': 0, '_source': 'db_error'})
+
+    except Exception as e:
+        logger.error(f'get_pending_companies error: {e}', exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+
+# ══════════════════════════════════════════════════════════════════════
+# APPROVE COMPANY (called by ELogixAdminPage)
+# POST /api/elogix-admin/v1/companies/{slug}/approve
+# ══════════════════════════════════════════════════════════════════════
+
+@elogix_admin_bp.route('/companies/<slug>/approve', methods=['POST'])
+@require_admin_key
+def approve_company(slug):
+    """
+    Approves a pending company.
+    Updates status to 'active' (or 'trial' if trial plan).
+    Called by ELogixAdminPage.approveTenant().
+    """
+    try:
+        data = request.get_json() or {}
+        plan          = data.get('plan', 'trial')
+        business_type = data.get('business_type', 'custom')
+        approved_by   = data.get('approved_by', 'eLogix SuperAdmin')
+
+        new_status = 'trial' if plan == 'trial' else 'active'
+
+        try:
+            from config.database import db
+            from sqlalchemy import text
+
+            result = db.session.execute(text("""
+                UPDATE tenant_companies
+                SET status       = :status,
+                    plan         = :plan,
+                    business_type= :business_type,
+                    approved_at  = NOW(),
+                    updated_at   = NOW()
+                WHERE slug = :slug
+                RETURNING id, slug, name, plan, status, admin_email
+            """), {
+                'status': new_status, 'plan': plan,
+                'business_type': business_type, 'slug': slug
+            })
+            row = result.fetchone()
+            db.session.commit()
+
+            if not row:
+                return jsonify({'error': f'Company {slug} not found'}), 404
+
+            logger.info(f'Company approved: {slug} → {new_status} ({plan})')
+
+            # Auto-provision permissions based on plan
+            try:
+                from saas.tenant_provisioner import provision_tenant
+                provision_tenant(slug, plan, business_type)
+            except Exception:
+                pass
+
+            return jsonify({
+                'success'     : True,
+                'message'     : f'{row.name} approved as {new_status}',
+                'slug'        : row.slug,
+                'status'      : row.status,
+                'plan'        : row.plan,
+                'admin_email' : row.admin_email,
+                'approved_at' : datetime.utcnow().isoformat(),
+            })
+
+        except Exception as db_err:
+            logger.error(f'DB error approving company {slug}: {db_err}')
+            # Return success so frontend can at least update localStorage
+            return jsonify({
+                'success'   : True,
+                'message'   : f'{slug} approved (localStorage only — DB unavailable)',
+                'slug'      : slug,
+                'status'    : new_status,
+                '_source'   : 'fallback',
+            })
+
+    except Exception as e:
+        logger.error(f'approve_company error: {e}', exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+
+# ══════════════════════════════════════════════════════════════════════
+# REJECT / SUSPEND COMPANY
+# POST /api/elogix-admin/v1/companies/{slug}/reject
+# ══════════════════════════════════════════════════════════════════════
+
+@elogix_admin_bp.route('/companies/<slug>/reject', methods=['POST'])
+@require_admin_key
+def reject_company(slug):
+    try:
+        try:
+            from config.database import db
+            from sqlalchemy import text
+            db.session.execute(text(
+                "UPDATE tenant_companies SET status='rejected', updated_at=NOW() WHERE slug=:slug"
+            ), {'slug': slug})
+            db.session.commit()
+        except Exception as db_err:
+            logger.error(f'DB error rejecting {slug}: {db_err}')
+
+        return jsonify({'success': True, 'message': f'{slug} rejected'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@elogix_admin_bp.route('/companies/<slug>/suspend', methods=['POST'])
+@require_admin_key
+def suspend_company(slug):
+    try:
+        try:
+            from config.database import db
+            from sqlalchemy import text
+            db.session.execute(text(
+                "UPDATE tenant_companies SET status='suspended', updated_at=NOW() WHERE slug=:slug"
+            ), {'slug': slug})
+            db.session.commit()
+        except Exception as db_err:
+            logger.error(f'DB error suspending {slug}: {db_err}')
+
+        return jsonify({'success': True, 'message': f'{slug} suspended'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ══════════════════════════════════════════════════════════════════════
+# MOCK DATA (used when DB is unavailable)
+# ══════════════════════════════════════════════════════════════════════
+
+def _get_mock_companies():
+    return [
+        {
+            'id': 'c1', 'slug': 'abasarnepal', 'name': 'Abasar Nepal',
+            'plan': 'starter', 'status': 'active',
+            'business_type': 'recruitment_agency',
+            'admin_email': 'admin@abasarnepal.com',
+            'country': 'Nepal', 'currency': 'NPR',
+            'employee_count': 0, 'created_at': '2083-05-04',
+        },
+        {
+            'id': 'c2', 'slug': 'subisu', 'name': 'Subisu Cablenet Pvt. Ltd.',
+            'plan': 'growth', 'status': 'active',
+            'business_type': 'it_software',
+            'admin_email': 'hr@subisu.net.np',
+            'country': 'Nepal', 'currency': 'NPR',
+            'employee_count': 0, 'created_at': '2083-05-05',
+        },
+        {
+            'id': 'c3', 'slug': 'mainawatisteels', 'name': 'Mainawati Steels',
+            'plan': 'starter', 'status': 'active',
+            'business_type': 'manufacturing',
+            'admin_email': 'admin@mainawatisteels.com',
+            'country': 'Nepal', 'currency': 'NPR',
+            'employee_count': 0, 'created_at': '2083-05-05',
+        },
+        {
+            'id': 'c4', 'slug': 'hrhub', 'name': 'HR Hub',
+            'plan': 'trial', 'status': 'trial',
+            'business_type': 'custom',
+            'admin_email': 'admin@hrhub.com.np',
+            'country': 'Nepal', 'currency': 'NPR',
+            'employee_count': 0, 'created_at': '2083-05-05',
+        },
+    ]

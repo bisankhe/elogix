@@ -272,7 +272,39 @@ export default function RegisterPage({ onSuccess }) {
     setLoading(true); setError('')
     try {
       let data
-      try { data = await eLogixAPI.createCompany(form) } catch(_e) {}
+
+      // ── PRIMARY: Try to register via backend API ──────────────────
+      // This is THE reliable path — stores in PostgreSQL, visible from ANY browser
+      try {
+        const apiRes = await fetch('/api/elogix-admin/v1/register-company', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name          : form.company_name,
+            slug          : form.slug,
+            plan          : form.plan || 'trial',
+            business_type : form.business_type,
+            admin_email   : form.admin_email,
+            admin_name    : form.admin_name,
+            phone         : form.phone,
+            country       : form.country || 'Nepal',
+            currency      : form.currency || 'NPR',
+            industry      : form.business_label,
+            modules       : form.modules,
+            status        : 'pending',
+          })
+        })
+        if (apiRes.ok) {
+          data = await apiRes.json()
+        }
+      } catch(_e) {
+        // Backend unavailable — localStorage fallback below
+      }
+
+      // ── FALLBACK: Also try the old eLogixAPI (belt + suspenders) ──
+      if (!data?.success) {
+        try { data = await eLogixAPI.createCompany(form) } catch(_e) {}
+      }
 
       // ── Always save to localStorage (works with or without API) ──
       const slugKey = (form.slug||'COMP').toUpperCase().replace(/[^A-Z]/g,'').slice(0,4)||'COMP'
@@ -312,6 +344,30 @@ export default function RegisterPage({ onSuccess }) {
           admin_email:form.admin_email, phone:form.phone,
         })
         localStorage.setItem('elogix_pending_tenants', JSON.stringify(pending))
+
+        // ── Write to global pending key (read by ELogixAdminPage on same browser) ──
+        // Also write to elogix_pending_global which ELogixAdminPage polls
+        const globalPending = JSON.parse(localStorage.getItem('elogix_global_pending')||'[]')
+        if (!globalPending.find(t=>t.slug===form.slug)) {
+          globalPending.push({
+            id:`c_${form.slug}`,name:form.company_name,slug:form.slug,
+            plan:form.plan,status:'pending',
+            employee_count:0,
+            max_employees:{trial:10,starter:50,growth:250,business:500,enterprise:1000}[form.plan]||10,
+            created_at:new Date().toISOString().split('T')[0],registered_at:new Date().toISOString(),
+            account_manager:'New Signup',support_tier:'standard',
+            industry:form.business_label,country:form.country||'Nepal',
+            currency:form.currency||'NPR',pending_invoice:0,last_payment:null,
+            business_type:form.business_type,modules:form.modules,
+            admin_email:form.admin_email,phone:form.phone,
+          })
+          localStorage.setItem('elogix_global_pending', JSON.stringify(globalPending))
+        }
+        // Trigger storage event so ELogixAdminPage on SAME browser/tab picks it up immediately
+        window.dispatchEvent(new StorageEvent('storage',{
+          key:'elogix_global_pending',
+          newValue:localStorage.getItem('elogix_global_pending'),
+        }))
       }
 
       if (!data?.success) {
