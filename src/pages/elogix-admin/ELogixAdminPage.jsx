@@ -128,68 +128,109 @@ export default function ELogixAdminPage({ onLogout }) {
   // ══════════════════════════════════════════════════════════
   // Pending self-registered tenants waiting for SuperAdmin approval
   const [pendingTenants, setPendingTenants] = useState(() => {
-    try {
-      // Merge all pending sources from localStorage for initial render
-      const p1 = JSON.parse(localStorage.getItem('elogix_pending_tenants') || '[]')
-      const p2 = JSON.parse(localStorage.getItem('elogix_global_pending') || '[]')
-      const merged = [...p1]
-      for (const t of p2) { if (!merged.find(x => x.slug === t.slug)) merged.push(t) }
-      return merged
-    } catch(_e) { return [] }
+    try { return JSON.parse(localStorage.getItem('elogix_pending_tenants') || '[]') } catch(_e) { return [] }
   })
   const [apiLoading, setApiLoading] = useState(false)
 
   const loadFromAPI = async () => {
     setApiLoading(true)
-    const adminKey = localStorage.getItem('elogix_admin_key') || 'elogix-admin-2026'
-    const token    = localStorage.getItem('elogix_admin_token') || ''
-    const headers  = {
-      'X-eLogix-Admin-Key': adminKey,
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    }
-
     try {
-      // Load active/approved companies from Node.js API
-      const res = await fetch('/api/elogix-admin/v1/companies', { headers })
+      const adminKey = localStorage.getItem('elogix_admin_key') || 'elogix-admin-2026'
+      const token    = localStorage.getItem('elogix_admin_token') || ''
+
+      // Load active companies from backend DB
+      const res = await fetch('/api/elogix-admin/v1/companies', {
+        headers: {
+          'X-eLogix-Admin-Key': adminKey,
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      })
       if (res.ok) {
         const data = await res.json()
-        const apiCompanies = data.companies || data.data || []
+        const raw = data.companies || data.data || []
+        // Normalize: fill in defaults for fields the API may not return
+        const apiCompanies = raw.map(co => ({
+          id             : co.id || `api_${co.slug}`,
+          slug           : co.slug || '',
+          name           : co.name || co.slug || 'Unknown',
+          plan           : co.plan || 'trial',
+          status         : co.status || 'active',
+          business_type  : co.business_type || 'custom',
+          industry       : co.industry || co.business_type || '',
+          admin_email    : co.admin_email || '',
+          phone          : co.phone || '',
+          country        : co.country || 'Nepal',
+          currency       : co.currency || 'NPR',
+          employee_count : co.employee_count || 0,
+          max_employees  : co.max_employees ||
+            {trial:10,starter:50,growth:250,business:500,enterprise:1000}[co.plan] || 50,
+          account_manager: co.account_manager || 'eLogix Team',
+          support_tier   : co.support_tier || 'standard',
+          pending_invoice: co.pending_invoice || 0,
+          last_payment   : co.last_payment || null,
+          created_at     : co.created_at || new Date().toISOString().split('T')[0],
+          approved_at    : co.approved_at || co.created_at || '',
+        }))
         if (apiCompanies.length > 0) {
           setCompanies(prev => {
             const slugMap = {}
-            for (const c of prev) slugMap[c.slug] = c
-            for (const c of apiCompanies) slugMap[c.slug] = c  // API overrides mock
+            for (const co of prev) slugMap[co.slug] = co
+            for (const co of apiCompanies) slugMap[co.slug] = {...(slugMap[co.slug]||{}), ...co}
             const merged = Object.values(slugMap)
             localStorage.setItem('elogix_active_companies', JSON.stringify(merged))
             return merged
           })
         }
       }
-    } catch(_e) { /* offline */ }
 
-    try {
-      // Load pending registrations — THE KEY FIX
-      // This reads from server.js /data/companies.json which stores all registrations
-      // regardless of which computer/browser they came from
-      const pendRes = await fetch('/api/elogix-admin/v1/pending-companies', { headers })
+      // Load pending registrations from backend
+      const pendRes = await fetch('/api/elogix-admin/v1/pending-companies', {
+        headers: {
+          'X-eLogix-Admin-Key': adminKey,
+          'Authorization': `Bearer ${token}`,
+        }
+      })
       if (pendRes.ok) {
         const pendData = await pendRes.json()
-        const apiPending = pendData.companies || pendData.data || []
+        const raw2 = pendData.companies || pendData.data || []
+        // Normalize pending companies the same way
+        const apiPending = raw2.map(co => ({
+          id             : co.id || `pend_${co.slug}`,
+          slug           : co.slug || '',
+          name           : co.name || co.slug || 'Unknown',
+          plan           : co.plan || 'trial',
+          status         : co.status || 'pending',
+          business_type  : co.business_type || 'custom',
+          industry       : co.industry || co.business_type || '',
+          admin_email    : co.admin_email || '',
+          phone          : co.phone || '',
+          country        : co.country || 'Nepal',
+          currency       : co.currency || 'NPR',
+          employee_count : co.employee_count || 0,
+          max_employees  : co.max_employees ||
+            {trial:10,starter:50,growth:250,business:500,enterprise:1000}[co.plan] || 10,
+          account_manager: co.account_manager || 'New Signup',
+          support_tier   : co.support_tier || 'standard',
+          pending_invoice: co.pending_invoice || 0,
+          last_payment   : co.last_payment || null,
+          created_at     : co.created_at || new Date().toISOString().split('T')[0],
+          registered_at  : co.registered_at || co.created_at || new Date().toISOString(),
+        }))
         if (apiPending.length > 0) {
           setPendingTenants(prev => {
             const slugs = new Set(apiPending.map(t => t.slug))
-            // Keep any local-only pending that API doesn't know about yet
             const localOnly = prev.filter(t => !slugs.has(t.slug))
-            const merged = [...apiPending, ...localOnly]
-            localStorage.setItem('elogix_pending_tenants', JSON.stringify(merged))
-            return merged
+            return [...apiPending, ...localOnly]
           })
+          localStorage.setItem('elogix_pending_tenants', JSON.stringify(apiPending))
         }
       }
-    } catch(_e) { /* offline */ }
-
-    setApiLoading(false)
+    } catch(_e) {
+      // API unavailable — fall through to localStorage
+    } finally {
+      setApiLoading(false)
+    }
   }
 
   const mergeFromLocalStorage = () => {
@@ -222,16 +263,9 @@ export default function ELogixAdminPage({ onLogout }) {
           return toAdd.length ? [...prev, ...toAdd] : prev
         })
       }
-      // Merge ALL pending sources: pending_tenants + global_pending + registered_companies
-      const p1 = JSON.parse(localStorage.getItem('elogix_pending_tenants') || '[]')
-      const p2 = JSON.parse(localStorage.getItem('elogix_global_pending') || '[]')
-      const p3 = Object.values(JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}')).filter(t=>t.status!=='active')
+      const pending = JSON.parse(localStorage.getItem('elogix_pending_tenants') || '[]')
       const approvedSlugs = new Set(Object.keys(approvedRegistry))
-      const allPendingSlugs = {}
-      for (const t of [...p1,...p2,...p3]) {
-        if (t.slug && !approvedSlugs.has(t.slug)) allPendingSlugs[t.slug] = t
-      }
-      const stillPending = Object.values(allPendingSlugs)
+      const stillPending = pending.filter(t => !approvedSlugs.has(t.slug))
       setPendingTenants(prev => {
         const existing = new Set(prev.map(t => t.slug))
         const toAdd = stillPending.filter(t => t.slug && !existing.has(t.slug))
@@ -241,24 +275,12 @@ export default function ELogixAdminPage({ onLogout }) {
   }
 
   useEffect(() => {
-    // 1. Try Node.js API first (sees ALL registrations from any browser)
+    // Try API first (works on live server, sees ALL registrations)
+    // Then merge localStorage (works offline/dev, sees same-browser data)
     loadFromAPI().then(() => mergeFromLocalStorage())
-
-    // 2. Poll every 30s to catch new registrations from the API
-    const interval = setInterval(() => {
-      loadFromAPI().then(() => mergeFromLocalStorage())
-    }, 30000)
-
-    // 3. Listen for storage events (same browser, different tab)
-    const onStorage = (e) => {
-      if (['elogix_global_pending','elogix_pending_tenants','elogix_registered_companies'].includes(e.key)) {
-        mergeFromLocalStorage()
-        notify('🔔 New registration detected!')
-      }
-    }
-    window.addEventListener('storage', onStorage)
-
-    return () => { clearInterval(interval); window.removeEventListener('storage', onStorage) }
+    // Poll every 30 seconds to catch new registrations in real time
+    const interval = setInterval(() => loadFromAPI(), 30000)
+    return () => clearInterval(interval)
   }, [])
 
 
@@ -619,7 +641,7 @@ export default function ELogixAdminPage({ onLogout }) {
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(360px,1fr))',gap:14}}>
             {filtered.map(c=>{
               const sc = STATUS_COLORS[c.status]||STATUS_COLORS.active
-              const utilPct = Math.round(c.employee_count/c.max_employees*100)
+              const utilPct = c.max_employees ? Math.round((c.employee_count||0)/c.max_employees*100) : 0
               const planColor = PLAN_COLORS[c.plan]||'#64748b'
               return (
                 <div key={c.id} style={{background:'#fff',borderRadius:14,boxShadow:'0 2px 8px rgba(0,0,0,.06)',
@@ -647,7 +669,7 @@ export default function ELogixAdminPage({ onLogout }) {
                   <div style={{padding:'12px 16px'}}>
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,marginBottom:10}}>
                       {[
-                        ['👥','Employees',`${c.employee_count}/${c.max_employees}`],
+                        ['👥','Employees',`${c.employee_count||0}/${c.max_employees||'?'}`],
                         ['💰','Pending',c.pending_invoice?`NPR ${c.pending_invoice.toLocaleString()}`:'Paid ✅'],
                         ['📅','Last Pay',c.last_payment||'—'],
                       ].map(([ic,lb,v])=>(
