@@ -128,59 +128,68 @@ export default function ELogixAdminPage({ onLogout }) {
   // ══════════════════════════════════════════════════════════
   // Pending self-registered tenants waiting for SuperAdmin approval
   const [pendingTenants, setPendingTenants] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('elogix_pending_tenants') || '[]') } catch(_e) { return [] }
+    try {
+      // Merge all pending sources from localStorage for initial render
+      const p1 = JSON.parse(localStorage.getItem('elogix_pending_tenants') || '[]')
+      const p2 = JSON.parse(localStorage.getItem('elogix_global_pending') || '[]')
+      const merged = [...p1]
+      for (const t of p2) { if (!merged.find(x => x.slug === t.slug)) merged.push(t) }
+      return merged
+    } catch(_e) { return [] }
   })
   const [apiLoading, setApiLoading] = useState(false)
 
   const loadFromAPI = async () => {
     setApiLoading(true)
-    try {
-      const adminKey = localStorage.getItem('elogix_admin_key') || 'elogix-admin-2026'
-      const token    = localStorage.getItem('elogix_admin_token') || ''
+    const adminKey = localStorage.getItem('elogix_admin_key') || 'elogix-admin-2026'
+    const token    = localStorage.getItem('elogix_admin_token') || ''
+    const headers  = {
+      'X-eLogix-Admin-Key': adminKey,
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    }
 
-      // Load active companies from backend DB
-      const res = await fetch('/api/elogix-admin/v1/companies', {
-        headers: {
-          'X-eLogix-Admin-Key': adminKey,
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        }
-      })
+    try {
+      // Load active/approved companies from Node.js API
+      const res = await fetch('/api/elogix-admin/v1/companies', { headers })
       if (res.ok) {
         const data = await res.json()
         const apiCompanies = data.companies || data.data || []
         if (apiCompanies.length > 0) {
           setCompanies(prev => {
-            const existingSlugs = new Set(prev.map(c => c.slug))
-            const toAdd = apiCompanies.filter(c => !existingSlugs.has(c.slug))
-            const merged = toAdd.length ? [...prev, ...toAdd] : prev
-            // Persist API data to localStorage for offline access
+            const slugMap = {}
+            for (const c of prev) slugMap[c.slug] = c
+            for (const c of apiCompanies) slugMap[c.slug] = c  // API overrides mock
+            const merged = Object.values(slugMap)
             localStorage.setItem('elogix_active_companies', JSON.stringify(merged))
             return merged
           })
         }
       }
+    } catch(_e) { /* offline */ }
 
-      // Load pending registrations from backend
-      const pendRes = await fetch('/api/elogix-admin/v1/pending-companies', {
-        headers: {
-          'X-eLogix-Admin-Key': adminKey,
-          'Authorization': `Bearer ${token}`,
-        }
-      })
+    try {
+      // Load pending registrations — THE KEY FIX
+      // This reads from server.js /data/companies.json which stores all registrations
+      // regardless of which computer/browser they came from
+      const pendRes = await fetch('/api/elogix-admin/v1/pending-companies', { headers })
       if (pendRes.ok) {
         const pendData = await pendRes.json()
         const apiPending = pendData.companies || pendData.data || []
         if (apiPending.length > 0) {
-          setPendingTenants(apiPending)
-          localStorage.setItem('elogix_pending_tenants', JSON.stringify(apiPending))
+          setPendingTenants(prev => {
+            const slugs = new Set(apiPending.map(t => t.slug))
+            // Keep any local-only pending that API doesn't know about yet
+            const localOnly = prev.filter(t => !slugs.has(t.slug))
+            const merged = [...apiPending, ...localOnly]
+            localStorage.setItem('elogix_pending_tenants', JSON.stringify(merged))
+            return merged
+          })
         }
       }
-    } catch(_e) {
-      // API unavailable — fall through to localStorage
-    } finally {
-      setApiLoading(false)
-    }
+    } catch(_e) { /* offline */ }
+
+    setApiLoading(false)
   }
 
   const mergeFromLocalStorage = () => {
@@ -213,19 +222,16 @@ export default function ELogixAdminPage({ onLogout }) {
           return toAdd.length ? [...prev, ...toAdd] : prev
         })
       }
-      // Merge from ALL pending sources
-      const pending1 = JSON.parse(localStorage.getItem('elogix_pending_tenants') || '[]')
-      const pending2 = JSON.parse(localStorage.getItem('elogix_global_pending') || '[]')
-      const pending3 = JSON.parse(localStorage.getItem('elogix_registered_companies') ? 
-        Object.values(JSON.parse(localStorage.getItem('elogix_registered_companies'))).filter(c=>c.status!=='active') : '[]')
-      
-      // Merge all pending sources into one list, dedup by slug
-      const allPending = [...pending1]
-      for (const t of [...pending2, ...pending3]) {
-        if (t.slug && !allPending.find(p => p.slug === t.slug)) allPending.push(t)
-      }
+      // Merge ALL pending sources: pending_tenants + global_pending + registered_companies
+      const p1 = JSON.parse(localStorage.getItem('elogix_pending_tenants') || '[]')
+      const p2 = JSON.parse(localStorage.getItem('elogix_global_pending') || '[]')
+      const p3 = Object.values(JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}')).filter(t=>t.status!=='active')
       const approvedSlugs = new Set(Object.keys(approvedRegistry))
-      const stillPending = allPending.filter(t => t.slug && !approvedSlugs.has(t.slug))
+      const allPendingSlugs = {}
+      for (const t of [...p1,...p2,...p3]) {
+        if (t.slug && !approvedSlugs.has(t.slug)) allPendingSlugs[t.slug] = t
+      }
+      const stillPending = Object.values(allPendingSlugs)
       setPendingTenants(prev => {
         const existing = new Set(prev.map(t => t.slug))
         const toAdd = stillPending.filter(t => t.slug && !existing.has(t.slug))
@@ -235,30 +241,24 @@ export default function ELogixAdminPage({ onLogout }) {
   }
 
   useEffect(() => {
-    // Try API first (works on live server, sees ALL registrations)
-    // Then merge localStorage (works offline/dev, sees same-browser data)
+    // 1. Try Node.js API first (sees ALL registrations from any browser)
     loadFromAPI().then(() => mergeFromLocalStorage())
 
-    // Poll every 30 seconds to catch new registrations from API
+    // 2. Poll every 30s to catch new registrations from the API
     const interval = setInterval(() => {
       loadFromAPI().then(() => mergeFromLocalStorage())
     }, 30000)
 
-    // Listen for localStorage storage events (fires when RegisterPage writes on SAME browser)
-    // This gives INSTANT notification when someone registers in another tab on same browser
+    // 3. Listen for storage events (same browser, different tab)
     const onStorage = (e) => {
-      if (e.key === 'elogix_global_pending' || e.key === 'elogix_pending_tenants' ||
-          e.key === 'elogix_registered_companies') {
+      if (['elogix_global_pending','elogix_pending_tenants','elogix_registered_companies'].includes(e.key)) {
         mergeFromLocalStorage()
-        notify('🔔 New registration detected — refreshing...')
+        notify('🔔 New registration detected!')
       }
     }
     window.addEventListener('storage', onStorage)
 
-    return () => {
-      clearInterval(interval)
-      window.removeEventListener('storage', onStorage)
-    }
+    return () => { clearInterval(interval); window.removeEventListener('storage', onStorage) }
   }, [])
 
 
@@ -345,15 +345,7 @@ export default function ELogixAdminPage({ onLogout }) {
       const without = prev.filter(c => c.slug !== tenant.slug)
       const next = [...without, approvedTenant]
       // ✅ KEY FIX: persist active companies so they survive page refresh
-      // Written to ALL keys that BillingPage + TenantModulePermissionPage read
       localStorage.setItem('elogix_active_companies', JSON.stringify(next))
-      // Also update elogix_approved_tenants registry
-      const currentApproved = JSON.parse(localStorage.getItem('elogix_approved_tenants')||'{}')
-      currentApproved[tenant.slug] = approvedTenant
-      localStorage.setItem('elogix_approved_tenants', JSON.stringify(currentApproved))
-      // Remove from global_pending
-      const gp = JSON.parse(localStorage.getItem('elogix_global_pending')||'[]')
-      localStorage.setItem('elogix_global_pending', JSON.stringify(gp.filter(t=>t.slug!==tenant.slug)))
       return next
     })
 
