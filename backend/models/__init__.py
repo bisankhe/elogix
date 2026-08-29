@@ -1,66 +1,57 @@
 # FILE: backend/models/__init__.py
-# eLogix HRMS — Model Package Init
-# Fixed: Base added to __all__ so alembic/env.py can import it
+# eLogix HRMS — SQLAlchemy Models Package
+#
+# CRITICAL: Every model file MUST be imported here.
+# Alembic's autogenerate scans db.metadata — it only sees models
+# that have been imported at least once. If a model file is not
+# imported here, its tables will NOT appear in migrations.
+#
+# This is why "autogenerate" was producing 0 tables — models/__init__.py
+# was not importing all the model files.
+#
 # eLogix Technologies · www.elogix.com.np
 
-from .org_models import (
-    Base, GroupCompany, Company, CompanyLegalDocument,
-    Branch, BusinessUnit, Department, Section, Unit,
-    Team, CostCenter, WorkLocation,
-)
+# ── Core Models ────────────────────────────────────────────────────────
+from backend.models.org_models             import *   # noqa: F401,F403
+from backend.models.org_setup_models       import *   # noqa: F401,F403
+from backend.models.org_structure_models   import *   # noqa: F401,F403
+from backend.models.company_setup_models   import *   # noqa: F401,F403
+from backend.models.structure_models       import *   # noqa: F401,F403
+from backend.models.structure_hierarchy_models import * # noqa: F401,F403
+from backend.models.group_branch_models    import *   # noqa: F401,F403
 
-# Import all other models so Base.metadata is fully populated
-# (SQLAlchemy only registers tables when the model class is imported)
-try: from .saas_models        import *
-except ImportError: pass
-try: from .employee_models    import *
-except ImportError: pass
-try: from .recruitment_models import *
-except ImportError: pass
-try: from .ats_models         import *
-except ImportError: pass
-try: from .attendance_log     import *
-except ImportError: pass
-try: from .payroll_tax_models import *
-except ImportError: pass
-try: from .hr_policy_models   import *
-except ImportError: pass
-try: from .audit_models       import *
-except ImportError: pass
-try: from .billing_models     import *
-except ImportError: pass
-try: from .ai_models          import *
-except ImportError: pass
-try: from .company_setup_models import *
-except ImportError: pass
-try: from .dept_team_models   import *
-except ImportError: pass
-try: from .group_branch_models import *
-except ImportError: pass
-try: from .org_setup_models   import *
-except ImportError: pass
-try: from .org_structure_models import *
-except ImportError: pass
-try: from .structure_models   import *
-except ImportError: pass
-try: from .structure_hierarchy_models import *
-except ImportError: pass
-try: from .position_management_models import *
-except ImportError: pass
-try: from .employment_category_models import *
-except ImportError: pass
-try: from .shift_holiday_models import *
-except ImportError: pass
-try: from .workforce_config_models import *
-except ImportError: pass
-try: from .attendance_reports_models import *
-except ImportError: pass
+# ── Employees ──────────────────────────────────────────────────────────
+from backend.models.employee_models        import *   # noqa: F401,F403
+from backend.models.employment_category_models import * # noqa: F401,F403
+from backend.models.position_management_models import * # noqa: F401,F403
 
-# ── PUBLIC API ────────────────────────────────────────────────────────
-# Base MUST be first so alembic/env.py can do: from backend.models import Base
-__all__ = [
-    "Base",                        # ← KEY: was missing, caused alembic to see no tables
-    "GroupCompany", "Company", "CompanyLegalDocument",
-    "Branch", "BusinessUnit", "Department", "Section", "Unit",
-    "Team", "CostCenter", "WorkLocation",
-]
+# ── Department & Team ──────────────────────────────────────────────────
+from backend.models.dept_team_models       import *   # noqa: F401,F403
+from backend.models.workforce_config_models import *  # noqa: F401,F403
+
+# ── Attendance ─────────────────────────────────────────────────────────
+from backend.models.attendance_log         import *   # noqa: F401,F403
+from backend.models.attendance_reports_models import * # noqa: F401,F403
+from backend.models.shift_holiday_models   import *   # noqa: F401,F403
+
+# ── Payroll & Tax ──────────────────────────────────────────────────────
+from backend.models.payroll_tax_models     import *   # noqa: F401,F403
+
+# ── Recruitment / ATS ─────────────────────────────────────────────────
+from backend.models.recruitment_models     import *   # noqa: F401,F403
+from backend.models.ats_models             import *   # noqa: F401,F403
+
+# ── HR Policy ─────────────────────────────────────────────────────────
+from backend.models.hr_policy_models       import *   # noqa: F401,F403
+
+# ── Billing / SaaS ────────────────────────────────────────────────────
+from backend.models.billing_models         import *   # noqa: F401,F403
+from backend.saas.models                   import *   # noqa: F401,F403
+
+# ── AI / Analytics ────────────────────────────────────────────────────
+from backend.models.ai_models              import *   # noqa: F401,F403
+from backend.models.audit_models           import *   # noqa: F401,F403
+
+# ── Expose db and Base for Alembic ────────────────────────────────────
+from backend.extensions import db
+Base = db.Model
