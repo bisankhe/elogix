@@ -10,8 +10,8 @@ from functools import wraps
 from flask import g, request, jsonify, current_app
 from sqlalchemy import event, text
 from sqlalchemy.orm import Session
-from ..extensions import db
-from ..utils.logging_config import get_logger
+from backend.extensions import db
+from backend.utils.logging_config import get_logger
 
 log = get_logger('elogix.tenant')
 

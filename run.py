@@ -1,24 +1,19 @@
-"""
-FILE: run.py
-eLogix HRMS — Application Entry Point
-Usage:
-  Development: python run.py
-  Production:  gunicorn "backend.app:create_app('production')" --workers 4 --bind 0.0.0.0:5000
-"""
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
+# FILE: run.py  (project root: /opt/elogix/run.py)
+# eLogix HRMS — Gunicorn / Flask Entry Point
+#
+# Run from /opt/elogix (package mode — keeps backend.routes.* imports working):
+#   gunicorn run:app
+#   gunicorn run:app --workers 4 --bind 0.0.0.0:5000
+#
+# NOT from --chdir backend (breaks the 110 route files that use backend.* imports)
+# eLogix Technologies · www.elogix.com.np
 
 from backend.app import create_app
 
-app = create_app(os.getenv("FLASK_ENV", "development"))
+app = create_app()
 
-if __name__ == "__main__":
-    port = int(os.getenv("PORT", 5000))
-    debug= os.getenv("FLASK_ENV", "development") == "development"
-    print(f"\n eLogix HRMS API running on http://localhost:{port}")
-    print(f" Environment: {os.getenv('FLASK_ENV', 'development')}")
-    print(f" API Base: http://localhost:{port}/api/v1/")
-    print(f" Health:   http://localhost:{port}/api/health\n")
-    app.run(host="0.0.0.0", port=port, debug=debug)
+if __name__ == '__main__':
+    import os
+    port  = int(os.getenv('PORT', 5000))
+    debug = os.getenv('FLASK_ENV', 'production') == 'development'
+    app.run(host='0.0.0.0', port=port, debug=debug)

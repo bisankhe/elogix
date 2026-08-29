@@ -86,7 +86,7 @@ class TenantMiddleware:
         # Set PostgreSQL session variable for RLS
         # This makes the RLS policies in saas_schema.sql activate
         try:
-            from config.database import db
+            from backend.extensions import db
             db.session.execute(
                 f"SET LOCAL app.current_company_id = '{int(g.company_id)}'"
             )
@@ -121,7 +121,7 @@ def require_permission(module_key):
                 return jsonify({'error': 'No tenant context'}), 401
 
             try:
-                from config.database import db
+                from backend.extensions import db
                 result = db.session.execute(
                     "SELECT modules FROM tenant_module_permissions WHERE company_id = :cid",
                     {'cid': company_id}
@@ -174,3 +174,65 @@ def require_role(*allowed_roles):
             return f(*args, **kwargs)
         return decorated
     return decorator
+
+
+# ══════════════════════════════════════════════════════════════
+# RESTORED: apply_tenant_scope and resolve_tenant
+# These were in commit ee266be and are imported by route files.
+# Removed accidentally — restored here.
+# ══════════════════════════════════════════════════════════════
+
+def resolve_tenant(slug: str = None):
+    """
+    Resolve a tenant by slug or from the current request context.
+    Returns a dict with company_id and slug, or None if not found.
+
+    Usage:
+        tenant = resolve_tenant()            # from JWT context
+        tenant = resolve_tenant('subisu')    # by slug
+    """
+    # From request context (already decoded by TenantMiddleware)
+    if slug is None:
+        company_id = getattr(g, 'company_id', None)
+        tenant_slug = getattr(g, 'tenant_slug', None)
+        if company_id:
+            return {'company_id': str(company_id), 'slug': tenant_slug}
+        # Try X-Tenant-Slug header (used by frontend)
+        slug = request.headers.get('X-Tenant-Slug')
+        if not slug:
+            return None
+
+    # Lookup by slug
+    try:
+        from backend.extensions import db
+        from sqlalchemy import text
+        row = db.session.execute(
+            text("SELECT id, slug FROM tenant_companies WHERE slug = :slug AND status IN ('active','trial')"),
+            {'slug': slug}
+        ).fetchone()
+        if row:
+            return {'company_id': str(row.id), 'slug': row.slug}
+    except Exception as e:
+        logger.warning(f'resolve_tenant({slug}) failed: {e}')
+
+    return None
+
+
+def apply_tenant_scope(query, model, company_id: str = None):
+    """
+    Apply tenant isolation filter to a SQLAlchemy query.
+    Alias kept for backward compatibility with route files that import it.
+
+    Usage (in route files):
+        from backend.middleware.tenant import apply_tenant_scope
+        emps = apply_tenant_scope(Employee.query, Employee).all()
+    """
+    cid = company_id or getattr(g, 'company_id', None)
+    if not cid:
+        logger.critical(
+            '⛔ apply_tenant_scope called without company_id on %s — potential data leak',
+            model.__name__ if hasattr(model, '__name__') else str(model)
+        )
+        raise PermissionError('Tenant scope required')
+    return query.filter(model.company_id == cid)
+
