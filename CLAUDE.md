@@ -190,6 +190,17 @@ replaced the API's exact reason with a guess.
   backfill with `op.execute`, then `alter_column(..., nullable=False)`. Autogenerate
   emits a NOT NULL column with no default, which fails outright. The same applies in
   reverse in `downgrade` — see the phase 03 revision for both directions.
+- **`POST /auth/register-company` is the only unauthenticated write in the system.**
+  Four guards stand in for the login it cannot have: the plan is not a request field, so
+  a signup can only ever create a trial; slugs are validated against a reserved list;
+  requests are rate limited per IP; and the response is identical whether the email was
+  already registered, so signup is not an enumeration oracle. The limiter in
+  `core/ratelimit.py` is in-process and therefore per-worker — stated there rather than
+  pretended away, and the real limit belongs in front of the app.
+- **Provisioning creates no placeholder document rows.** The compliance view reads "a
+  row exists" as *held*, so seeding the ten statutory documents made a brand-new company
+  open on "10 in order, 0 missing" — a checklist that lies on the one day it matters
+  most. The view lists all ten from `nepal/company.py` regardless. Found in a screenshot.
 - **One company per tenant**, by decision on 2026-08-30. The prototype modelled
   tenant → group companies → companies → branches but defined `companies` twice with
   clashing id types, never created the `tenants` table its `tenant_id` referenced, and
