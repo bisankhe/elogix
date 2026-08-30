@@ -145,6 +145,19 @@ asks for a new access token on startup and there is no refresh cookie until you 
   backfill with `op.execute`, then `alter_column(..., nullable=False)`. Autogenerate
   emits a NOT NULL column with no default, which fails outright. The same applies in
   reverse in `downgrade` — see the phase 03 revision for both directions.
+- **Statutory rules live in `nepal/`, not in the modules that use them.** They are
+  legal constants, they need reviewing by a person against the Act, and every one of
+  them is a *default* that a per-company policy row can override — `nepal/labour.py`
+  carries an explicit unverified warning saying so.
+- **Attendance is derived, never edited.** `attendance_punches` is the append-only truth;
+  `attendance_days` is computed from it and safe to rebuild. A correction adds a
+  `regularisation`-sourced punch and reprocesses — it never edits the day record, so the
+  original device reading survives and a dispute stays settleable.
+- **Deduct the unpunched break.** Almost nobody punches out for lunch, so a 09:00–18:00
+  pair against an 8-hour shift looks like an hour of overtime. Counting it produced 69
+  hours of phantom overtime in one seeded month, which payroll would pay at 1.5x. The
+  deduction never takes worked time below the shift's scheduled hours, so a short day is
+  not docked for a lunch nobody took.
 - **`migrations/versions/` is excluded from ruff.** It is machine output; don't reformat
   it by hand.
 - **Never `pkill -f <name>`** — the pattern matches the issuing shell's own command line.
@@ -200,11 +213,12 @@ This is a dependency chain, not a priority ranking — each phase produces the t
 next one needs, so nothing gets built twice against mocked inputs. Payroll is last in the
 core *deliberately*: it consumes phases 03–05, and its tests get written before its code.
 
-**Current state: phases 00–03 are done**, proven by 78 tests against a real Postgres
+**Current state: phases 00–04 are done**, proven by 128 tests against a real Postgres
 with the schema built by running the migrations from zero. Module access is denied
 server-side, no endpoint returns another tenant's rows, a tenant can be provisioned into
-a complete org chart, and an employee can be hired, edited, documented and offboarded
-with history preserved.
+a complete org chart, an employee can be hired through to offboarded with history
+preserved, and a month of attendance can be captured, corrected and exported as payroll
+input.
 
 Phase 01 originally shipped row-level security as a second isolation layer; it was
 removed by decision on 2026-08-30, so tenant isolation is the query filters alone. If it
@@ -214,9 +228,10 @@ even on a `FORCE ROW LEVEL SECURITY` table — the app would need a `NOSUPERUSER
 
 `modules/employee` is deliberately thin — phase 03 owns its real field set.
 
-**Phase 04 (attendance and roster) is next.** Shifts, rosters, punches, daily records
-and regularisation. It is the highest-frequency screen in any HRMS and produces the
-inputs payroll consumes, so its outputs need to be right before phase 06 reads them.
+**Phase 05 (leave) is next.** Leave types, policies, accrual, balances, requests and
+approvals. It depends on the working calendar established in phase 04 and feeds
+unpaid-leave deductions into payroll. `AttendanceDay` already has a `leave` status and
+`compute_day` takes an `is_on_leave` flag — phase 05 is what supplies it.
 
 ---
 

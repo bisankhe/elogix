@@ -9,6 +9,55 @@ import type {
 } from "./client";
 import { client } from "./client.gen";
 import type {
+  AttendanceAssignRosterData,
+  AttendanceAssignRosterErrors,
+  AttendanceAssignRosterResponses,
+  AttendanceCreateHolidayData,
+  AttendanceCreateHolidayErrors,
+  AttendanceCreateHolidayResponses,
+  AttendanceCreateShiftData,
+  AttendanceCreateShiftErrors,
+  AttendanceCreateShiftResponses,
+  AttendanceDecideRegularisationData,
+  AttendanceDecideRegularisationErrors,
+  AttendanceDecideRegularisationResponses,
+  AttendanceDeleteHolidayData,
+  AttendanceDeleteHolidayErrors,
+  AttendanceDeleteHolidayResponses,
+  AttendanceGetPolicyData,
+  AttendanceGetPolicyResponses,
+  AttendanceListDaysData,
+  AttendanceListDaysErrors,
+  AttendanceListDaysResponses,
+  AttendanceListHolidaysData,
+  AttendanceListHolidaysErrors,
+  AttendanceListHolidaysResponses,
+  AttendanceListPunchesData,
+  AttendanceListPunchesErrors,
+  AttendanceListPunchesResponses,
+  AttendanceListRegularisationsData,
+  AttendanceListRegularisationsErrors,
+  AttendanceListRegularisationsResponses,
+  AttendanceListRosterData,
+  AttendanceListRosterErrors,
+  AttendanceListRosterResponses,
+  AttendanceListShiftsData,
+  AttendanceListShiftsResponses,
+  AttendancePayrollExportData,
+  AttendancePayrollExportErrors,
+  AttendancePayrollExportResponses,
+  AttendanceProcessData,
+  AttendanceProcessErrors,
+  AttendanceProcessResponses,
+  AttendanceRecordPunchData,
+  AttendanceRecordPunchErrors,
+  AttendanceRecordPunchResponses,
+  AttendanceRequestRegularisationData,
+  AttendanceRequestRegularisationErrors,
+  AttendanceRequestRegularisationResponses,
+  AttendanceUpdatePolicyData,
+  AttendanceUpdatePolicyErrors,
+  AttendanceUpdatePolicyResponses,
   AuthEntitlementsData,
   AuthEntitlementsResponses,
   AuthLoginData,
@@ -165,6 +214,391 @@ export const metaHealth = <ThrowOnError extends boolean = false>(
   (options?.client ?? client).get<MetaHealthResponses, unknown, ThrowOnError>({
     url: "/api/health",
     ...options,
+  });
+
+/**
+ * List Days
+ */
+export const attendanceListDays = <ThrowOnError extends boolean = false>(
+  options: Options<AttendanceListDaysData, ThrowOnError>,
+): RequestResult<
+  AttendanceListDaysResponses,
+  AttendanceListDaysErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    AttendanceListDaysResponses,
+    AttendanceListDaysErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/attendance/days",
+    ...options,
+  });
+
+/**
+ * List Holidays
+ */
+export const attendanceListHolidays = <ThrowOnError extends boolean = false>(
+  options?: Options<AttendanceListHolidaysData, ThrowOnError>,
+): RequestResult<
+  AttendanceListHolidaysResponses,
+  AttendanceListHolidaysErrors,
+  ThrowOnError
+> =>
+  (options?.client ?? client).get<
+    AttendanceListHolidaysResponses,
+    AttendanceListHolidaysErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/attendance/holidays",
+    ...options,
+  });
+
+/**
+ * Create Holiday
+ */
+export const attendanceCreateHoliday = <ThrowOnError extends boolean = false>(
+  options: Options<AttendanceCreateHolidayData, ThrowOnError>,
+): RequestResult<
+  AttendanceCreateHolidayResponses,
+  AttendanceCreateHolidayErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    AttendanceCreateHolidayResponses,
+    AttendanceCreateHolidayErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/attendance/holidays",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Delete Holiday
+ */
+export const attendanceDeleteHoliday = <ThrowOnError extends boolean = false>(
+  options: Options<AttendanceDeleteHolidayData, ThrowOnError>,
+): RequestResult<
+  AttendanceDeleteHolidayResponses,
+  AttendanceDeleteHolidayErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).delete<
+    AttendanceDeleteHolidayResponses,
+    AttendanceDeleteHolidayErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/attendance/holidays/{holiday_id}",
+    ...options,
+  });
+
+/**
+ * Payroll Export
+ *
+ * A month of attendance, totalled per employee — phase 04's deliverable to phase 06.
+ *
+ * `unlocked_days` is reported rather than hidden: payroll should know it is about to
+ * pay on figures that could still change, and decide whether to lock first.
+ */
+export const attendancePayrollExport = <ThrowOnError extends boolean = false>(
+  options: Options<AttendancePayrollExportData, ThrowOnError>,
+): RequestResult<
+  AttendancePayrollExportResponses,
+  AttendancePayrollExportErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    AttendancePayrollExportResponses,
+    AttendancePayrollExportErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/attendance/payroll-export",
+    ...options,
+  });
+
+/**
+ * Get Policy
+ */
+export const attendanceGetPolicy = <ThrowOnError extends boolean = false>(
+  options?: Options<AttendanceGetPolicyData, ThrowOnError>,
+): RequestResult<AttendanceGetPolicyResponses, unknown, ThrowOnError> =>
+  (options?.client ?? client).get<
+    AttendanceGetPolicyResponses,
+    unknown,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/attendance/policy",
+    ...options,
+  });
+
+/**
+ * Update Policy
+ */
+export const attendanceUpdatePolicy = <ThrowOnError extends boolean = false>(
+  options: Options<AttendanceUpdatePolicyData, ThrowOnError>,
+): RequestResult<
+  AttendanceUpdatePolicyResponses,
+  AttendanceUpdatePolicyErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).put<
+    AttendanceUpdatePolicyResponses,
+    AttendanceUpdatePolicyErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/attendance/policy",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Process
+ *
+ * Rebuild the daily register for a range. Idempotent; skips locked days.
+ */
+export const attendanceProcess = <ThrowOnError extends boolean = false>(
+  options: Options<AttendanceProcessData, ThrowOnError>,
+): RequestResult<
+  AttendanceProcessResponses,
+  AttendanceProcessErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    AttendanceProcessResponses,
+    AttendanceProcessErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/attendance/process",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * List Punches
+ */
+export const attendanceListPunches = <ThrowOnError extends boolean = false>(
+  options: Options<AttendanceListPunchesData, ThrowOnError>,
+): RequestResult<
+  AttendanceListPunchesResponses,
+  AttendanceListPunchesErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    AttendanceListPunchesResponses,
+    AttendanceListPunchesErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/attendance/punches",
+    ...options,
+  });
+
+/**
+ * Record Punch
+ */
+export const attendanceRecordPunch = <ThrowOnError extends boolean = false>(
+  options: Options<AttendanceRecordPunchData, ThrowOnError>,
+): RequestResult<
+  AttendanceRecordPunchResponses,
+  AttendanceRecordPunchErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    AttendanceRecordPunchResponses,
+    AttendanceRecordPunchErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/attendance/punches",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * List Regularisations
+ */
+export const attendanceListRegularisations = <
+  ThrowOnError extends boolean = false,
+>(
+  options?: Options<AttendanceListRegularisationsData, ThrowOnError>,
+): RequestResult<
+  AttendanceListRegularisationsResponses,
+  AttendanceListRegularisationsErrors,
+  ThrowOnError
+> =>
+  (options?.client ?? client).get<
+    AttendanceListRegularisationsResponses,
+    AttendanceListRegularisationsErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/attendance/regularisations",
+    ...options,
+  });
+
+/**
+ * Request Regularisation
+ */
+export const attendanceRequestRegularisation = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<AttendanceRequestRegularisationData, ThrowOnError>,
+): RequestResult<
+  AttendanceRequestRegularisationResponses,
+  AttendanceRequestRegularisationErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    AttendanceRequestRegularisationResponses,
+    AttendanceRequestRegularisationErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/attendance/regularisations",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Decide Regularisation
+ *
+ * Approve or reject. Approval writes punches and recomputes the day.
+ *
+ * The correction becomes a `regularisation`-sourced punch rather than an edit to the
+ * computed record, so the original device readings survive and the day can still be
+ * rebuilt from scratch.
+ */
+export const attendanceDecideRegularisation = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<AttendanceDecideRegularisationData, ThrowOnError>,
+): RequestResult<
+  AttendanceDecideRegularisationResponses,
+  AttendanceDecideRegularisationErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    AttendanceDecideRegularisationResponses,
+    AttendanceDecideRegularisationErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/attendance/regularisations/{request_id}/decide",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * List Roster
+ */
+export const attendanceListRoster = <ThrowOnError extends boolean = false>(
+  options: Options<AttendanceListRosterData, ThrowOnError>,
+): RequestResult<
+  AttendanceListRosterResponses,
+  AttendanceListRosterErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    AttendanceListRosterResponses,
+    AttendanceListRosterErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/attendance/roster",
+    ...options,
+  });
+
+/**
+ * Assign Roster
+ *
+ * Assign one shift across employees and dates, replacing anything already there.
+ */
+export const attendanceAssignRoster = <ThrowOnError extends boolean = false>(
+  options: Options<AttendanceAssignRosterData, ThrowOnError>,
+): RequestResult<
+  AttendanceAssignRosterResponses,
+  AttendanceAssignRosterErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    AttendanceAssignRosterResponses,
+    AttendanceAssignRosterErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/attendance/roster",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * List Shifts
+ */
+export const attendanceListShifts = <ThrowOnError extends boolean = false>(
+  options?: Options<AttendanceListShiftsData, ThrowOnError>,
+): RequestResult<AttendanceListShiftsResponses, unknown, ThrowOnError> =>
+  (options?.client ?? client).get<
+    AttendanceListShiftsResponses,
+    unknown,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/attendance/shifts",
+    ...options,
+  });
+
+/**
+ * Create Shift
+ */
+export const attendanceCreateShift = <ThrowOnError extends boolean = false>(
+  options: Options<AttendanceCreateShiftData, ThrowOnError>,
+): RequestResult<
+  AttendanceCreateShiftResponses,
+  AttendanceCreateShiftErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    AttendanceCreateShiftResponses,
+    AttendanceCreateShiftErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/attendance/shifts",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
   });
 
 /**

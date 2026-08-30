@@ -10,6 +10,23 @@ import {
 
 import { client } from "../client.gen";
 import {
+  attendanceAssignRoster,
+  attendanceCreateHoliday,
+  attendanceCreateShift,
+  attendanceDecideRegularisation,
+  attendanceDeleteHoliday,
+  attendanceGetPolicy,
+  attendanceListDays,
+  attendanceListHolidays,
+  attendanceListPunches,
+  attendanceListRegularisations,
+  attendanceListRoster,
+  attendanceListShifts,
+  attendancePayrollExport,
+  attendanceProcess,
+  attendanceRecordPunch,
+  attendanceRequestRegularisation,
+  attendanceUpdatePolicy,
   authEntitlements,
   authLogin,
   authLogout,
@@ -53,6 +70,55 @@ import {
   orgUpdateUnit,
 } from "../sdk.gen";
 import type {
+  AttendanceAssignRosterData,
+  AttendanceAssignRosterError,
+  AttendanceAssignRosterResponse,
+  AttendanceCreateHolidayData,
+  AttendanceCreateHolidayError,
+  AttendanceCreateHolidayResponse,
+  AttendanceCreateShiftData,
+  AttendanceCreateShiftError,
+  AttendanceCreateShiftResponse,
+  AttendanceDecideRegularisationData,
+  AttendanceDecideRegularisationError,
+  AttendanceDecideRegularisationResponse,
+  AttendanceDeleteHolidayData,
+  AttendanceDeleteHolidayError,
+  AttendanceDeleteHolidayResponse,
+  AttendanceGetPolicyData,
+  AttendanceGetPolicyResponse,
+  AttendanceListDaysData,
+  AttendanceListDaysError,
+  AttendanceListDaysResponse,
+  AttendanceListHolidaysData,
+  AttendanceListHolidaysError,
+  AttendanceListHolidaysResponse,
+  AttendanceListPunchesData,
+  AttendanceListPunchesError,
+  AttendanceListPunchesResponse,
+  AttendanceListRegularisationsData,
+  AttendanceListRegularisationsError,
+  AttendanceListRegularisationsResponse,
+  AttendanceListRosterData,
+  AttendanceListRosterError,
+  AttendanceListRosterResponse,
+  AttendanceListShiftsData,
+  AttendanceListShiftsResponse,
+  AttendancePayrollExportData,
+  AttendancePayrollExportError,
+  AttendancePayrollExportResponse,
+  AttendanceProcessData,
+  AttendanceProcessError,
+  AttendanceProcessResponse,
+  AttendanceRecordPunchData,
+  AttendanceRecordPunchError,
+  AttendanceRecordPunchResponse,
+  AttendanceRequestRegularisationData,
+  AttendanceRequestRegularisationError,
+  AttendanceRequestRegularisationResponse,
+  AttendanceUpdatePolicyData,
+  AttendanceUpdatePolicyError,
+  AttendanceUpdatePolicyResponse,
   AuthEntitlementsData,
   AuthEntitlementsResponse,
   AuthLoginData,
@@ -246,6 +312,488 @@ export const metaHealthOptions = (options?: Options<MetaHealthData>) =>
     },
     queryKey: metaHealthQueryKey(options),
   });
+
+export const attendanceListDaysQueryKey = (
+  options: Options<AttendanceListDaysData>,
+) => createQueryKey("attendanceListDays", options);
+
+/**
+ * List Days
+ */
+export const attendanceListDaysOptions = (
+  options: Options<AttendanceListDaysData>,
+) =>
+  queryOptions<
+    AttendanceListDaysResponse,
+    AttendanceListDaysError,
+    AttendanceListDaysResponse,
+    ReturnType<typeof attendanceListDaysQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await attendanceListDays({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: attendanceListDaysQueryKey(options),
+  });
+
+export const attendanceListHolidaysQueryKey = (
+  options?: Options<AttendanceListHolidaysData>,
+) => createQueryKey("attendanceListHolidays", options);
+
+/**
+ * List Holidays
+ */
+export const attendanceListHolidaysOptions = (
+  options?: Options<AttendanceListHolidaysData>,
+) =>
+  queryOptions<
+    AttendanceListHolidaysResponse,
+    AttendanceListHolidaysError,
+    AttendanceListHolidaysResponse,
+    ReturnType<typeof attendanceListHolidaysQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await attendanceListHolidays({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: attendanceListHolidaysQueryKey(options),
+  });
+
+/**
+ * Create Holiday
+ */
+export const attendanceCreateHolidayMutation = (
+  options?: Partial<Options<AttendanceCreateHolidayData>>,
+): UseMutationOptions<
+  AttendanceCreateHolidayResponse,
+  AttendanceCreateHolidayError,
+  Options<AttendanceCreateHolidayData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    AttendanceCreateHolidayResponse,
+    AttendanceCreateHolidayError,
+    Options<AttendanceCreateHolidayData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await attendanceCreateHoliday({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Delete Holiday
+ */
+export const attendanceDeleteHolidayMutation = (
+  options?: Partial<Options<AttendanceDeleteHolidayData>>,
+): UseMutationOptions<
+  AttendanceDeleteHolidayResponse,
+  AttendanceDeleteHolidayError,
+  Options<AttendanceDeleteHolidayData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    AttendanceDeleteHolidayResponse,
+    AttendanceDeleteHolidayError,
+    Options<AttendanceDeleteHolidayData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await attendanceDeleteHoliday({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const attendancePayrollExportQueryKey = (
+  options: Options<AttendancePayrollExportData>,
+) => createQueryKey("attendancePayrollExport", options);
+
+/**
+ * Payroll Export
+ *
+ * A month of attendance, totalled per employee — phase 04's deliverable to phase 06.
+ *
+ * `unlocked_days` is reported rather than hidden: payroll should know it is about to
+ * pay on figures that could still change, and decide whether to lock first.
+ */
+export const attendancePayrollExportOptions = (
+  options: Options<AttendancePayrollExportData>,
+) =>
+  queryOptions<
+    AttendancePayrollExportResponse,
+    AttendancePayrollExportError,
+    AttendancePayrollExportResponse,
+    ReturnType<typeof attendancePayrollExportQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await attendancePayrollExport({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: attendancePayrollExportQueryKey(options),
+  });
+
+export const attendanceGetPolicyQueryKey = (
+  options?: Options<AttendanceGetPolicyData>,
+) => createQueryKey("attendanceGetPolicy", options);
+
+/**
+ * Get Policy
+ */
+export const attendanceGetPolicyOptions = (
+  options?: Options<AttendanceGetPolicyData>,
+) =>
+  queryOptions<
+    AttendanceGetPolicyResponse,
+    DefaultError,
+    AttendanceGetPolicyResponse,
+    ReturnType<typeof attendanceGetPolicyQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await attendanceGetPolicy({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: attendanceGetPolicyQueryKey(options),
+  });
+
+/**
+ * Update Policy
+ */
+export const attendanceUpdatePolicyMutation = (
+  options?: Partial<Options<AttendanceUpdatePolicyData>>,
+): UseMutationOptions<
+  AttendanceUpdatePolicyResponse,
+  AttendanceUpdatePolicyError,
+  Options<AttendanceUpdatePolicyData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    AttendanceUpdatePolicyResponse,
+    AttendanceUpdatePolicyError,
+    Options<AttendanceUpdatePolicyData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await attendanceUpdatePolicy({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Process
+ *
+ * Rebuild the daily register for a range. Idempotent; skips locked days.
+ */
+export const attendanceProcessMutation = (
+  options?: Partial<Options<AttendanceProcessData>>,
+): UseMutationOptions<
+  AttendanceProcessResponse,
+  AttendanceProcessError,
+  Options<AttendanceProcessData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    AttendanceProcessResponse,
+    AttendanceProcessError,
+    Options<AttendanceProcessData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await attendanceProcess({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const attendanceListPunchesQueryKey = (
+  options: Options<AttendanceListPunchesData>,
+) => createQueryKey("attendanceListPunches", options);
+
+/**
+ * List Punches
+ */
+export const attendanceListPunchesOptions = (
+  options: Options<AttendanceListPunchesData>,
+) =>
+  queryOptions<
+    AttendanceListPunchesResponse,
+    AttendanceListPunchesError,
+    AttendanceListPunchesResponse,
+    ReturnType<typeof attendanceListPunchesQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await attendanceListPunches({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: attendanceListPunchesQueryKey(options),
+  });
+
+/**
+ * Record Punch
+ */
+export const attendanceRecordPunchMutation = (
+  options?: Partial<Options<AttendanceRecordPunchData>>,
+): UseMutationOptions<
+  AttendanceRecordPunchResponse,
+  AttendanceRecordPunchError,
+  Options<AttendanceRecordPunchData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    AttendanceRecordPunchResponse,
+    AttendanceRecordPunchError,
+    Options<AttendanceRecordPunchData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await attendanceRecordPunch({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const attendanceListRegularisationsQueryKey = (
+  options?: Options<AttendanceListRegularisationsData>,
+) => createQueryKey("attendanceListRegularisations", options);
+
+/**
+ * List Regularisations
+ */
+export const attendanceListRegularisationsOptions = (
+  options?: Options<AttendanceListRegularisationsData>,
+) =>
+  queryOptions<
+    AttendanceListRegularisationsResponse,
+    AttendanceListRegularisationsError,
+    AttendanceListRegularisationsResponse,
+    ReturnType<typeof attendanceListRegularisationsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await attendanceListRegularisations({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: attendanceListRegularisationsQueryKey(options),
+  });
+
+/**
+ * Request Regularisation
+ */
+export const attendanceRequestRegularisationMutation = (
+  options?: Partial<Options<AttendanceRequestRegularisationData>>,
+): UseMutationOptions<
+  AttendanceRequestRegularisationResponse,
+  AttendanceRequestRegularisationError,
+  Options<AttendanceRequestRegularisationData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    AttendanceRequestRegularisationResponse,
+    AttendanceRequestRegularisationError,
+    Options<AttendanceRequestRegularisationData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await attendanceRequestRegularisation({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Decide Regularisation
+ *
+ * Approve or reject. Approval writes punches and recomputes the day.
+ *
+ * The correction becomes a `regularisation`-sourced punch rather than an edit to the
+ * computed record, so the original device readings survive and the day can still be
+ * rebuilt from scratch.
+ */
+export const attendanceDecideRegularisationMutation = (
+  options?: Partial<Options<AttendanceDecideRegularisationData>>,
+): UseMutationOptions<
+  AttendanceDecideRegularisationResponse,
+  AttendanceDecideRegularisationError,
+  Options<AttendanceDecideRegularisationData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    AttendanceDecideRegularisationResponse,
+    AttendanceDecideRegularisationError,
+    Options<AttendanceDecideRegularisationData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await attendanceDecideRegularisation({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const attendanceListRosterQueryKey = (
+  options: Options<AttendanceListRosterData>,
+) => createQueryKey("attendanceListRoster", options);
+
+/**
+ * List Roster
+ */
+export const attendanceListRosterOptions = (
+  options: Options<AttendanceListRosterData>,
+) =>
+  queryOptions<
+    AttendanceListRosterResponse,
+    AttendanceListRosterError,
+    AttendanceListRosterResponse,
+    ReturnType<typeof attendanceListRosterQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await attendanceListRoster({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: attendanceListRosterQueryKey(options),
+  });
+
+/**
+ * Assign Roster
+ *
+ * Assign one shift across employees and dates, replacing anything already there.
+ */
+export const attendanceAssignRosterMutation = (
+  options?: Partial<Options<AttendanceAssignRosterData>>,
+): UseMutationOptions<
+  AttendanceAssignRosterResponse,
+  AttendanceAssignRosterError,
+  Options<AttendanceAssignRosterData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    AttendanceAssignRosterResponse,
+    AttendanceAssignRosterError,
+    Options<AttendanceAssignRosterData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await attendanceAssignRoster({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const attendanceListShiftsQueryKey = (
+  options?: Options<AttendanceListShiftsData>,
+) => createQueryKey("attendanceListShifts", options);
+
+/**
+ * List Shifts
+ */
+export const attendanceListShiftsOptions = (
+  options?: Options<AttendanceListShiftsData>,
+) =>
+  queryOptions<
+    AttendanceListShiftsResponse,
+    DefaultError,
+    AttendanceListShiftsResponse,
+    ReturnType<typeof attendanceListShiftsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await attendanceListShifts({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: attendanceListShiftsQueryKey(options),
+  });
+
+/**
+ * Create Shift
+ */
+export const attendanceCreateShiftMutation = (
+  options?: Partial<Options<AttendanceCreateShiftData>>,
+): UseMutationOptions<
+  AttendanceCreateShiftResponse,
+  AttendanceCreateShiftError,
+  Options<AttendanceCreateShiftData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    AttendanceCreateShiftResponse,
+    AttendanceCreateShiftError,
+    Options<AttendanceCreateShiftData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await attendanceCreateShift({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
 
 export const authEntitlementsQueryKey = (
   options?: Options<AuthEntitlementsData>,

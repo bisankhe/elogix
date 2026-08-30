@@ -283,6 +283,129 @@
         "title": "CostCentreOut",
         "type": "object"
       },
+      "DayOut": {
+        "properties": {
+          "early_out_minutes": {
+            "title": "Early Out Minutes",
+            "type": "integer"
+          },
+          "employee_id": {
+            "format": "uuid",
+            "title": "Employee Id",
+            "type": "string"
+          },
+          "first_in": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First In"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_locked": {
+            "title": "Is Locked",
+            "type": "boolean"
+          },
+          "last_out": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Out"
+          },
+          "late_minutes": {
+            "title": "Late Minutes",
+            "type": "integer"
+          },
+          "overtime_approved": {
+            "title": "Overtime Approved",
+            "type": "boolean"
+          },
+          "overtime_minutes": {
+            "title": "Overtime Minutes",
+            "type": "integer"
+          },
+          "remarks": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remarks"
+          },
+          "shift_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shift Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/DayStatus"
+          },
+          "work_date": {
+            "format": "date",
+            "title": "Work Date",
+            "type": "string"
+          },
+          "worked_minutes": {
+            "title": "Worked Minutes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "employee_id",
+          "work_date",
+          "shift_id",
+          "first_in",
+          "last_out",
+          "worked_minutes",
+          "late_minutes",
+          "early_out_minutes",
+          "overtime_minutes",
+          "overtime_approved",
+          "status",
+          "is_locked",
+          "remarks"
+        ],
+        "title": "DayOut",
+        "type": "object"
+      },
+      "DayStatus": {
+        "enum": [
+          "present",
+          "half_day",
+          "absent",
+          "weekly_off",
+          "holiday",
+          "leave"
+        ],
+        "title": "DayStatus",
+        "type": "string"
+      },
       "DesignationCreate": {
         "properties": {
           "code": {
@@ -1790,6 +1913,86 @@
         "title": "HireRequest",
         "type": "object"
       },
+      "HolidayCreate": {
+        "properties": {
+          "bs_label": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bs Label"
+          },
+          "holiday_date": {
+            "format": "date",
+            "title": "Holiday Date",
+            "type": "string"
+          },
+          "is_optional": {
+            "default": false,
+            "title": "Is Optional",
+            "type": "boolean"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "holiday_date",
+          "name"
+        ],
+        "title": "HolidayCreate",
+        "type": "object"
+      },
+      "HolidayOut": {
+        "properties": {
+          "bs_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bs Label"
+          },
+          "holiday_date": {
+            "format": "date",
+            "title": "Holiday Date",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_optional": {
+            "title": "Is Optional",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "holiday_date",
+          "name",
+          "bs_label",
+          "is_optional"
+        ],
+        "title": "HolidayOut",
+        "type": "object"
+      },
       "LoginRequest": {
         "properties": {
           "company_slug": {
@@ -2064,6 +2267,114 @@
         "title": "OrgUnitUpdate",
         "type": "object"
       },
+      "PayrollExport": {
+        "properties": {
+          "end_date": {
+            "format": "date",
+            "title": "End Date",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/PayrollExportRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start_date",
+          "end_date",
+          "rows"
+        ],
+        "title": "PayrollExport",
+        "type": "object"
+      },
+      "PayrollExportRow": {
+        "description": "One employee's month, in the shape payroll consumes.\n\nDays, not just minutes: a monthly salary is prorated on days present, while overtime\nis paid on minutes. Both are needed, and deriving one from the other loses half-days.",
+        "properties": {
+          "absent_days": {
+            "title": "Absent Days",
+            "type": "integer"
+          },
+          "employee_code": {
+            "title": "Employee Code",
+            "type": "string"
+          },
+          "employee_id": {
+            "format": "uuid",
+            "title": "Employee Id",
+            "type": "string"
+          },
+          "full_name": {
+            "title": "Full Name",
+            "type": "string"
+          },
+          "half_days": {
+            "title": "Half Days",
+            "type": "integer"
+          },
+          "holiday_days": {
+            "title": "Holiday Days",
+            "type": "integer"
+          },
+          "late_minutes": {
+            "title": "Late Minutes",
+            "type": "integer"
+          },
+          "leave_days": {
+            "title": "Leave Days",
+            "type": "integer"
+          },
+          "overtime_minutes": {
+            "title": "Overtime Minutes",
+            "type": "integer"
+          },
+          "payable_days": {
+            "title": "Payable Days",
+            "type": "number"
+          },
+          "present_days": {
+            "title": "Present Days",
+            "type": "integer"
+          },
+          "unlocked_days": {
+            "title": "Unlocked Days",
+            "type": "integer"
+          },
+          "weekly_off_days": {
+            "title": "Weekly Off Days",
+            "type": "integer"
+          },
+          "worked_minutes": {
+            "title": "Worked Minutes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "employee_id",
+          "employee_code",
+          "full_name",
+          "payable_days",
+          "present_days",
+          "half_days",
+          "absent_days",
+          "leave_days",
+          "holiday_days",
+          "weekly_off_days",
+          "worked_minutes",
+          "overtime_minutes",
+          "late_minutes",
+          "unlocked_days"
+        ],
+        "title": "PayrollExportRow",
+        "type": "object"
+      },
       "Placement": {
         "description": "Where an employee sits. The same shape whether hiring or moving someone.",
         "properties": {
@@ -2174,6 +2485,168 @@
         ],
         "title": "PlanTier",
         "type": "string"
+      },
+      "PolicyOut": {
+        "properties": {
+          "grace_minutes": {
+            "title": "Grace Minutes",
+            "type": "integer"
+          },
+          "half_day_minutes": {
+            "title": "Half Day Minutes",
+            "type": "integer"
+          },
+          "max_overtime_minutes_per_day": {
+            "title": "Max Overtime Minutes Per Day",
+            "type": "integer"
+          },
+          "max_overtime_minutes_per_week": {
+            "title": "Max Overtime Minutes Per Week",
+            "type": "integer"
+          },
+          "overtime_requires_approval": {
+            "title": "Overtime Requires Approval",
+            "type": "boolean"
+          },
+          "standard_daily_minutes": {
+            "title": "Standard Daily Minutes",
+            "type": "integer"
+          },
+          "standard_weekly_minutes": {
+            "title": "Standard Weekly Minutes",
+            "type": "integer"
+          },
+          "weekly_off_weekdays": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Weekly Off Weekdays",
+            "type": "array"
+          }
+        },
+        "required": [
+          "weekly_off_weekdays",
+          "standard_daily_minutes",
+          "standard_weekly_minutes",
+          "max_overtime_minutes_per_day",
+          "max_overtime_minutes_per_week",
+          "grace_minutes",
+          "half_day_minutes",
+          "overtime_requires_approval"
+        ],
+        "title": "PolicyOut",
+        "type": "object"
+      },
+      "PolicyUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "grace_minutes": {
+            "anyOf": [
+              {
+                "maximum": 120.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grace Minutes"
+          },
+          "half_day_minutes": {
+            "anyOf": [
+              {
+                "maximum": 1440.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Half Day Minutes"
+          },
+          "max_overtime_minutes_per_day": {
+            "anyOf": [
+              {
+                "maximum": 720.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Overtime Minutes Per Day"
+          },
+          "max_overtime_minutes_per_week": {
+            "anyOf": [
+              {
+                "maximum": 5040.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Overtime Minutes Per Week"
+          },
+          "overtime_requires_approval": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overtime Requires Approval"
+          },
+          "standard_daily_minutes": {
+            "anyOf": [
+              {
+                "maximum": 1440.0,
+                "minimum": 60.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Standard Daily Minutes"
+          },
+          "standard_weekly_minutes": {
+            "anyOf": [
+              {
+                "maximum": 10080.0,
+                "minimum": 60.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Standard Weekly Minutes"
+          },
+          "weekly_off_weekdays": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "maxItems": 7,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weekly Off Weekdays"
+          }
+        },
+        "title": "PolicyUpdate",
+        "type": "object"
       },
       "PositionCreate": {
         "properties": {
@@ -2376,6 +2849,357 @@
         "title": "PositionOut",
         "type": "object"
       },
+      "ProcessRequest": {
+        "properties": {
+          "employee_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Employee Id"
+          },
+          "end_date": {
+            "format": "date",
+            "title": "End Date",
+            "type": "string"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start_date",
+          "end_date"
+        ],
+        "title": "ProcessRequest",
+        "type": "object"
+      },
+      "ProcessResult": {
+        "properties": {
+          "days_written": {
+            "title": "Days Written",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "days_written"
+        ],
+        "title": "ProcessResult",
+        "type": "object"
+      },
+      "PunchCreate": {
+        "properties": {
+          "device_id": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Device Id"
+          },
+          "direction": {
+            "$ref": "#/components/schemas/PunchDirection"
+          },
+          "employee_id": {
+            "format": "uuid",
+            "title": "Employee Id",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "punched_at": {
+            "format": "date-time",
+            "title": "Punched At",
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/PunchSource",
+            "default": "web"
+          },
+          "work_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Work Date"
+          }
+        },
+        "required": [
+          "employee_id",
+          "punched_at",
+          "direction"
+        ],
+        "title": "PunchCreate",
+        "type": "object"
+      },
+      "PunchDirection": {
+        "enum": [
+          "in",
+          "out"
+        ],
+        "title": "PunchDirection",
+        "type": "string"
+      },
+      "PunchOut": {
+        "properties": {
+          "direction": {
+            "$ref": "#/components/schemas/PunchDirection"
+          },
+          "employee_id": {
+            "format": "uuid",
+            "title": "Employee Id",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "punched_at": {
+            "format": "date-time",
+            "title": "Punched At",
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/PunchSource"
+          },
+          "work_date": {
+            "format": "date",
+            "title": "Work Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "employee_id",
+          "work_date",
+          "punched_at",
+          "direction",
+          "source",
+          "note"
+        ],
+        "title": "PunchOut",
+        "type": "object"
+      },
+      "PunchSource": {
+        "enum": [
+          "biometric",
+          "web",
+          "mobile",
+          "manual",
+          "regularisation"
+        ],
+        "title": "PunchSource",
+        "type": "string"
+      },
+      "RegularisationCreate": {
+        "properties": {
+          "employee_id": {
+            "format": "uuid",
+            "title": "Employee Id",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          },
+          "requested_in": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested In"
+          },
+          "requested_out": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested Out"
+          },
+          "work_date": {
+            "format": "date",
+            "title": "Work Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "employee_id",
+          "work_date",
+          "reason"
+        ],
+        "title": "RegularisationCreate",
+        "type": "object"
+      },
+      "RegularisationDecision": {
+        "properties": {
+          "approve": {
+            "title": "Approve",
+            "type": "boolean"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "required": [
+          "approve"
+        ],
+        "title": "RegularisationDecision",
+        "type": "object"
+      },
+      "RegularisationOut": {
+        "properties": {
+          "decided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "decision_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision Note"
+          },
+          "employee_id": {
+            "format": "uuid",
+            "title": "Employee Id",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "requested_in": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested In"
+          },
+          "requested_out": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested Out"
+          },
+          "status": {
+            "$ref": "#/components/schemas/RequestStatus"
+          },
+          "work_date": {
+            "format": "date",
+            "title": "Work Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "employee_id",
+          "work_date",
+          "requested_in",
+          "requested_out",
+          "reason",
+          "status",
+          "decided_at",
+          "decision_note"
+        ],
+        "title": "RegularisationOut",
+        "type": "object"
+      },
+      "RequestStatus": {
+        "enum": [
+          "pending",
+          "approved",
+          "rejected",
+          "cancelled"
+        ],
+        "title": "RequestStatus",
+        "type": "string"
+      },
       "RoleCode": {
         "enum": [
           "super_admin",
@@ -2386,6 +3210,189 @@
         ],
         "title": "RoleCode",
         "type": "string"
+      },
+      "RosterAssign": {
+        "description": "Assign one shift to a set of employees across a date range, in one call.\n\nA roster is filled in a screenful at a time, not row by row \u2014 the prototype's\nper-row endpoint made a month for forty people four hundred requests.",
+        "properties": {
+          "employee_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 500,
+            "minItems": 1,
+            "title": "Employee Ids",
+            "type": "array"
+          },
+          "end_date": {
+            "format": "date",
+            "title": "End Date",
+            "type": "string"
+          },
+          "shift_id": {
+            "format": "uuid",
+            "title": "Shift Id",
+            "type": "string"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "weekdays": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "maxItems": 7,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weekdays"
+          }
+        },
+        "required": [
+          "employee_ids",
+          "shift_id",
+          "start_date",
+          "end_date"
+        ],
+        "title": "RosterAssign",
+        "type": "object"
+      },
+      "RosterEntryOut": {
+        "properties": {
+          "employee_id": {
+            "format": "uuid",
+            "title": "Employee Id",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "shift_id": {
+            "format": "uuid",
+            "title": "Shift Id",
+            "type": "string"
+          },
+          "work_date": {
+            "format": "date",
+            "title": "Work Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "employee_id",
+          "work_date",
+          "shift_id"
+        ],
+        "title": "RosterEntryOut",
+        "type": "object"
+      },
+      "ShiftCreate": {
+        "properties": {
+          "break_minutes": {
+            "default": 60,
+            "maximum": 480.0,
+            "minimum": 0.0,
+            "title": "Break Minutes",
+            "type": "integer"
+          },
+          "code": {
+            "maxLength": 32,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$",
+            "title": "Code",
+            "type": "string"
+          },
+          "ends_at": {
+            "format": "time",
+            "title": "Ends At",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "starts_at": {
+            "format": "time",
+            "title": "Starts At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "starts_at",
+          "ends_at"
+        ],
+        "title": "ShiftCreate",
+        "type": "object"
+      },
+      "ShiftOut": {
+        "properties": {
+          "break_minutes": {
+            "title": "Break Minutes",
+            "type": "integer"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "crosses_midnight": {
+            "title": "Crosses Midnight",
+            "type": "boolean"
+          },
+          "ends_at": {
+            "format": "time",
+            "title": "Ends At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "scheduled_minutes": {
+            "title": "Scheduled Minutes",
+            "type": "integer"
+          },
+          "starts_at": {
+            "format": "time",
+            "title": "Starts At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name",
+          "starts_at",
+          "ends_at",
+          "break_minutes",
+          "scheduled_minutes",
+          "crosses_midnight",
+          "is_active"
+        ],
+        "title": "ShiftOut",
+        "type": "object"
       },
       "UserOut": {
         "properties": {
@@ -2602,6 +3609,908 @@
         "summary": "Health",
         "tags": [
           "meta"
+        ]
+      }
+    },
+    "/api/v1/attendance/days": {
+      "get": {
+        "operationId": "attendance-list_days",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "start_date",
+            "required": true,
+            "schema": {
+              "format": "date",
+              "title": "Start Date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "end_date",
+            "required": true,
+            "schema": {
+              "format": "date",
+              "title": "End Date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "employee_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Employee Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/DayStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DayOut"
+                  },
+                  "title": "Response Attendance-List Days",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Days",
+        "tags": [
+          "attendance"
+        ]
+      }
+    },
+    "/api/v1/attendance/holidays": {
+      "get": {
+        "operationId": "attendance-list_holidays",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "year",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 2100,
+                  "minimum": 2000,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Year"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/HolidayOut"
+                  },
+                  "title": "Response Attendance-List Holidays",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Holidays",
+        "tags": [
+          "attendance"
+        ]
+      },
+      "post": {
+        "operationId": "attendance-create_holiday",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HolidayCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HolidayOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Holiday",
+        "tags": [
+          "attendance"
+        ]
+      }
+    },
+    "/api/v1/attendance/holidays/{holiday_id}": {
+      "delete": {
+        "operationId": "attendance-delete_holiday",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "holiday_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Holiday Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete Holiday",
+        "tags": [
+          "attendance"
+        ]
+      }
+    },
+    "/api/v1/attendance/payroll-export": {
+      "get": {
+        "description": "A month of attendance, totalled per employee \u2014 phase 04's deliverable to phase 06.\n\n`unlocked_days` is reported rather than hidden: payroll should know it is about to\npay on figures that could still change, and decide whether to lock first.",
+        "operationId": "attendance-payroll_export",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "start_date",
+            "required": true,
+            "schema": {
+              "format": "date",
+              "title": "Start Date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "end_date",
+            "required": true,
+            "schema": {
+              "format": "date",
+              "title": "End Date",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayrollExport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Payroll Export",
+        "tags": [
+          "attendance"
+        ]
+      }
+    },
+    "/api/v1/attendance/policy": {
+      "get": {
+        "operationId": "attendance-get_policy",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Policy",
+        "tags": [
+          "attendance"
+        ]
+      },
+      "put": {
+        "operationId": "attendance-update_policy",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PolicyUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Policy",
+        "tags": [
+          "attendance"
+        ]
+      }
+    },
+    "/api/v1/attendance/process": {
+      "post": {
+        "description": "Rebuild the daily register for a range. Idempotent; skips locked days.",
+        "operationId": "attendance-process",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProcessResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Process",
+        "tags": [
+          "attendance"
+        ]
+      }
+    },
+    "/api/v1/attendance/punches": {
+      "get": {
+        "operationId": "attendance-list_punches",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "start_date",
+            "required": true,
+            "schema": {
+              "format": "date",
+              "title": "Start Date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "end_date",
+            "required": true,
+            "schema": {
+              "format": "date",
+              "title": "End Date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "employee_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Employee Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PunchOut"
+                  },
+                  "title": "Response Attendance-List Punches",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Punches",
+        "tags": [
+          "attendance"
+        ]
+      },
+      "post": {
+        "operationId": "attendance-record_punch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PunchCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PunchOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Record Punch",
+        "tags": [
+          "attendance"
+        ]
+      }
+    },
+    "/api/v1/attendance/regularisations": {
+      "get": {
+        "operationId": "attendance-list_regularisations",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/RequestStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RegularisationOut"
+                  },
+                  "title": "Response Attendance-List Regularisations",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Regularisations",
+        "tags": [
+          "attendance"
+        ]
+      },
+      "post": {
+        "operationId": "attendance-request_regularisation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegularisationCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegularisationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Request Regularisation",
+        "tags": [
+          "attendance"
+        ]
+      }
+    },
+    "/api/v1/attendance/regularisations/{request_id}/decide": {
+      "post": {
+        "description": "Approve or reject. Approval writes punches and recomputes the day.\n\nThe correction becomes a `regularisation`-sourced punch rather than an edit to the\ncomputed record, so the original device readings survive and the day can still be\nrebuilt from scratch.",
+        "operationId": "attendance-decide_regularisation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegularisationDecision"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegularisationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Decide Regularisation",
+        "tags": [
+          "attendance"
+        ]
+      }
+    },
+    "/api/v1/attendance/roster": {
+      "get": {
+        "operationId": "attendance-list_roster",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "start_date",
+            "required": true,
+            "schema": {
+              "format": "date",
+              "title": "Start Date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "end_date",
+            "required": true,
+            "schema": {
+              "format": "date",
+              "title": "End Date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "employee_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Employee Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RosterEntryOut"
+                  },
+                  "title": "Response Attendance-List Roster",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Roster",
+        "tags": [
+          "attendance"
+        ]
+      },
+      "post": {
+        "description": "Assign one shift across employees and dates, replacing anything already there.",
+        "operationId": "attendance-assign_roster",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RosterAssign"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RosterEntryOut"
+                  },
+                  "title": "Response Attendance-Assign Roster",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Assign Roster",
+        "tags": [
+          "attendance"
+        ]
+      }
+    },
+    "/api/v1/attendance/shifts": {
+      "get": {
+        "operationId": "attendance-list_shifts",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ShiftOut"
+                  },
+                  "title": "Response Attendance-List Shifts",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Shifts",
+        "tags": [
+          "attendance"
+        ]
+      },
+      "post": {
+        "operationId": "attendance-create_shift",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShiftCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShiftOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Shift",
+        "tags": [
+          "attendance"
         ]
       }
     },

@@ -55,6 +55,13 @@ TENANT_TABLES = (
     "employee_assignments",
     "employee_documents",
     "employee_events",
+    "attendance_policies",
+    "shifts",
+    "holidays",
+    "roster_entries",
+    "attendance_punches",
+    "attendance_days",
+    "regularisation_requests",
 )
 
 

@@ -157,6 +157,71 @@ export type CostCentreOut = {
 };
 
 /**
+ * DayOut
+ */
+export type DayOut = {
+  /**
+   * Early Out Minutes
+   */
+  early_out_minutes: number;
+  /**
+   * Employee Id
+   */
+  employee_id: string;
+  /**
+   * First In
+   */
+  first_in: string | null;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Is Locked
+   */
+  is_locked: boolean;
+  /**
+   * Last Out
+   */
+  last_out: string | null;
+  /**
+   * Late Minutes
+   */
+  late_minutes: number;
+  /**
+   * Overtime Approved
+   */
+  overtime_approved: boolean;
+  /**
+   * Overtime Minutes
+   */
+  overtime_minutes: number;
+  /**
+   * Remarks
+   */
+  remarks: string | null;
+  /**
+   * Shift Id
+   */
+  shift_id: string | null;
+  status: DayStatus;
+  /**
+   * Work Date
+   */
+  work_date: string;
+  /**
+   * Worked Minutes
+   */
+  worked_minutes: number;
+};
+
+/**
+ * DayStatus
+ */
+export type DayStatus =
+  "present" | "half_day" | "absent" | "weekly_off" | "holiday" | "leave";
+
+/**
  * DesignationCreate
  */
 export type DesignationCreate = {
@@ -853,6 +918,54 @@ export type HireRequest = {
 };
 
 /**
+ * HolidayCreate
+ */
+export type HolidayCreate = {
+  /**
+   * Bs Label
+   */
+  bs_label?: string | null;
+  /**
+   * Holiday Date
+   */
+  holiday_date: string;
+  /**
+   * Is Optional
+   */
+  is_optional?: boolean;
+  /**
+   * Name
+   */
+  name: string;
+};
+
+/**
+ * HolidayOut
+ */
+export type HolidayOut = {
+  /**
+   * Bs Label
+   */
+  bs_label: string | null;
+  /**
+   * Holiday Date
+   */
+  holiday_date: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Is Optional
+   */
+  is_optional: boolean;
+  /**
+   * Name
+   */
+  name: string;
+};
+
+/**
  * LoginRequest
  */
 export type LoginRequest = {
@@ -1019,6 +1132,91 @@ export type OrgUnitUpdate = {
 };
 
 /**
+ * PayrollExport
+ */
+export type PayrollExport = {
+  /**
+   * End Date
+   */
+  end_date: string;
+  /**
+   * Rows
+   */
+  rows: Array<PayrollExportRow>;
+  /**
+   * Start Date
+   */
+  start_date: string;
+};
+
+/**
+ * PayrollExportRow
+ *
+ * One employee's month, in the shape payroll consumes.
+ *
+ * Days, not just minutes: a monthly salary is prorated on days present, while overtime
+ * is paid on minutes. Both are needed, and deriving one from the other loses half-days.
+ */
+export type PayrollExportRow = {
+  /**
+   * Absent Days
+   */
+  absent_days: number;
+  /**
+   * Employee Code
+   */
+  employee_code: string;
+  /**
+   * Employee Id
+   */
+  employee_id: string;
+  /**
+   * Full Name
+   */
+  full_name: string;
+  /**
+   * Half Days
+   */
+  half_days: number;
+  /**
+   * Holiday Days
+   */
+  holiday_days: number;
+  /**
+   * Late Minutes
+   */
+  late_minutes: number;
+  /**
+   * Leave Days
+   */
+  leave_days: number;
+  /**
+   * Overtime Minutes
+   */
+  overtime_minutes: number;
+  /**
+   * Payable Days
+   */
+  payable_days: number;
+  /**
+   * Present Days
+   */
+  present_days: number;
+  /**
+   * Unlocked Days
+   */
+  unlocked_days: number;
+  /**
+   * Weekly Off Days
+   */
+  weekly_off_days: number;
+  /**
+   * Worked Minutes
+   */
+  worked_minutes: number;
+};
+
+/**
  * Placement
  *
  * Where an employee sits. The same shape whether hiring or moving someone.
@@ -1065,6 +1263,82 @@ export type Placement = {
  */
 export type PlanTier =
   "trial" | "starter" | "growth" | "business" | "enterprise";
+
+/**
+ * PolicyOut
+ */
+export type PolicyOut = {
+  /**
+   * Grace Minutes
+   */
+  grace_minutes: number;
+  /**
+   * Half Day Minutes
+   */
+  half_day_minutes: number;
+  /**
+   * Max Overtime Minutes Per Day
+   */
+  max_overtime_minutes_per_day: number;
+  /**
+   * Max Overtime Minutes Per Week
+   */
+  max_overtime_minutes_per_week: number;
+  /**
+   * Overtime Requires Approval
+   */
+  overtime_requires_approval: boolean;
+  /**
+   * Standard Daily Minutes
+   */
+  standard_daily_minutes: number;
+  /**
+   * Standard Weekly Minutes
+   */
+  standard_weekly_minutes: number;
+  /**
+   * Weekly Off Weekdays
+   */
+  weekly_off_weekdays: Array<number>;
+};
+
+/**
+ * PolicyUpdate
+ */
+export type PolicyUpdate = {
+  /**
+   * Grace Minutes
+   */
+  grace_minutes?: number | null;
+  /**
+   * Half Day Minutes
+   */
+  half_day_minutes?: number | null;
+  /**
+   * Max Overtime Minutes Per Day
+   */
+  max_overtime_minutes_per_day?: number | null;
+  /**
+   * Max Overtime Minutes Per Week
+   */
+  max_overtime_minutes_per_week?: number | null;
+  /**
+   * Overtime Requires Approval
+   */
+  overtime_requires_approval?: boolean | null;
+  /**
+   * Standard Daily Minutes
+   */
+  standard_daily_minutes?: number | null;
+  /**
+   * Standard Weekly Minutes
+   */
+  standard_weekly_minutes?: number | null;
+  /**
+   * Weekly Off Weekdays
+   */
+  weekly_off_weekdays?: Array<number> | null;
+};
 
 /**
  * PositionCreate
@@ -1159,10 +1433,310 @@ export type PositionOut = {
 };
 
 /**
+ * ProcessRequest
+ */
+export type ProcessRequest = {
+  /**
+   * Employee Id
+   */
+  employee_id?: string | null;
+  /**
+   * End Date
+   */
+  end_date: string;
+  /**
+   * Start Date
+   */
+  start_date: string;
+};
+
+/**
+ * ProcessResult
+ */
+export type ProcessResult = {
+  /**
+   * Days Written
+   */
+  days_written: number;
+};
+
+/**
+ * PunchCreate
+ */
+export type PunchCreate = {
+  /**
+   * Device Id
+   */
+  device_id?: string | null;
+  direction: PunchDirection;
+  /**
+   * Employee Id
+   */
+  employee_id: string;
+  /**
+   * Note
+   */
+  note?: string | null;
+  /**
+   * Punched At
+   */
+  punched_at: string;
+  source?: PunchSource;
+  /**
+   * Work Date
+   */
+  work_date?: string | null;
+};
+
+/**
+ * PunchDirection
+ */
+export type PunchDirection = "in" | "out";
+
+/**
+ * PunchOut
+ */
+export type PunchOut = {
+  direction: PunchDirection;
+  /**
+   * Employee Id
+   */
+  employee_id: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Note
+   */
+  note: string | null;
+  /**
+   * Punched At
+   */
+  punched_at: string;
+  source: PunchSource;
+  /**
+   * Work Date
+   */
+  work_date: string;
+};
+
+/**
+ * PunchSource
+ */
+export type PunchSource =
+  "biometric" | "web" | "mobile" | "manual" | "regularisation";
+
+/**
+ * RegularisationCreate
+ */
+export type RegularisationCreate = {
+  /**
+   * Employee Id
+   */
+  employee_id: string;
+  /**
+   * Reason
+   */
+  reason: string;
+  /**
+   * Requested In
+   */
+  requested_in?: string | null;
+  /**
+   * Requested Out
+   */
+  requested_out?: string | null;
+  /**
+   * Work Date
+   */
+  work_date: string;
+};
+
+/**
+ * RegularisationDecision
+ */
+export type RegularisationDecision = {
+  /**
+   * Approve
+   */
+  approve: boolean;
+  /**
+   * Note
+   */
+  note?: string | null;
+};
+
+/**
+ * RegularisationOut
+ */
+export type RegularisationOut = {
+  /**
+   * Decided At
+   */
+  decided_at: string | null;
+  /**
+   * Decision Note
+   */
+  decision_note: string | null;
+  /**
+   * Employee Id
+   */
+  employee_id: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Reason
+   */
+  reason: string;
+  /**
+   * Requested In
+   */
+  requested_in: string | null;
+  /**
+   * Requested Out
+   */
+  requested_out: string | null;
+  status: RequestStatus;
+  /**
+   * Work Date
+   */
+  work_date: string;
+};
+
+/**
+ * RequestStatus
+ */
+export type RequestStatus = "pending" | "approved" | "rejected" | "cancelled";
+
+/**
  * RoleCode
  */
 export type RoleCode =
   "super_admin" | "hr_manager" | "hr_officer" | "manager" | "employee";
+
+/**
+ * RosterAssign
+ *
+ * Assign one shift to a set of employees across a date range, in one call.
+ *
+ * A roster is filled in a screenful at a time, not row by row — the prototype's
+ * per-row endpoint made a month for forty people four hundred requests.
+ */
+export type RosterAssign = {
+  /**
+   * Employee Ids
+   */
+  employee_ids: Array<string>;
+  /**
+   * End Date
+   */
+  end_date: string;
+  /**
+   * Shift Id
+   */
+  shift_id: string;
+  /**
+   * Start Date
+   */
+  start_date: string;
+  /**
+   * Weekdays
+   */
+  weekdays?: Array<number> | null;
+};
+
+/**
+ * RosterEntryOut
+ */
+export type RosterEntryOut = {
+  /**
+   * Employee Id
+   */
+  employee_id: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Shift Id
+   */
+  shift_id: string;
+  /**
+   * Work Date
+   */
+  work_date: string;
+};
+
+/**
+ * ShiftCreate
+ */
+export type ShiftCreate = {
+  /**
+   * Break Minutes
+   */
+  break_minutes?: number;
+  /**
+   * Code
+   */
+  code: string;
+  /**
+   * Ends At
+   */
+  ends_at: string;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Starts At
+   */
+  starts_at: string;
+};
+
+/**
+ * ShiftOut
+ */
+export type ShiftOut = {
+  /**
+   * Break Minutes
+   */
+  break_minutes: number;
+  /**
+   * Code
+   */
+  code: string;
+  /**
+   * Crosses Midnight
+   */
+  crosses_midnight: boolean;
+  /**
+   * Ends At
+   */
+  ends_at: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Is Active
+   */
+  is_active: boolean;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Scheduled Minutes
+   */
+  scheduled_minutes: number;
+  /**
+   * Starts At
+   */
+  starts_at: string;
+};
 
 /**
  * UserOut
@@ -1463,6 +2037,531 @@ export type MetaHealthResponses = {
 };
 
 export type MetaHealthResponse = MetaHealthResponses[keyof MetaHealthResponses];
+
+export type AttendanceListDaysData = {
+  body?: never;
+  path?: never;
+  query: {
+    /**
+     * Start Date
+     */
+    start_date: string;
+    /**
+     * End Date
+     */
+    end_date: string;
+    /**
+     * Employee Id
+     */
+    employee_id?: string | null;
+    /**
+     * Status
+     */
+    status?: DayStatus | null;
+  };
+  url: "/api/v1/attendance/days";
+};
+
+export type AttendanceListDaysErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type AttendanceListDaysError =
+  AttendanceListDaysErrors[keyof AttendanceListDaysErrors];
+
+export type AttendanceListDaysResponses = {
+  /**
+   * Response Attendance-List Days
+   *
+   * Successful Response
+   */
+  200: Array<DayOut>;
+};
+
+export type AttendanceListDaysResponse =
+  AttendanceListDaysResponses[keyof AttendanceListDaysResponses];
+
+export type AttendanceListHolidaysData = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * Year
+     */
+    year?: number | null;
+  };
+  url: "/api/v1/attendance/holidays";
+};
+
+export type AttendanceListHolidaysErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type AttendanceListHolidaysError =
+  AttendanceListHolidaysErrors[keyof AttendanceListHolidaysErrors];
+
+export type AttendanceListHolidaysResponses = {
+  /**
+   * Response Attendance-List Holidays
+   *
+   * Successful Response
+   */
+  200: Array<HolidayOut>;
+};
+
+export type AttendanceListHolidaysResponse =
+  AttendanceListHolidaysResponses[keyof AttendanceListHolidaysResponses];
+
+export type AttendanceCreateHolidayData = {
+  body: HolidayCreate;
+  path?: never;
+  query?: never;
+  url: "/api/v1/attendance/holidays";
+};
+
+export type AttendanceCreateHolidayErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type AttendanceCreateHolidayError =
+  AttendanceCreateHolidayErrors[keyof AttendanceCreateHolidayErrors];
+
+export type AttendanceCreateHolidayResponses = {
+  /**
+   * Successful Response
+   */
+  201: HolidayOut;
+};
+
+export type AttendanceCreateHolidayResponse =
+  AttendanceCreateHolidayResponses[keyof AttendanceCreateHolidayResponses];
+
+export type AttendanceDeleteHolidayData = {
+  body?: never;
+  path: {
+    /**
+     * Holiday Id
+     */
+    holiday_id: string;
+  };
+  query?: never;
+  url: "/api/v1/attendance/holidays/{holiday_id}";
+};
+
+export type AttendanceDeleteHolidayErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type AttendanceDeleteHolidayError =
+  AttendanceDeleteHolidayErrors[keyof AttendanceDeleteHolidayErrors];
+
+export type AttendanceDeleteHolidayResponses = {
+  /**
+   * Successful Response
+   */
+  204: void;
+};
+
+export type AttendanceDeleteHolidayResponse =
+  AttendanceDeleteHolidayResponses[keyof AttendanceDeleteHolidayResponses];
+
+export type AttendancePayrollExportData = {
+  body?: never;
+  path?: never;
+  query: {
+    /**
+     * Start Date
+     */
+    start_date: string;
+    /**
+     * End Date
+     */
+    end_date: string;
+  };
+  url: "/api/v1/attendance/payroll-export";
+};
+
+export type AttendancePayrollExportErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type AttendancePayrollExportError =
+  AttendancePayrollExportErrors[keyof AttendancePayrollExportErrors];
+
+export type AttendancePayrollExportResponses = {
+  /**
+   * Successful Response
+   */
+  200: PayrollExport;
+};
+
+export type AttendancePayrollExportResponse =
+  AttendancePayrollExportResponses[keyof AttendancePayrollExportResponses];
+
+export type AttendanceGetPolicyData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/api/v1/attendance/policy";
+};
+
+export type AttendanceGetPolicyResponses = {
+  /**
+   * Successful Response
+   */
+  200: PolicyOut;
+};
+
+export type AttendanceGetPolicyResponse =
+  AttendanceGetPolicyResponses[keyof AttendanceGetPolicyResponses];
+
+export type AttendanceUpdatePolicyData = {
+  body: PolicyUpdate;
+  path?: never;
+  query?: never;
+  url: "/api/v1/attendance/policy";
+};
+
+export type AttendanceUpdatePolicyErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type AttendanceUpdatePolicyError =
+  AttendanceUpdatePolicyErrors[keyof AttendanceUpdatePolicyErrors];
+
+export type AttendanceUpdatePolicyResponses = {
+  /**
+   * Successful Response
+   */
+  200: PolicyOut;
+};
+
+export type AttendanceUpdatePolicyResponse =
+  AttendanceUpdatePolicyResponses[keyof AttendanceUpdatePolicyResponses];
+
+export type AttendanceProcessData = {
+  body: ProcessRequest;
+  path?: never;
+  query?: never;
+  url: "/api/v1/attendance/process";
+};
+
+export type AttendanceProcessErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type AttendanceProcessError =
+  AttendanceProcessErrors[keyof AttendanceProcessErrors];
+
+export type AttendanceProcessResponses = {
+  /**
+   * Successful Response
+   */
+  200: ProcessResult;
+};
+
+export type AttendanceProcessResponse =
+  AttendanceProcessResponses[keyof AttendanceProcessResponses];
+
+export type AttendanceListPunchesData = {
+  body?: never;
+  path?: never;
+  query: {
+    /**
+     * Start Date
+     */
+    start_date: string;
+    /**
+     * End Date
+     */
+    end_date: string;
+    /**
+     * Employee Id
+     */
+    employee_id?: string | null;
+  };
+  url: "/api/v1/attendance/punches";
+};
+
+export type AttendanceListPunchesErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type AttendanceListPunchesError =
+  AttendanceListPunchesErrors[keyof AttendanceListPunchesErrors];
+
+export type AttendanceListPunchesResponses = {
+  /**
+   * Response Attendance-List Punches
+   *
+   * Successful Response
+   */
+  200: Array<PunchOut>;
+};
+
+export type AttendanceListPunchesResponse =
+  AttendanceListPunchesResponses[keyof AttendanceListPunchesResponses];
+
+export type AttendanceRecordPunchData = {
+  body: PunchCreate;
+  path?: never;
+  query?: never;
+  url: "/api/v1/attendance/punches";
+};
+
+export type AttendanceRecordPunchErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type AttendanceRecordPunchError =
+  AttendanceRecordPunchErrors[keyof AttendanceRecordPunchErrors];
+
+export type AttendanceRecordPunchResponses = {
+  /**
+   * Successful Response
+   */
+  201: PunchOut;
+};
+
+export type AttendanceRecordPunchResponse =
+  AttendanceRecordPunchResponses[keyof AttendanceRecordPunchResponses];
+
+export type AttendanceListRegularisationsData = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * Status
+     */
+    status?: RequestStatus | null;
+  };
+  url: "/api/v1/attendance/regularisations";
+};
+
+export type AttendanceListRegularisationsErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type AttendanceListRegularisationsError =
+  AttendanceListRegularisationsErrors[keyof AttendanceListRegularisationsErrors];
+
+export type AttendanceListRegularisationsResponses = {
+  /**
+   * Response Attendance-List Regularisations
+   *
+   * Successful Response
+   */
+  200: Array<RegularisationOut>;
+};
+
+export type AttendanceListRegularisationsResponse =
+  AttendanceListRegularisationsResponses[keyof AttendanceListRegularisationsResponses];
+
+export type AttendanceRequestRegularisationData = {
+  body: RegularisationCreate;
+  path?: never;
+  query?: never;
+  url: "/api/v1/attendance/regularisations";
+};
+
+export type AttendanceRequestRegularisationErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type AttendanceRequestRegularisationError =
+  AttendanceRequestRegularisationErrors[keyof AttendanceRequestRegularisationErrors];
+
+export type AttendanceRequestRegularisationResponses = {
+  /**
+   * Successful Response
+   */
+  201: RegularisationOut;
+};
+
+export type AttendanceRequestRegularisationResponse =
+  AttendanceRequestRegularisationResponses[keyof AttendanceRequestRegularisationResponses];
+
+export type AttendanceDecideRegularisationData = {
+  body: RegularisationDecision;
+  path: {
+    /**
+     * Request Id
+     */
+    request_id: string;
+  };
+  query?: never;
+  url: "/api/v1/attendance/regularisations/{request_id}/decide";
+};
+
+export type AttendanceDecideRegularisationErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type AttendanceDecideRegularisationError =
+  AttendanceDecideRegularisationErrors[keyof AttendanceDecideRegularisationErrors];
+
+export type AttendanceDecideRegularisationResponses = {
+  /**
+   * Successful Response
+   */
+  200: RegularisationOut;
+};
+
+export type AttendanceDecideRegularisationResponse =
+  AttendanceDecideRegularisationResponses[keyof AttendanceDecideRegularisationResponses];
+
+export type AttendanceListRosterData = {
+  body?: never;
+  path?: never;
+  query: {
+    /**
+     * Start Date
+     */
+    start_date: string;
+    /**
+     * End Date
+     */
+    end_date: string;
+    /**
+     * Employee Id
+     */
+    employee_id?: string | null;
+  };
+  url: "/api/v1/attendance/roster";
+};
+
+export type AttendanceListRosterErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type AttendanceListRosterError =
+  AttendanceListRosterErrors[keyof AttendanceListRosterErrors];
+
+export type AttendanceListRosterResponses = {
+  /**
+   * Response Attendance-List Roster
+   *
+   * Successful Response
+   */
+  200: Array<RosterEntryOut>;
+};
+
+export type AttendanceListRosterResponse =
+  AttendanceListRosterResponses[keyof AttendanceListRosterResponses];
+
+export type AttendanceAssignRosterData = {
+  body: RosterAssign;
+  path?: never;
+  query?: never;
+  url: "/api/v1/attendance/roster";
+};
+
+export type AttendanceAssignRosterErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type AttendanceAssignRosterError =
+  AttendanceAssignRosterErrors[keyof AttendanceAssignRosterErrors];
+
+export type AttendanceAssignRosterResponses = {
+  /**
+   * Response Attendance-Assign Roster
+   *
+   * Successful Response
+   */
+  201: Array<RosterEntryOut>;
+};
+
+export type AttendanceAssignRosterResponse =
+  AttendanceAssignRosterResponses[keyof AttendanceAssignRosterResponses];
+
+export type AttendanceListShiftsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/api/v1/attendance/shifts";
+};
+
+export type AttendanceListShiftsResponses = {
+  /**
+   * Response Attendance-List Shifts
+   *
+   * Successful Response
+   */
+  200: Array<ShiftOut>;
+};
+
+export type AttendanceListShiftsResponse =
+  AttendanceListShiftsResponses[keyof AttendanceListShiftsResponses];
+
+export type AttendanceCreateShiftData = {
+  body: ShiftCreate;
+  path?: never;
+  query?: never;
+  url: "/api/v1/attendance/shifts";
+};
+
+export type AttendanceCreateShiftErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type AttendanceCreateShiftError =
+  AttendanceCreateShiftErrors[keyof AttendanceCreateShiftErrors];
+
+export type AttendanceCreateShiftResponses = {
+  /**
+   * Successful Response
+   */
+  201: ShiftOut;
+};
+
+export type AttendanceCreateShiftResponse =
+  AttendanceCreateShiftResponses[keyof AttendanceCreateShiftResponses];
 
 export type AuthEntitlementsData = {
   body?: never;

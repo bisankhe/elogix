@@ -7,13 +7,22 @@ nothing here is used by tests, which build their own fixtures.
 """
 
 import uuid
-from datetime import date
+from datetime import UTC, date, datetime, time, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from elogix_api.core.security import hash_password
 from elogix_api.db.session import SessionLocal
+from elogix_api.modules.attendance.models import (
+    AttendancePunch,
+    Holiday,
+    PunchDirection,
+    PunchSource,
+    RosterEntry,
+    Shift,
+)
+from elogix_api.modules.attendance.service import process_range
 from elogix_api.modules.employee.models import (
     AssignmentReason,
     Employee,
@@ -125,6 +134,8 @@ def main() -> None:
             )
             print(f"created employee {code}")
 
+        db.commit()
+        _seed_attendance(db, company.id)
         db.commit()
 
     print(f"\nlog in with  {LOGIN_EMAIL} / {LOGIN_PASSWORD}  at company '{COMPANY_SLUG}'")
@@ -284,6 +295,96 @@ def _seed_org(db: Session, company_id: uuid.UUID) -> None:
         f"created org chart: {len(units)} units, 5 grades, {len(cost_centres)} cost centres, "
         f"{len(locations)} locations, {len(categories)} categories, 6 positions"
     )
+
+
+def _seed_attendance(db: Session, company_id: uuid.UUID) -> None:
+    """A shift, some holidays, a roster and a month of punches, then process it.
+
+    Deliberately imperfect: one employee is late twice, one works overtime, and one day
+    is missed entirely — so the register shows the states a user actually has to deal
+    with rather than a wall of identical green rows.
+    """
+    if db.execute(
+        select(Shift.id).where(Shift.company_id == company_id)
+    ).first() is not None:
+        return
+
+    shift = Shift(
+        company_id=company_id,
+        code="GEN",
+        name="General (09:00-18:00)",
+        starts_at=time(9, 0),
+        ends_at=time(18, 0),
+        break_minutes=60,
+    )
+    db.add(shift)
+
+    for holiday_date, name, bs in (
+        (date(2026, 3, 8), "International Women's Day", "२०८२ फाल्गुन २४"),
+        (date(2026, 3, 20), "Ghode Jatra", "२०८२ चैत ६"),
+    ):
+        db.add(
+            Holiday(
+                company_id=company_id, holiday_date=holiday_date, name=name, bs_label=bs
+            )
+        )
+    db.flush()
+
+    employees = list(
+        db.execute(select(Employee).where(Employee.company_id == company_id)).scalars()
+    )
+    start, end = date(2026, 3, 1), date(2026, 3, 31)
+
+    for index, employee in enumerate(employees):
+        day = start
+        while day <= end:
+            # Sunday-Friday roster; Saturday is the weekly off in Nepal.
+            if day.weekday() != 5:
+                db.add(
+                    RosterEntry(
+                        company_id=company_id,
+                        employee_id=employee.id,
+                        work_date=day,
+                        shift_id=shift.id,
+                    )
+                )
+                in_hour, in_minute, out_hour = 9, 0, 18
+                if day.day % 9 == index:            # a couple of late arrivals
+                    in_minute = 35
+                if day.day % 11 == index:           # and some overtime
+                    out_hour = 20
+                skip = day.day == 11 and index == 0  # one missed punch-out
+
+                db.add(
+                    AttendancePunch(
+                        company_id=company_id,
+                        employee_id=employee.id,
+                        work_date=day,
+                        punched_at=datetime(
+                            day.year, day.month, day.day, in_hour, in_minute, tzinfo=UTC
+                        ),
+                        direction=PunchDirection.IN,
+                        source=PunchSource.BIOMETRIC,
+                    )
+                )
+                if not skip:
+                    db.add(
+                        AttendancePunch(
+                            company_id=company_id,
+                            employee_id=employee.id,
+                            work_date=day,
+                            punched_at=datetime(
+                                day.year, day.month, day.day, out_hour, 0, tzinfo=UTC
+                            ),
+                            direction=PunchDirection.OUT,
+                            source=PunchSource.BIOMETRIC,
+                        )
+                    )
+            day += timedelta(days=1)
+
+    db.commit()
+    written = process_range(db, company_id=company_id, start=start, end=end)
+    print(f"created attendance: 1 shift, 2 holidays, March 2026 rostered, {written} days processed")
 
 if __name__ == "__main__":
     main()

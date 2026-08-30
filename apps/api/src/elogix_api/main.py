@@ -14,6 +14,7 @@ from fastapi.routing import APIRoute
 from sqlalchemy import func, select
 
 from elogix_api.db.session import engine
+from elogix_api.modules.attendance import router as attendance_router
 from elogix_api.modules.employee import router as employee_router
 from elogix_api.modules.identity import router as identity_router
 from elogix_api.modules.identity.models import Company
@@ -56,6 +57,7 @@ def create_app() -> FastAPI:
     app.include_router(identity_router.router, prefix="/api/v1")
     app.include_router(org_router.router, prefix="/api/v1")
     app.include_router(employee_router.router, prefix="/api/v1")
+    app.include_router(attendance_router.router, prefix="/api/v1")
 
     @app.get("/api/health", tags=["meta"])
     def health(response: Response) -> dict[str, str]:

@@ -8,6 +8,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link, Outlet, useNavigate, useRouterState } from '@tanstack/react-router'
 import {
   Building2,
+  CalendarClock,
   ChevronLeft,
   ChevronRight,
   LayoutDashboard,
@@ -31,6 +32,7 @@ const NAV = [
   { to: '/org/grades', label: 'Grades & Designations', icon: Wallet, module: 'org' },
   { to: '/org/locations', label: 'Locations & Categories', icon: MapPin, module: 'org' },
   { to: '/employees', label: 'Employees', icon: Users, module: 'employee' },
+  { to: '/attendance', label: 'Attendance', icon: CalendarClock, module: 'attendance' },
 ] as const
 
 export function AppShell() {

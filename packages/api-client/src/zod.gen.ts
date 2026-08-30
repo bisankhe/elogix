@@ -78,6 +78,38 @@ export const zCostCentreOut = z.object({
 });
 
 /**
+ * DayStatus
+ */
+export const zDayStatus = z.enum([
+  "present",
+  "half_day",
+  "absent",
+  "weekly_off",
+  "holiday",
+  "leave",
+]);
+
+/**
+ * DayOut
+ */
+export const zDayOut = z.object({
+  early_out_minutes: z.int(),
+  employee_id: z.uuid(),
+  first_in: z.iso.datetime().nullable(),
+  id: z.uuid(),
+  is_locked: z.boolean(),
+  last_out: z.iso.datetime().nullable(),
+  late_minutes: z.int(),
+  overtime_approved: z.boolean(),
+  overtime_minutes: z.int(),
+  remarks: z.string().nullable(),
+  shift_id: z.uuid().nullable(),
+  status: zDayStatus,
+  work_date: z.iso.date(),
+  worked_minutes: z.int(),
+});
+
+/**
  * DesignationCreate
  */
 export const zDesignationCreate = z.object({
@@ -284,6 +316,27 @@ export const zGradeLevelOut = z.object({
 });
 
 /**
+ * HolidayCreate
+ */
+export const zHolidayCreate = z.object({
+  bs_label: z.string().max(64).nullish(),
+  holiday_date: z.iso.date(),
+  is_optional: z.boolean().optional().default(false),
+  name: z.string().min(1).max(200),
+});
+
+/**
+ * HolidayOut
+ */
+export const zHolidayOut = z.object({
+  bs_label: z.string().nullable(),
+  holiday_date: z.iso.date(),
+  id: z.uuid(),
+  is_optional: z.boolean(),
+  name: z.string(),
+});
+
+/**
  * LoginRequest
  */
 export const zLoginRequest = z.object({
@@ -464,6 +517,40 @@ export const zOrgUnitUpdate = z.object({
 });
 
 /**
+ * PayrollExportRow
+ *
+ * One employee's month, in the shape payroll consumes.
+ *
+ * Days, not just minutes: a monthly salary is prorated on days present, while overtime
+ * is paid on minutes. Both are needed, and deriving one from the other loses half-days.
+ */
+export const zPayrollExportRow = z.object({
+  absent_days: z.int(),
+  employee_code: z.string(),
+  employee_id: z.uuid(),
+  full_name: z.string(),
+  half_days: z.int(),
+  holiday_days: z.int(),
+  late_minutes: z.int(),
+  leave_days: z.int(),
+  overtime_minutes: z.int(),
+  payable_days: z.number(),
+  present_days: z.int(),
+  unlocked_days: z.int(),
+  weekly_off_days: z.int(),
+  worked_minutes: z.int(),
+});
+
+/**
+ * PayrollExport
+ */
+export const zPayrollExport = z.object({
+  end_date: z.iso.date(),
+  rows: z.array(zPayrollExportRow),
+  start_date: z.iso.date(),
+});
+
+/**
  * Placement
  *
  * Where an employee sits. The same shape whether hiring or moving someone.
@@ -554,6 +641,34 @@ export const zEntitlementsOut = z.object({
 });
 
 /**
+ * PolicyOut
+ */
+export const zPolicyOut = z.object({
+  grace_minutes: z.int(),
+  half_day_minutes: z.int(),
+  max_overtime_minutes_per_day: z.int(),
+  max_overtime_minutes_per_week: z.int(),
+  overtime_requires_approval: z.boolean(),
+  standard_daily_minutes: z.int(),
+  standard_weekly_minutes: z.int(),
+  weekly_off_weekdays: z.array(z.int()),
+});
+
+/**
+ * PolicyUpdate
+ */
+export const zPolicyUpdate = z.object({
+  grace_minutes: z.int().gte(0).lte(120).nullish(),
+  half_day_minutes: z.int().gte(0).lte(1440).nullish(),
+  max_overtime_minutes_per_day: z.int().gte(0).lte(720).nullish(),
+  max_overtime_minutes_per_week: z.int().gte(0).lte(5040).nullish(),
+  overtime_requires_approval: z.boolean().nullish(),
+  standard_daily_minutes: z.int().gte(60).lte(1440).nullish(),
+  standard_weekly_minutes: z.int().gte(60).lte(10080).nullish(),
+  weekly_off_weekdays: z.array(z.int()).max(7).nullish(),
+});
+
+/**
  * PositionCreate
  */
 export const zPositionCreate = z.object({
@@ -590,6 +705,108 @@ export const zPositionOut = z.object({
 });
 
 /**
+ * ProcessRequest
+ */
+export const zProcessRequest = z.object({
+  employee_id: z.uuid().nullish(),
+  end_date: z.iso.date(),
+  start_date: z.iso.date(),
+});
+
+/**
+ * ProcessResult
+ */
+export const zProcessResult = z.object({
+  days_written: z.int(),
+});
+
+/**
+ * PunchDirection
+ */
+export const zPunchDirection = z.enum(["in", "out"]);
+
+/**
+ * PunchSource
+ */
+export const zPunchSource = z.enum([
+  "biometric",
+  "web",
+  "mobile",
+  "manual",
+  "regularisation",
+]);
+
+/**
+ * PunchCreate
+ */
+export const zPunchCreate = z.object({
+  device_id: z.string().max(64).nullish(),
+  direction: zPunchDirection,
+  employee_id: z.uuid(),
+  note: z.string().nullish(),
+  punched_at: z.iso.datetime(),
+  source: zPunchSource.optional().default("web"),
+  work_date: z.iso.date().nullish(),
+});
+
+/**
+ * PunchOut
+ */
+export const zPunchOut = z.object({
+  direction: zPunchDirection,
+  employee_id: z.uuid(),
+  id: z.uuid(),
+  note: z.string().nullable(),
+  punched_at: z.iso.datetime(),
+  source: zPunchSource,
+  work_date: z.iso.date(),
+});
+
+/**
+ * RegularisationCreate
+ */
+export const zRegularisationCreate = z.object({
+  employee_id: z.uuid(),
+  reason: z.string().min(1).max(2000),
+  requested_in: z.iso.datetime().nullish(),
+  requested_out: z.iso.datetime().nullish(),
+  work_date: z.iso.date(),
+});
+
+/**
+ * RegularisationDecision
+ */
+export const zRegularisationDecision = z.object({
+  approve: z.boolean(),
+  note: z.string().max(2000).nullish(),
+});
+
+/**
+ * RequestStatus
+ */
+export const zRequestStatus = z.enum([
+  "pending",
+  "approved",
+  "rejected",
+  "cancelled",
+]);
+
+/**
+ * RegularisationOut
+ */
+export const zRegularisationOut = z.object({
+  decided_at: z.iso.datetime().nullable(),
+  decision_note: z.string().nullable(),
+  employee_id: z.uuid(),
+  id: z.uuid(),
+  reason: z.string(),
+  requested_in: z.iso.datetime().nullable(),
+  requested_out: z.iso.datetime().nullable(),
+  status: zRequestStatus,
+  work_date: z.iso.date(),
+});
+
+/**
  * RoleCode
  */
 export const zRoleCode = z.enum([
@@ -599,6 +816,62 @@ export const zRoleCode = z.enum([
   "manager",
   "employee",
 ]);
+
+/**
+ * RosterAssign
+ *
+ * Assign one shift to a set of employees across a date range, in one call.
+ *
+ * A roster is filled in a screenful at a time, not row by row — the prototype's
+ * per-row endpoint made a month for forty people four hundred requests.
+ */
+export const zRosterAssign = z.object({
+  employee_ids: z.array(z.uuid()).min(1).max(500),
+  end_date: z.iso.date(),
+  shift_id: z.uuid(),
+  start_date: z.iso.date(),
+  weekdays: z.array(z.int()).max(7).nullish(),
+});
+
+/**
+ * RosterEntryOut
+ */
+export const zRosterEntryOut = z.object({
+  employee_id: z.uuid(),
+  id: z.uuid(),
+  shift_id: z.uuid(),
+  work_date: z.iso.date(),
+});
+
+/**
+ * ShiftCreate
+ */
+export const zShiftCreate = z.object({
+  break_minutes: z.int().gte(0).lte(480).optional().default(60),
+  code: z
+    .string()
+    .min(1)
+    .max(32)
+    .regex(/^[A-Za-z0-9][A-Za-z0-9._-]*$/),
+  ends_at: z.iso.time(),
+  name: z.string().min(1).max(200),
+  starts_at: z.iso.time(),
+});
+
+/**
+ * ShiftOut
+ */
+export const zShiftOut = z.object({
+  break_minutes: z.int(),
+  code: z.string(),
+  crosses_midnight: z.boolean(),
+  ends_at: z.iso.time(),
+  id: z.uuid(),
+  is_active: z.boolean(),
+  name: z.string(),
+  scheduled_minutes: z.int(),
+  starts_at: z.iso.time(),
+});
 
 /**
  * UserOut
@@ -724,6 +997,162 @@ export const zEmployeeListWritable = z.object({
  * Successful Response
  */
 export const zMetaHealthResponse = z.record(z.string(), z.string());
+
+export const zAttendanceListDaysQuery = z.object({
+  start_date: z.iso.date(),
+  end_date: z.iso.date(),
+  employee_id: z.uuid().nullish(),
+  status: zDayStatus.nullish(),
+});
+
+/**
+ * Response Attendance-List Days
+ *
+ * Successful Response
+ */
+export const zAttendanceListDaysResponse = z.array(zDayOut);
+
+export const zAttendanceListHolidaysQuery = z.object({
+  year: z.int().gte(2000).lte(2100).nullish(),
+});
+
+/**
+ * Response Attendance-List Holidays
+ *
+ * Successful Response
+ */
+export const zAttendanceListHolidaysResponse = z.array(zHolidayOut);
+
+export const zAttendanceCreateHolidayBody = zHolidayCreate;
+
+/**
+ * Successful Response
+ */
+export const zAttendanceCreateHolidayResponse = zHolidayOut;
+
+export const zAttendanceDeleteHolidayPath = z.object({
+  holiday_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zAttendanceDeleteHolidayResponse = z.void();
+
+export const zAttendancePayrollExportQuery = z.object({
+  start_date: z.iso.date(),
+  end_date: z.iso.date(),
+});
+
+/**
+ * Successful Response
+ */
+export const zAttendancePayrollExportResponse = zPayrollExport;
+
+/**
+ * Successful Response
+ */
+export const zAttendanceGetPolicyResponse = zPolicyOut;
+
+export const zAttendanceUpdatePolicyBody = zPolicyUpdate;
+
+/**
+ * Successful Response
+ */
+export const zAttendanceUpdatePolicyResponse = zPolicyOut;
+
+export const zAttendanceProcessBody = zProcessRequest;
+
+/**
+ * Successful Response
+ */
+export const zAttendanceProcessResponse = zProcessResult;
+
+export const zAttendanceListPunchesQuery = z.object({
+  start_date: z.iso.date(),
+  end_date: z.iso.date(),
+  employee_id: z.uuid().nullish(),
+});
+
+/**
+ * Response Attendance-List Punches
+ *
+ * Successful Response
+ */
+export const zAttendanceListPunchesResponse = z.array(zPunchOut);
+
+export const zAttendanceRecordPunchBody = zPunchCreate;
+
+/**
+ * Successful Response
+ */
+export const zAttendanceRecordPunchResponse = zPunchOut;
+
+export const zAttendanceListRegularisationsQuery = z.object({
+  status: zRequestStatus.nullish(),
+});
+
+/**
+ * Response Attendance-List Regularisations
+ *
+ * Successful Response
+ */
+export const zAttendanceListRegularisationsResponse =
+  z.array(zRegularisationOut);
+
+export const zAttendanceRequestRegularisationBody = zRegularisationCreate;
+
+/**
+ * Successful Response
+ */
+export const zAttendanceRequestRegularisationResponse = zRegularisationOut;
+
+export const zAttendanceDecideRegularisationBody = zRegularisationDecision;
+
+export const zAttendanceDecideRegularisationPath = z.object({
+  request_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zAttendanceDecideRegularisationResponse = zRegularisationOut;
+
+export const zAttendanceListRosterQuery = z.object({
+  start_date: z.iso.date(),
+  end_date: z.iso.date(),
+  employee_id: z.uuid().nullish(),
+});
+
+/**
+ * Response Attendance-List Roster
+ *
+ * Successful Response
+ */
+export const zAttendanceListRosterResponse = z.array(zRosterEntryOut);
+
+export const zAttendanceAssignRosterBody = zRosterAssign;
+
+/**
+ * Response Attendance-Assign Roster
+ *
+ * Successful Response
+ */
+export const zAttendanceAssignRosterResponse = z.array(zRosterEntryOut);
+
+/**
+ * Response Attendance-List Shifts
+ *
+ * Successful Response
+ */
+export const zAttendanceListShiftsResponse = z.array(zShiftOut);
+
+export const zAttendanceCreateShiftBody = zShiftCreate;
+
+/**
+ * Successful Response
+ */
+export const zAttendanceCreateShiftResponse = zShiftOut;
 
 /**
  * Successful Response
