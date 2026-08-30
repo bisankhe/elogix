@@ -10,7 +10,8 @@ import uuid
 from datetime import UTC, datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -18,6 +19,7 @@ from sqlalchemy.orm import Session
 from elogix_api.core.deps import CurrentUserDep, DbDep, require_module
 from elogix_api.core.entitlements import ModuleCode
 from elogix_api.db.session import get_db
+from elogix_api.modules.employee import documents
 from elogix_api.modules.identity.models import Company
 from elogix_api.modules.org.models import Position
 from elogix_api.modules.recruitment import onboarding, service
@@ -220,6 +222,28 @@ def open_requisition(req_id: uuid.UUID, user: CurrentUserDep, db: DbDep) -> Requ
     return requisition
 
 
+@router.post("/requisitions/{req_id}/hold", response_model=RequisitionOut)
+def hold_requisition(req_id: uuid.UUID, user: CurrentUserDep, db: DbDep) -> Requisition:
+    """Pause an open requisition without cancelling it.
+
+    It keeps holding its openings against the position's budget, which is the point:
+    a paused hire is still a hire somebody intends to make, and freeing the budget
+    would let a second requisition be raised for the same slot.
+    """
+    requisition = _get_requisition(db, req_id, user.company_id)
+    if requisition.status is not RequisitionStatus.OPEN:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            f"Only an open requisition can be put on hold; this one is "
+            f"{requisition.status.value}.",
+        )
+
+    requisition.status = RequisitionStatus.ON_HOLD
+    db.commit()
+    db.refresh(requisition)
+    return requisition
+
+
 @router.post("/requisitions/{req_id}/close", response_model=RequisitionOut)
 def close_requisition(
     req_id: uuid.UUID,
@@ -272,6 +296,65 @@ def create_candidate(
         ) from exc
     db.refresh(candidate)
     return candidate
+
+
+def _get_candidate(db: Session, candidate_id: uuid.UUID, company_id: uuid.UUID) -> Candidate:
+    row = db.execute(
+        select(Candidate).where(
+            Candidate.id == candidate_id, Candidate.company_id == company_id
+        )
+    ).scalar_one_or_none()
+    if row is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Candidate not found")
+    return row
+
+
+@router.post("/candidates/{candidate_id}/resume", response_model=CandidateOut)
+def upload_resume(
+    candidate_id: uuid.UUID,
+    user: CurrentUserDep,
+    db: DbDep,
+    file: Annotated[UploadFile, File()],
+) -> Candidate:
+    """Attach a CV to a candidate.
+
+    Same checks and same store as an employee document — allowlisted types, a capped
+    read, a content-addressed key — through `documents.receive`. A candidate is not an
+    employee, so this is not an `EmployeeDocument`; onboarding is what moves the file
+    into their employee file, and because the key is the content hash that move
+    references the same bytes rather than copying them.
+
+    Replacing a CV leaves the old blob in storage. That is deliberate for now: content
+    addressing means it may still be referenced by an employee document created from an
+    earlier application, and deleting it would break that. Reclaiming orphans needs a
+    sweep that knows every reference, which does not exist yet.
+    """
+    candidate = _get_candidate(db, candidate_id, user.company_id)
+    stored = documents.receive(file, company_id=user.company_id)
+
+    candidate.resume_key = stored.key
+    candidate.resume_filename = stored.filename
+    db.commit()
+    db.refresh(candidate)
+    return candidate
+
+
+@router.get("/candidates/{candidate_id}/resume")
+def download_resume(
+    candidate_id: uuid.UUID, user: CurrentUserDep, db: DbDep
+) -> StreamingResponse:
+    """Stream the CV back. An attachment with sniffing off, like every other upload."""
+    candidate = _get_candidate(db, candidate_id, user.company_id)
+    if candidate.resume_key is None:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, "No CV has been uploaded for this candidate"
+        )
+
+    return documents.stream(
+        storage_key=candidate.resume_key,
+        content_type=None,
+        filename=candidate.resume_filename,
+    )
 
 
 # ── Applications ──────────────────────────────────────────────────────

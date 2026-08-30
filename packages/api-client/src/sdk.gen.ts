@@ -253,9 +253,27 @@ import type {
   OrgListWorkLocationsResponses,
   OrgOrgTreeData,
   OrgOrgTreeResponses,
+  OrgUpdateCostCentreData,
+  OrgUpdateCostCentreErrors,
+  OrgUpdateCostCentreResponses,
+  OrgUpdateDesignationData,
+  OrgUpdateDesignationErrors,
+  OrgUpdateDesignationResponses,
+  OrgUpdateEmploymentCategoryData,
+  OrgUpdateEmploymentCategoryErrors,
+  OrgUpdateEmploymentCategoryResponses,
+  OrgUpdateGradeLevelData,
+  OrgUpdateGradeLevelErrors,
+  OrgUpdateGradeLevelResponses,
+  OrgUpdatePositionData,
+  OrgUpdatePositionErrors,
+  OrgUpdatePositionResponses,
   OrgUpdateUnitData,
   OrgUpdateUnitErrors,
   OrgUpdateUnitResponses,
+  OrgUpdateWorkLocationData,
+  OrgUpdateWorkLocationErrors,
+  OrgUpdateWorkLocationResponses,
   PayrollApproveRunData,
   PayrollApproveRunErrors,
   PayrollApproveRunResponses,
@@ -307,12 +325,18 @@ import type {
   RecruitmentCreateStageData,
   RecruitmentCreateStageErrors,
   RecruitmentCreateStageResponses,
+  RecruitmentDownloadResumeData,
+  RecruitmentDownloadResumeErrors,
+  RecruitmentDownloadResumeResponses,
   RecruitmentGetApplicationData,
   RecruitmentGetApplicationErrors,
   RecruitmentGetApplicationResponses,
   RecruitmentGetRequisitionData,
   RecruitmentGetRequisitionErrors,
   RecruitmentGetRequisitionResponses,
+  RecruitmentHoldRequisitionData,
+  RecruitmentHoldRequisitionErrors,
+  RecruitmentHoldRequisitionResponses,
   RecruitmentListApplicationsData,
   RecruitmentListApplicationsErrors,
   RecruitmentListApplicationsResponses,
@@ -338,6 +362,9 @@ import type {
   RecruitmentSendOfferData,
   RecruitmentSendOfferErrors,
   RecruitmentSendOfferResponses,
+  RecruitmentUploadResumeData,
+  RecruitmentUploadResumeErrors,
+  RecruitmentUploadResumeResponses,
   RecruitmentWithdrawOfferData,
   RecruitmentWithdrawOfferErrors,
   RecruitmentWithdrawOfferResponses,
@@ -1851,6 +1878,30 @@ export const orgDeactivateCostCentre = <ThrowOnError extends boolean = false>(
   });
 
 /**
+ * Update Cost Centre
+ */
+export const orgUpdateCostCentre = <ThrowOnError extends boolean = false>(
+  options: Options<OrgUpdateCostCentreData, ThrowOnError>,
+): RequestResult<
+  OrgUpdateCostCentreResponses,
+  OrgUpdateCostCentreErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).patch<
+    OrgUpdateCostCentreResponses,
+    OrgUpdateCostCentreErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/cost-centres/{record_id}",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
  * List Designations
  */
 export const orgListDesignations = <ThrowOnError extends boolean = false>(
@@ -1912,6 +1963,30 @@ export const orgDeactivateDesignation = <ThrowOnError extends boolean = false>(
     security: [{ scheme: "bearer", type: "http" }],
     url: "/api/v1/org/designations/{record_id}",
     ...options,
+  });
+
+/**
+ * Update Designation
+ */
+export const orgUpdateDesignation = <ThrowOnError extends boolean = false>(
+  options: Options<OrgUpdateDesignationData, ThrowOnError>,
+): RequestResult<
+  OrgUpdateDesignationResponses,
+  OrgUpdateDesignationErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).patch<
+    OrgUpdateDesignationResponses,
+    OrgUpdateDesignationErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/designations/{record_id}",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
   });
 
 /**
@@ -1985,6 +2060,32 @@ export const orgDeactivateEmploymentCategory = <
   });
 
 /**
+ * Update Employment Category
+ */
+export const orgUpdateEmploymentCategory = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<OrgUpdateEmploymentCategoryData, ThrowOnError>,
+): RequestResult<
+  OrgUpdateEmploymentCategoryResponses,
+  OrgUpdateEmploymentCategoryErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).patch<
+    OrgUpdateEmploymentCategoryResponses,
+    OrgUpdateEmploymentCategoryErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/employment-categories/{record_id}",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
  * List Grade Levels
  */
 export const orgListGradeLevels = <ThrowOnError extends boolean = false>(
@@ -2049,6 +2150,30 @@ export const orgDeactivateGradeLevel = <ThrowOnError extends boolean = false>(
   });
 
 /**
+ * Update Grade Level
+ */
+export const orgUpdateGradeLevel = <ThrowOnError extends boolean = false>(
+  options: Options<OrgUpdateGradeLevelData, ThrowOnError>,
+): RequestResult<
+  OrgUpdateGradeLevelResponses,
+  OrgUpdateGradeLevelErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).patch<
+    OrgUpdateGradeLevelResponses,
+    OrgUpdateGradeLevelErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/grade-levels/{record_id}",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
  * List Positions
  */
 export const orgListPositions = <ThrowOnError extends boolean = false>(
@@ -2110,6 +2235,36 @@ export const orgDeactivatePosition = <ThrowOnError extends boolean = false>(
     security: [{ scheme: "bearer", type: "http" }],
     url: "/api/v1/org/positions/{position_id}",
     ...options,
+  });
+
+/**
+ * Update Position
+ *
+ * Change a position, headcount included.
+ *
+ * A budget nothing can change is a budget nobody maintains, and requisitions are
+ * refused against it — so until this existed, hiring past a stale number meant
+ * deleting the position, which the foreign keys from assignments correctly refuse.
+ */
+export const orgUpdatePosition = <ThrowOnError extends boolean = false>(
+  options: Options<OrgUpdatePositionData, ThrowOnError>,
+): RequestResult<
+  OrgUpdatePositionResponses,
+  OrgUpdatePositionErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).patch<
+    OrgUpdatePositionResponses,
+    OrgUpdatePositionErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/positions/{position_id}",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
   });
 
 /**
@@ -2264,6 +2419,30 @@ export const orgDeactivateWorkLocation = <ThrowOnError extends boolean = false>(
     security: [{ scheme: "bearer", type: "http" }],
     url: "/api/v1/org/work-locations/{record_id}",
     ...options,
+  });
+
+/**
+ * Update Work Location
+ */
+export const orgUpdateWorkLocation = <ThrowOnError extends boolean = false>(
+  options: Options<OrgUpdateWorkLocationData, ThrowOnError>,
+): RequestResult<
+  OrgUpdateWorkLocationResponses,
+  OrgUpdateWorkLocationErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).patch<
+    OrgUpdateWorkLocationResponses,
+    OrgUpdateWorkLocationErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/work-locations/{record_id}",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
   });
 
 /**
@@ -2697,6 +2876,66 @@ export const recruitmentCreateCandidate = <
   });
 
 /**
+ * Download Resume
+ *
+ * Stream the CV back. An attachment with sniffing off, like every other upload.
+ */
+export const recruitmentDownloadResume = <ThrowOnError extends boolean = false>(
+  options: Options<RecruitmentDownloadResumeData, ThrowOnError>,
+): RequestResult<
+  RecruitmentDownloadResumeResponses,
+  RecruitmentDownloadResumeErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    RecruitmentDownloadResumeResponses,
+    RecruitmentDownloadResumeErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/recruitment/candidates/{candidate_id}/resume",
+    ...options,
+  });
+
+/**
+ * Upload Resume
+ *
+ * Attach a CV to a candidate.
+ *
+ * Same checks and same store as an employee document — allowlisted types, a capped
+ * read, a content-addressed key — through `documents.receive`. A candidate is not an
+ * employee, so this is not an `EmployeeDocument`; onboarding is what moves the file
+ * into their employee file, and because the key is the content hash that move
+ * references the same bytes rather than copying them.
+ *
+ * Replacing a CV leaves the old blob in storage. That is deliberate for now: content
+ * addressing means it may still be referenced by an employee document created from an
+ * earlier application, and deleting it would break that. Reclaiming orphans needs a
+ * sweep that knows every reference, which does not exist yet.
+ */
+export const recruitmentUploadResume = <ThrowOnError extends boolean = false>(
+  options: Options<RecruitmentUploadResumeData, ThrowOnError>,
+): RequestResult<
+  RecruitmentUploadResumeResponses,
+  RecruitmentUploadResumeErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    RecruitmentUploadResumeResponses,
+    RecruitmentUploadResumeErrors,
+    ThrowOnError
+  >({
+    ...formDataBodySerializer,
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/recruitment/candidates/{candidate_id}/resume",
+    ...options,
+    headers: {
+      "Content-Type": null,
+      ...options.headers,
+    },
+  });
+
+/**
  * List Offers
  *
  * Never includes `response_token`. It is a credential, not a field.
@@ -2881,6 +3120,34 @@ export const recruitmentCloseRequisition = <
   >({
     security: [{ scheme: "bearer", type: "http" }],
     url: "/api/v1/recruitment/requisitions/{req_id}/close",
+    ...options,
+  });
+
+/**
+ * Hold Requisition
+ *
+ * Pause an open requisition without cancelling it.
+ *
+ * It keeps holding its openings against the position's budget, which is the point:
+ * a paused hire is still a hire somebody intends to make, and freeing the budget
+ * would let a second requisition be raised for the same slot.
+ */
+export const recruitmentHoldRequisition = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<RecruitmentHoldRequisitionData, ThrowOnError>,
+): RequestResult<
+  RecruitmentHoldRequisitionResponses,
+  RecruitmentHoldRequisitionErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    RecruitmentHoldRequisitionResponses,
+    RecruitmentHoldRequisitionErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/recruitment/requisitions/{req_id}/hold",
     ...options,
   });
 

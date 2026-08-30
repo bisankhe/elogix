@@ -12,6 +12,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -32,20 +33,26 @@ from elogix_api.modules.org.models import (
 from elogix_api.modules.org.schemas import (
     CostCentreCreate,
     CostCentreOut,
+    CostCentreUpdate,
     DesignationCreate,
     DesignationOut,
+    DesignationUpdate,
     EmploymentCategoryCreate,
     EmploymentCategoryOut,
+    EmploymentCategoryUpdate,
     GradeLevelCreate,
     GradeLevelOut,
+    GradeLevelUpdate,
     OrgUnitCreate,
     OrgUnitNode,
     OrgUnitOut,
     OrgUnitUpdate,
     PositionCreate,
     PositionOut,
+    PositionUpdate,
     WorkLocationCreate,
     WorkLocationOut,
+    WorkLocationUpdate,
 )
 
 router = APIRouter(
@@ -90,6 +97,22 @@ def _deactivate[R: ReferenceMixin](
     db.commit()
 
 
+def _update[R: ReferenceMixin](
+    db: Session, model: type[R], record_id: uuid.UUID, user: CurrentUser, payload: BaseModel
+) -> R:
+    """Apply only the fields that were sent.
+
+    `exclude_unset` rather than `exclude_none`, so clearing a nullable field to null is
+    possible and omitting it is not the same thing.
+    """
+    row = _get(db, model, record_id, user)
+    for key, value in payload.model_dump(exclude_unset=True).items():
+        setattr(row, key, value)
+    db.commit()
+    db.refresh(row)
+    return row
+
+
 def _commit[T](db: Session, row: T) -> T:
     """Turn the per-tenant unique-code violation into a 409 rather than a 500."""
     db.add(row)
@@ -117,6 +140,13 @@ def create_cost_centre(payload: CostCentreCreate, user: CurrentUserDep, db: DbDe
     return _commit(db, CostCentre(company_id=user.company_id, **payload.model_dump()))
 
 
+@router.patch("/cost-centres/{record_id}", response_model=CostCentreOut)
+def update_cost_centre(
+    record_id: uuid.UUID, payload: CostCentreUpdate, user: CurrentUserDep, db: DbDep
+) -> CostCentre:
+    return _update(db, CostCentre, record_id, user, payload)
+
+
 @router.delete("/cost-centres/{record_id}", status_code=status.HTTP_204_NO_CONTENT)
 def deactivate_cost_centre(record_id: uuid.UUID, user: CurrentUserDep, db: DbDep) -> None:
     _deactivate(db, CostCentre, record_id, user)
@@ -139,6 +169,13 @@ def create_work_location(
     payload: WorkLocationCreate, user: CurrentUserDep, db: DbDep
 ) -> WorkLocation:
     return _commit(db, WorkLocation(company_id=user.company_id, **payload.model_dump()))
+
+
+@router.patch("/work-locations/{record_id}", response_model=WorkLocationOut)
+def update_work_location(
+    record_id: uuid.UUID, payload: WorkLocationUpdate, user: CurrentUserDep, db: DbDep
+) -> WorkLocation:
+    return _update(db, WorkLocation, record_id, user, payload)
 
 
 @router.delete("/work-locations/{record_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -165,6 +202,13 @@ def create_grade_level(payload: GradeLevelCreate, user: CurrentUserDep, db: DbDe
     return _commit(db, GradeLevel(company_id=user.company_id, **payload.model_dump()))
 
 
+@router.patch("/grade-levels/{record_id}", response_model=GradeLevelOut)
+def update_grade_level(
+    record_id: uuid.UUID, payload: GradeLevelUpdate, user: CurrentUserDep, db: DbDep
+) -> GradeLevel:
+    return _update(db, GradeLevel, record_id, user, payload)
+
+
 @router.delete("/grade-levels/{record_id}", status_code=status.HTTP_204_NO_CONTENT)
 def deactivate_grade_level(record_id: uuid.UUID, user: CurrentUserDep, db: DbDep) -> None:
     _deactivate(db, GradeLevel, record_id, user)
@@ -187,6 +231,15 @@ def create_designation(
     if payload.grade_level_id is not None:
         _get(db, GradeLevel, payload.grade_level_id, user)
     return _commit(db, Designation(company_id=user.company_id, **payload.model_dump()))
+
+
+@router.patch("/designations/{record_id}", response_model=DesignationOut)
+def update_designation(
+    record_id: uuid.UUID, payload: DesignationUpdate, user: CurrentUserDep, db: DbDep
+) -> Designation:
+    if payload.grade_level_id is not None:
+        _get(db, GradeLevel, payload.grade_level_id, user)
+    return _update(db, Designation, record_id, user, payload)
 
 
 @router.delete("/designations/{record_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -213,6 +266,16 @@ def create_employment_category(
     payload: EmploymentCategoryCreate, user: CurrentUserDep, db: DbDep
 ) -> EmploymentCategory:
     return _commit(db, EmploymentCategory(company_id=user.company_id, **payload.model_dump()))
+
+
+@router.patch("/employment-categories/{record_id}", response_model=EmploymentCategoryOut)
+def update_employment_category(
+    record_id: uuid.UUID,
+    payload: EmploymentCategoryUpdate,
+    user: CurrentUserDep,
+    db: DbDep,
+) -> EmploymentCategory:
+    return _update(db, EmploymentCategory, record_id, user, payload)
 
 
 @router.delete("/employment-categories/{record_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -343,6 +406,47 @@ def create_position(payload: PositionCreate, user: CurrentUserDep, db: DbDep) ->
         _get_position(db, payload.reports_to_id, user, missing="Reporting position not found")
 
     return _commit(db, Position(company_id=user.company_id, **payload.model_dump()))
+
+
+@router.patch("/positions/{position_id}", response_model=PositionOut)
+def update_position(
+    position_id: uuid.UUID, payload: PositionUpdate, user: CurrentUserDep, db: DbDep
+) -> Position:
+    """Change a position, headcount included.
+
+    A budget nothing can change is a budget nobody maintains, and requisitions are
+    refused against it — so until this existed, hiring past a stale number meant
+    deleting the position, which the foreign keys from assignments correctly refuse.
+    """
+    # Positions do not use `ReferenceMixin`, so they get their own lookup — the same
+    # reason `_get_position` exists.
+    position = _get_position(db, position_id, user)
+
+    # Every foreign key is re-checked against the caller's tenant, exactly as on create.
+    # An update that skipped this would be a cross-tenant hole the create does not have,
+    # which is the worse kind: the same field, validated on one path and not the other.
+    if payload.org_unit_id is not None:
+        service.get_unit(db, company_id=user.company_id, unit_id=payload.org_unit_id)
+    if payload.designation_id is not None:
+        _get(db, Designation, payload.designation_id, user)
+    if payload.cost_centre_id is not None:
+        _get(db, CostCentre, payload.cost_centre_id, user)
+    if payload.work_location_id is not None:
+        _get(db, WorkLocation, payload.work_location_id, user)
+    if payload.employment_category_id is not None:
+        _get(db, EmploymentCategory, payload.employment_category_id, user)
+    if payload.reports_to_id is not None:
+        if payload.reports_to_id == position_id:
+            raise HTTPException(
+                status.HTTP_409_CONFLICT, "A position cannot report to itself"
+            )
+        _get_position(db, payload.reports_to_id, user, missing="Reporting position not found")
+
+    for key, value in payload.model_dump(exclude_unset=True).items():
+        setattr(position, key, value)
+    db.commit()
+    db.refresh(position)
+    return position
 
 
 @router.delete("/positions/{position_id}", status_code=status.HTTP_204_NO_CONTENT)

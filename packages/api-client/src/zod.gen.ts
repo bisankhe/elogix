@@ -111,6 +111,13 @@ export const zBodyEmployeesUploadDocumentFile = z.object({
 });
 
 /**
+ * Body_recruitment-upload_resume
+ */
+export const zBodyRecruitmentUploadResume = z.object({
+  file: z.string(),
+});
+
+/**
  * CandidateCreate
  */
 export const zCandidateCreate = z.object({
@@ -204,6 +211,22 @@ export const zCostCentreOut = z.object({
 });
 
 /**
+ * CostCentreUpdate
+ *
+ * Every field optional; only what is sent is changed.
+ *
+ * These records were creatable and deletable but not editable, which meant correcting
+ * a typo in a grade name, or raising a position's headcount, was a delete and
+ * recreate — and `RESTRICT` foreign keys from assignments and requisitions refuse
+ * exactly that, for good reason. The `code` stays immutable: it is what people quote
+ * to each other and what an import file matches on.
+ */
+export const zCostCentreUpdate = z.object({
+  is_active: z.boolean().nullish(),
+  name: z.string().min(1).max(200).nullish(),
+});
+
+/**
  * DayPortion
  */
 export const zDayPortion = z.enum(["full", "first_half", "second_half"]);
@@ -262,6 +285,15 @@ export const zDesignationOut = z.object({
   id: z.uuid(),
   is_active: z.boolean(),
   name: z.string(),
+});
+
+/**
+ * DesignationUpdate
+ */
+export const zDesignationUpdate = z.object({
+  grade_level_id: z.uuid().nullish(),
+  is_active: z.boolean().nullish(),
+  name: z.string().min(1).max(200).nullish(),
 });
 
 /**
@@ -367,6 +399,17 @@ export const zEmployeeSummary = z.object({
 export const zEmployeeList = z.object({
   items: z.array(zEmployeeSummary),
   total: z.int(),
+});
+
+/**
+ * EmploymentCategoryUpdate
+ */
+export const zEmploymentCategoryUpdate = z.object({
+  is_active: z.boolean().nullish(),
+  is_overtime_eligible: z.boolean().nullish(),
+  name: z.string().min(1).max(200).nullish(),
+  notice_days: z.int().gte(0).lte(365).nullish(),
+  probation_months: z.int().gte(0).lte(6).nullish(),
 });
 
 /**
@@ -481,6 +524,15 @@ export const zGradeLevelOut = z.object({
   is_active: z.boolean(),
   name: z.string(),
   rank: z.int(),
+});
+
+/**
+ * GradeLevelUpdate
+ */
+export const zGradeLevelUpdate = z.object({
+  is_active: z.boolean().nullish(),
+  name: z.string().min(1).max(200).nullish(),
+  rank: z.int().gte(1).lte(100).nullish(),
 });
 
 /**
@@ -1491,6 +1543,24 @@ export const zPositionOut = z.object({
 });
 
 /**
+ * PositionUpdate
+ *
+ * Headcount above all. A budget nothing can change is a budget nobody maintains,
+ * and requisitions are refused against it.
+ */
+export const zPositionUpdate = z.object({
+  cost_centre_id: z.uuid().nullish(),
+  designation_id: z.uuid().nullish(),
+  employment_category_id: z.uuid().nullish(),
+  headcount: z.int().gte(0).lte(9999).nullish(),
+  is_active: z.boolean().nullish(),
+  org_unit_id: z.uuid().nullish(),
+  reports_to_id: z.uuid().nullish(),
+  title: z.string().min(1).max(200).nullish(),
+  work_location_id: z.uuid().nullish(),
+});
+
+/**
  * ProcessRequest
  */
 export const zProcessRequest = z.object({
@@ -2188,6 +2258,16 @@ export const zWorkLocationOut = z.object({
   id: z.uuid(),
   is_active: z.boolean(),
   name: z.string(),
+});
+
+/**
+ * WorkLocationUpdate
+ */
+export const zWorkLocationUpdate = z.object({
+  address: z.string().max(500).nullish(),
+  district: z.string().max(100).nullish(),
+  is_active: z.boolean().nullish(),
+  name: z.string().min(1).max(200).nullish(),
 });
 
 /**
@@ -2911,6 +2991,17 @@ export const zOrgDeactivateCostCentrePath = z.object({
  */
 export const zOrgDeactivateCostCentreResponse = z.void();
 
+export const zOrgUpdateCostCentreBody = zCostCentreUpdate;
+
+export const zOrgUpdateCostCentrePath = z.object({
+  record_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zOrgUpdateCostCentreResponse = zCostCentreOut;
+
 export const zOrgListDesignationsQuery = z.object({
   include_inactive: z.boolean().optional().default(false),
 });
@@ -2937,6 +3028,17 @@ export const zOrgDeactivateDesignationPath = z.object({
  * Successful Response
  */
 export const zOrgDeactivateDesignationResponse = z.void();
+
+export const zOrgUpdateDesignationBody = zDesignationUpdate;
+
+export const zOrgUpdateDesignationPath = z.object({
+  record_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zOrgUpdateDesignationResponse = zDesignationOut;
 
 export const zOrgListEmploymentCategoriesQuery = z.object({
   include_inactive: z.boolean().optional().default(false),
@@ -2967,6 +3069,17 @@ export const zOrgDeactivateEmploymentCategoryPath = z.object({
  */
 export const zOrgDeactivateEmploymentCategoryResponse = z.void();
 
+export const zOrgUpdateEmploymentCategoryBody = zEmploymentCategoryUpdate;
+
+export const zOrgUpdateEmploymentCategoryPath = z.object({
+  record_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zOrgUpdateEmploymentCategoryResponse = zEmploymentCategoryOut;
+
 export const zOrgListGradeLevelsQuery = z.object({
   include_inactive: z.boolean().optional().default(false),
 });
@@ -2993,6 +3106,17 @@ export const zOrgDeactivateGradeLevelPath = z.object({
  * Successful Response
  */
 export const zOrgDeactivateGradeLevelResponse = z.void();
+
+export const zOrgUpdateGradeLevelBody = zGradeLevelUpdate;
+
+export const zOrgUpdateGradeLevelPath = z.object({
+  record_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zOrgUpdateGradeLevelResponse = zGradeLevelOut;
 
 export const zOrgListPositionsQuery = z.object({
   org_unit_id: z.uuid().nullish(),
@@ -3021,6 +3145,17 @@ export const zOrgDeactivatePositionPath = z.object({
  * Successful Response
  */
 export const zOrgDeactivatePositionResponse = z.void();
+
+export const zOrgUpdatePositionBody = zPositionUpdate;
+
+export const zOrgUpdatePositionPath = z.object({
+  position_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zOrgUpdatePositionResponse = zPositionOut;
 
 /**
  * Response Org-Org Tree
@@ -3093,6 +3228,17 @@ export const zOrgDeactivateWorkLocationPath = z.object({
  * Successful Response
  */
 export const zOrgDeactivateWorkLocationResponse = z.void();
+
+export const zOrgUpdateWorkLocationBody = zWorkLocationUpdate;
+
+export const zOrgUpdateWorkLocationPath = z.object({
+  record_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zOrgUpdateWorkLocationResponse = zWorkLocationOut;
 
 /**
  * Response Payroll-List Components
@@ -3274,6 +3420,21 @@ export const zRecruitmentCreateCandidateBody = zCandidateCreate;
  */
 export const zRecruitmentCreateCandidateResponse = zCandidateOut;
 
+export const zRecruitmentDownloadResumePath = z.object({
+  candidate_id: z.uuid(),
+});
+
+export const zRecruitmentUploadResumeBody = zBodyRecruitmentUploadResume;
+
+export const zRecruitmentUploadResumePath = z.object({
+  candidate_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zRecruitmentUploadResumeResponse = zCandidateOut;
+
 /**
  * Response Recruitment-List Offers
  *
@@ -3349,6 +3510,15 @@ export const zRecruitmentCloseRequisitionQuery = z.object({
  * Successful Response
  */
 export const zRecruitmentCloseRequisitionResponse = zRequisitionOut;
+
+export const zRecruitmentHoldRequisitionPath = z.object({
+  req_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zRecruitmentHoldRequisitionResponse = zRequisitionOut;
 
 export const zRecruitmentOpenRequisitionPath = z.object({
   req_id: z.uuid(),

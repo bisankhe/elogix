@@ -17,6 +17,7 @@ a file labelled anything at all. `Content-Disposition: attachment` plus
 
 import re
 import uuid
+from dataclasses import dataclass
 from datetime import UTC, datetime
 
 from fastapi import HTTPException, UploadFile, status
@@ -60,18 +61,24 @@ def safe_filename(name: str | None, *, fallback: str) -> str:
     return cleaned or fallback
 
 
-def store_upload(
-    db: Session,
-    *,
-    document: EmployeeDocument,
-    upload: UploadFile,
-    company_id: uuid.UUID,
-) -> EmployeeDocument:
-    """Attach a file to an existing document row.
+@dataclass(frozen=True, slots=True)
+class StoredFile:
+    """What came off an upload, once it has been checked and written."""
 
-    The row comes first and the file second, on purpose: a document is a record that HR
-    keeps whether or not the paper has arrived, and "expected but not yet collected" is
-    a state the expiry report needs to be able to show.
+    key: str
+    checksum: str
+    size_bytes: int
+    content_type: str | None
+    filename: str
+
+
+def receive(upload: UploadFile, *, company_id: uuid.UUID) -> StoredFile:
+    """Validate an upload and put it in storage. Touches no database row.
+
+    Separate from `store_upload` because a candidate's CV needs exactly this and is not
+    an `EmployeeDocument` — a candidate is not an employee, and giving them a row in the
+    employee file before they are hired would be wrong in a way that is hard to undo.
+    The rules a file must pass are the same either way, and they should be in one place.
     """
     settings = get_settings()
 
@@ -105,26 +112,53 @@ def store_upload(
     if size == 0:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "That file is empty")
 
-    document.storage_key = key
-    document.checksum = checksum
-    document.size_bytes = size
-    document.content_type = upload.content_type
-    document.original_filename = safe_filename(upload.filename, fallback="document")
+    return StoredFile(
+        key=key,
+        checksum=checksum,
+        size_bytes=size,
+        content_type=upload.content_type,
+        filename=safe_filename(upload.filename, fallback="document"),
+    )
+
+
+def store_upload(
+    db: Session,
+    *,
+    document: EmployeeDocument,
+    upload: UploadFile,
+    company_id: uuid.UUID,
+) -> EmployeeDocument:
+    """Attach a file to an existing document row.
+
+    The row comes first and the file second, on purpose: a document is a record that HR
+    keeps whether or not the paper has arrived, and "expected but not yet collected" is
+    a state the expiry report needs to be able to show.
+    """
+    stored = receive(upload, company_id=company_id)
+
+    document.storage_key = stored.key
+    document.checksum = stored.checksum
+    document.size_bytes = stored.size_bytes
+    document.content_type = stored.content_type
+    document.original_filename = stored.filename
 
     db.commit()
     db.refresh(document)
     return document
 
 
-def download(document: EmployeeDocument) -> StreamingResponse:
-    """Stream the file back as an attachment, never inline."""
-    if document.storage_key is None:
-        raise HTTPException(
-            status.HTTP_404_NOT_FOUND, "No file has been uploaded for this document yet"
-        )
+def stream(
+    *, storage_key: str, content_type: str | None, filename: str | None
+) -> StreamingResponse:
+    """Serve a stored file as an attachment, never inline.
 
+    The headers are the point, and they are the same for every file this system holds,
+    whoever it belongs to — an employee's contract or a candidate's CV. Both come from
+    whoever was allowed to upload one, and an HTML file served inline from the API's
+    origin is stored XSS against every colleague who opens it.
+    """
     try:
-        handle = get_storage().open(document.storage_key)
+        handle = get_storage().open(storage_key)
     except StorageError as exc:
         # The row says there is a file and the store disagrees. That is a real fault
         # worth surfacing as one, rather than a 404 that reads like "never uploaded".
@@ -133,15 +167,28 @@ def download(document: EmployeeDocument) -> StreamingResponse:
             "The record points at a file that is missing from storage",
         ) from exc
 
-    filename = safe_filename(document.original_filename, fallback="document")
+    safe = safe_filename(filename, fallback="document")
     return StreamingResponse(
         handle,
-        media_type=document.content_type or "application/octet-stream",
+        media_type=content_type or "application/octet-stream",
         headers={
-            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Content-Disposition": f'attachment; filename="{safe}"',
             "X-Content-Type-Options": "nosniff",
             "Cache-Control": "private, no-store",
         },
+    )
+
+
+def download(document: EmployeeDocument) -> StreamingResponse:
+    """Stream an employee document."""
+    if document.storage_key is None:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, "No file has been uploaded for this document yet"
+        )
+    return stream(
+        storage_key=document.storage_key,
+        content_type=document.content_type,
+        filename=document.original_filename,
     )
 
 

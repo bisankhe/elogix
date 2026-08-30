@@ -155,6 +155,9 @@ replaced the API's exact reason with a guess.
   `UniqueConstraint("company_id", "code")` and `UniqueConstraint("company_id", "rank")`
   both resolve to `uq_<table>_company_id` and the second fails at CREATE TABLE. See
   `GradeLevel.__table_args__`.
+- **A multipart upload passes `body: {file}`, not a hand-built `FormData`.** The
+  generated operation already spreads `formDataBodySerializer`, so it assembles the
+  multipart and lets the browser set the boundary; passing `FormData` fights the client.
 - **Invalidate a generated query with `invalidate()` from `lib/queries.ts`**, never
   with a bare string key. The generated client builds keys as
   `[{_id: 'opName', baseUrl, path}]`, so `invalidateQueries({queryKey: ['opName']})`
@@ -265,7 +268,7 @@ This is a dependency chain, not a priority ranking — each phase produces the t
 next one needs, so nothing gets built twice against mocked inputs. Payroll is last in the
 core *deliberately*: it consumes phases 03–05, and its tests get written before its code.
 
-**Current state: phases 00–09 are done**, proven by 370 tests against a real Postgres
+**Current state: phases 00–09 are done**, proven by 387 tests against a real Postgres
 with the schema built by running the migrations from zero. Module access is denied
 server-side, no endpoint returns another tenant's rows, a tenant can be provisioned into
 a complete org chart, an employee can be hired through to offboarded with history

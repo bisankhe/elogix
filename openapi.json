@@ -629,6 +629,20 @@
         "title": "Body_employees-upload_document_file",
         "type": "object"
       },
+      "Body_recruitment-upload_resume": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_recruitment-upload_resume",
+        "type": "object"
+      },
       "CandidateCreate": {
         "properties": {
           "email": {
@@ -927,6 +941,37 @@
         "title": "CostCentreOut",
         "type": "object"
       },
+      "CostCentreUpdate": {
+        "description": "Every field optional; only what is sent is changed.\n\nThese records were creatable and deletable but not editable, which meant correcting\na typo in a grade name, or raising a position's headcount, was a delete and\nrecreate \u2014 and `RESTRICT` foreign keys from assignments and requisitions refuse\nexactly that, for good reason. The `code` stays immutable: it is what people quote\nto each other and what an import file matches on.",
+        "properties": {
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "title": "CostCentreUpdate",
+        "type": "object"
+      },
       "DayOut": {
         "properties": {
           "early_out_minutes": {
@@ -1134,6 +1179,48 @@
           "is_active"
         ],
         "title": "DesignationOut",
+        "type": "object"
+      },
+      "DesignationUpdate": {
+        "properties": {
+          "grade_level_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade Level Id"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "title": "DesignationUpdate",
         "type": "object"
       },
       "DocumentCreate": {
@@ -2401,6 +2488,73 @@
         "title": "EmploymentCategoryOut",
         "type": "object"
       },
+      "EmploymentCategoryUpdate": {
+        "properties": {
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "is_overtime_eligible": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Overtime Eligible"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "notice_days": {
+            "anyOf": [
+              {
+                "maximum": 365.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notice Days"
+          },
+          "probation_months": {
+            "anyOf": [
+              {
+                "maximum": 6.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Probation Months"
+          }
+        },
+        "title": "EmploymentCategoryUpdate",
+        "type": "object"
+      },
       "EmploymentType": {
         "description": "Nepal Labour Act 2074 recognises these employment categories.",
         "enum": [
@@ -2701,6 +2855,49 @@
           "is_active"
         ],
         "title": "GradeLevelOut",
+        "type": "object"
+      },
+      "GradeLevelUpdate": {
+        "properties": {
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "rank": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank"
+          }
+        },
+        "title": "GradeLevelUpdate",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -6342,6 +6539,122 @@
         "title": "PositionOut",
         "type": "object"
       },
+      "PositionUpdate": {
+        "description": "Headcount above all. A budget nothing can change is a budget nobody maintains,\nand requisitions are refused against it.",
+        "properties": {
+          "cost_centre_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Centre Id"
+          },
+          "designation_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Designation Id"
+          },
+          "employment_category_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Employment Category Id"
+          },
+          "headcount": {
+            "anyOf": [
+              {
+                "maximum": 9999.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headcount"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "org_unit_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Org Unit Id"
+          },
+          "reports_to_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reports To Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "work_location_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Work Location Id"
+          }
+        },
+        "title": "PositionUpdate",
+        "type": "object"
+      },
       "ProcessRequest": {
         "properties": {
           "employee_id": {
@@ -8566,6 +8879,60 @@
           "is_active"
         ],
         "title": "WorkLocationOut",
+        "type": "object"
+      },
+      "WorkLocationUpdate": {
+        "properties": {
+          "address": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "district": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "District"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "title": "WorkLocationUpdate",
         "type": "object"
       },
       "elogix_api__modules__employee__schemas__EventOut": {
@@ -12065,6 +12432,62 @@
         "tags": [
           "org"
         ]
+      },
+      "patch": {
+        "operationId": "org-update_cost_centre",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "record_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Record Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CostCentreUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CostCentreOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Cost Centre",
+        "tags": [
+          "org"
+        ]
       }
     },
     "/api/v1/org/designations": {
@@ -12199,6 +12622,62 @@
           }
         ],
         "summary": "Deactivate Designation",
+        "tags": [
+          "org"
+        ]
+      },
+      "patch": {
+        "operationId": "org-update_designation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "record_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Record Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DesignationUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DesignationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Designation",
         "tags": [
           "org"
         ]
@@ -12339,6 +12818,62 @@
         "tags": [
           "org"
         ]
+      },
+      "patch": {
+        "operationId": "org-update_employment_category",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "record_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Record Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmploymentCategoryUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmploymentCategoryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Employment Category",
+        "tags": [
+          "org"
+        ]
       }
     },
     "/api/v1/org/grade-levels": {
@@ -12473,6 +13008,62 @@
           }
         ],
         "summary": "Deactivate Grade Level",
+        "tags": [
+          "org"
+        ]
+      },
+      "patch": {
+        "operationId": "org-update_grade_level",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "record_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Record Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GradeLevelUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GradeLevelOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Grade Level",
         "tags": [
           "org"
         ]
@@ -12627,6 +13218,63 @@
           }
         ],
         "summary": "Deactivate Position",
+        "tags": [
+          "org"
+        ]
+      },
+      "patch": {
+        "description": "Change a position, headcount included.\n\nA budget nothing can change is a budget nobody maintains, and requisitions are\nrefused against it \u2014 so until this existed, hiring past a stale number meant\ndeleting the position, which the foreign keys from assignments correctly refuse.",
+        "operationId": "org-update_position",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "position_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Position Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PositionUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PositionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Position",
         "tags": [
           "org"
         ]
@@ -12988,6 +13636,62 @@
           }
         ],
         "summary": "Deactivate Work Location",
+        "tags": [
+          "org"
+        ]
+      },
+      "patch": {
+        "operationId": "org-update_work_location",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "record_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Record Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkLocationUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkLocationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Work Location",
         "tags": [
           "org"
         ]
@@ -13955,6 +14659,110 @@
         ]
       }
     },
+    "/api/v1/recruitment/candidates/{candidate_id}/resume": {
+      "get": {
+        "description": "Stream the CV back. An attachment with sniffing off, like every other upload.",
+        "operationId": "recruitment-download_resume",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "candidate_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Candidate Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Download Resume",
+        "tags": [
+          "recruitment"
+        ]
+      },
+      "post": {
+        "description": "Attach a CV to a candidate.\n\nSame checks and same store as an employee document \u2014 allowlisted types, a capped\nread, a content-addressed key \u2014 through `documents.receive`. A candidate is not an\nemployee, so this is not an `EmployeeDocument`; onboarding is what moves the file\ninto their employee file, and because the key is the content hash that move\nreferences the same bytes rather than copying them.\n\nReplacing a CV leaves the old blob in storage. That is deliberate for now: content\naddressing means it may still be referenced by an employee document created from an\nearlier application, and deleting it would break that. Reclaiming orphans needs a\nsweep that knows every reference, which does not exist yet.",
+        "operationId": "recruitment-upload_resume",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "candidate_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Candidate Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_recruitment-upload_resume"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandidateOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Upload Resume",
+        "tags": [
+          "recruitment"
+        ]
+      }
+    },
     "/api/v1/recruitment/offers": {
       "get": {
         "description": "Never includes `response_token`. It is a credential, not a field.",
@@ -14347,6 +15155,55 @@
           }
         ],
         "summary": "Close Requisition",
+        "tags": [
+          "recruitment"
+        ]
+      }
+    },
+    "/api/v1/recruitment/requisitions/{req_id}/hold": {
+      "post": {
+        "description": "Pause an open requisition without cancelling it.\n\nIt keeps holding its openings against the position's budget, which is the point:\na paused hire is still a hire somebody intends to make, and freeing the budget\nwould let a second requisition be raised for the same slot.",
+        "operationId": "recruitment-hold_requisition",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "req_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Req Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequisitionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Hold Requisition",
         "tags": [
           "recruitment"
         ]

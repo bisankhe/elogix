@@ -53,6 +53,20 @@ class CostCentreCreate(BaseModel):
     name: str = NAME
 
 
+class CostCentreUpdate(BaseModel):
+    """Every field optional; only what is sent is changed.
+
+    These records were creatable and deletable but not editable, which meant correcting
+    a typo in a grade name, or raising a position's headcount, was a delete and
+    recreate — and `RESTRICT` foreign keys from assignments and requisitions refuse
+    exactly that, for good reason. The `code` stays immutable: it is what people quote
+    to each other and what an import file matches on.
+    """
+
+    name: str | None = Field(default=None, min_length=1, max_length=200)
+    is_active: bool | None = None
+
+
 class CostCentreOut(_Out):
     id: uuid.UUID
     code: str
@@ -63,6 +77,11 @@ class CostCentreOut(_Out):
 class WorkLocationCreate(BaseModel):
     code: str = CODE
     name: str = NAME
+    address: str | None = Field(default=None, max_length=500)
+    district: str | None = Field(default=None, max_length=100)
+
+
+class WorkLocationUpdate(CostCentreUpdate):
     address: str | None = Field(default=None, max_length=500)
     district: str | None = Field(default=None, max_length=100)
 
@@ -82,6 +101,10 @@ class GradeLevelCreate(BaseModel):
     rank: int = Field(ge=1, le=100)
 
 
+class GradeLevelUpdate(CostCentreUpdate):
+    rank: int | None = Field(default=None, ge=1, le=100)
+
+
 class GradeLevelOut(_Out):
     id: uuid.UUID
     code: str
@@ -93,6 +116,10 @@ class GradeLevelOut(_Out):
 class DesignationCreate(BaseModel):
     code: str = CODE
     name: str = NAME
+    grade_level_id: uuid.UUID | None = None
+
+
+class DesignationUpdate(CostCentreUpdate):
     grade_level_id: uuid.UUID | None = None
 
 
@@ -112,6 +139,12 @@ class EmploymentCategoryCreate(BaseModel):
     probation_months: int = Field(default=0, ge=0, le=6)
     notice_days: int = Field(default=30, ge=0, le=365)
     is_overtime_eligible: bool = True
+
+
+class EmploymentCategoryUpdate(CostCentreUpdate):
+    probation_months: int | None = Field(default=None, ge=0, le=6)
+    notice_days: int | None = Field(default=None, ge=0, le=365)
+    is_overtime_eligible: bool | None = None
 
 
 class EmploymentCategoryOut(_Out):
@@ -138,6 +171,21 @@ class PositionCreate(BaseModel):
     employment_category_id: uuid.UUID | None = None
     reports_to_id: uuid.UUID | None = None
     headcount: int = Field(default=1, ge=0, le=9999)
+
+
+class PositionUpdate(BaseModel):
+    """Headcount above all. A budget nothing can change is a budget nobody maintains,
+    and requisitions are refused against it."""
+
+    title: str | None = Field(default=None, min_length=1, max_length=200)
+    org_unit_id: uuid.UUID | None = None
+    designation_id: uuid.UUID | None = None
+    cost_centre_id: uuid.UUID | None = None
+    work_location_id: uuid.UUID | None = None
+    employment_category_id: uuid.UUID | None = None
+    reports_to_id: uuid.UUID | None = None
+    headcount: int | None = Field(default=None, ge=0, le=9999)
+    is_active: bool | None = None
 
 
 class PositionOut(_Out):

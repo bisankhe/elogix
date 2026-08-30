@@ -354,6 +354,16 @@ export type BodyEmployeesUploadDocumentFile = {
 };
 
 /**
+ * Body_recruitment-upload_resume
+ */
+export type BodyRecruitmentUploadResume = {
+  /**
+   * File
+   */
+  file: Blob | File;
+};
+
+/**
  * CandidateCreate
  */
 export type CandidateCreate = {
@@ -529,6 +539,28 @@ export type CostCentreOut = {
 };
 
 /**
+ * CostCentreUpdate
+ *
+ * Every field optional; only what is sent is changed.
+ *
+ * These records were creatable and deletable but not editable, which meant correcting
+ * a typo in a grade name, or raising a position's headcount, was a delete and
+ * recreate — and `RESTRICT` foreign keys from assignments and requisitions refuse
+ * exactly that, for good reason. The `code` stays immutable: it is what people quote
+ * to each other and what an import file matches on.
+ */
+export type CostCentreUpdate = {
+  /**
+   * Is Active
+   */
+  is_active?: boolean | null;
+  /**
+   * Name
+   */
+  name?: string | null;
+};
+
+/**
  * DayOut
  */
 export type DayOut = {
@@ -640,6 +672,24 @@ export type DesignationOut = {
    * Name
    */
   name: string;
+};
+
+/**
+ * DesignationUpdate
+ */
+export type DesignationUpdate = {
+  /**
+   * Grade Level Id
+   */
+  grade_level_id?: string | null;
+  /**
+   * Is Active
+   */
+  is_active?: boolean | null;
+  /**
+   * Name
+   */
+  name?: string | null;
 };
 
 /**
@@ -1220,6 +1270,32 @@ export type EmploymentCategoryOut = {
 };
 
 /**
+ * EmploymentCategoryUpdate
+ */
+export type EmploymentCategoryUpdate = {
+  /**
+   * Is Active
+   */
+  is_active?: boolean | null;
+  /**
+   * Is Overtime Eligible
+   */
+  is_overtime_eligible?: boolean | null;
+  /**
+   * Name
+   */
+  name?: string | null;
+  /**
+   * Notice Days
+   */
+  notice_days?: number | null;
+  /**
+   * Probation Months
+   */
+  probation_months?: number | null;
+};
+
+/**
  * EmploymentType
  *
  * Nepal Labour Act 2074 recognises these employment categories.
@@ -1392,6 +1468,24 @@ export type GradeLevelOut = {
    * Rank
    */
   rank: number;
+};
+
+/**
+ * GradeLevelUpdate
+ */
+export type GradeLevelUpdate = {
+  /**
+   * Is Active
+   */
+  is_active?: boolean | null;
+  /**
+   * Name
+   */
+  name?: string | null;
+  /**
+   * Rank
+   */
+  rank?: number | null;
 };
 
 /**
@@ -3438,6 +3532,51 @@ export type PositionOut = {
 };
 
 /**
+ * PositionUpdate
+ *
+ * Headcount above all. A budget nothing can change is a budget nobody maintains,
+ * and requisitions are refused against it.
+ */
+export type PositionUpdate = {
+  /**
+   * Cost Centre Id
+   */
+  cost_centre_id?: string | null;
+  /**
+   * Designation Id
+   */
+  designation_id?: string | null;
+  /**
+   * Employment Category Id
+   */
+  employment_category_id?: string | null;
+  /**
+   * Headcount
+   */
+  headcount?: number | null;
+  /**
+   * Is Active
+   */
+  is_active?: boolean | null;
+  /**
+   * Org Unit Id
+   */
+  org_unit_id?: string | null;
+  /**
+   * Reports To Id
+   */
+  reports_to_id?: string | null;
+  /**
+   * Title
+   */
+  title?: string | null;
+  /**
+   * Work Location Id
+   */
+  work_location_id?: string | null;
+};
+
+/**
  * ProcessRequest
  */
 export type ProcessRequest = {
@@ -4650,6 +4789,28 @@ export type WorkLocationOut = {
    * Name
    */
   name: string;
+};
+
+/**
+ * WorkLocationUpdate
+ */
+export type WorkLocationUpdate = {
+  /**
+   * Address
+   */
+  address?: string | null;
+  /**
+   * District
+   */
+  district?: string | null;
+  /**
+   * Is Active
+   */
+  is_active?: boolean | null;
+  /**
+   * Name
+   */
+  name?: string | null;
 };
 
 /**
@@ -6862,6 +7023,38 @@ export type OrgDeactivateCostCentreResponses = {
 export type OrgDeactivateCostCentreResponse =
   OrgDeactivateCostCentreResponses[keyof OrgDeactivateCostCentreResponses];
 
+export type OrgUpdateCostCentreData = {
+  body: CostCentreUpdate;
+  path: {
+    /**
+     * Record Id
+     */
+    record_id: string;
+  };
+  query?: never;
+  url: "/api/v1/org/cost-centres/{record_id}";
+};
+
+export type OrgUpdateCostCentreErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgUpdateCostCentreError =
+  OrgUpdateCostCentreErrors[keyof OrgUpdateCostCentreErrors];
+
+export type OrgUpdateCostCentreResponses = {
+  /**
+   * Successful Response
+   */
+  200: CostCentreOut;
+};
+
+export type OrgUpdateCostCentreResponse =
+  OrgUpdateCostCentreResponses[keyof OrgUpdateCostCentreResponses];
+
 export type OrgListDesignationsData = {
   body?: never;
   path?: never;
@@ -6954,6 +7147,38 @@ export type OrgDeactivateDesignationResponses = {
 
 export type OrgDeactivateDesignationResponse =
   OrgDeactivateDesignationResponses[keyof OrgDeactivateDesignationResponses];
+
+export type OrgUpdateDesignationData = {
+  body: DesignationUpdate;
+  path: {
+    /**
+     * Record Id
+     */
+    record_id: string;
+  };
+  query?: never;
+  url: "/api/v1/org/designations/{record_id}";
+};
+
+export type OrgUpdateDesignationErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgUpdateDesignationError =
+  OrgUpdateDesignationErrors[keyof OrgUpdateDesignationErrors];
+
+export type OrgUpdateDesignationResponses = {
+  /**
+   * Successful Response
+   */
+  200: DesignationOut;
+};
+
+export type OrgUpdateDesignationResponse =
+  OrgUpdateDesignationResponses[keyof OrgUpdateDesignationResponses];
 
 export type OrgListEmploymentCategoriesData = {
   body?: never;
@@ -7048,6 +7273,38 @@ export type OrgDeactivateEmploymentCategoryResponses = {
 export type OrgDeactivateEmploymentCategoryResponse =
   OrgDeactivateEmploymentCategoryResponses[keyof OrgDeactivateEmploymentCategoryResponses];
 
+export type OrgUpdateEmploymentCategoryData = {
+  body: EmploymentCategoryUpdate;
+  path: {
+    /**
+     * Record Id
+     */
+    record_id: string;
+  };
+  query?: never;
+  url: "/api/v1/org/employment-categories/{record_id}";
+};
+
+export type OrgUpdateEmploymentCategoryErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgUpdateEmploymentCategoryError =
+  OrgUpdateEmploymentCategoryErrors[keyof OrgUpdateEmploymentCategoryErrors];
+
+export type OrgUpdateEmploymentCategoryResponses = {
+  /**
+   * Successful Response
+   */
+  200: EmploymentCategoryOut;
+};
+
+export type OrgUpdateEmploymentCategoryResponse =
+  OrgUpdateEmploymentCategoryResponses[keyof OrgUpdateEmploymentCategoryResponses];
+
 export type OrgListGradeLevelsData = {
   body?: never;
   path?: never;
@@ -7140,6 +7397,38 @@ export type OrgDeactivateGradeLevelResponses = {
 
 export type OrgDeactivateGradeLevelResponse =
   OrgDeactivateGradeLevelResponses[keyof OrgDeactivateGradeLevelResponses];
+
+export type OrgUpdateGradeLevelData = {
+  body: GradeLevelUpdate;
+  path: {
+    /**
+     * Record Id
+     */
+    record_id: string;
+  };
+  query?: never;
+  url: "/api/v1/org/grade-levels/{record_id}";
+};
+
+export type OrgUpdateGradeLevelErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgUpdateGradeLevelError =
+  OrgUpdateGradeLevelErrors[keyof OrgUpdateGradeLevelErrors];
+
+export type OrgUpdateGradeLevelResponses = {
+  /**
+   * Successful Response
+   */
+  200: GradeLevelOut;
+};
+
+export type OrgUpdateGradeLevelResponse =
+  OrgUpdateGradeLevelResponses[keyof OrgUpdateGradeLevelResponses];
 
 export type OrgListPositionsData = {
   body?: never;
@@ -7237,6 +7526,38 @@ export type OrgDeactivatePositionResponses = {
 
 export type OrgDeactivatePositionResponse =
   OrgDeactivatePositionResponses[keyof OrgDeactivatePositionResponses];
+
+export type OrgUpdatePositionData = {
+  body: PositionUpdate;
+  path: {
+    /**
+     * Position Id
+     */
+    position_id: string;
+  };
+  query?: never;
+  url: "/api/v1/org/positions/{position_id}";
+};
+
+export type OrgUpdatePositionErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgUpdatePositionError =
+  OrgUpdatePositionErrors[keyof OrgUpdatePositionErrors];
+
+export type OrgUpdatePositionResponses = {
+  /**
+   * Successful Response
+   */
+  200: PositionOut;
+};
+
+export type OrgUpdatePositionResponse =
+  OrgUpdatePositionResponses[keyof OrgUpdatePositionResponses];
 
 export type OrgOrgTreeData = {
   body?: never;
@@ -7470,6 +7791,38 @@ export type OrgDeactivateWorkLocationResponses = {
 
 export type OrgDeactivateWorkLocationResponse =
   OrgDeactivateWorkLocationResponses[keyof OrgDeactivateWorkLocationResponses];
+
+export type OrgUpdateWorkLocationData = {
+  body: WorkLocationUpdate;
+  path: {
+    /**
+     * Record Id
+     */
+    record_id: string;
+  };
+  query?: never;
+  url: "/api/v1/org/work-locations/{record_id}";
+};
+
+export type OrgUpdateWorkLocationErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgUpdateWorkLocationError =
+  OrgUpdateWorkLocationErrors[keyof OrgUpdateWorkLocationErrors];
+
+export type OrgUpdateWorkLocationResponses = {
+  /**
+   * Successful Response
+   */
+  200: WorkLocationOut;
+};
+
+export type OrgUpdateWorkLocationResponse =
+  OrgUpdateWorkLocationResponses[keyof OrgUpdateWorkLocationResponses];
 
 export type PayrollListComponentsData = {
   body?: never;
@@ -8041,6 +8394,67 @@ export type RecruitmentCreateCandidateResponses = {
 export type RecruitmentCreateCandidateResponse =
   RecruitmentCreateCandidateResponses[keyof RecruitmentCreateCandidateResponses];
 
+export type RecruitmentDownloadResumeData = {
+  body?: never;
+  path: {
+    /**
+     * Candidate Id
+     */
+    candidate_id: string;
+  };
+  query?: never;
+  url: "/api/v1/recruitment/candidates/{candidate_id}/resume";
+};
+
+export type RecruitmentDownloadResumeErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type RecruitmentDownloadResumeError =
+  RecruitmentDownloadResumeErrors[keyof RecruitmentDownloadResumeErrors];
+
+export type RecruitmentDownloadResumeResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type RecruitmentUploadResumeData = {
+  body: BodyRecruitmentUploadResume;
+  path: {
+    /**
+     * Candidate Id
+     */
+    candidate_id: string;
+  };
+  query?: never;
+  url: "/api/v1/recruitment/candidates/{candidate_id}/resume";
+};
+
+export type RecruitmentUploadResumeErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type RecruitmentUploadResumeError =
+  RecruitmentUploadResumeErrors[keyof RecruitmentUploadResumeErrors];
+
+export type RecruitmentUploadResumeResponses = {
+  /**
+   * Successful Response
+   */
+  200: CandidateOut;
+};
+
+export type RecruitmentUploadResumeResponse =
+  RecruitmentUploadResumeResponses[keyof RecruitmentUploadResumeResponses];
+
 export type RecruitmentListOffersData = {
   body?: never;
   path?: never;
@@ -8285,6 +8699,38 @@ export type RecruitmentCloseRequisitionResponses = {
 
 export type RecruitmentCloseRequisitionResponse =
   RecruitmentCloseRequisitionResponses[keyof RecruitmentCloseRequisitionResponses];
+
+export type RecruitmentHoldRequisitionData = {
+  body?: never;
+  path: {
+    /**
+     * Req Id
+     */
+    req_id: string;
+  };
+  query?: never;
+  url: "/api/v1/recruitment/requisitions/{req_id}/hold";
+};
+
+export type RecruitmentHoldRequisitionErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type RecruitmentHoldRequisitionError =
+  RecruitmentHoldRequisitionErrors[keyof RecruitmentHoldRequisitionErrors];
+
+export type RecruitmentHoldRequisitionResponses = {
+  /**
+   * Successful Response
+   */
+  200: RequisitionOut;
+};
+
+export type RecruitmentHoldRequisitionResponse =
+  RecruitmentHoldRequisitionResponses[keyof RecruitmentHoldRequisitionResponses];
 
 export type RecruitmentOpenRequisitionData = {
   body?: never;

@@ -42,6 +42,8 @@ TENANT_SCOPED_READS = [
     ("GET", "/api/v1/recruitment/applications"),
     ("GET", "/api/v1/recruitment/offers"),
     ("GET", "/api/v1/recruitment/stages"),
+    ("GET", "/api/v1/org/positions"),
+    ("GET", "/api/v1/org/grade-levels"),
 ]
 
 

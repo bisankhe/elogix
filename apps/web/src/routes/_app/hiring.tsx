@@ -12,6 +12,7 @@ import {
   recruitmentOnboardOffer,
   recruitmentOpenRequisition,
   recruitmentSendOffer,
+  recruitmentUploadResume,
 } from '@elogix/api-client'
 import {
   orgListPositionsOptions,
@@ -38,6 +39,7 @@ import {
   Table,
 } from '@/components/ui'
 import type { PillTone } from '@/components/ui'
+import { downloadFile } from '@/lib/download'
 import { apiErrorMessage } from '@/lib/errors'
 import { invalidate } from '@/lib/queries'
 
@@ -673,6 +675,75 @@ function RequisitionsTab() {
   )
 }
 
+/**
+ * A candidate's CV.
+ *
+ * Downloading goes through `downloadFile` rather than a plain link, for the same reason
+ * every export does: the access token lives in memory, so a bare href arrives
+ * unauthenticated and saves a 401 body as a file.
+ */
+function Resume({
+  candidate,
+  onUploaded,
+}: {
+  candidate: { id: string; resume_filename?: string | null }
+  onUploaded: () => void
+}) {
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  const upload = async (file: File) => {
+    setError(null)
+    setBusy(true)
+    // `body: { file }`, not a hand-built FormData. The generated operation already
+    // spreads `formDataBodySerializer`, so it assembles the multipart itself and lets
+    // the browser set the boundary — passing FormData here would fight the client.
+    const { error: failed } = await recruitmentUploadResume({
+      path: { candidate_id: candidate.id },
+      body: { file },
+    })
+    setBusy(false)
+    if (failed) setError(apiErrorMessage(failed, 'That file was not accepted'))
+    else onUploaded()
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      {candidate.resume_filename ? (
+        <button
+          onClick={() =>
+            downloadFile(
+              `/api/v1/recruitment/candidates/${candidate.id}/resume`,
+              candidate.resume_filename ?? 'cv',
+            ).catch((e: Error) => setError(e.message))
+          }
+          className="max-w-32 truncate text-xs font-medium text-blue-700 hover:underline"
+        >
+          {candidate.resume_filename}
+        </button>
+      ) : (
+        <label className="cursor-pointer text-xs text-slate-500 hover:text-slate-800">
+          {busy ? 'Uploading…' : 'Upload CV'}
+          <input
+            type="file"
+            className="hidden"
+            accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (file) void upload(file)
+            }}
+          />
+        </label>
+      )}
+      {error && (
+        <span role="alert" className="text-[11px] text-red-700">
+          {error}
+        </span>
+      )}
+    </div>
+  )
+}
+
 // ── Candidates ────────────────────────────────────────────────────────
 
 function CandidatesTab() {
@@ -717,6 +788,7 @@ function CandidatesTab() {
     onSuccess: refresh,
   })
 
+  const refreshCandidates = () => invalidate(queryClient, 'recruitmentListCandidates')
   const openReqs = requisitions.data?.filter((r) => r.status === 'open') ?? []
 
   return (
@@ -770,14 +842,16 @@ function CandidatesTab() {
         <SectionLabel>Candidates</SectionLabel>
         <Card>
           <Table
-            columns={['Name', 'Email', 'Source', 'Apply to']}
+            columns={['Name', 'Email', 'CV', 'Apply to']}
             empty={candidates.data?.length === 0}
           >
             {candidates.data?.map((c) => (
               <Row key={c.id}>
                 <Cell className="font-medium text-slate-800">{c.full_name}</Cell>
                 <Cell mono>{c.email}</Cell>
-                <Cell>{c.source ?? '—'}</Cell>
+                <Cell>
+                  <Resume candidate={c} onUploaded={refreshCandidates} />
+                </Cell>
                 <Cell>
                   <div className="flex items-center gap-2">
                     <Select

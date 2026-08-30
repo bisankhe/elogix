@@ -96,7 +96,13 @@ import {
   orgListUnits,
   orgListWorkLocations,
   orgOrgTree,
+  orgUpdateCostCentre,
+  orgUpdateDesignation,
+  orgUpdateEmploymentCategory,
+  orgUpdateGradeLevel,
+  orgUpdatePosition,
   orgUpdateUnit,
+  orgUpdateWorkLocation,
   payrollApproveRun,
   payrollComputeRun,
   payrollCreateComponent,
@@ -115,8 +121,10 @@ import {
   recruitmentCreateOffer,
   recruitmentCreateRequisition,
   recruitmentCreateStage,
+  recruitmentDownloadResume,
   recruitmentGetApplication,
   recruitmentGetRequisition,
+  recruitmentHoldRequisition,
   recruitmentListApplications,
   recruitmentListCandidates,
   recruitmentListOffers,
@@ -126,6 +134,7 @@ import {
   recruitmentOnboardOffer,
   recruitmentOpenRequisition,
   recruitmentSendOffer,
+  recruitmentUploadResume,
   recruitmentWithdrawOffer,
   reportsHeadcount,
   reportsLeaveBalances,
@@ -382,9 +391,27 @@ import type {
   OrgListWorkLocationsResponse,
   OrgOrgTreeData,
   OrgOrgTreeResponse,
+  OrgUpdateCostCentreData,
+  OrgUpdateCostCentreError,
+  OrgUpdateCostCentreResponse,
+  OrgUpdateDesignationData,
+  OrgUpdateDesignationError,
+  OrgUpdateDesignationResponse,
+  OrgUpdateEmploymentCategoryData,
+  OrgUpdateEmploymentCategoryError,
+  OrgUpdateEmploymentCategoryResponse,
+  OrgUpdateGradeLevelData,
+  OrgUpdateGradeLevelError,
+  OrgUpdateGradeLevelResponse,
+  OrgUpdatePositionData,
+  OrgUpdatePositionError,
+  OrgUpdatePositionResponse,
   OrgUpdateUnitData,
   OrgUpdateUnitError,
   OrgUpdateUnitResponse,
+  OrgUpdateWorkLocationData,
+  OrgUpdateWorkLocationError,
+  OrgUpdateWorkLocationResponse,
   PayrollApproveRunData,
   PayrollApproveRunError,
   PayrollApproveRunResponse,
@@ -436,12 +463,17 @@ import type {
   RecruitmentCreateStageData,
   RecruitmentCreateStageError,
   RecruitmentCreateStageResponse,
+  RecruitmentDownloadResumeData,
+  RecruitmentDownloadResumeError,
   RecruitmentGetApplicationData,
   RecruitmentGetApplicationError,
   RecruitmentGetApplicationResponse,
   RecruitmentGetRequisitionData,
   RecruitmentGetRequisitionError,
   RecruitmentGetRequisitionResponse,
+  RecruitmentHoldRequisitionData,
+  RecruitmentHoldRequisitionError,
+  RecruitmentHoldRequisitionResponse,
   RecruitmentListApplicationsData,
   RecruitmentListApplicationsError,
   RecruitmentListApplicationsResponse,
@@ -467,6 +499,9 @@ import type {
   RecruitmentSendOfferData,
   RecruitmentSendOfferError,
   RecruitmentSendOfferResponse,
+  RecruitmentUploadResumeData,
+  RecruitmentUploadResumeError,
+  RecruitmentUploadResumeResponse,
   RecruitmentWithdrawOfferData,
   RecruitmentWithdrawOfferError,
   RecruitmentWithdrawOfferResponse,
@@ -2531,6 +2566,33 @@ export const orgDeactivateCostCentreMutation = (
   return mutationOptions;
 };
 
+/**
+ * Update Cost Centre
+ */
+export const orgUpdateCostCentreMutation = (
+  options?: Partial<Options<OrgUpdateCostCentreData>>,
+): UseMutationOptions<
+  OrgUpdateCostCentreResponse,
+  OrgUpdateCostCentreError,
+  Options<OrgUpdateCostCentreData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    OrgUpdateCostCentreResponse,
+    OrgUpdateCostCentreError,
+    Options<OrgUpdateCostCentreData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await orgUpdateCostCentre({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
 export const orgListDesignationsQueryKey = (
   options?: Options<OrgListDesignationsData>,
 ) => createQueryKey("orgListDesignations", options);
@@ -2603,6 +2665,33 @@ export const orgDeactivateDesignationMutation = (
   > = {
     mutationFn: async (fnOptions) => {
       const { data } = await orgDeactivateDesignation({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Update Designation
+ */
+export const orgUpdateDesignationMutation = (
+  options?: Partial<Options<OrgUpdateDesignationData>>,
+): UseMutationOptions<
+  OrgUpdateDesignationResponse,
+  OrgUpdateDesignationError,
+  Options<OrgUpdateDesignationData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    OrgUpdateDesignationResponse,
+    OrgUpdateDesignationError,
+    Options<OrgUpdateDesignationData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await orgUpdateDesignation({
         ...options,
         ...fnOptions,
         throwOnError: true,
@@ -2695,6 +2784,33 @@ export const orgDeactivateEmploymentCategoryMutation = (
   return mutationOptions;
 };
 
+/**
+ * Update Employment Category
+ */
+export const orgUpdateEmploymentCategoryMutation = (
+  options?: Partial<Options<OrgUpdateEmploymentCategoryData>>,
+): UseMutationOptions<
+  OrgUpdateEmploymentCategoryResponse,
+  OrgUpdateEmploymentCategoryError,
+  Options<OrgUpdateEmploymentCategoryData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    OrgUpdateEmploymentCategoryResponse,
+    OrgUpdateEmploymentCategoryError,
+    Options<OrgUpdateEmploymentCategoryData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await orgUpdateEmploymentCategory({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
 export const orgListGradeLevelsQueryKey = (
   options?: Options<OrgListGradeLevelsData>,
 ) => createQueryKey("orgListGradeLevels", options);
@@ -2777,6 +2893,33 @@ export const orgDeactivateGradeLevelMutation = (
   return mutationOptions;
 };
 
+/**
+ * Update Grade Level
+ */
+export const orgUpdateGradeLevelMutation = (
+  options?: Partial<Options<OrgUpdateGradeLevelData>>,
+): UseMutationOptions<
+  OrgUpdateGradeLevelResponse,
+  OrgUpdateGradeLevelError,
+  Options<OrgUpdateGradeLevelData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    OrgUpdateGradeLevelResponse,
+    OrgUpdateGradeLevelError,
+    Options<OrgUpdateGradeLevelData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await orgUpdateGradeLevel({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
 export const orgListPositionsQueryKey = (
   options?: Options<OrgListPositionsData>,
 ) => createQueryKey("orgListPositions", options);
@@ -2849,6 +2992,39 @@ export const orgDeactivatePositionMutation = (
   > = {
     mutationFn: async (fnOptions) => {
       const { data } = await orgDeactivatePosition({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Update Position
+ *
+ * Change a position, headcount included.
+ *
+ * A budget nothing can change is a budget nobody maintains, and requisitions are
+ * refused against it — so until this existed, hiring past a stale number meant
+ * deleting the position, which the foreign keys from assignments correctly refuse.
+ */
+export const orgUpdatePositionMutation = (
+  options?: Partial<Options<OrgUpdatePositionData>>,
+): UseMutationOptions<
+  OrgUpdatePositionResponse,
+  OrgUpdatePositionError,
+  Options<OrgUpdatePositionData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    OrgUpdatePositionResponse,
+    OrgUpdatePositionError,
+    Options<OrgUpdatePositionData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await orgUpdatePosition({
         ...options,
         ...fnOptions,
         throwOnError: true,
@@ -3064,6 +3240,33 @@ export const orgDeactivateWorkLocationMutation = (
   > = {
     mutationFn: async (fnOptions) => {
       const { data } = await orgDeactivateWorkLocation({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Update Work Location
+ */
+export const orgUpdateWorkLocationMutation = (
+  options?: Partial<Options<OrgUpdateWorkLocationData>>,
+): UseMutationOptions<
+  OrgUpdateWorkLocationResponse,
+  OrgUpdateWorkLocationError,
+  Options<OrgUpdateWorkLocationData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    OrgUpdateWorkLocationResponse,
+    OrgUpdateWorkLocationError,
+    Options<OrgUpdateWorkLocationData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await orgUpdateWorkLocation({
         ...options,
         ...fnOptions,
         throwOnError: true,
@@ -3618,6 +3821,76 @@ export const recruitmentCreateCandidateMutation = (
   return mutationOptions;
 };
 
+export const recruitmentDownloadResumeQueryKey = (
+  options: Options<RecruitmentDownloadResumeData>,
+) => createQueryKey("recruitmentDownloadResume", options);
+
+/**
+ * Download Resume
+ *
+ * Stream the CV back. An attachment with sniffing off, like every other upload.
+ */
+export const recruitmentDownloadResumeOptions = (
+  options: Options<RecruitmentDownloadResumeData>,
+) =>
+  queryOptions<
+    unknown,
+    RecruitmentDownloadResumeError,
+    unknown,
+    ReturnType<typeof recruitmentDownloadResumeQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await recruitmentDownloadResume({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: recruitmentDownloadResumeQueryKey(options),
+  });
+
+/**
+ * Upload Resume
+ *
+ * Attach a CV to a candidate.
+ *
+ * Same checks and same store as an employee document — allowlisted types, a capped
+ * read, a content-addressed key — through `documents.receive`. A candidate is not an
+ * employee, so this is not an `EmployeeDocument`; onboarding is what moves the file
+ * into their employee file, and because the key is the content hash that move
+ * references the same bytes rather than copying them.
+ *
+ * Replacing a CV leaves the old blob in storage. That is deliberate for now: content
+ * addressing means it may still be referenced by an employee document created from an
+ * earlier application, and deleting it would break that. Reclaiming orphans needs a
+ * sweep that knows every reference, which does not exist yet.
+ */
+export const recruitmentUploadResumeMutation = (
+  options?: Partial<Options<RecruitmentUploadResumeData>>,
+): UseMutationOptions<
+  RecruitmentUploadResumeResponse,
+  RecruitmentUploadResumeError,
+  Options<RecruitmentUploadResumeData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    RecruitmentUploadResumeResponse,
+    RecruitmentUploadResumeError,
+    Options<RecruitmentUploadResumeData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await recruitmentUploadResume({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
 export const recruitmentListOffersQueryKey = (
   options?: Options<RecruitmentListOffersData>,
 ) => createQueryKey("recruitmentListOffers", options);
@@ -3845,6 +4118,39 @@ export const recruitmentCloseRequisitionMutation = (
   > = {
     mutationFn: async (fnOptions) => {
       const { data } = await recruitmentCloseRequisition({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Hold Requisition
+ *
+ * Pause an open requisition without cancelling it.
+ *
+ * It keeps holding its openings against the position's budget, which is the point:
+ * a paused hire is still a hire somebody intends to make, and freeing the budget
+ * would let a second requisition be raised for the same slot.
+ */
+export const recruitmentHoldRequisitionMutation = (
+  options?: Partial<Options<RecruitmentHoldRequisitionData>>,
+): UseMutationOptions<
+  RecruitmentHoldRequisitionResponse,
+  RecruitmentHoldRequisitionError,
+  Options<RecruitmentHoldRequisitionData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    RecruitmentHoldRequisitionResponse,
+    RecruitmentHoldRequisitionError,
+    Options<RecruitmentHoldRequisitionData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await recruitmentHoldRequisition({
         ...options,
         ...fnOptions,
         throwOnError: true,
