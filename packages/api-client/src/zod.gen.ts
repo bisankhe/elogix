@@ -111,6 +111,13 @@ export const zBodyEmployeesUploadDocumentFile = z.object({
 });
 
 /**
+ * Body_org-upload_company_document
+ */
+export const zBodyOrgUploadCompanyDocument = z.object({
+  file: z.string(),
+});
+
+/**
  * Body_recruitment-upload_resume
  */
 export const zBodyRecruitmentUploadResume = z.object({
@@ -147,6 +154,127 @@ export const zCandidateOut = z.object({
  */
 export const zCarryForwardRequest = z.object({
   from_year: z.int().gte(2000).lte(2100),
+});
+
+/**
+ * CompanyDocumentCreate
+ *
+ * `category` matches a statutory code from `nepal/company.py`, or is free text.
+ */
+export const zCompanyDocumentCreate = z.object({
+  category: z.string().min(1).max(48),
+  expires_on: z.iso.date().nullish(),
+  issued_on: z.iso.date().nullish(),
+  issuing_authority: z.string().max(200).nullish(),
+  notes: z.string().nullish(),
+  reference_number: z.string().max(120).nullish(),
+  title: z.string().min(1).max(200),
+});
+
+/**
+ * CompanyDocumentOut
+ */
+export const zCompanyDocumentOut = z.object({
+  category: z.string(),
+  checksum: z.string().nullable(),
+  expires_on: z.iso.date().nullable(),
+  id: z.uuid(),
+  is_verified: z.boolean(),
+  issued_on: z.iso.date().nullable(),
+  issuing_authority: z.string().nullable(),
+  notes: z.string().nullable(),
+  original_filename: z.string().nullable(),
+  reference_number: z.string().nullable(),
+  size_bytes: z.int().nullable(),
+  title: z.string(),
+  verified_at: z.iso.datetime().nullable(),
+  verified_by: z.string().nullable(),
+});
+
+/**
+ * CompanyOut
+ */
+export const zCompanyOut = z.object({
+  address: z.string().nullable(),
+  district: z.string().nullable(),
+  email: z.string().nullable(),
+  id: z.uuid(),
+  ird_office: z.string().nullable(),
+  is_active: z.boolean(),
+  labour_office: z.string().nullable(),
+  legal_name: z.string().nullable(),
+  municipality: z.string().nullable(),
+  name: z.string(),
+  pan_number: z.string().nullable(),
+  phone: z.string().nullable(),
+  plan_tier: z.string(),
+  province: z.string().nullable(),
+  registered_on: z.iso.date().nullable(),
+  registration_number: z.string().nullable(),
+  slug: z.string(),
+  ssf_employer_code: z.string().nullable(),
+  vat_number: z.string().nullable(),
+  ward: z.string().nullable(),
+  website: z.string().nullable(),
+});
+
+/**
+ * CompanyUpdate
+ *
+ * The tenant's own details. Name and slug are not here.
+ *
+ * Renaming a tenant is a platform operation, and the slug is the login identifier —
+ * changing it would lock every user out of their own company.
+ */
+export const zCompanyUpdate = z.object({
+  address: z.string().max(300).nullish(),
+  district: z.string().max(120).nullish(),
+  email: z.email().nullish(),
+  ird_office: z.string().max(120).nullish(),
+  labour_office: z.string().max(120).nullish(),
+  legal_name: z.string().max(300).nullish(),
+  municipality: z.string().max(120).nullish(),
+  pan_number: z.string().max(32).nullish(),
+  phone: z.string().max(32).nullish(),
+  province: z.string().max(120).nullish(),
+  registered_on: z.iso.date().nullish(),
+  registration_number: z.string().max(64).nullish(),
+  ssf_employer_code: z.string().max(64).nullish(),
+  vat_number: z.string().max(32).nullish(),
+  ward: z.string().max(16).nullish(),
+  website: z.string().max(200).nullish(),
+});
+
+/**
+ * ComplianceItem
+ *
+ * One statutory document, held or not.
+ */
+export const zComplianceItem = z.object({
+  authority: z.string(),
+  citation: z.string().nullable(),
+  code: z.string(),
+  detail: z.string(),
+  document_id: z.uuid().nullable(),
+  expires_on: z.iso.date().nullable(),
+  is_verified: z.boolean(),
+  name: z.string(),
+  note: z.string(),
+  renews: z.boolean(),
+  status: z.string(),
+});
+
+/**
+ * CompanyCompliance
+ */
+export const zCompanyCompliance = z.object({
+  as_of: z.iso.date(),
+  due: z.int(),
+  expired: z.int(),
+  held: z.int(),
+  items: z.array(zComplianceItem),
+  missing: z.int(),
+  missing_filing_fields: z.array(z.string()),
 });
 
 /**
@@ -2963,6 +3091,61 @@ export const zOfferResponseRespondPath = z.object({
  * Successful Response
  */
 export const zOfferResponseRespondResponse = zPublicOffer;
+
+/**
+ * Successful Response
+ */
+export const zOrgGetCompanyResponse = zCompanyOut;
+
+export const zOrgUpdateCompanyBody = zCompanyUpdate;
+
+/**
+ * Successful Response
+ */
+export const zOrgUpdateCompanyResponse = zCompanyOut;
+
+/**
+ * Successful Response
+ */
+export const zOrgCompanyComplianceResponse = zCompanyCompliance;
+
+/**
+ * Response Org-List Company Documents
+ *
+ * Successful Response
+ */
+export const zOrgListCompanyDocumentsResponse = z.array(zCompanyDocumentOut);
+
+export const zOrgAddCompanyDocumentBody = zCompanyDocumentCreate;
+
+/**
+ * Successful Response
+ */
+export const zOrgAddCompanyDocumentResponse = zCompanyDocumentOut;
+
+export const zOrgDownloadCompanyDocumentPath = z.object({
+  document_id: z.uuid(),
+});
+
+export const zOrgUploadCompanyDocumentBody = zBodyOrgUploadCompanyDocument;
+
+export const zOrgUploadCompanyDocumentPath = z.object({
+  document_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zOrgUploadCompanyDocumentResponse = zCompanyDocumentOut;
+
+export const zOrgVerifyCompanyDocumentPath = z.object({
+  document_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zOrgVerifyCompanyDocumentResponse = zCompanyDocumentOut;
 
 export const zOrgListCostCentresQuery = z.object({
   include_inactive: z.boolean().optional().default(false),

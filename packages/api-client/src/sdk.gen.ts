@@ -188,6 +188,11 @@ import type {
   OfferResponseViewOfferData,
   OfferResponseViewOfferErrors,
   OfferResponseViewOfferResponses,
+  OrgAddCompanyDocumentData,
+  OrgAddCompanyDocumentErrors,
+  OrgAddCompanyDocumentResponses,
+  OrgCompanyComplianceData,
+  OrgCompanyComplianceResponses,
   OrgCreateCostCentreData,
   OrgCreateCostCentreErrors,
   OrgCreateCostCentreResponses,
@@ -230,6 +235,13 @@ import type {
   OrgDeactivateWorkLocationData,
   OrgDeactivateWorkLocationErrors,
   OrgDeactivateWorkLocationResponses,
+  OrgDownloadCompanyDocumentData,
+  OrgDownloadCompanyDocumentErrors,
+  OrgDownloadCompanyDocumentResponses,
+  OrgGetCompanyData,
+  OrgGetCompanyResponses,
+  OrgListCompanyDocumentsData,
+  OrgListCompanyDocumentsResponses,
   OrgListCostCentresData,
   OrgListCostCentresErrors,
   OrgListCostCentresResponses,
@@ -253,6 +265,9 @@ import type {
   OrgListWorkLocationsResponses,
   OrgOrgTreeData,
   OrgOrgTreeResponses,
+  OrgUpdateCompanyData,
+  OrgUpdateCompanyErrors,
+  OrgUpdateCompanyResponses,
   OrgUpdateCostCentreData,
   OrgUpdateCostCentreErrors,
   OrgUpdateCostCentreResponses,
@@ -274,6 +289,12 @@ import type {
   OrgUpdateWorkLocationData,
   OrgUpdateWorkLocationErrors,
   OrgUpdateWorkLocationResponses,
+  OrgUploadCompanyDocumentData,
+  OrgUploadCompanyDocumentErrors,
+  OrgUploadCompanyDocumentResponses,
+  OrgVerifyCompanyDocumentData,
+  OrgVerifyCompanyDocumentErrors,
+  OrgVerifyCompanyDocumentResponses,
   PayrollApproveRunData,
   PayrollApproveRunErrors,
   PayrollApproveRunResponses,
@@ -1811,6 +1832,185 @@ export const offerResponseRespond = <ThrowOnError extends boolean = false>(
       "Content-Type": "application/json",
       ...options.headers,
     },
+  });
+
+/**
+ * Get Company
+ */
+export const orgGetCompany = <ThrowOnError extends boolean = false>(
+  options?: Options<OrgGetCompanyData, ThrowOnError>,
+): RequestResult<OrgGetCompanyResponses, unknown, ThrowOnError> =>
+  (options?.client ?? client).get<
+    OrgGetCompanyResponses,
+    unknown,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/company",
+    ...options,
+  });
+
+/**
+ * Update Company
+ *
+ * Set the statutory identity. Name and slug are deliberately not editable here.
+ */
+export const orgUpdateCompany = <ThrowOnError extends boolean = false>(
+  options: Options<OrgUpdateCompanyData, ThrowOnError>,
+): RequestResult<
+  OrgUpdateCompanyResponses,
+  OrgUpdateCompanyErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).patch<
+    OrgUpdateCompanyResponses,
+    OrgUpdateCompanyErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/company",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Company Compliance
+ *
+ * Every statutory document Nepal expects, held or not, worst first.
+ *
+ * Driven by the list in `nepal/company.py` rather than by the rows on file, so a
+ * document that was never collected shows as missing instead of simply being absent
+ * from the page.
+ */
+export const orgCompanyCompliance = <ThrowOnError extends boolean = false>(
+  options?: Options<OrgCompanyComplianceData, ThrowOnError>,
+): RequestResult<OrgCompanyComplianceResponses, unknown, ThrowOnError> =>
+  (options?.client ?? client).get<
+    OrgCompanyComplianceResponses,
+    unknown,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/company/compliance",
+    ...options,
+  });
+
+/**
+ * List Company Documents
+ */
+export const orgListCompanyDocuments = <ThrowOnError extends boolean = false>(
+  options?: Options<OrgListCompanyDocumentsData, ThrowOnError>,
+): RequestResult<OrgListCompanyDocumentsResponses, unknown, ThrowOnError> =>
+  (options?.client ?? client).get<
+    OrgListCompanyDocumentsResponses,
+    unknown,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/company/documents",
+    ...options,
+  });
+
+/**
+ * Add Company Document
+ *
+ * Record a document. The file comes second, as with employee documents — a company
+ * knows it needs a tax clearance before it has one.
+ */
+export const orgAddCompanyDocument = <ThrowOnError extends boolean = false>(
+  options: Options<OrgAddCompanyDocumentData, ThrowOnError>,
+): RequestResult<
+  OrgAddCompanyDocumentResponses,
+  OrgAddCompanyDocumentErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    OrgAddCompanyDocumentResponses,
+    OrgAddCompanyDocumentErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/company/documents",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Download Company Document
+ */
+export const orgDownloadCompanyDocument = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<OrgDownloadCompanyDocumentData, ThrowOnError>,
+): RequestResult<
+  OrgDownloadCompanyDocumentResponses,
+  OrgDownloadCompanyDocumentErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    OrgDownloadCompanyDocumentResponses,
+    OrgDownloadCompanyDocumentErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/company/documents/{document_id}/file",
+    ...options,
+  });
+
+/**
+ * Upload Company Document
+ *
+ * Attach the file. Same allowlist, size cap and content-addressed key as every
+ * other upload — `documents.receive` is shared.
+ */
+export const orgUploadCompanyDocument = <ThrowOnError extends boolean = false>(
+  options: Options<OrgUploadCompanyDocumentData, ThrowOnError>,
+): RequestResult<
+  OrgUploadCompanyDocumentResponses,
+  OrgUploadCompanyDocumentErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    OrgUploadCompanyDocumentResponses,
+    OrgUploadCompanyDocumentErrors,
+    ThrowOnError
+  >({
+    ...formDataBodySerializer,
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/company/documents/{document_id}/file",
+    ...options,
+    headers: {
+      "Content-Type": null,
+      ...options.headers,
+    },
+  });
+
+/**
+ * Verify Company Document
+ *
+ * Mark it checked, naming the checker from the token rather than the body.
+ */
+export const orgVerifyCompanyDocument = <ThrowOnError extends boolean = false>(
+  options: Options<OrgVerifyCompanyDocumentData, ThrowOnError>,
+): RequestResult<
+  OrgVerifyCompanyDocumentResponses,
+  OrgVerifyCompanyDocumentErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    OrgVerifyCompanyDocumentResponses,
+    OrgVerifyCompanyDocumentErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/company/documents/{document_id}/verify",
+    ...options,
   });
 
 /**

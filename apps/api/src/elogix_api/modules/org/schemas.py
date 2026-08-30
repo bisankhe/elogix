@@ -1,6 +1,7 @@
 import uuid
+from datetime import date, datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from elogix_api.modules.org.models import EmploymentType, OrgUnitKind
 
@@ -200,3 +201,118 @@ class PositionOut(_Out):
     reports_to_id: uuid.UUID | None
     headcount: int
     is_active: bool
+
+
+# ── The company's own record ──────────────────────────────────────────
+
+
+class CompanyOut(_Out):
+    id: uuid.UUID
+    name: str
+    slug: str
+    plan_tier: str
+    is_active: bool
+
+    legal_name: str | None
+    pan_number: str | None
+    vat_number: str | None
+    registration_number: str | None
+    registered_on: date | None
+    ird_office: str | None
+    ssf_employer_code: str | None
+    labour_office: str | None
+
+    address: str | None
+    ward: str | None
+    municipality: str | None
+    district: str | None
+    province: str | None
+
+    phone: str | None
+    email: str | None
+    website: str | None
+
+
+class CompanyUpdate(BaseModel):
+    """The tenant's own details. Name and slug are not here.
+
+    Renaming a tenant is a platform operation, and the slug is the login identifier —
+    changing it would lock every user out of their own company.
+    """
+
+    legal_name: str | None = Field(default=None, max_length=300)
+    pan_number: str | None = Field(default=None, max_length=32)
+    vat_number: str | None = Field(default=None, max_length=32)
+    registration_number: str | None = Field(default=None, max_length=64)
+    registered_on: date | None = None
+    ird_office: str | None = Field(default=None, max_length=120)
+    ssf_employer_code: str | None = Field(default=None, max_length=64)
+    labour_office: str | None = Field(default=None, max_length=120)
+
+    address: str | None = Field(default=None, max_length=300)
+    ward: str | None = Field(default=None, max_length=16)
+    municipality: str | None = Field(default=None, max_length=120)
+    district: str | None = Field(default=None, max_length=120)
+    province: str | None = Field(default=None, max_length=120)
+
+    phone: str | None = Field(default=None, max_length=32)
+    email: EmailStr | None = None
+    website: str | None = Field(default=None, max_length=200)
+
+
+class CompanyDocumentCreate(BaseModel):
+    """`category` matches a statutory code from `nepal/company.py`, or is free text."""
+
+    category: str = Field(min_length=1, max_length=48)
+    title: str = Field(min_length=1, max_length=200)
+    issuing_authority: str | None = Field(default=None, max_length=200)
+    reference_number: str | None = Field(default=None, max_length=120)
+    issued_on: date | None = None
+    expires_on: date | None = None
+    notes: str | None = None
+
+
+class CompanyDocumentOut(_Out):
+    id: uuid.UUID
+    category: str
+    title: str
+    issuing_authority: str | None
+    reference_number: str | None
+    issued_on: date | None
+    expires_on: date | None
+    is_verified: bool
+    verified_by: str | None
+    verified_at: datetime | None
+    original_filename: str | None
+    size_bytes: int | None
+    checksum: str | None
+    notes: str | None
+
+
+class ComplianceItem(BaseModel):
+    """One statutory document, held or not."""
+
+    code: str
+    name: str
+    authority: str
+    citation: str | None
+    renews: bool
+    note: str
+    # held | due | expired | missing
+    status: str
+    detail: str
+    document_id: uuid.UUID | None
+    expires_on: date | None
+    is_verified: bool
+
+
+class CompanyCompliance(BaseModel):
+    as_of: date
+    # Filing identifiers still blank. Named rather than counted, because "you cannot
+    # file without the SSF employer code" is actionable and "80% complete" is not.
+    missing_filing_fields: list[str]
+    items: list[ComplianceItem]
+    held: int
+    due: int
+    expired: int
+    missing: int

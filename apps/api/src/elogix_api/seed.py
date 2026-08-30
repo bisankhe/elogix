@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 import elogix_api.db.registry  # noqa: F401  — maps every table; see seed_scenarios.py
@@ -35,7 +35,14 @@ from elogix_api.modules.employee.models import (
     EmployeeEventType,
     EmployeeStatus,
 )
-from elogix_api.modules.identity.models import Company, PlanTier, RoleCode, User, UserRole
+from elogix_api.modules.identity.models import (
+    Company,
+    CompanyDocument,
+    PlanTier,
+    RoleCode,
+    User,
+    UserRole,
+)
 from elogix_api.modules.leave.models import DayPortion, LeaveRequest, LeaveRequestStatus, LeaveType
 from elogix_api.modules.leave.service import (
     accrue_month,
@@ -62,6 +69,7 @@ from elogix_api.modules.payroll.models import (
     SalaryComponent,
 )
 from elogix_api.modules.payroll.service import compute_run, set_salary
+from elogix_api.nepal import company as nepal_company
 
 COMPANY_SLUG = "acme"
 LOGIN_EMAIL = "admin@acme.com.np"
@@ -182,6 +190,26 @@ def main() -> None:
             db.flush()
             print(f"created company {COMPANY_SLUG}")
 
+        # The statutory identity a filing names the employer by. Seeded so the payroll
+        # and compliance screens have something real rather than a column of blanks.
+        if company.pan_number is None:
+            company.legal_name = "Acme Nepal Private Limited"
+            company.pan_number = "301234567"
+            company.vat_number = "301234567"
+            company.registration_number = "OCR-0091234"
+            company.registered_on = date(2020, 3, 15)
+            company.ird_office = "Inland Revenue Office, Kathmandu"
+            company.ssf_employer_code = "SSF-EMP-100234"
+            company.labour_office = "Department of Labour, Kathmandu"
+            company.address = "Baluwatar Marg 12"
+            company.ward = "4"
+            company.municipality = "Kathmandu Metropolitan City"
+            company.district = "Kathmandu"
+            company.province = "Bagmati"
+            company.phone = "+977-1-4001234"
+            company.email = "info@acme.com.np"
+            print("set the company's statutory identity")
+
 
         user = db.execute(
             select(User).where(User.company_id == company.id, User.email == LOGIN_EMAIL)
@@ -269,6 +297,8 @@ def main() -> None:
             print(f"created employee {person.code}")
 
         db.commit()
+        _seed_company_documents(db, company.id)
+        db.commit()
         _seed_self_service(db, company.id, user)
         db.commit()
         _seed_attendance(db, company.id)
@@ -279,6 +309,46 @@ def main() -> None:
         db.commit()
 
     print(f"\nlog in with  {LOGIN_EMAIL} / {LOGIN_PASSWORD}  at company '{COMPANY_SLUG}'")
+
+
+def _seed_company_documents(db: Session, company_id: uuid.UUID) -> None:
+    """A partly-collected paperwork file, which is what a real one looks like.
+
+    Deliberately incomplete and deliberately lapsed: the compliance screen exists to
+    show gaps, and a screen where everything is green proves nothing about it.
+    """
+    existing = db.execute(
+        select(func.count())
+        .select_from(CompanyDocument)
+        .where(CompanyDocument.company_id == company_id)
+    ).scalar_one()
+    if existing:
+        return
+
+    today = date.today()
+    for code, title, expires, verified in (
+        ("OCR_CERTIFICATE", "Company Registration Certificate", None, True),
+        ("PAN_CERTIFICATE", "PAN Certificate", None, True),
+        ("SSF_REGISTRATION", "SSF Employer Registration", None, True),
+        # Lapsed a fortnight ago — a trade licence that stops the company trading.
+        ("TRADE_LICENSE", "Trade Licence 2082-83", today - timedelta(days=14), True),
+        # Due inside the renewal window.
+        ("TAX_CLEARANCE", "Tax Clearance 2081-82", today + timedelta(days=25), False),
+    ):
+        spec = nepal_company.BY_CODE[code]
+        db.add(
+            CompanyDocument(
+                company_id=company_id,
+                category=code,
+                title=title,
+                issuing_authority=spec.authority,
+                expires_on=expires,
+                is_verified=verified,
+                verified_by="Acme Administrator" if verified else None,
+                verified_at=datetime.now(UTC) if verified else None,
+            )
+        )
+    print("created company documents: 5 of 10 statutory, 1 lapsed and 1 due")
 
 
 def _seed_self_service(db: Session, company_id: uuid.UUID, user: User) -> None:

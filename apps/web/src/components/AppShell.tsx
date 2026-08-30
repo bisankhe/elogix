@@ -60,6 +60,7 @@ const NAV: NavGroup[] = [
     icon: '🏛️',
     label: 'Organization Management',
     children: [
+      { to: '/org/company', label: 'Company Profile', module: 'org' },
       { to: '/org/units', label: 'Org Structure', module: 'org' },
       { to: '/org/positions', label: 'Positions', module: 'org' },
       { to: '/org/grades', label: 'Grades & Designations', module: 'org' },

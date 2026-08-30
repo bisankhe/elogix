@@ -74,6 +74,8 @@ import {
   offerResponseRespond,
   offerResponseViewOffer,
   type Options,
+  orgAddCompanyDocument,
+  orgCompanyCompliance,
   orgCreateCostCentre,
   orgCreateDesignation,
   orgCreateEmploymentCategory,
@@ -88,6 +90,9 @@ import {
   orgDeactivatePosition,
   orgDeactivateUnit,
   orgDeactivateWorkLocation,
+  orgDownloadCompanyDocument,
+  orgGetCompany,
+  orgListCompanyDocuments,
   orgListCostCentres,
   orgListDesignations,
   orgListEmploymentCategories,
@@ -96,6 +101,7 @@ import {
   orgListUnits,
   orgListWorkLocations,
   orgOrgTree,
+  orgUpdateCompany,
   orgUpdateCostCentre,
   orgUpdateDesignation,
   orgUpdateEmploymentCategory,
@@ -103,6 +109,8 @@ import {
   orgUpdatePosition,
   orgUpdateUnit,
   orgUpdateWorkLocation,
+  orgUploadCompanyDocument,
+  orgVerifyCompanyDocument,
   payrollApproveRun,
   payrollComputeRun,
   payrollCreateComponent,
@@ -326,6 +334,11 @@ import type {
   OfferResponseViewOfferData,
   OfferResponseViewOfferError,
   OfferResponseViewOfferResponse,
+  OrgAddCompanyDocumentData,
+  OrgAddCompanyDocumentError,
+  OrgAddCompanyDocumentResponse,
+  OrgCompanyComplianceData,
+  OrgCompanyComplianceResponse,
   OrgCreateCostCentreData,
   OrgCreateCostCentreError,
   OrgCreateCostCentreResponse,
@@ -368,6 +381,12 @@ import type {
   OrgDeactivateWorkLocationData,
   OrgDeactivateWorkLocationError,
   OrgDeactivateWorkLocationResponse,
+  OrgDownloadCompanyDocumentData,
+  OrgDownloadCompanyDocumentError,
+  OrgGetCompanyData,
+  OrgGetCompanyResponse,
+  OrgListCompanyDocumentsData,
+  OrgListCompanyDocumentsResponse,
   OrgListCostCentresData,
   OrgListCostCentresError,
   OrgListCostCentresResponse,
@@ -391,6 +410,9 @@ import type {
   OrgListWorkLocationsResponse,
   OrgOrgTreeData,
   OrgOrgTreeResponse,
+  OrgUpdateCompanyData,
+  OrgUpdateCompanyError,
+  OrgUpdateCompanyResponse,
   OrgUpdateCostCentreData,
   OrgUpdateCostCentreError,
   OrgUpdateCostCentreResponse,
@@ -412,6 +434,12 @@ import type {
   OrgUpdateWorkLocationData,
   OrgUpdateWorkLocationError,
   OrgUpdateWorkLocationResponse,
+  OrgUploadCompanyDocumentData,
+  OrgUploadCompanyDocumentError,
+  OrgUploadCompanyDocumentResponse,
+  OrgVerifyCompanyDocumentData,
+  OrgVerifyCompanyDocumentError,
+  OrgVerifyCompanyDocumentResponse,
   PayrollApproveRunData,
   PayrollApproveRunError,
   PayrollApproveRunResponse,
@@ -2474,6 +2502,239 @@ export const offerResponseRespondMutation = (
   > = {
     mutationFn: async (fnOptions) => {
       const { data } = await offerResponseRespond({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const orgGetCompanyQueryKey = (options?: Options<OrgGetCompanyData>) =>
+  createQueryKey("orgGetCompany", options);
+
+/**
+ * Get Company
+ */
+export const orgGetCompanyOptions = (options?: Options<OrgGetCompanyData>) =>
+  queryOptions<
+    OrgGetCompanyResponse,
+    DefaultError,
+    OrgGetCompanyResponse,
+    ReturnType<typeof orgGetCompanyQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await orgGetCompany({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: orgGetCompanyQueryKey(options),
+  });
+
+/**
+ * Update Company
+ *
+ * Set the statutory identity. Name and slug are deliberately not editable here.
+ */
+export const orgUpdateCompanyMutation = (
+  options?: Partial<Options<OrgUpdateCompanyData>>,
+): UseMutationOptions<
+  OrgUpdateCompanyResponse,
+  OrgUpdateCompanyError,
+  Options<OrgUpdateCompanyData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    OrgUpdateCompanyResponse,
+    OrgUpdateCompanyError,
+    Options<OrgUpdateCompanyData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await orgUpdateCompany({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const orgCompanyComplianceQueryKey = (
+  options?: Options<OrgCompanyComplianceData>,
+) => createQueryKey("orgCompanyCompliance", options);
+
+/**
+ * Company Compliance
+ *
+ * Every statutory document Nepal expects, held or not, worst first.
+ *
+ * Driven by the list in `nepal/company.py` rather than by the rows on file, so a
+ * document that was never collected shows as missing instead of simply being absent
+ * from the page.
+ */
+export const orgCompanyComplianceOptions = (
+  options?: Options<OrgCompanyComplianceData>,
+) =>
+  queryOptions<
+    OrgCompanyComplianceResponse,
+    DefaultError,
+    OrgCompanyComplianceResponse,
+    ReturnType<typeof orgCompanyComplianceQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await orgCompanyCompliance({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: orgCompanyComplianceQueryKey(options),
+  });
+
+export const orgListCompanyDocumentsQueryKey = (
+  options?: Options<OrgListCompanyDocumentsData>,
+) => createQueryKey("orgListCompanyDocuments", options);
+
+/**
+ * List Company Documents
+ */
+export const orgListCompanyDocumentsOptions = (
+  options?: Options<OrgListCompanyDocumentsData>,
+) =>
+  queryOptions<
+    OrgListCompanyDocumentsResponse,
+    DefaultError,
+    OrgListCompanyDocumentsResponse,
+    ReturnType<typeof orgListCompanyDocumentsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await orgListCompanyDocuments({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: orgListCompanyDocumentsQueryKey(options),
+  });
+
+/**
+ * Add Company Document
+ *
+ * Record a document. The file comes second, as with employee documents — a company
+ * knows it needs a tax clearance before it has one.
+ */
+export const orgAddCompanyDocumentMutation = (
+  options?: Partial<Options<OrgAddCompanyDocumentData>>,
+): UseMutationOptions<
+  OrgAddCompanyDocumentResponse,
+  OrgAddCompanyDocumentError,
+  Options<OrgAddCompanyDocumentData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    OrgAddCompanyDocumentResponse,
+    OrgAddCompanyDocumentError,
+    Options<OrgAddCompanyDocumentData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await orgAddCompanyDocument({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const orgDownloadCompanyDocumentQueryKey = (
+  options: Options<OrgDownloadCompanyDocumentData>,
+) => createQueryKey("orgDownloadCompanyDocument", options);
+
+/**
+ * Download Company Document
+ */
+export const orgDownloadCompanyDocumentOptions = (
+  options: Options<OrgDownloadCompanyDocumentData>,
+) =>
+  queryOptions<
+    unknown,
+    OrgDownloadCompanyDocumentError,
+    unknown,
+    ReturnType<typeof orgDownloadCompanyDocumentQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await orgDownloadCompanyDocument({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: orgDownloadCompanyDocumentQueryKey(options),
+  });
+
+/**
+ * Upload Company Document
+ *
+ * Attach the file. Same allowlist, size cap and content-addressed key as every
+ * other upload — `documents.receive` is shared.
+ */
+export const orgUploadCompanyDocumentMutation = (
+  options?: Partial<Options<OrgUploadCompanyDocumentData>>,
+): UseMutationOptions<
+  OrgUploadCompanyDocumentResponse,
+  OrgUploadCompanyDocumentError,
+  Options<OrgUploadCompanyDocumentData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    OrgUploadCompanyDocumentResponse,
+    OrgUploadCompanyDocumentError,
+    Options<OrgUploadCompanyDocumentData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await orgUploadCompanyDocument({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Verify Company Document
+ *
+ * Mark it checked, naming the checker from the token rather than the body.
+ */
+export const orgVerifyCompanyDocumentMutation = (
+  options?: Partial<Options<OrgVerifyCompanyDocumentData>>,
+): UseMutationOptions<
+  OrgVerifyCompanyDocumentResponse,
+  OrgVerifyCompanyDocumentError,
+  Options<OrgVerifyCompanyDocumentData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    OrgVerifyCompanyDocumentResponse,
+    OrgVerifyCompanyDocumentError,
+    Options<OrgVerifyCompanyDocumentData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await orgVerifyCompanyDocument({
         ...options,
         ...fnOptions,
         throwOnError: true,

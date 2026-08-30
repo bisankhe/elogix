@@ -19,6 +19,7 @@ const PAGES = [
   ['leave', '/leave'],
   ['attendance', '/attendance?start_date=2026-03-01&end_date=2026-03-31'],
   ['dashboard', '/dashboard'],
+  ['org-company', '/org/company'],
   ['org-units', '/org/units'],
   ['org-positions', '/org/positions'],
   ['org-grades', '/org/grades'],

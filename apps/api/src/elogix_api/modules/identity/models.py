@@ -11,14 +11,17 @@ tenant data, and login has to resolve a slug to an id before any tenant context 
 
 import enum
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 
 from sqlalchemy import (
     Boolean,
+    Date,
     DateTime,
     Enum,
     ForeignKey,
+    Integer,
     String,
+    Text,
     UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import UUID as PgUUID
@@ -47,7 +50,23 @@ class RoleCode(enum.StrEnum):
 
 
 class Company(Base, TimestampMixin):
-    """A tenant."""
+    """A tenant, and the legal entity that employs people and files returns.
+
+    **One company per tenant, by decision on 2026-08-30.** The prototype modelled
+    tenant → group companies → companies → branches, but defined `companies` twice with
+    clashing id types, never created a `tenants` table for the `tenant_id` those rows
+    carried, and took that `tenant_id` from a request header. There was no coherent
+    hierarchy to inherit.
+
+    If a customer later needs several registered companies under one group, the cheap
+    path is deliberately preserved: `company_id` here means *one legal entity*, never
+    "the SaaS account", and the caller's active company arrives on the token as a single
+    value. A group feature then adds a `groups` table, a nullable `group_id` here, and a
+    company **switcher** — it does not widen the filter. That distinction is what keeps
+    the change small: the 164 `.where(Model.company_id == user.company_id)` clauses stay
+    exactly as they are. Letting one request span several companies at once is the
+    expensive version, and it is the one to refuse.
+    """
 
     __tablename__ = "companies"
 
@@ -60,6 +79,82 @@ class Company(Base, TimestampMixin):
         default=PlanTier.TRIAL,
     )
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+    # ── Statutory identity ────────────────────────────────────────────
+    #
+    # Every one of these appears on a filing. Payroll has been complete since phase 06
+    # and still cannot produce a return, because a return names the employer by its PAN
+    # and its SSF employer code and this table held neither. Nullable throughout: a
+    # tenant is provisioned before its paperwork is gathered, and the document checklist
+    # in `nepal/company.py` is what chases the gaps.
+    legal_name: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    pan_number: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    vat_number: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    # Office of the Company Registrar — the registration every Nepali company has.
+    registration_number: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    registered_on: Mapped[date | None] = mapped_column(Date, nullable=True)
+    # Inland Revenue Department office the company files with.
+    ird_office: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    # Social Security Fund employer code. Without it no SSF contribution can be remitted,
+    # which makes it the single most consequential blank on this record.
+    ssf_employer_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    labour_office: Mapped[str | None] = mapped_column(String(120), nullable=True)
+
+    # ── Registered address ────────────────────────────────────────────
+    #
+    # Nepal addresses down to the ward, because that is the level a municipality
+    # registration and a labour audit are filed at.
+    address: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    ward: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    municipality: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    district: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    province: Mapped[str | None] = mapped_column(String(120), nullable=True)
+
+    # ── Contact ───────────────────────────────────────────────────────
+    phone: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    email: Mapped[str | None] = mapped_column(String(320), nullable=True)
+    website: Mapped[str | None] = mapped_column(String(200), nullable=True)
+
+
+class CompanyDocument(Base, TimestampMixin):
+    """A statutory document the company itself holds.
+
+    Deliberately not `EmployeeDocument`. These belong to the company, not to a person —
+    an OCR certificate has no employee — and filing them against a member of staff would
+    make them disappear when that person left. The storage layer is shared, so the
+    upload rules, the content-addressed key and the attachment headers are identical;
+    see `modules/employee/documents.py`.
+
+    Expiry is the reason this table earns its place. A trade licence or a tax clearance
+    that lapses unnoticed stops a company operating, and nobody finds it by opening
+    records one at a time.
+    """
+
+    __tablename__ = "company_documents"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    company_id: Mapped[uuid.UUID] = company_fk()
+    # Matches a `code` in `nepal/company.py` for a statutory document, or free text for
+    # anything else the company keeps.
+    category: Mapped[str] = mapped_column(String(48), nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    issuing_authority: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    reference_number: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    issued_on: Mapped[date | None] = mapped_column(Date, nullable=True)
+    expires_on: Mapped[date | None] = mapped_column(Date, nullable=True)
+
+    is_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    verified_by: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    verified_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    storage_key: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    original_filename: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    content_type: Mapped[str | None] = mapped_column(String(127), nullable=True)
+    size_bytes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    checksum: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 class User(Base, TimestampMixin):

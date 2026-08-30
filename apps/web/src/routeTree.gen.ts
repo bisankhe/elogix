@@ -23,6 +23,7 @@ import { Route as AppSettlementsRouteImport } from './routes/_app/settlements'
 import { Route as OfferTokenRouteImport } from './routes/offer.$token'
 import { Route as AppEmployeesIndexRouteImport } from './routes/_app/employees.index'
 import { Route as AppEmployeesEmployeeIdRouteImport } from './routes/_app/employees.$employeeId'
+import { Route as AppOrgCompanyRouteImport } from './routes/_app/org/company'
 import { Route as AppOrgGradesRouteImport } from './routes/_app/org/grades'
 import { Route as AppOrgLocationsRouteImport } from './routes/_app/org/locations'
 import { Route as AppOrgPositionsRouteImport } from './routes/_app/org/positions'
@@ -97,6 +98,11 @@ const AppEmployeesEmployeeIdRoute = AppEmployeesEmployeeIdRouteImport.update({
   path: '/employees/$employeeId',
   getParentRoute: () => AppRoute,
 } as any)
+const AppOrgCompanyRoute = AppOrgCompanyRouteImport.update({
+  id: '/org/company',
+  path: '/org/company',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppOrgGradesRoute = AppOrgGradesRouteImport.update({
   id: '/org/grades',
   path: '/org/grades',
@@ -131,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/settlements': typeof AppSettlementsRoute
   '/offer/$token': typeof OfferTokenRoute
   '/employees/$employeeId': typeof AppEmployeesEmployeeIdRoute
+  '/org/company': typeof AppOrgCompanyRoute
   '/org/grades': typeof AppOrgGradesRoute
   '/org/locations': typeof AppOrgLocationsRoute
   '/org/positions': typeof AppOrgPositionsRoute
@@ -150,6 +157,7 @@ export interface FileRoutesByTo {
   '/settlements': typeof AppSettlementsRoute
   '/offer/$token': typeof OfferTokenRoute
   '/employees/$employeeId': typeof AppEmployeesEmployeeIdRoute
+  '/org/company': typeof AppOrgCompanyRoute
   '/org/grades': typeof AppOrgGradesRoute
   '/org/locations': typeof AppOrgLocationsRoute
   '/org/positions': typeof AppOrgPositionsRoute
@@ -171,6 +179,7 @@ export interface FileRoutesById {
   '/_app/settlements': typeof AppSettlementsRoute
   '/offer/$token': typeof OfferTokenRoute
   '/_app/employees/$employeeId': typeof AppEmployeesEmployeeIdRoute
+  '/_app/org/company': typeof AppOrgCompanyRoute
   '/_app/org/grades': typeof AppOrgGradesRoute
   '/_app/org/locations': typeof AppOrgLocationsRoute
   '/_app/org/positions': typeof AppOrgPositionsRoute
@@ -192,6 +201,7 @@ export interface FileRouteTypes {
     | '/settlements'
     | '/offer/$token'
     | '/employees/$employeeId'
+    | '/org/company'
     | '/org/grades'
     | '/org/locations'
     | '/org/positions'
@@ -211,6 +221,7 @@ export interface FileRouteTypes {
     | '/settlements'
     | '/offer/$token'
     | '/employees/$employeeId'
+    | '/org/company'
     | '/org/grades'
     | '/org/locations'
     | '/org/positions'
@@ -231,6 +242,7 @@ export interface FileRouteTypes {
     | '/_app/settlements'
     | '/offer/$token'
     | '/_app/employees/$employeeId'
+    | '/_app/org/company'
     | '/_app/org/grades'
     | '/_app/org/locations'
     | '/_app/org/positions'
@@ -345,6 +357,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEmployeesEmployeeIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/org/company': {
+      id: '/_app/org/company'
+      path: '/org/company'
+      fullPath: '/org/company'
+      preLoaderRoute: typeof AppOrgCompanyRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/org/grades': {
       id: '/_app/org/grades'
       path: '/org/grades'
@@ -386,6 +405,7 @@ interface AppRouteChildren {
   AppReportsRoute: typeof AppReportsRoute
   AppSettlementsRoute: typeof AppSettlementsRoute
   AppEmployeesEmployeeIdRoute: typeof AppEmployeesEmployeeIdRoute
+  AppOrgCompanyRoute: typeof AppOrgCompanyRoute
   AppOrgGradesRoute: typeof AppOrgGradesRoute
   AppOrgLocationsRoute: typeof AppOrgLocationsRoute
   AppOrgPositionsRoute: typeof AppOrgPositionsRoute
@@ -403,6 +423,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppReportsRoute: AppReportsRoute,
   AppSettlementsRoute: AppSettlementsRoute,
   AppEmployeesEmployeeIdRoute: AppEmployeesEmployeeIdRoute,
+  AppOrgCompanyRoute: AppOrgCompanyRoute,
   AppOrgGradesRoute: AppOrgGradesRoute,
   AppOrgLocationsRoute: AppOrgLocationsRoute,
   AppOrgPositionsRoute: AppOrgPositionsRoute,

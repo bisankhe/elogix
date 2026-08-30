@@ -83,8 +83,11 @@ the foot. Match new screens the same way rather than guessing.
 
 ### Seeing the UI
 
-There is no Claude browser extension here, but a real headed Chromium runs against a
-virtual display, which is enough to verify screens and catch console errors.
+A real headed Chromium runs against a virtual display, which is enough to verify
+screens and catch console errors. Claude for Chrome is also installed as of
+2026-08-30, so the browser can be driven interactively as well — but the two scripts
+below stay the verification of record, because they fail the build and a conversation
+does not.
 
 `bash start-gui.sh` brings up the whole desktop — Xvfb, fluxbox, x11vnc and noVNC — and
 is safe to re-run; anything already up is left alone. Then open port **6080** from the
@@ -97,6 +100,11 @@ and x11vnc runs with `-nopw`, so Public means anyone with the URL can control th
 bash start-gui.sh                                   # desktop on :1, noVNC on 6080
 cd apps/web && DISPLAY=:1 node scripts/screenshot.mjs   # every screen, with good data
 cd apps/web && DISPLAY=:1 node scripts/scenarios.mjs    # empty states, refusals, mobile
+
+# A browser to drive by hand on the desktop, if the extension is not being used:
+DISPLAY=:1 ~/.cache/ms-playwright/chromium-*/chrome-linux64/chrome \
+  --no-sandbox --disable-dev-shm-usage --window-size=1600,1000 \
+  --user-data-dir=/tmp/chrome-profile http://localhost:5173 &
 ```
 
 Both scripts exit non-zero on a console error, page error or unexpected 4xx/5xx, so they
@@ -182,6 +190,16 @@ replaced the API's exact reason with a guess.
   backfill with `op.execute`, then `alter_column(..., nullable=False)`. Autogenerate
   emits a NOT NULL column with no default, which fails outright. The same applies in
   reverse in `downgrade` — see the phase 03 revision for both directions.
+- **One company per tenant**, by decision on 2026-08-30. The prototype modelled
+  tenant → group companies → companies → branches but defined `companies` twice with
+  clashing id types, never created the `tenants` table its `tenant_id` referenced, and
+  read that `tenant_id` from a request header — there was no coherent hierarchy to
+  inherit. If a customer later needs several registered companies under one group, the
+  cheap path is preserved deliberately: `company_id` means *one legal entity*, and the
+  caller's active company arrives on the token as a single value, so a group feature
+  adds a **switcher**, not a wider filter. The 164 `.where(Model.company_id ==
+  user.company_id)` clauses then stay exactly as they are. Letting one request span
+  several companies at once is the expensive version, and it is the one to refuse.
 - **Statutory rules live in `nepal/`, not in the modules that use them.** They are
   legal constants, they need reviewing by a person against the Act, and every one of
   them is a *default* that a per-company policy row can override — `nepal/labour.py`

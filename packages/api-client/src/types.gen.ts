@@ -354,6 +354,16 @@ export type BodyEmployeesUploadDocumentFile = {
 };
 
 /**
+ * Body_org-upload_company_document
+ */
+export type BodyOrgUploadCompanyDocument = {
+  /**
+   * File
+   */
+  file: Blob | File;
+};
+
+/**
  * Body_recruitment-upload_resume
  */
 export type BodyRecruitmentUploadResume = {
@@ -435,6 +445,355 @@ export type CarryForwardRequest = {
    * From Year
    */
   from_year: number;
+};
+
+/**
+ * CompanyCompliance
+ */
+export type CompanyCompliance = {
+  /**
+   * As Of
+   */
+  as_of: string;
+  /**
+   * Due
+   */
+  due: number;
+  /**
+   * Expired
+   */
+  expired: number;
+  /**
+   * Held
+   */
+  held: number;
+  /**
+   * Items
+   */
+  items: Array<ComplianceItem>;
+  /**
+   * Missing
+   */
+  missing: number;
+  /**
+   * Missing Filing Fields
+   */
+  missing_filing_fields: Array<string>;
+};
+
+/**
+ * CompanyDocumentCreate
+ *
+ * `category` matches a statutory code from `nepal/company.py`, or is free text.
+ */
+export type CompanyDocumentCreate = {
+  /**
+   * Category
+   */
+  category: string;
+  /**
+   * Expires On
+   */
+  expires_on?: string | null;
+  /**
+   * Issued On
+   */
+  issued_on?: string | null;
+  /**
+   * Issuing Authority
+   */
+  issuing_authority?: string | null;
+  /**
+   * Notes
+   */
+  notes?: string | null;
+  /**
+   * Reference Number
+   */
+  reference_number?: string | null;
+  /**
+   * Title
+   */
+  title: string;
+};
+
+/**
+ * CompanyDocumentOut
+ */
+export type CompanyDocumentOut = {
+  /**
+   * Category
+   */
+  category: string;
+  /**
+   * Checksum
+   */
+  checksum: string | null;
+  /**
+   * Expires On
+   */
+  expires_on: string | null;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Is Verified
+   */
+  is_verified: boolean;
+  /**
+   * Issued On
+   */
+  issued_on: string | null;
+  /**
+   * Issuing Authority
+   */
+  issuing_authority: string | null;
+  /**
+   * Notes
+   */
+  notes: string | null;
+  /**
+   * Original Filename
+   */
+  original_filename: string | null;
+  /**
+   * Reference Number
+   */
+  reference_number: string | null;
+  /**
+   * Size Bytes
+   */
+  size_bytes: number | null;
+  /**
+   * Title
+   */
+  title: string;
+  /**
+   * Verified At
+   */
+  verified_at: string | null;
+  /**
+   * Verified By
+   */
+  verified_by: string | null;
+};
+
+/**
+ * CompanyOut
+ */
+export type CompanyOut = {
+  /**
+   * Address
+   */
+  address: string | null;
+  /**
+   * District
+   */
+  district: string | null;
+  /**
+   * Email
+   */
+  email: string | null;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Ird Office
+   */
+  ird_office: string | null;
+  /**
+   * Is Active
+   */
+  is_active: boolean;
+  /**
+   * Labour Office
+   */
+  labour_office: string | null;
+  /**
+   * Legal Name
+   */
+  legal_name: string | null;
+  /**
+   * Municipality
+   */
+  municipality: string | null;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Pan Number
+   */
+  pan_number: string | null;
+  /**
+   * Phone
+   */
+  phone: string | null;
+  /**
+   * Plan Tier
+   */
+  plan_tier: string;
+  /**
+   * Province
+   */
+  province: string | null;
+  /**
+   * Registered On
+   */
+  registered_on: string | null;
+  /**
+   * Registration Number
+   */
+  registration_number: string | null;
+  /**
+   * Slug
+   */
+  slug: string;
+  /**
+   * Ssf Employer Code
+   */
+  ssf_employer_code: string | null;
+  /**
+   * Vat Number
+   */
+  vat_number: string | null;
+  /**
+   * Ward
+   */
+  ward: string | null;
+  /**
+   * Website
+   */
+  website: string | null;
+};
+
+/**
+ * CompanyUpdate
+ *
+ * The tenant's own details. Name and slug are not here.
+ *
+ * Renaming a tenant is a platform operation, and the slug is the login identifier —
+ * changing it would lock every user out of their own company.
+ */
+export type CompanyUpdate = {
+  /**
+   * Address
+   */
+  address?: string | null;
+  /**
+   * District
+   */
+  district?: string | null;
+  /**
+   * Email
+   */
+  email?: string | null;
+  /**
+   * Ird Office
+   */
+  ird_office?: string | null;
+  /**
+   * Labour Office
+   */
+  labour_office?: string | null;
+  /**
+   * Legal Name
+   */
+  legal_name?: string | null;
+  /**
+   * Municipality
+   */
+  municipality?: string | null;
+  /**
+   * Pan Number
+   */
+  pan_number?: string | null;
+  /**
+   * Phone
+   */
+  phone?: string | null;
+  /**
+   * Province
+   */
+  province?: string | null;
+  /**
+   * Registered On
+   */
+  registered_on?: string | null;
+  /**
+   * Registration Number
+   */
+  registration_number?: string | null;
+  /**
+   * Ssf Employer Code
+   */
+  ssf_employer_code?: string | null;
+  /**
+   * Vat Number
+   */
+  vat_number?: string | null;
+  /**
+   * Ward
+   */
+  ward?: string | null;
+  /**
+   * Website
+   */
+  website?: string | null;
+};
+
+/**
+ * ComplianceItem
+ *
+ * One statutory document, held or not.
+ */
+export type ComplianceItem = {
+  /**
+   * Authority
+   */
+  authority: string;
+  /**
+   * Citation
+   */
+  citation: string | null;
+  /**
+   * Code
+   */
+  code: string;
+  /**
+   * Detail
+   */
+  detail: string;
+  /**
+   * Document Id
+   */
+  document_id: string | null;
+  /**
+   * Expires On
+   */
+  expires_on: string | null;
+  /**
+   * Is Verified
+   */
+  is_verified: boolean;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Note
+   */
+  note: string;
+  /**
+   * Renews
+   */
+  renews: boolean;
+  /**
+   * Status
+   */
+  status: string;
 };
 
 /**
@@ -6929,6 +7288,206 @@ export type OfferResponseRespondResponses = {
 
 export type OfferResponseRespondResponse =
   OfferResponseRespondResponses[keyof OfferResponseRespondResponses];
+
+export type OrgGetCompanyData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/api/v1/org/company";
+};
+
+export type OrgGetCompanyResponses = {
+  /**
+   * Successful Response
+   */
+  200: CompanyOut;
+};
+
+export type OrgGetCompanyResponse =
+  OrgGetCompanyResponses[keyof OrgGetCompanyResponses];
+
+export type OrgUpdateCompanyData = {
+  body: CompanyUpdate;
+  path?: never;
+  query?: never;
+  url: "/api/v1/org/company";
+};
+
+export type OrgUpdateCompanyErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgUpdateCompanyError =
+  OrgUpdateCompanyErrors[keyof OrgUpdateCompanyErrors];
+
+export type OrgUpdateCompanyResponses = {
+  /**
+   * Successful Response
+   */
+  200: CompanyOut;
+};
+
+export type OrgUpdateCompanyResponse =
+  OrgUpdateCompanyResponses[keyof OrgUpdateCompanyResponses];
+
+export type OrgCompanyComplianceData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/api/v1/org/company/compliance";
+};
+
+export type OrgCompanyComplianceResponses = {
+  /**
+   * Successful Response
+   */
+  200: CompanyCompliance;
+};
+
+export type OrgCompanyComplianceResponse =
+  OrgCompanyComplianceResponses[keyof OrgCompanyComplianceResponses];
+
+export type OrgListCompanyDocumentsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/api/v1/org/company/documents";
+};
+
+export type OrgListCompanyDocumentsResponses = {
+  /**
+   * Response Org-List Company Documents
+   *
+   * Successful Response
+   */
+  200: Array<CompanyDocumentOut>;
+};
+
+export type OrgListCompanyDocumentsResponse =
+  OrgListCompanyDocumentsResponses[keyof OrgListCompanyDocumentsResponses];
+
+export type OrgAddCompanyDocumentData = {
+  body: CompanyDocumentCreate;
+  path?: never;
+  query?: never;
+  url: "/api/v1/org/company/documents";
+};
+
+export type OrgAddCompanyDocumentErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgAddCompanyDocumentError =
+  OrgAddCompanyDocumentErrors[keyof OrgAddCompanyDocumentErrors];
+
+export type OrgAddCompanyDocumentResponses = {
+  /**
+   * Successful Response
+   */
+  201: CompanyDocumentOut;
+};
+
+export type OrgAddCompanyDocumentResponse =
+  OrgAddCompanyDocumentResponses[keyof OrgAddCompanyDocumentResponses];
+
+export type OrgDownloadCompanyDocumentData = {
+  body?: never;
+  path: {
+    /**
+     * Document Id
+     */
+    document_id: string;
+  };
+  query?: never;
+  url: "/api/v1/org/company/documents/{document_id}/file";
+};
+
+export type OrgDownloadCompanyDocumentErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgDownloadCompanyDocumentError =
+  OrgDownloadCompanyDocumentErrors[keyof OrgDownloadCompanyDocumentErrors];
+
+export type OrgDownloadCompanyDocumentResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type OrgUploadCompanyDocumentData = {
+  body: BodyOrgUploadCompanyDocument;
+  path: {
+    /**
+     * Document Id
+     */
+    document_id: string;
+  };
+  query?: never;
+  url: "/api/v1/org/company/documents/{document_id}/file";
+};
+
+export type OrgUploadCompanyDocumentErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgUploadCompanyDocumentError =
+  OrgUploadCompanyDocumentErrors[keyof OrgUploadCompanyDocumentErrors];
+
+export type OrgUploadCompanyDocumentResponses = {
+  /**
+   * Successful Response
+   */
+  200: CompanyDocumentOut;
+};
+
+export type OrgUploadCompanyDocumentResponse =
+  OrgUploadCompanyDocumentResponses[keyof OrgUploadCompanyDocumentResponses];
+
+export type OrgVerifyCompanyDocumentData = {
+  body?: never;
+  path: {
+    /**
+     * Document Id
+     */
+    document_id: string;
+  };
+  query?: never;
+  url: "/api/v1/org/company/documents/{document_id}/verify";
+};
+
+export type OrgVerifyCompanyDocumentErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgVerifyCompanyDocumentError =
+  OrgVerifyCompanyDocumentErrors[keyof OrgVerifyCompanyDocumentErrors];
+
+export type OrgVerifyCompanyDocumentResponses = {
+  /**
+   * Successful Response
+   */
+  200: CompanyDocumentOut;
+};
+
+export type OrgVerifyCompanyDocumentResponse =
+  OrgVerifyCompanyDocumentResponses[keyof OrgVerifyCompanyDocumentResponses];
 
 export type OrgListCostCentresData = {
   body?: never;

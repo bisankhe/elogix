@@ -9,9 +9,11 @@ Org units and positions get real logic, because they have real invariants.
 """
 
 import uuid
+from datetime import UTC, datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -19,6 +21,9 @@ from sqlalchemy.orm import Session
 
 from elogix_api.core.deps import CurrentUser, CurrentUserDep, DbDep, require_module
 from elogix_api.core.entitlements import ModuleCode
+from elogix_api.modules.employee import documents
+from elogix_api.modules.identity.models import Company, CompanyDocument
+from elogix_api.modules.org import company as company_service
 from elogix_api.modules.org import service
 from elogix_api.modules.org.models import (
     CostCentre,
@@ -31,6 +36,11 @@ from elogix_api.modules.org.models import (
     WorkLocation,
 )
 from elogix_api.modules.org.schemas import (
+    CompanyCompliance,
+    CompanyDocumentCreate,
+    CompanyDocumentOut,
+    CompanyOut,
+    CompanyUpdate,
     CostCentreCreate,
     CostCentreOut,
     CostCentreUpdate,
@@ -54,6 +64,7 @@ from elogix_api.modules.org.schemas import (
     WorkLocationOut,
     WorkLocationUpdate,
 )
+from elogix_api.nepal import company as nepal_company
 
 router = APIRouter(
     prefix="/org",
@@ -472,3 +483,155 @@ def _get_position(
     if row is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, missing)
     return row
+
+
+# ── The company itself ────────────────────────────────────────────────
+#
+# `Company` lives in `modules/identity/` because login resolves a slug to a tenant
+# before any tenant context exists. Its administration is org-shaped, so it is served
+# here — see `modules/org/company.py`.
+
+
+def _own_company(db: Session, user: CurrentUser) -> Company:
+    """The caller's own company, and only ever that.
+
+    There is no company id in the path. One company per tenant means the caller's
+    company is the one on their token, so there is nothing to substitute — the same
+    rule the self-service module follows for employees.
+    """
+    return db.execute(select(Company).where(Company.id == user.company_id)).scalar_one()
+
+
+@router.get("/company", response_model=CompanyOut)
+def get_company(user: CurrentUserDep, db: DbDep) -> Company:
+    return _own_company(db, user)
+
+
+@router.patch("/company", response_model=CompanyOut)
+def update_company(payload: CompanyUpdate, user: CurrentUserDep, db: DbDep) -> Company:
+    """Set the statutory identity. Name and slug are deliberately not editable here."""
+    record = _own_company(db, user)
+    for key, value in payload.model_dump(exclude_unset=True).items():
+        setattr(record, key, value)
+    db.commit()
+    db.refresh(record)
+    return record
+
+
+@router.get("/company/compliance", response_model=CompanyCompliance)
+def company_compliance(user: CurrentUserDep, db: DbDep) -> CompanyCompliance:
+    """Every statutory document Nepal expects, held or not, worst first.
+
+    Driven by the list in `nepal/company.py` rather than by the rows on file, so a
+    document that was never collected shows as missing instead of simply being absent
+    from the page.
+    """
+    return company_service.compliance(db, company=_own_company(db, user))
+
+
+@router.get("/company/documents", response_model=list[CompanyDocumentOut])
+def list_company_documents(user: CurrentUserDep, db: DbDep) -> list[CompanyDocument]:
+    return list(
+        db.execute(
+            select(CompanyDocument)
+            .where(CompanyDocument.company_id == user.company_id)
+            .order_by(CompanyDocument.category)
+        ).scalars().all()
+    )
+
+
+@router.post(
+    "/company/documents",
+    response_model=CompanyDocumentOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def add_company_document(
+    payload: CompanyDocumentCreate, user: CurrentUserDep, db: DbDep
+) -> CompanyDocument:
+    """Record a document. The file comes second, as with employee documents — a company
+    knows it needs a tax clearance before it has one."""
+    if payload.expires_on and payload.issued_on and payload.expires_on < payload.issued_on:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT, "A document cannot expire before it was issued"
+        )
+
+    # Fill the authority from the statutory list when the category names one, so nobody
+    # retypes "Office of the Company Registrar".
+    spec = nepal_company.BY_CODE.get(payload.category)
+    record = CompanyDocument(
+        company_id=user.company_id,
+        **{
+            **payload.model_dump(),
+            "issuing_authority": payload.issuing_authority
+            or (spec.authority if spec else None),
+        },
+    )
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+    return record
+
+
+@router.post("/company/documents/{document_id}/file", response_model=CompanyDocumentOut)
+def upload_company_document(
+    document_id: uuid.UUID,
+    user: CurrentUserDep,
+    db: DbDep,
+    file: Annotated[UploadFile, File()],
+) -> CompanyDocument:
+    """Attach the file. Same allowlist, size cap and content-addressed key as every
+    other upload — `documents.receive` is shared."""
+    record = company_service.get_document(
+        db, company_id=user.company_id, document_id=document_id
+    )
+    if record is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Document not found")
+
+    stored = documents.receive(file, company_id=user.company_id)
+    record.storage_key = stored.key
+    record.checksum = stored.checksum
+    record.size_bytes = stored.size_bytes
+    record.content_type = stored.content_type
+    record.original_filename = stored.filename
+    db.commit()
+    db.refresh(record)
+    return record
+
+
+@router.get("/company/documents/{document_id}/file")
+def download_company_document(
+    document_id: uuid.UUID, user: CurrentUserDep, db: DbDep
+) -> StreamingResponse:
+    record = company_service.get_document(
+        db, company_id=user.company_id, document_id=document_id
+    )
+    if record is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Document not found")
+    if record.storage_key is None:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, "No file has been uploaded for this document yet"
+        )
+    return documents.stream(
+        storage_key=record.storage_key,
+        content_type=record.content_type,
+        filename=record.original_filename,
+    )
+
+
+@router.post("/company/documents/{document_id}/verify", response_model=CompanyDocumentOut)
+def verify_company_document(
+    document_id: uuid.UUID, user: CurrentUserDep, db: DbDep
+) -> CompanyDocument:
+    """Mark it checked, naming the checker from the token rather than the body."""
+    record = company_service.get_document(
+        db, company_id=user.company_id, document_id=document_id
+    )
+    if record is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Document not found")
+
+    record.is_verified = True
+    record.verified_by = user.full_name
+    record.verified_at = datetime.now(UTC)
+    db.commit()
+    db.refresh(record)
+    return record
