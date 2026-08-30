@@ -77,39 +77,33 @@ the foot. Match new screens the same way rather than guessing.
 ### Seeing the UI
 
 There is no Claude browser extension here, but a real headed Chromium runs against a
-virtual display, which is enough to verify screens and to catch console errors:
+virtual display, which is enough to verify screens and catch console errors.
+
+`bash start-gui.sh` brings up the whole desktop — Xvfb, fluxbox, x11vnc and noVNC — and
+is safe to re-run; anything already up is left alone. Then open port **6080** from the
+Ports tab and add `/vnc.html`, and you can drive the browser yourself.
+
+Leave 6080 **Private**. Codespaces forwards it to your authenticated session either way,
+and x11vnc runs with `-nopw`, so Public means anyone with the URL can control the desktop.
 
 ```bash
-npx playwright install --with-deps chromium   # once
-Xvfb :99 -screen 0 1600x1000x24 &             # a display to render into
-cd apps/web && DISPLAY=:99 node scripts/screenshot.mjs
+bash start-gui.sh                                   # desktop on :1, noVNC on 6080
+cd apps/web && DISPLAY=:1 node scripts/screenshot.mjs   # every screen, with good data
+cd apps/web && DISPLAY=:1 node scripts/scenarios.mjs    # empty states, refusals, mobile
 ```
 
-Two scripts. `screenshot.mjs` captures every screen with good data; `scenarios.mjs`
-captures the states the happy path never reaches — empty tenants, refusals, a smaller
-plan, a collapsed sidebar, a phone-width viewport — into `/tmp/elogix-scenarios/`. Both
-exit non-zero on a console error, page error or unexpected 4xx/5xx, so they double as
-smoke tests. `headless: false` is deliberate: it renders through the same path a user's
-browser does.
+Both scripts exit non-zero on a console error, page error or unexpected 4xx/5xx, so they
+double as smoke tests. `headless: false` is deliberate: it renders through the same path
+a user's browser does.
 
 `uv run python -m elogix_api.seed_scenarios` creates a second tenant, `startup`, empty
 and on the trial plan — which is what makes every empty state and the entitlement-filtered
 nav reachable at all.
 
-**Every UI change should be looked at.** Three real bugs so far were invisible to 154
-passing tests and obvious in a screenshot: an hour of phantom overtime on every day, an
-empty Positions screen, and a sidebar that ate a phone viewport.
-
-To *watch* it live rather than screenshot it, add a VNC bridge and open port 6080:
-
-```bash
-sudo apt-get install -y x11vnc novnc websockify
-x11vnc -display :99 -forever -shared -nopw -rfbport 5901 &
-websockify --web=/usr/share/novnc 6080 localhost:5901 &
-```
-
-A `401` on `/api/v1/auth/refresh` during a cold load is expected, not a bug: the app
-asks for a new access token on startup and there is no refresh cookie until you sign in.
+**Every UI change should be looked at.** Several real bugs so far were invisible to a
+green test suite and obvious in a screenshot: an hour of phantom overtime on every day,
+an empty Positions screen, a sidebar that ate a phone viewport, and a leave refusal that
+replaced the API's exact reason with a guess.
 
 ---
 
