@@ -10,6 +10,10 @@ node_modules/
 dist/
 *.tsbuildinfo
 
+# Uploaded documents. Citizenship scans, contracts, medical certificates — employee
+# PII that must never reach a commit. `settings.storage_dir` points here by default.
+var/
+
 # Env
 .env
 .env.local

@@ -1080,6 +1080,63 @@ export type HttpValidationError = {
 };
 
 /**
+ * Headcount
+ *
+ * Who works here, cut by one dimension at a time.
+ *
+ * `as_of` is recorded on the response because headcount is a point-in-time figure and
+ * a screenshot of one without a date is worthless in a meeting.
+ */
+export type Headcount = {
+  /**
+   * As Of
+   */
+  as_of: string;
+  /**
+   * Grouped By
+   */
+  grouped_by: string;
+  /**
+   * Rows
+   */
+  rows: Array<HeadcountRow>;
+  /**
+   * Total Active
+   */
+  total_active: number;
+};
+
+/**
+ * HeadcountRow
+ */
+export type HeadcountRow = {
+  /**
+   * Active
+   */
+  active: number;
+  /**
+   * Exited
+   */
+  exited: number;
+  /**
+   * Group
+   */
+  group: string;
+  /**
+   * Probation
+   */
+  probation: number;
+  /**
+   * Suspended
+   */
+  suspended: number;
+  /**
+   * Total
+   */
+  total: number;
+};
+
+/**
  * HireRequest
  *
  * One call creates the person, their opening assignment and the HIRED event.
@@ -1232,6 +1289,50 @@ export type HolidayOut = {
    * Name
    */
   name: string;
+};
+
+/**
+ * LeaveBalanceReport
+ */
+export type LeaveBalanceReport = {
+  /**
+   * Leave Year
+   */
+  leave_year: number;
+  /**
+   * Rows
+   */
+  rows: Array<LeaveBalanceRow>;
+};
+
+/**
+ * LeaveBalanceRow
+ */
+export type LeaveBalanceRow = {
+  /**
+   * Available Days
+   */
+  available_days: string;
+  /**
+   * Employee Code
+   */
+  employee_code: string;
+  /**
+   * Employee Id
+   */
+  employee_id: string;
+  /**
+   * Full Name
+   */
+  full_name: string;
+  /**
+   * Leave Type
+   */
+  leave_type: string;
+  /**
+   * Org Unit
+   */
+  org_unit: string | null;
 };
 
 /**
@@ -2243,6 +2344,119 @@ export type PayrollExportRow = {
    * Worked Minutes
    */
   worked_minutes: number;
+};
+
+/**
+ * PayrollRegister
+ */
+export type PayrollRegister = {
+  /**
+   * Fiscal Year
+   */
+  fiscal_year: string;
+  /**
+   * Period End
+   */
+  period_end: string;
+  /**
+   * Period Start
+   */
+  period_start: string;
+  /**
+   * Rows
+   */
+  rows: Array<PayrollRegisterRow>;
+  /**
+   * Status
+   */
+  status: string;
+  totals: PayrollRegisterTotals;
+};
+
+/**
+ * PayrollRegisterRow
+ */
+export type PayrollRegisterRow = {
+  /**
+   * Basic Earned
+   */
+  basic_earned: string;
+  /**
+   * Employee Code
+   */
+  employee_code: string;
+  /**
+   * Full Name
+   */
+  full_name: string;
+  /**
+   * Gross
+   */
+  gross: string;
+  /**
+   * Monthly Tax
+   */
+  monthly_tax: string;
+  /**
+   * Net Pay
+   */
+  net_pay: string;
+  /**
+   * Overtime Pay
+   */
+  overtime_pay: string;
+  /**
+   * Payable Days
+   */
+  payable_days: string;
+  /**
+   * Ssf Employee
+   */
+  ssf_employee: string;
+  /**
+   * Ssf Employer
+   */
+  ssf_employer: string;
+  /**
+   * Total Deductions
+   */
+  total_deductions: string;
+};
+
+/**
+ * PayrollRegisterTotals
+ *
+ * What a statutory filing needs, added up once by the server.
+ *
+ * The employer's SSF contribution is a cost the company owes on top of gross, not a
+ * deduction from anyone — it is totalled separately so nobody adds it to the wrong
+ * side of a return.
+ */
+export type PayrollRegisterTotals = {
+  /**
+   * Employees
+   */
+  employees: number;
+  /**
+   * Gross
+   */
+  gross: string;
+  /**
+   * Monthly Tax
+   */
+  monthly_tax: string;
+  /**
+   * Net Pay
+   */
+  net_pay: string;
+  /**
+   * Ssf Employee
+   */
+  ssf_employee: string;
+  /**
+   * Ssf Employer
+   */
+  ssf_employer: string;
 };
 
 /**
@@ -6429,3 +6643,112 @@ export type PayrollUpdateTaxScaleResponses = {
 
 export type PayrollUpdateTaxScaleResponse =
   PayrollUpdateTaxScaleResponses[keyof PayrollUpdateTaxScaleResponses];
+
+export type ReportsHeadcountData = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * Group By
+     */
+    group_by?: "department" | "designation" | "status" | "gender";
+    /**
+     * Format
+     */
+    format?: "json" | "csv";
+  };
+  url: "/api/v1/reports/headcount";
+};
+
+export type ReportsHeadcountErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ReportsHeadcountError =
+  ReportsHeadcountErrors[keyof ReportsHeadcountErrors];
+
+export type ReportsHeadcountResponses = {
+  /**
+   * Successful Response
+   */
+  200: Headcount;
+};
+
+export type ReportsHeadcountResponse =
+  ReportsHeadcountResponses[keyof ReportsHeadcountResponses];
+
+export type ReportsLeaveBalancesData = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * Leave Year
+     */
+    leave_year?: number | null;
+    /**
+     * Format
+     */
+    format?: "json" | "csv";
+  };
+  url: "/api/v1/reports/leave-balances";
+};
+
+export type ReportsLeaveBalancesErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ReportsLeaveBalancesError =
+  ReportsLeaveBalancesErrors[keyof ReportsLeaveBalancesErrors];
+
+export type ReportsLeaveBalancesResponses = {
+  /**
+   * Successful Response
+   */
+  200: LeaveBalanceReport;
+};
+
+export type ReportsLeaveBalancesResponse =
+  ReportsLeaveBalancesResponses[keyof ReportsLeaveBalancesResponses];
+
+export type ReportsPayrollRegisterData = {
+  body?: never;
+  path: {
+    /**
+     * Run Id
+     */
+    run_id: string;
+  };
+  query?: {
+    /**
+     * Format
+     */
+    format?: "json" | "csv";
+  };
+  url: "/api/v1/reports/payroll-register/{run_id}";
+};
+
+export type ReportsPayrollRegisterErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type ReportsPayrollRegisterError =
+  ReportsPayrollRegisterErrors[keyof ReportsPayrollRegisterErrors];
+
+export type ReportsPayrollRegisterResponses = {
+  /**
+   * Successful Response
+   */
+  200: PayrollRegister;
+};
+
+export type ReportsPayrollRegisterResponse =
+  ReportsPayrollRegisterResponses[keyof ReportsPayrollRegisterResponses];

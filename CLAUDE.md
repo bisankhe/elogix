@@ -219,8 +219,9 @@ apps/api/                       FastAPI + SQLAlchemy 2.0 + Alembic, sync psycopg
     db/registry.py              ← the only file Alembic reads for metadata
     db/types.py                 uuid_pk(), company_fk(), TimestampMixin
     db/session.py               engine + get_db dependency
-    core/                       auth, security, deps, entitlements
+    core/                       auth, security, deps, entitlements, storage, csv
     modules/<domain>/           models.py schemas.py router.py service.py
+    var/documents/              uploaded files, content-addressed by tenant (gitignored)
     nepal/                      BS dates, Labour Act, tax slabs — pure functions
   migrations/versions/          Alembic revisions
   tests/
@@ -256,14 +257,15 @@ This is a dependency chain, not a priority ranking — each phase produces the t
 next one needs, so nothing gets built twice against mocked inputs. Payroll is last in the
 core *deliberately*: it consumes phases 03–05, and its tests get written before its code.
 
-**Current state: phases 00–06 are done**, proven by 208 tests against a real Postgres
+**Current state: phases 00–07 are done**, proven by 271 tests against a real Postgres
 with the schema built by running the migrations from zero. Module access is denied
 server-side, no endpoint returns another tenant's rows, a tenant can be provisioned into
 a complete org chart, an employee can be hired through to offboarded with history
 preserved, a month of attendance can be captured, corrected and exported as payroll
 input, leave balances accrue across a full year with approvals adjusting them
-atomically, and that attendance export and those balances turn into payslips whose
-every figure is reproducible by hand.
+atomically, that attendance export and those balances turn into payslips whose every
+figure is reproducible by hand, and a person can sign in and see their own record —
+and only their own.
 
 Phase 01 originally shipped row-level security as a second isolation layer; it was
 removed by decision on 2026-08-30, so tenant isolation is the query filters alone. If it
@@ -293,14 +295,35 @@ Two structural rules the engine depends on: the **order of operations** in
 each step sits where it does; and **overtime is rated on the full basic, not the prorated
 one**, so an absent day is not deducted twice.
 
-**Phase 07 (self-service, documents, reports) is next.**
+**Phase 07 answered the open question about the 524 screens: no.** Self-service is one
+screen with five tabs, and reports is one screen with three. The prototype's forty report
+pages were mostly the same filtered table with a different `WHERE`; what is here are the
+questions that differ in kind — who works here, what leave is owed, what was paid — each
+exporting to CSV from the same query that draws the table. Anything that is "the employee
+list, filtered" belongs on the employee list, filtered.
+
+Three things from phase 07 that constrain what comes next:
+
+- **Self-service is a second isolation axis, not a screen.** Tenant isolation keeps Acme
+  out of Globex; `CurrentEmployeeDep` keeps one Acme employee out of another's payslip.
+  No route under `/ess` takes an employee id in a path, query or body, so there is
+  nothing to substitute — `tests/test_ess.py` sweeps every one of them to prove it.
+- **Uploaded files are hostile until proven otherwise.** `modules/employee/documents.py`
+  serves everything as an attachment with `nosniff`, allowlists the content types, and
+  never lets a filename reach a path. The key is the content hash.
+- **Report exports are escaped against formula injection.** A cell starting `=`, `+`,
+  `-` or `@` is executed by Excel when the file opens, and every cell in an HR report is
+  free text somebody typed. `core/csv_export.py` guards text and deliberately does not
+  guard numbers.
+
+**Phase 08 is unscoped.** The core is complete; what remains from the prototype's
+taxonomy is ATS, performance, training, vendor, compliance and the AI proxy, none of
+which have been designed.
 
 ---
 
 ## Decisions still open
 
-- **Do all 524 prototype screens need to exist?** Many are variations on a filtered table.
-  A product call, worth making before phase 07.
 - **Who signs off on the tax and labour rules?** Needs a named human before payroll ships.
   The prototype's engine triple-deducts SSF; the slab table could not be verified from
   code alone.

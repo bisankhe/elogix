@@ -452,6 +452,33 @@ export const zGradeLevelOut = z.object({
 });
 
 /**
+ * HeadcountRow
+ */
+export const zHeadcountRow = z.object({
+  active: z.int(),
+  exited: z.int(),
+  group: z.string(),
+  probation: z.int(),
+  suspended: z.int(),
+  total: z.int(),
+});
+
+/**
+ * Headcount
+ *
+ * Who works here, cut by one dimension at a time.
+ *
+ * `as_of` is recorded on the response because headcount is a point-in-time figure and
+ * a screenshot of one without a date is worthless in a meeting.
+ */
+export const zHeadcount = z.object({
+  as_of: z.iso.date(),
+  grouped_by: z.string(),
+  rows: z.array(zHeadcountRow),
+  total_active: z.int(),
+});
+
+/**
  * HolidayCreate
  */
 export const zHolidayCreate = z.object({
@@ -470,6 +497,26 @@ export const zHolidayOut = z.object({
   id: z.uuid(),
   is_optional: z.boolean(),
   name: z.string(),
+});
+
+/**
+ * LeaveBalanceRow
+ */
+export const zLeaveBalanceRow = z.object({
+  available_days: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  employee_code: z.string(),
+  employee_id: z.uuid(),
+  full_name: z.string(),
+  leave_type: z.string(),
+  org_unit: z.string().nullable(),
+});
+
+/**
+ * LeaveBalanceReport
+ */
+export const zLeaveBalanceReport = z.object({
+  leave_year: z.int(),
+  rows: z.array(zLeaveBalanceRow),
 });
 
 /**
@@ -1005,6 +1052,53 @@ export const zPayrollExport = z.object({
   end_date: z.iso.date(),
   rows: z.array(zPayrollExportRow),
   start_date: z.iso.date(),
+});
+
+/**
+ * PayrollRegisterRow
+ */
+export const zPayrollRegisterRow = z.object({
+  basic_earned: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  employee_code: z.string(),
+  full_name: z.string(),
+  gross: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  monthly_tax: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  net_pay: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  overtime_pay: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  payable_days: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  ssf_employee: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  ssf_employer: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  total_deductions: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+});
+
+/**
+ * PayrollRegisterTotals
+ *
+ * What a statutory filing needs, added up once by the server.
+ *
+ * The employer's SSF contribution is a cost the company owes on top of gross, not a
+ * deduction from anyone — it is totalled separately so nobody adds it to the wrong
+ * side of a return.
+ */
+export const zPayrollRegisterTotals = z.object({
+  employees: z.int(),
+  gross: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  monthly_tax: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  net_pay: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  ssf_employee: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  ssf_employer: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+});
+
+/**
+ * PayrollRegister
+ */
+export const zPayrollRegister = z.object({
+  fiscal_year: z.string(),
+  period_end: z.iso.date(),
+  period_start: z.iso.date(),
+  rows: z.array(zPayrollRegisterRow),
+  status: z.string(),
+  totals: zPayrollRegisterTotals,
 });
 
 /**
@@ -2577,3 +2671,39 @@ export const zPayrollUpdateTaxScalePath = z.object({
  * Successful Response
  */
 export const zPayrollUpdateTaxScaleResponse = zTaxScaleOut;
+
+export const zReportsHeadcountQuery = z.object({
+  group_by: z
+    .enum(["department", "designation", "status", "gender"])
+    .optional()
+    .default("department"),
+  format: z.enum(["json", "csv"]).optional().default("json"),
+});
+
+/**
+ * Successful Response
+ */
+export const zReportsHeadcountResponse = zHeadcount;
+
+export const zReportsLeaveBalancesQuery = z.object({
+  leave_year: z.int().gte(2000).lte(2100).nullish(),
+  format: z.enum(["json", "csv"]).optional().default("json"),
+});
+
+/**
+ * Successful Response
+ */
+export const zReportsLeaveBalancesResponse = zLeaveBalanceReport;
+
+export const zReportsPayrollRegisterPath = z.object({
+  run_id: z.uuid(),
+});
+
+export const zReportsPayrollRegisterQuery = z.object({
+  format: z.enum(["json", "csv"]).optional().default("json"),
+});
+
+/**
+ * Successful Response
+ */
+export const zReportsPayrollRegisterResponse = zPayrollRegister;

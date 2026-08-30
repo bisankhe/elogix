@@ -283,6 +283,15 @@ import type {
   PayrollUpdateTaxScaleData,
   PayrollUpdateTaxScaleErrors,
   PayrollUpdateTaxScaleResponses,
+  ReportsHeadcountData,
+  ReportsHeadcountErrors,
+  ReportsHeadcountResponses,
+  ReportsLeaveBalancesData,
+  ReportsLeaveBalancesErrors,
+  ReportsLeaveBalancesResponses,
+  ReportsPayrollRegisterData,
+  ReportsPayrollRegisterErrors,
+  ReportsPayrollRegisterResponses,
 } from "./types.gen";
 
 export type Options<
@@ -2381,4 +2390,78 @@ export const payrollUpdateTaxScale = <ThrowOnError extends boolean = false>(
       "Content-Type": "application/json",
       ...options.headers,
     },
+  });
+
+/**
+ * Headcount
+ *
+ * Who works here, cut one way at a time.
+ *
+ * `group_by` is a literal rather than a string, so the set of dimensions is in the
+ * OpenAPI spec, in the generated client, and refused at the edge — not validated
+ * somewhere inside the query builder.
+ */
+export const reportsHeadcount = <ThrowOnError extends boolean = false>(
+  options?: Options<ReportsHeadcountData, ThrowOnError>,
+): RequestResult<
+  ReportsHeadcountResponses,
+  ReportsHeadcountErrors,
+  ThrowOnError
+> =>
+  (options?.client ?? client).get<
+    ReportsHeadcountResponses,
+    ReportsHeadcountErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/reports/headcount",
+    ...options,
+  });
+
+/**
+ * Leave Balances
+ *
+ * What the company owes in leave, per person per type.
+ */
+export const reportsLeaveBalances = <ThrowOnError extends boolean = false>(
+  options?: Options<ReportsLeaveBalancesData, ThrowOnError>,
+): RequestResult<
+  ReportsLeaveBalancesResponses,
+  ReportsLeaveBalancesErrors,
+  ThrowOnError
+> =>
+  (options?.client ?? client).get<
+    ReportsLeaveBalancesResponses,
+    ReportsLeaveBalancesErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/reports/leave-balances",
+    ...options,
+  });
+
+/**
+ * Payroll Register
+ *
+ * One payroll run as a register, with the totals a filing needs.
+ *
+ * Available for a computed run as well as an approved one: the register is how
+ * somebody checks a run *before* approving it, and withholding it until after
+ * approval would make the check impossible.
+ */
+export const reportsPayrollRegister = <ThrowOnError extends boolean = false>(
+  options: Options<ReportsPayrollRegisterData, ThrowOnError>,
+): RequestResult<
+  ReportsPayrollRegisterResponses,
+  ReportsPayrollRegisterErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    ReportsPayrollRegisterResponses,
+    ReportsPayrollRegisterErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/reports/payroll-register/{run_id}",
+    ...options,
   });

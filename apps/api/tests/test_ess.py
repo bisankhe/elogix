@@ -254,7 +254,6 @@ def test_applying_for_leave_cannot_name_someone_else(
     """
     _, _, colleague = tenant
     headers = sign_in(client, "admin@acme.com.np")
-    client.post("/api/v1/leave/types/seed", headers=headers)
     leave_type = client.get("/api/v1/leave/types", headers=headers).json()[0]
 
     response = client.post(
@@ -279,7 +278,6 @@ def test_i_can_withdraw_my_own_pending_request_but_not_an_approved_one(
     client: TestClient, db: Session, tenant: tuple[Employee, User, Employee]
 ) -> None:
     headers = sign_in(client, "admin@acme.com.np")
-    client.post("/api/v1/leave/types/seed", headers=headers)
     leave_type = client.get("/api/v1/leave/types", headers=headers).json()[0]
 
     created = client.post(
@@ -309,7 +307,6 @@ def test_i_cannot_withdraw_a_colleagues_request(
     """404, not 403 — whether a colleague's request exists is not mine to learn."""
     _, _, colleague = tenant
     headers = sign_in(client, "admin@acme.com.np")
-    client.post("/api/v1/leave/types/seed", headers=headers)
     leave_type = client.get("/api/v1/leave/types", headers=headers).json()[0]
 
     theirs = client.post(

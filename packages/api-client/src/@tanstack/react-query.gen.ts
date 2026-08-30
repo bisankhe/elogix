@@ -107,6 +107,9 @@ import {
   payrollSalaryHistory,
   payrollSetSalary,
   payrollUpdateTaxScale,
+  reportsHeadcount,
+  reportsLeaveBalances,
+  reportsPayrollRegister,
 } from "../sdk.gen";
 import type {
   AttendanceAssignRosterData,
@@ -380,6 +383,15 @@ import type {
   PayrollUpdateTaxScaleData,
   PayrollUpdateTaxScaleError,
   PayrollUpdateTaxScaleResponse,
+  ReportsHeadcountData,
+  ReportsHeadcountError,
+  ReportsHeadcountResponse,
+  ReportsLeaveBalancesData,
+  ReportsLeaveBalancesError,
+  ReportsLeaveBalancesResponse,
+  ReportsPayrollRegisterData,
+  ReportsPayrollRegisterError,
+  ReportsPayrollRegisterResponse,
 } from "../types.gen";
 
 export type QueryKey<TOptions extends Options> = [
@@ -3228,3 +3240,101 @@ export const payrollUpdateTaxScaleMutation = (
   };
   return mutationOptions;
 };
+
+export const reportsHeadcountQueryKey = (
+  options?: Options<ReportsHeadcountData>,
+) => createQueryKey("reportsHeadcount", options);
+
+/**
+ * Headcount
+ *
+ * Who works here, cut one way at a time.
+ *
+ * `group_by` is a literal rather than a string, so the set of dimensions is in the
+ * OpenAPI spec, in the generated client, and refused at the edge — not validated
+ * somewhere inside the query builder.
+ */
+export const reportsHeadcountOptions = (
+  options?: Options<ReportsHeadcountData>,
+) =>
+  queryOptions<
+    ReportsHeadcountResponse,
+    ReportsHeadcountError,
+    ReportsHeadcountResponse,
+    ReturnType<typeof reportsHeadcountQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await reportsHeadcount({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: reportsHeadcountQueryKey(options),
+  });
+
+export const reportsLeaveBalancesQueryKey = (
+  options?: Options<ReportsLeaveBalancesData>,
+) => createQueryKey("reportsLeaveBalances", options);
+
+/**
+ * Leave Balances
+ *
+ * What the company owes in leave, per person per type.
+ */
+export const reportsLeaveBalancesOptions = (
+  options?: Options<ReportsLeaveBalancesData>,
+) =>
+  queryOptions<
+    ReportsLeaveBalancesResponse,
+    ReportsLeaveBalancesError,
+    ReportsLeaveBalancesResponse,
+    ReturnType<typeof reportsLeaveBalancesQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await reportsLeaveBalances({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: reportsLeaveBalancesQueryKey(options),
+  });
+
+export const reportsPayrollRegisterQueryKey = (
+  options: Options<ReportsPayrollRegisterData>,
+) => createQueryKey("reportsPayrollRegister", options);
+
+/**
+ * Payroll Register
+ *
+ * One payroll run as a register, with the totals a filing needs.
+ *
+ * Available for a computed run as well as an approved one: the register is how
+ * somebody checks a run *before* approving it, and withholding it until after
+ * approval would make the check impossible.
+ */
+export const reportsPayrollRegisterOptions = (
+  options: Options<ReportsPayrollRegisterData>,
+) =>
+  queryOptions<
+    ReportsPayrollRegisterResponse,
+    ReportsPayrollRegisterError,
+    ReportsPayrollRegisterResponse,
+    ReturnType<typeof reportsPayrollRegisterQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await reportsPayrollRegister({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: reportsPayrollRegisterQueryKey(options),
+  });

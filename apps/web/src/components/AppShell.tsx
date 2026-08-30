@@ -90,7 +90,10 @@ const NAV: NavGroup[] = [
     id: 'finance',
     icon: '💰',
     label: 'Payroll & Finance',
-    children: [{ to: '/payroll', label: 'Payroll Runs', module: 'payroll' }],
+    children: [
+      { to: '/payroll', label: 'Payroll Runs', module: 'payroll' },
+      { to: '/reports', label: 'Reports', module: 'reports' },
+    ],
   },
   {
     id: 'self-service',

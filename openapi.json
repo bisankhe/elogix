@@ -2121,6 +2121,77 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "Headcount": {
+        "description": "Who works here, cut by one dimension at a time.\n\n`as_of` is recorded on the response because headcount is a point-in-time figure and\na screenshot of one without a date is worthless in a meeting.",
+        "properties": {
+          "as_of": {
+            "format": "date",
+            "title": "As Of",
+            "type": "string"
+          },
+          "grouped_by": {
+            "title": "Grouped By",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/HeadcountRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "total_active": {
+            "title": "Total Active",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "as_of",
+          "grouped_by",
+          "rows",
+          "total_active"
+        ],
+        "title": "Headcount",
+        "type": "object"
+      },
+      "HeadcountRow": {
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "integer"
+          },
+          "exited": {
+            "title": "Exited",
+            "type": "integer"
+          },
+          "group": {
+            "title": "Group",
+            "type": "string"
+          },
+          "probation": {
+            "title": "Probation",
+            "type": "integer"
+          },
+          "suspended": {
+            "title": "Suspended",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "group",
+          "active",
+          "probation",
+          "suspended",
+          "exited",
+          "total"
+        ],
+        "title": "HeadcountRow",
+        "type": "object"
+      },
       "HireRequest": {
         "description": "One call creates the person, their opening assignment and the HIRED event.",
         "properties": {
@@ -2481,6 +2552,74 @@
           "is_optional"
         ],
         "title": "HolidayOut",
+        "type": "object"
+      },
+      "LeaveBalanceReport": {
+        "properties": {
+          "leave_year": {
+            "title": "Leave Year",
+            "type": "integer"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/LeaveBalanceRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "leave_year",
+          "rows"
+        ],
+        "title": "LeaveBalanceReport",
+        "type": "object"
+      },
+      "LeaveBalanceRow": {
+        "properties": {
+          "available_days": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Available Days",
+            "type": "string"
+          },
+          "employee_code": {
+            "title": "Employee Code",
+            "type": "string"
+          },
+          "employee_id": {
+            "format": "uuid",
+            "title": "Employee Id",
+            "type": "string"
+          },
+          "full_name": {
+            "title": "Full Name",
+            "type": "string"
+          },
+          "leave_type": {
+            "title": "Leave Type",
+            "type": "string"
+          },
+          "org_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Org Unit"
+          }
+        },
+        "required": [
+          "employee_id",
+          "employee_code",
+          "full_name",
+          "org_unit",
+          "leave_type",
+          "available_days"
+        ],
+        "title": "LeaveBalanceRow",
         "type": "object"
       },
       "LeaveDecision": {
@@ -4246,6 +4385,164 @@
           "unlocked_days"
         ],
         "title": "PayrollExportRow",
+        "type": "object"
+      },
+      "PayrollRegister": {
+        "properties": {
+          "fiscal_year": {
+            "title": "Fiscal Year",
+            "type": "string"
+          },
+          "period_end": {
+            "format": "date",
+            "title": "Period End",
+            "type": "string"
+          },
+          "period_start": {
+            "format": "date",
+            "title": "Period Start",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/PayrollRegisterRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/PayrollRegisterTotals"
+          }
+        },
+        "required": [
+          "period_start",
+          "period_end",
+          "fiscal_year",
+          "status",
+          "rows",
+          "totals"
+        ],
+        "title": "PayrollRegister",
+        "type": "object"
+      },
+      "PayrollRegisterRow": {
+        "properties": {
+          "basic_earned": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Basic Earned",
+            "type": "string"
+          },
+          "employee_code": {
+            "title": "Employee Code",
+            "type": "string"
+          },
+          "full_name": {
+            "title": "Full Name",
+            "type": "string"
+          },
+          "gross": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Gross",
+            "type": "string"
+          },
+          "monthly_tax": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Monthly Tax",
+            "type": "string"
+          },
+          "net_pay": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Net Pay",
+            "type": "string"
+          },
+          "overtime_pay": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Overtime Pay",
+            "type": "string"
+          },
+          "payable_days": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Payable Days",
+            "type": "string"
+          },
+          "ssf_employee": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ssf Employee",
+            "type": "string"
+          },
+          "ssf_employer": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ssf Employer",
+            "type": "string"
+          },
+          "total_deductions": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Deductions",
+            "type": "string"
+          }
+        },
+        "required": [
+          "employee_code",
+          "full_name",
+          "payable_days",
+          "basic_earned",
+          "overtime_pay",
+          "gross",
+          "ssf_employee",
+          "ssf_employer",
+          "monthly_tax",
+          "total_deductions",
+          "net_pay"
+        ],
+        "title": "PayrollRegisterRow",
+        "type": "object"
+      },
+      "PayrollRegisterTotals": {
+        "description": "What a statutory filing needs, added up once by the server.\n\nThe employer's SSF contribution is a cost the company owes on top of gross, not a\ndeduction from anyone \u2014 it is totalled separately so nobody adds it to the wrong\nside of a return.",
+        "properties": {
+          "employees": {
+            "title": "Employees",
+            "type": "integer"
+          },
+          "gross": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Gross",
+            "type": "string"
+          },
+          "monthly_tax": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Monthly Tax",
+            "type": "string"
+          },
+          "net_pay": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Net Pay",
+            "type": "string"
+          },
+          "ssf_employee": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ssf Employee",
+            "type": "string"
+          },
+          "ssf_employer": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ssf Employer",
+            "type": "string"
+          }
+        },
+        "required": [
+          "employees",
+          "gross",
+          "ssf_employee",
+          "ssf_employer",
+          "monthly_tax",
+          "net_pay"
+        ],
+        "title": "PayrollRegisterTotals",
         "type": "object"
       },
       "PayslipDetail": {
@@ -11132,6 +11429,209 @@
         "summary": "Update Tax Scale",
         "tags": [
           "payroll"
+        ]
+      }
+    },
+    "/api/v1/reports/headcount": {
+      "get": {
+        "description": "Who works here, cut one way at a time.\n\n`group_by` is a literal rather than a string, so the set of dimensions is in the\nOpenAPI spec, in the generated client, and refused at the edge \u2014 not validated\nsomewhere inside the query builder.",
+        "operationId": "reports-headcount",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "group_by",
+            "required": false,
+            "schema": {
+              "default": "department",
+              "enum": [
+                "department",
+                "designation",
+                "status",
+                "gender"
+              ],
+              "title": "Group By",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "schema": {
+              "default": "json",
+              "enum": [
+                "json",
+                "csv"
+              ],
+              "title": "Format",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Headcount"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Headcount",
+        "tags": [
+          "reports"
+        ]
+      }
+    },
+    "/api/v1/reports/leave-balances": {
+      "get": {
+        "description": "What the company owes in leave, per person per type.",
+        "operationId": "reports-leave_balances",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "leave_year",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 2100,
+                  "minimum": 2000,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Leave Year"
+            }
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "schema": {
+              "default": "json",
+              "enum": [
+                "json",
+                "csv"
+              ],
+              "title": "Format",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeaveBalanceReport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Leave Balances",
+        "tags": [
+          "reports"
+        ]
+      }
+    },
+    "/api/v1/reports/payroll-register/{run_id}": {
+      "get": {
+        "description": "One payroll run as a register, with the totals a filing needs.\n\nAvailable for a computed run as well as an approved one: the register is how\nsomebody checks a run *before* approving it, and withholding it until after\napproval would make the check impossible.",
+        "operationId": "reports-payroll_register",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Run Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "schema": {
+              "default": "json",
+              "enum": [
+                "json",
+                "csv"
+              ],
+              "title": "Format",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayrollRegister"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Payroll Register",
+        "tags": [
+          "reports"
         ]
       }
     }
