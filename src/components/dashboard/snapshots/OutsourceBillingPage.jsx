@@ -1,5 +1,5 @@
 // FILE: OutsourceBillingPage.jsx - Page 4: Billing & Invoice
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Field, ExcelModal, PageHeader, AIImpact, Drawer, SearchBar, Badge, LuxCard, ContextMenu } from './DeptSetupShared.jsx'
 
 const T = { gradient:'linear-gradient(135deg,#d97706 0%,#f59e0b 100%)', accent:'#d97706', light:'#fffbeb' }
@@ -60,7 +60,16 @@ const CONTEXT_ACTIONS = [
   {icon:'📤', label:'Export Excel',          key:'export'},
 ]
 
+
+function _getSlug() {
+  try {
+    const s = JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{}
+    return s?.company?.slug || s?.tenant || localStorage.getItem('elogix_tenant_slug') || ''
+  } catch(_e) { return '' }
+}
+
 export default function OutsourceBillingPage() {
+  const [_apiLoading, _setApiLoading] = useState(false)
   const [invoices,  setInvoices]  = useState(MOCK_INVOICES)
   const [ctx,       setCtx]       = useState(null)
   const [showExcel, setShowExcel] = useState(false)
@@ -80,6 +89,29 @@ export default function OutsourceBillingPage() {
   const totalPaid     = invoices.filter(i=>i.status==='paid').reduce((s,i)=>s+i.amount_npr,0)
   const totalDisputed = invoices.filter(i=>i.discrepancy).reduce((s,i)=>s+i.discrepancy_amt,0)
   const pending       = invoices.filter(i=>i.status==='pending_approval'||i.status==='approved')
+
+
+  // SaaS DB — load real tenant data (fallback to mock if no token/API down)
+  useEffect(() => {
+    const _token = localStorage.getItem('access_token')
+    const _slug  = _getSlug()
+    if (!_token) return
+    _setApiLoading(true)
+    fetch('/api/v1/vendor/billing', {
+      headers: {
+        'Authorization': `Bearer ${_token}`,
+        'X-Tenant-Slug': _slug,
+        'Content-Type': 'application/json',
+      }
+    })
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(d => {
+        const items = d.invoices || d.data || d.items || []
+        if (items.length > 0) setInvoices(items)
+      })
+      .catch(() => {/* keep mock */})
+      .finally(() => _setApiLoading(false))
+  }, [])
 
   return (
     <div onClick={()=>setCtx(null)}>

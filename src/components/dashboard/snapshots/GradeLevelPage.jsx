@@ -1,7 +1,7 @@
 // FILE: GradeLevelPage.jsx
 // Page 2: Grade & Level - luxury matrix, salary bands, AI benchmarking
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Field, ContextMenu, ExcelModal, PageHeader,
   AIImpact, Drawer, SearchBar, Badge, LuxCard
@@ -129,7 +129,16 @@ const EXCEL_COLS = ['Grade Code','Grade Name','Track','Min Salary (NPR)','Mid Sa
   'Max Salary (NPR)','Bonus %','Leave Days','Overtime Exempt','Managerial Category',
   'Can Approve Leave','Can Hire','Span of Control Max','Approval Limit (NPR)']
 
+
+function _getSlug() {
+  try {
+    const s = JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{}
+    return s?.company?.slug || s?.tenant || localStorage.getItem('elogix_tenant_slug') || ''
+  } catch(_e) { return '' }
+}
+
 export default function GradeLevelPage() {
+  const [_apiLoading, _setApiLoading] = useState(false)
   const [grades,     setGrades]     = useState(MOCK_GRADES)
   const [search,     setSearch]     = useState('')
   const [trackFilter,setTrackFilter]= useState('all')
@@ -143,6 +152,29 @@ export default function GradeLevelPage() {
     (trackFilter==='all' || g.track===trackFilter) &&
     (!search || g.name.toLowerCase().includes(search.toLowerCase()) || g.code.toLowerCase().includes(search.toLowerCase()))
   )
+
+
+  // SaaS DB — load real tenant data (fallback to mock if no token/API down)
+  useEffect(() => {
+    const _token = localStorage.getItem('access_token')
+    const _slug  = _getSlug()
+    if (!_token) return
+    _setApiLoading(true)
+    fetch('/api/v1/org/grades', {
+      headers: {
+        'Authorization': `Bearer ${_token}`,
+        'X-Tenant-Slug': _slug,
+        'Content-Type': 'application/json',
+      }
+    })
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(d => {
+        const items = d.grades || d.data || d.items || []
+        if (items.length > 0) setGrades(items)
+      })
+      .catch(() => {/* keep mock */})
+      .finally(() => _setApiLoading(false))
+  }, [])
 
   return (
     <div onClick={()=>setCtx(null)}>

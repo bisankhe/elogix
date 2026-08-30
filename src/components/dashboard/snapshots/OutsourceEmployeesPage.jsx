@@ -1,6 +1,6 @@
 // FILE: OutsourceEmployeesPage.jsx - Page 3: Outsource Employees
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Field, ExcelModal, PageHeader, AIImpact, Drawer, SearchBar, Badge, LuxCard, ContextMenu } from './DeptSetupShared.jsx'
 
 const T = { gradient:'linear-gradient(135deg,#065f46 0%,#10b981 100%)', accent:'#065f46', light:'#f0fdf4' }
@@ -69,7 +69,16 @@ const CONTEXT_ACTIONS = [
   {icon:'🚫', label:'End Assignment',        key:'end', danger:true},
 ]
 
+
+function _getSlug() {
+  try {
+    const s = JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{}
+    return s?.company?.slug || s?.tenant || localStorage.getItem('elogix_tenant_slug') || ''
+  } catch(_e) { return '' }
+}
+
 export default function OutsourceEmployeesPage() {
+  const [_apiLoading, _setApiLoading] = useState(false)
   const [employees, setEmployees] = useState(MOCK_EMPLOYEES)
   const [ctx,       setCtx]       = useState(null)
   const [showAdd,   setShowAdd]   = useState(false)
@@ -101,6 +110,29 @@ export default function OutsourceEmployeesPage() {
     acc[dept].push(e)
     return acc
   }, {})
+
+
+  // SaaS DB — load real tenant data (fallback to mock if no token/API down)
+  useEffect(() => {
+    const _token = localStorage.getItem('access_token')
+    const _slug  = _getSlug()
+    if (!_token) return
+    _setApiLoading(true)
+    fetch('/api/v1/vendor/employees', {
+      headers: {
+        'Authorization': `Bearer ${_token}`,
+        'X-Tenant-Slug': _slug,
+        'Content-Type': 'application/json',
+      }
+    })
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(d => {
+        const items = d.employees || d.data || d.items || []
+        if (items.length > 0) setEmployees(items)
+      })
+      .catch(() => {/* keep mock */})
+      .finally(() => _setApiLoading(false))
+  }, [])
 
   return (
     <div onClick={()=>setCtx(null)}>

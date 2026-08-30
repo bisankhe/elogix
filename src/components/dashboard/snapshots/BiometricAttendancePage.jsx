@@ -216,6 +216,29 @@ export default function BiometricAttendancePage() {
   const selType = DEVICE_TYPES.find(t => t.id === form.device_type)
   const totalPunches = devices.reduce((s, d) => s+(d.punches_today||0), 0)
 
+
+  // SaaS DB — load real tenant data (fallback to mock if no token/API down)
+  useEffect(() => {
+    const _token = localStorage.getItem('access_token')
+    const _slug  = getSessionSlug()
+    if (!_token) return
+    setLoading(true)
+    fetch('/api/v1/biometric/devices', {
+      headers: {
+        'Authorization': `Bearer ${_token}`,
+        'X-Tenant-Slug': _slug,
+        'Content-Type': 'application/json',
+      }
+    })
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(d => {
+        const items = d.devices || d.data || d.items || []
+        if (items.length > 0) setDevices(items)
+      })
+      .catch(() => {/* keep mock */})
+      .finally(() => setLoading(false))
+  }, [])
+
   return (
     <div style={{position:'relative', width:'100%', minHeight:'100vh', fontFamily:"'Segoe UI',system-ui,sans-serif",
       background:'#f0f9ff', display:'flex', flexDirection:'column', overflow:'hidden'}}>

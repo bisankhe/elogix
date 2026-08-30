@@ -1,6 +1,6 @@
 // FILE: RecruitmentAnalyticsPage.jsx - Recruitment Analytics
 // Time-to-hire, cost-per-hire, source analytics, pipeline velocity
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Field, ExcelModal, PageHeader, AIImpact, Drawer, SearchBar, LuxCard, ContextMenu } from './DeptSetupShared.jsx'
 
 const G = 'linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#3b82f6 100%)'
@@ -32,7 +32,16 @@ const CTX_ACTIONS = [
 
 const IMPACT_LINKS = ['ATS Dashboard','Vacancy Management','Candidate Database','HR Dashboard','Annual Manpower Plan']
 
+
+function _getSlug() {
+  try {
+    const s = JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{}
+    return s?.company?.slug || s?.tenant || localStorage.getItem('elogix_tenant_slug') || ''
+  } catch(_e) { return '' }
+}
+
 export default function RecruitmentAnalyticsPage() {
+  const [_apiLoading, _setApiLoading] = useState(false)
   const [items, setItems]         = useState(MOCK_DATA)
   const [search, setSearch]       = useState('')
   const [filterStatus, setFilter] = useState('all')
@@ -50,6 +59,29 @@ export default function RecruitmentAnalyticsPage() {
   const activeCount  = items.filter(i=>i.status==='active').length
   const pendingCount = items.filter(i=>i.status==='pending').length
   const avgScore     = Math.round(items.reduce((s,i)=>s+i.score,0)/items.length)
+
+
+  // SaaS DB — load real tenant data (fallback to mock if no token/API down)
+  useEffect(() => {
+    const _token = localStorage.getItem('access_token')
+    const _slug  = _getSlug()
+    if (!_token) return
+    _setApiLoading(true)
+    fetch('/api/v1/hr-analytics?module=recruitment', {
+      headers: {
+        'Authorization': `Bearer ${_token}`,
+        'X-Tenant-Slug': _slug,
+        'Content-Type': 'application/json',
+      }
+    })
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(d => {
+        const items = d.analytics || d.data || d.items || []
+        if (items.length > 0) setItems(items)
+      })
+      .catch(() => {/* keep mock */})
+      .finally(() => _setApiLoading(false))
+  }, [])
 
   return (
     <div onClick={()=>setCtx(null)}>

@@ -1,5 +1,5 @@
 // FILE: OutsourceAttendancePage.jsx - Page 5: Outsource Attendance
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ExcelModal, PageHeader, SearchBar, Badge, ContextMenu } from './DeptSetupShared.jsx'
 
 const T = { gradient:'linear-gradient(135deg,#5b21b6 0%,#8b5cf6 100%)', accent:'#5b21b6', light:'#f5f3ff' }
@@ -41,7 +41,16 @@ const CONTEXT_ACTIONS = [
   {icon:'💰', label:'Link to Invoice',    key:'invoice'},
 ]
 
+
+function _getSlug() {
+  try {
+    const s = JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{}
+    return s?.company?.slug || s?.tenant || localStorage.getItem('elogix_tenant_slug') || ''
+  } catch(_e) { return '' }
+}
+
 export default function OutsourceAttendancePage() {
+  const [_apiLoading, _setApiLoading] = useState(false)
   const [ctx,       setCtx]       = useState(null)
   const [showConfig,setShowConfig] = useState(false)
   const [configVendor,setConfigVendor] = useState('ShieldGuard Nepal')
@@ -59,6 +68,29 @@ export default function OutsourceAttendancePage() {
   const avgAtt   = Math.round(filtered.reduce((s,e)=>s+e.att_pct,0)/filtered.length)
   const ghostRisk = filtered.filter(e=>e.ghost_risk!=='low').length
   const unverified = filtered.filter(e=>!e.biometric_verified).length
+
+
+  // SaaS DB — load real tenant data (fallback to mock if no token/API down)
+  useEffect(() => {
+    const _token = localStorage.getItem('access_token')
+    const _slug  = _getSlug()
+    if (!_token) return
+    _setApiLoading(true)
+    fetch('/api/v1/insource-attendance', {
+      headers: {
+        'Authorization': `Bearer ${_token}`,
+        'X-Tenant-Slug': _slug,
+        'Content-Type': 'application/json',
+      }
+    })
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(d => {
+        const items = d.records || d.data || d.items || []
+        if (items.length > 0) setCtx(items)
+      })
+      .catch(() => {/* keep mock */})
+      .finally(() => _setApiLoading(false))
+  }, [])
 
   return (
     <div onClick={()=>setCtx(null)}>

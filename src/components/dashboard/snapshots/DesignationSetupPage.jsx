@@ -1,7 +1,7 @@
 // FILE: DesignationSetupPage.jsx
 // Page 1: Designation Setup - luxury, AI JD generator, SAP right-click, voice, Excel
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Field, ContextMenu, ExcelModal, PageHeader,
   AIImpact, Drawer, SearchBar, Badge, LuxCard
@@ -130,6 +130,29 @@ function AIJDModal({ desig, onClose }) {
       setLoading(false)
     }, 1800)
   }
+
+
+  // SaaS DB — load real tenant data (fallback to mock if no token/API down)
+  useEffect(() => {
+    const _token = localStorage.getItem('access_token')
+    const _slug  = _getSlug()
+    if (!_token) return
+    setLoading(true)
+    fetch('/api/v1/org/designations', {
+      headers: {
+        'Authorization': `Bearer ${_token}`,
+        'X-Tenant-Slug': _slug,
+        'Content-Type': 'application/json',
+      }
+    })
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(d => {
+        const items = d.designations || d.data || d.items || []
+        if (items.length > 0) setLoading(items)
+      })
+      .catch(() => {/* keep mock */})
+      .finally(() => setLoading(false))
+  }, [])
 
   return (
     <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.65)',zIndex:8000,
@@ -298,6 +321,14 @@ function AddDesigModal({ onClose, onSave }) {
       </div>
     </div>
   )
+}
+
+
+function _getSlug() {
+  try {
+    const s = JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{}
+    return s?.company?.slug || s?.tenant || localStorage.getItem('elogix_tenant_slug') || ''
+  } catch(_e) { return '' }
 }
 
 export default function DesignationSetupPage() {

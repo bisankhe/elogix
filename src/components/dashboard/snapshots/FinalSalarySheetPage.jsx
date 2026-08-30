@@ -3,7 +3,7 @@
 // All 65 columns from Excel · SSF · PF · CIT · Tax · Net Salary
 // Auto-calculated · Digital Signature (Prepared/Verified/Approved)
 // Nepal Income Tax Act 2058 · Labour Act 2074 · SSF Regulation 2074
-import { useState, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 
 const G  = 'linear-gradient(135deg,#064e3b 0%,#059669 55%,#34d399 100%)'
 const GA = 'linear-gradient(135deg,#1e3a5f 0%,#0369a1 60%,#38bdf8 100%)'
@@ -153,7 +153,16 @@ const inp = { padding:'7px 10px',borderRadius:8,border:'1.5px solid #e2e8f0',
 const nr  = v => typeof v==='number' ? v.toLocaleString('en-NP',{maximumFractionDigits:2}) : v
 const fmt = v => typeof v==='number' ? (v<0?'-':'')+Math.abs(v).toLocaleString('en-NP',{maximumFractionDigits:2}) : (v||'—')
 
+
+function _getSlug() {
+  try {
+    const s = JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{}
+    return s?.company?.slug || s?.tenant || localStorage.getItem('elogix_tenant_slug') || ''
+  } catch(_e) { return '' }
+}
+
 export default function FinalSalarySheetPage() {
+  const [_apiLoading, _setApiLoading] = useState(false)
   const [employees, setEmployees] = useState(MOCK_EMPLOYEES)
   const [showAdd,   setShowAdd]   = useState(false)
   const [showDetail,setShowDetail]= useState(null)
@@ -242,6 +251,29 @@ export default function FinalSalarySheetPage() {
     { label:'TAX COMPUTATION (ANNUAL)', bg:'#312e81', span:4 },
     { label:'MONTHLY PAYABLE', bg:'#1e3a5f', span:4 },
   ]
+
+
+  // SaaS DB — load real tenant data (fallback to mock if no token/API down)
+  useEffect(() => {
+    const _token = localStorage.getItem('access_token')
+    const _slug  = _getSlug()
+    if (!_token) return
+    _setApiLoading(true)
+    fetch('/api/v1/payroll/salary-sheet', {
+      headers: {
+        'Authorization': `Bearer ${_token}`,
+        'X-Tenant-Slug': _slug,
+        'Content-Type': 'application/json',
+      }
+    })
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(d => {
+        const items = d.records || d.data || d.items || []
+        if (items.length > 0) setEmployees(items)
+      })
+      .catch(() => {/* keep mock */})
+      .finally(() => _setApiLoading(false))
+  }, [])
 
   return (
     <div style={{fontFamily:'system-ui,sans-serif',minHeight:'100vh',background:'#f0fdf4',display:'flex',flexDirection:'column'}}>

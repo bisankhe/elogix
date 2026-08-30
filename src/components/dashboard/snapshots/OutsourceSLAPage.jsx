@@ -1,6 +1,6 @@
 // FILE: OutsourceSLAPage.jsx - Page 2: Outsource SLA & Contract Management
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Field, ExcelModal, PageHeader, AIImpact, Drawer, SearchBar, Badge, LuxCard, ContextMenu } from './DeptSetupShared.jsx'
 
 const T = { gradient:'linear-gradient(135deg,#0369a1 0%,#0ea5e9 100%)', accent:'#0369a1', light:'#f0f9ff' }
@@ -92,8 +92,32 @@ const CONTEXT_ACTIONS = [
 
 // Add SLA Modal
 function AddSLAModal({ onClose, onSave }) {
+  const [_apiLoading, _setApiLoading] = useState(false)
   const [f,setF] = useState({contract_no:'',vendor:'',service:'',agency_code:'',type:'Service Agreement',start:'',end:'',value_npr:'',workers_allowed:'',notes:''})
   const s = k => v => setF(p=>({...p,[k]:v}))
+
+  // SaaS DB — load real tenant data (fallback to mock if no token/API down)
+  useEffect(() => {
+    const _token = localStorage.getItem('access_token')
+    const _slug  = _getSlug()
+    if (!_token) return
+    _setApiLoading(true)
+    fetch('/api/v1/sla', {
+      headers: {
+        'Authorization': `Bearer ${_token}`,
+        'X-Tenant-Slug': _slug,
+        'Content-Type': 'application/json',
+      }
+    })
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(d => {
+        const items = d.slas || d.data || d.items || []
+        if (items.length > 0) setF(items)
+      })
+      .catch(() => {/* keep mock */})
+      .finally(() => _setApiLoading(false))
+  }, [])
+
   return (
     <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.6)',zIndex:5000,display:'flex',alignItems:'center',justifyContent:'center',padding:20}} onClick={onClose}>
       <div style={{background:'#fff',borderRadius:20,width:700,maxHeight:'92vh',overflow:'auto',boxShadow:'0 40px 80px rgba(0,0,0,.3)'}} onClick={e=>e.stopPropagation()}>
@@ -139,6 +163,14 @@ function AddSLAModal({ onClose, onSave }) {
       </div>
     </div>
   )
+}
+
+
+function _getSlug() {
+  try {
+    const s = JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{}
+    return s?.company?.slug || s?.tenant || localStorage.getItem('elogix_tenant_slug') || ''
+  } catch(_e) { return '' }
 }
 
 export default function OutsourceSLAPage() {
