@@ -14,7 +14,14 @@ from sqlalchemy.orm import Session
 
 from elogix_api.core.security import hash_password
 from elogix_api.db.session import SessionLocal
-from elogix_api.modules.employee.models import Employee, EmployeeStatus
+from elogix_api.modules.employee.models import (
+    AssignmentReason,
+    Employee,
+    EmployeeAssignment,
+    EmployeeEvent,
+    EmployeeEventType,
+    EmployeeStatus,
+)
 from elogix_api.modules.identity.models import Company, PlanTier, RoleCode, User, UserRole
 from elogix_api.modules.org.models import (
     CostCentre,
@@ -74,21 +81,45 @@ def main() -> None:
         ).scalars()
         known = set(existing)
 
-        for code, name, status, joined in [
-            ("EMP-001", "Sita Sharma", EmployeeStatus.ACTIVE, date(2023, 4, 17)),
-            ("EMP-002", "Bikash Thapa", EmployeeStatus.PROBATION, date(2026, 6, 1)),
-            ("EMP-003", "Anjali Gurung", EmployeeStatus.ACTIVE, date(2021, 11, 8)),
+        eng = db.execute(
+            select(OrgUnit).where(OrgUnit.company_id == company.id, OrgUnit.code == "ENG")
+        ).scalar_one()
+
+        for code, first, last, emp_status, joined in [
+            ("EMP-001", "Sita", "Sharma", EmployeeStatus.ACTIVE, date(2023, 4, 17)),
+            ("EMP-002", "Bikash", "Thapa", EmployeeStatus.PROBATION, date(2026, 6, 1)),
+            ("EMP-003", "Anjali", "Gurung", EmployeeStatus.ACTIVE, date(2021, 11, 8)),
         ]:
             if code in known:
                 continue
+            employee = Employee(
+                company_id=company.id,
+                employee_code=code,
+                first_name=first,
+                last_name=last,
+                work_email=f"{code.lower()}@acme.com.np",
+                status=emp_status,
+                joined_on=joined,
+            )
+            db.add(employee)
+            db.flush()
+            # Every employee gets an opening assignment and a hire event, the same way
+            # the API's /employees POST would create them.
             db.add(
-                Employee(
+                EmployeeAssignment(
                     company_id=company.id,
-                    employee_code=code,
-                    full_name=name,
-                    email=f"{code.lower()}@acme.com.np",
-                    status=status,
-                    joined_on=joined,
+                    employee_id=employee.id,
+                    org_unit_id=eng.id,
+                    reason=AssignmentReason.HIRE,
+                    effective_from=joined,
+                )
+            )
+            db.add(
+                EmployeeEvent(
+                    company_id=company.id,
+                    employee_id=employee.id,
+                    event_type=EmployeeEventType.HIRED,
+                    occurred_on=joined,
                 )
             )
             print(f"created employee {code}")

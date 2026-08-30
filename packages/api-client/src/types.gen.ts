@@ -28,6 +28,99 @@ export type AccessToken = {
 };
 
 /**
+ * AssignmentOut
+ */
+export type AssignmentOut = {
+  /**
+   * Cost Centre Id
+   */
+  cost_centre_id: string | null;
+  /**
+   * Designation Id
+   */
+  designation_id: string | null;
+  /**
+   * Effective From
+   */
+  effective_from: string;
+  /**
+   * Effective To
+   */
+  effective_to: string | null;
+  /**
+   * Employment Category Id
+   */
+  employment_category_id: string | null;
+  /**
+   * Grade Level Id
+   */
+  grade_level_id: string | null;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Manager Id
+   */
+  manager_id: string | null;
+  /**
+   * Note
+   */
+  note: string | null;
+  /**
+   * Org Unit Id
+   */
+  org_unit_id: string;
+  /**
+   * Position Id
+   */
+  position_id: string | null;
+  reason: AssignmentReason;
+  /**
+   * Work Location Id
+   */
+  work_location_id: string | null;
+};
+
+/**
+ * AssignmentReason
+ */
+export type AssignmentReason =
+  | "hire"
+  | "confirmation"
+  | "transfer"
+  | "promotion"
+  | "demotion"
+  | "redesignation"
+  | "exit";
+
+/**
+ * AssignmentRequest
+ */
+export type AssignmentRequest = {
+  /**
+   * Effective From
+   */
+  effective_from: string;
+  /**
+   * Note
+   */
+  note?: string | null;
+  placement: Placement;
+  reason?: AssignmentReason;
+};
+
+/**
+ * ConfirmRequest
+ */
+export type ConfirmRequest = {
+  /**
+   * Confirmed On
+   */
+  confirmed_on: string;
+};
+
+/**
  * CostCentreCreate
  */
 export type CostCentreCreate = {
@@ -108,35 +201,144 @@ export type DesignationOut = {
 };
 
 /**
- * EmployeeList
+ * DocumentCreate
  */
-export type EmployeeList = {
+export type DocumentCreate = {
+  document_type: DocumentType;
   /**
-   * Items
+   * Expires On
    */
-  items: Array<EmployeeOut>;
+  expires_on?: string | null;
   /**
-   * Total
+   * Issued On
    */
-  total: number;
+  issued_on?: string | null;
+  /**
+   * Storage Key
+   */
+  storage_key?: string | null;
+  /**
+   * Title
+   */
+  title: string;
 };
 
 /**
- * EmployeeOut
+ * DocumentOut
  */
-export type EmployeeOut = {
+export type DocumentOut = {
+  document_type: DocumentType;
   /**
-   * Email
+   * Expires On
    */
-  email: string | null;
+  expires_on: string | null;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Is Verified
+   */
+  is_verified: boolean;
+  /**
+   * Issued On
+   */
+  issued_on: string | null;
+  /**
+   * Storage Key
+   */
+  storage_key: string | null;
+  /**
+   * Title
+   */
+  title: string;
+};
+
+/**
+ * DocumentType
+ */
+export type DocumentType =
+  | "citizenship"
+  | "passport"
+  | "cv"
+  | "academic"
+  | "training"
+  | "contract"
+  | "appointment_letter"
+  | "experience_letter"
+  | "medical"
+  | "other";
+
+/**
+ * EmployeeDetail
+ */
+export type EmployeeDetail = {
+  /**
+   * Address
+   */
+  address: string | null;
+  /**
+   * Bank Account Number
+   */
+  bank_account_number: string | null;
+  /**
+   * Bank Name
+   */
+  bank_name: string | null;
+  /**
+   * Blood Group
+   */
+  blood_group: string | null;
+  /**
+   * Citizenship Number
+   */
+  citizenship_number: string | null;
+  /**
+   * Confirmed On
+   */
+  confirmed_on: string | null;
+  current_assignment?: AssignmentOut | null;
+  /**
+   * Date Of Birth
+   */
+  date_of_birth: string | null;
+  /**
+   * District
+   */
+  district: string | null;
+  /**
+   * Emergency Contact Name
+   */
+  emergency_contact_name: string | null;
+  /**
+   * Emergency Contact Phone
+   */
+  emergency_contact_phone: string | null;
   /**
    * Employee Code
    */
   employee_code: string;
   /**
+   * Exit Reason
+   */
+  exit_reason: string | null;
+  /**
+   * Exited On
+   */
+  exited_on: string | null;
+  /**
+   * First Name
+   */
+  first_name: string;
+  /**
    * Full Name
    */
-  full_name: string;
+  readonly full_name: string;
+  /**
+   * Full Name Nepali
+   */
+  full_name_nepali: string | null;
+  gender: Gender;
   /**
    * Id
    */
@@ -145,13 +347,215 @@ export type EmployeeOut = {
    * Joined On
    */
   joined_on: string;
+  /**
+   * Last Name
+   */
+  last_name: string;
+  marital_status: MaritalStatus;
+  /**
+   * Middle Name
+   */
+  middle_name: string | null;
+  /**
+   * Nationality
+   */
+  nationality: string;
+  /**
+   * Pan Number
+   */
+  pan_number: string | null;
+  /**
+   * Personal Email
+   */
+  personal_email: string | null;
+  /**
+   * Phone
+   */
+  phone: string | null;
+  /**
+   * Probation Ends On
+   */
+  probation_ends_on: string | null;
+  /**
+   * Provident Fund Number
+   */
+  provident_fund_number: string | null;
+  /**
+   * Province
+   */
+  province: string | null;
+  /**
+   * Ssf Number
+   */
+  ssf_number: string | null;
   status: EmployeeStatus;
+  /**
+   * Work Email
+   */
+  work_email: string | null;
+};
+
+/**
+ * EmployeeEventType
+ */
+export type EmployeeEventType =
+  "hired" | "confirmed" | "assigned" | "suspended" | "reinstated" | "exited";
+
+/**
+ * EmployeeList
+ */
+export type EmployeeList = {
+  /**
+   * Items
+   */
+  items: Array<EmployeeSummary>;
+  /**
+   * Total
+   */
+  total: number;
 };
 
 /**
  * EmployeeStatus
  */
-export type EmployeeStatus = "active" | "probation" | "suspended" | "exited";
+export type EmployeeStatus = "probation" | "active" | "suspended" | "exited";
+
+/**
+ * EmployeeSummary
+ *
+ * The list row. Deliberately small — an employee list is the highest-traffic
+ * screen in the product and does not need the full record.
+ */
+export type EmployeeSummary = {
+  /**
+   * Employee Code
+   */
+  employee_code: string;
+  /**
+   * First Name
+   */
+  first_name: string;
+  /**
+   * Full Name
+   */
+  readonly full_name: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Joined On
+   */
+  joined_on: string;
+  /**
+   * Last Name
+   */
+  last_name: string;
+  /**
+   * Middle Name
+   */
+  middle_name: string | null;
+  status: EmployeeStatus;
+  /**
+   * Work Email
+   */
+  work_email: string | null;
+};
+
+/**
+ * EmployeeUpdate
+ *
+ * Personal details only. Placement changes go through /assignments, and lifecycle
+ * changes through /confirm and /exit, so history cannot be edited away.
+ */
+export type EmployeeUpdate = {
+  /**
+   * Address
+   */
+  address?: string | null;
+  /**
+   * Bank Account Number
+   */
+  bank_account_number?: string | null;
+  /**
+   * Bank Name
+   */
+  bank_name?: string | null;
+  /**
+   * Blood Group
+   */
+  blood_group?: string | null;
+  /**
+   * Citizenship Number
+   */
+  citizenship_number?: string | null;
+  /**
+   * Date Of Birth
+   */
+  date_of_birth?: string | null;
+  /**
+   * District
+   */
+  district?: string | null;
+  /**
+   * Emergency Contact Name
+   */
+  emergency_contact_name?: string | null;
+  /**
+   * Emergency Contact Phone
+   */
+  emergency_contact_phone?: string | null;
+  /**
+   * First Name
+   */
+  first_name?: string | null;
+  /**
+   * Full Name Nepali
+   */
+  full_name_nepali?: string | null;
+  gender?: Gender | null;
+  /**
+   * Last Name
+   */
+  last_name?: string | null;
+  marital_status?: MaritalStatus | null;
+  /**
+   * Middle Name
+   */
+  middle_name?: string | null;
+  /**
+   * Nationality
+   */
+  nationality?: string | null;
+  /**
+   * Pan Number
+   */
+  pan_number?: string | null;
+  /**
+   * Personal Email
+   */
+  personal_email?: string | null;
+  /**
+   * Phone
+   */
+  phone?: string | null;
+  /**
+   * Provident Fund Number
+   */
+  provident_fund_number?: string | null;
+  /**
+   * Province
+   */
+  province?: string | null;
+  /**
+   * Ssf Number
+   */
+  ssf_number?: string | null;
+  /**
+   * Work Email
+   */
+  work_email?: string | null;
+};
 
 /**
  * EmploymentCategoryCreate
@@ -250,6 +654,44 @@ export type EntitlementsOut = {
 };
 
 /**
+ * EventOut
+ */
+export type EventOut = {
+  event_type: EmployeeEventType;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Note
+   */
+  note: string | null;
+  /**
+   * Occurred On
+   */
+  occurred_on: string;
+};
+
+/**
+ * ExitRequest
+ */
+export type ExitRequest = {
+  /**
+   * Exited On
+   */
+  exited_on: string;
+  /**
+   * Reason
+   */
+  reason: string;
+};
+
+/**
+ * Gender
+ */
+export type Gender = "female" | "male" | "other" | "undisclosed";
+
+/**
  * GradeLevelCreate
  */
 export type GradeLevelCreate = {
@@ -304,6 +746,113 @@ export type HttpValidationError = {
 };
 
 /**
+ * HireRequest
+ *
+ * One call creates the person, their opening assignment and the HIRED event.
+ */
+export type HireRequest = {
+  /**
+   * Address
+   */
+  address?: string | null;
+  /**
+   * Bank Account Number
+   */
+  bank_account_number?: string | null;
+  /**
+   * Bank Name
+   */
+  bank_name?: string | null;
+  /**
+   * Blood Group
+   */
+  blood_group?: string | null;
+  /**
+   * Citizenship Number
+   */
+  citizenship_number?: string | null;
+  /**
+   * Date Of Birth
+   */
+  date_of_birth?: string | null;
+  /**
+   * District
+   */
+  district?: string | null;
+  /**
+   * Emergency Contact Name
+   */
+  emergency_contact_name?: string | null;
+  /**
+   * Emergency Contact Phone
+   */
+  emergency_contact_phone?: string | null;
+  /**
+   * Employee Code
+   */
+  employee_code: string;
+  /**
+   * First Name
+   */
+  first_name: string;
+  /**
+   * Full Name Nepali
+   */
+  full_name_nepali?: string | null;
+  gender?: Gender;
+  /**
+   * Joined On
+   */
+  joined_on: string;
+  /**
+   * Last Name
+   */
+  last_name: string;
+  marital_status?: MaritalStatus;
+  /**
+   * Middle Name
+   */
+  middle_name?: string | null;
+  /**
+   * Nationality
+   */
+  nationality?: string;
+  /**
+   * Pan Number
+   */
+  pan_number?: string | null;
+  /**
+   * Personal Email
+   */
+  personal_email?: string | null;
+  /**
+   * Phone
+   */
+  phone?: string | null;
+  placement: Placement;
+  /**
+   * Probation Ends On
+   */
+  probation_ends_on?: string | null;
+  /**
+   * Provident Fund Number
+   */
+  provident_fund_number?: string | null;
+  /**
+   * Province
+   */
+  province?: string | null;
+  /**
+   * Ssf Number
+   */
+  ssf_number?: string | null;
+  /**
+   * Work Email
+   */
+  work_email?: string | null;
+};
+
+/**
  * LoginRequest
  */
 export type LoginRequest = {
@@ -320,6 +869,14 @@ export type LoginRequest = {
    */
   password: string;
 };
+
+/**
+ * MaritalStatus
+ *
+ * Not cosmetic: Nepal's income tax slabs differ for single and married filers, so
+ * payroll reads this in phase 06.
+ */
+export type MaritalStatus = "single" | "married";
 
 /**
  * ModuleCode
@@ -459,6 +1016,46 @@ export type OrgUnitUpdate = {
    * Parent Id
    */
   parent_id?: string | null;
+};
+
+/**
+ * Placement
+ *
+ * Where an employee sits. The same shape whether hiring or moving someone.
+ */
+export type Placement = {
+  /**
+   * Cost Centre Id
+   */
+  cost_centre_id?: string | null;
+  /**
+   * Designation Id
+   */
+  designation_id?: string | null;
+  /**
+   * Employment Category Id
+   */
+  employment_category_id?: string | null;
+  /**
+   * Grade Level Id
+   */
+  grade_level_id?: string | null;
+  /**
+   * Manager Id
+   */
+  manager_id?: string | null;
+  /**
+   * Org Unit Id
+   */
+  org_unit_id: string;
+  /**
+   * Position Id
+   */
+  position_id?: string | null;
+  /**
+   * Work Location Id
+   */
+  work_location_id?: string | null;
 };
 
 /**
@@ -673,6 +1270,180 @@ export type WorkLocationOut = {
   name: string;
 };
 
+/**
+ * EmployeeDetail
+ */
+export type EmployeeDetailWritable = {
+  /**
+   * Address
+   */
+  address: string | null;
+  /**
+   * Bank Account Number
+   */
+  bank_account_number: string | null;
+  /**
+   * Bank Name
+   */
+  bank_name: string | null;
+  /**
+   * Blood Group
+   */
+  blood_group: string | null;
+  /**
+   * Citizenship Number
+   */
+  citizenship_number: string | null;
+  /**
+   * Confirmed On
+   */
+  confirmed_on: string | null;
+  current_assignment?: AssignmentOut | null;
+  /**
+   * Date Of Birth
+   */
+  date_of_birth: string | null;
+  /**
+   * District
+   */
+  district: string | null;
+  /**
+   * Emergency Contact Name
+   */
+  emergency_contact_name: string | null;
+  /**
+   * Emergency Contact Phone
+   */
+  emergency_contact_phone: string | null;
+  /**
+   * Employee Code
+   */
+  employee_code: string;
+  /**
+   * Exit Reason
+   */
+  exit_reason: string | null;
+  /**
+   * Exited On
+   */
+  exited_on: string | null;
+  /**
+   * First Name
+   */
+  first_name: string;
+  /**
+   * Full Name Nepali
+   */
+  full_name_nepali: string | null;
+  gender: Gender;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Joined On
+   */
+  joined_on: string;
+  /**
+   * Last Name
+   */
+  last_name: string;
+  marital_status: MaritalStatus;
+  /**
+   * Middle Name
+   */
+  middle_name: string | null;
+  /**
+   * Nationality
+   */
+  nationality: string;
+  /**
+   * Pan Number
+   */
+  pan_number: string | null;
+  /**
+   * Personal Email
+   */
+  personal_email: string | null;
+  /**
+   * Phone
+   */
+  phone: string | null;
+  /**
+   * Probation Ends On
+   */
+  probation_ends_on: string | null;
+  /**
+   * Provident Fund Number
+   */
+  provident_fund_number: string | null;
+  /**
+   * Province
+   */
+  province: string | null;
+  /**
+   * Ssf Number
+   */
+  ssf_number: string | null;
+  status: EmployeeStatus;
+  /**
+   * Work Email
+   */
+  work_email: string | null;
+};
+
+/**
+ * EmployeeList
+ */
+export type EmployeeListWritable = {
+  /**
+   * Items
+   */
+  items: Array<EmployeeSummaryWritable>;
+  /**
+   * Total
+   */
+  total: number;
+};
+
+/**
+ * EmployeeSummary
+ *
+ * The list row. Deliberately small — an employee list is the highest-traffic
+ * screen in the product and does not need the full record.
+ */
+export type EmployeeSummaryWritable = {
+  /**
+   * Employee Code
+   */
+  employee_code: string;
+  /**
+   * First Name
+   */
+  first_name: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Joined On
+   */
+  joined_on: string;
+  /**
+   * Last Name
+   */
+  last_name: string;
+  /**
+   * Middle Name
+   */
+  middle_name: string | null;
+  status: EmployeeStatus;
+  /**
+   * Work Email
+   */
+  work_email: string | null;
+};
+
 export type MetaHealthData = {
   body?: never;
   path?: never;
@@ -807,6 +1578,18 @@ export type EmployeesListEmployeesData = {
   path?: never;
   query?: {
     /**
+     * Status
+     */
+    status?: EmployeeStatus | null;
+    /**
+     * Org Unit Id
+     */
+    org_unit_id?: string | null;
+    /**
+     * Q
+     */
+    q?: string | null;
+    /**
      * Limit
      */
     limit?: number;
@@ -838,6 +1621,32 @@ export type EmployeesListEmployeesResponses = {
 export type EmployeesListEmployeesResponse =
   EmployeesListEmployeesResponses[keyof EmployeesListEmployeesResponses];
 
+export type EmployeesHireData = {
+  body: HireRequest;
+  path?: never;
+  query?: never;
+  url: "/api/v1/employees";
+};
+
+export type EmployeesHireErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type EmployeesHireError = EmployeesHireErrors[keyof EmployeesHireErrors];
+
+export type EmployeesHireResponses = {
+  /**
+   * Successful Response
+   */
+  201: EmployeeDetail;
+};
+
+export type EmployeesHireResponse =
+  EmployeesHireResponses[keyof EmployeesHireResponses];
+
 export type EmployeesGetEmployeeData = {
   body?: never;
   path: {
@@ -864,11 +1673,273 @@ export type EmployeesGetEmployeeResponses = {
   /**
    * Successful Response
    */
-  200: EmployeeOut;
+  200: EmployeeDetail;
 };
 
 export type EmployeesGetEmployeeResponse =
   EmployeesGetEmployeeResponses[keyof EmployeesGetEmployeeResponses];
+
+export type EmployeesUpdateEmployeeData = {
+  body: EmployeeUpdate;
+  path: {
+    /**
+     * Employee Id
+     */
+    employee_id: string;
+  };
+  query?: never;
+  url: "/api/v1/employees/{employee_id}";
+};
+
+export type EmployeesUpdateEmployeeErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type EmployeesUpdateEmployeeError =
+  EmployeesUpdateEmployeeErrors[keyof EmployeesUpdateEmployeeErrors];
+
+export type EmployeesUpdateEmployeeResponses = {
+  /**
+   * Successful Response
+   */
+  200: EmployeeDetail;
+};
+
+export type EmployeesUpdateEmployeeResponse =
+  EmployeesUpdateEmployeeResponses[keyof EmployeesUpdateEmployeeResponses];
+
+export type EmployeesListAssignmentsData = {
+  body?: never;
+  path: {
+    /**
+     * Employee Id
+     */
+    employee_id: string;
+  };
+  query?: never;
+  url: "/api/v1/employees/{employee_id}/assignments";
+};
+
+export type EmployeesListAssignmentsErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type EmployeesListAssignmentsError =
+  EmployeesListAssignmentsErrors[keyof EmployeesListAssignmentsErrors];
+
+export type EmployeesListAssignmentsResponses = {
+  /**
+   * Response Employees-List Assignments
+   *
+   * Successful Response
+   */
+  200: Array<AssignmentOut>;
+};
+
+export type EmployeesListAssignmentsResponse =
+  EmployeesListAssignmentsResponses[keyof EmployeesListAssignmentsResponses];
+
+export type EmployeesAssignData = {
+  body: AssignmentRequest;
+  path: {
+    /**
+     * Employee Id
+     */
+    employee_id: string;
+  };
+  query?: never;
+  url: "/api/v1/employees/{employee_id}/assignments";
+};
+
+export type EmployeesAssignErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type EmployeesAssignError =
+  EmployeesAssignErrors[keyof EmployeesAssignErrors];
+
+export type EmployeesAssignResponses = {
+  /**
+   * Successful Response
+   */
+  201: AssignmentOut;
+};
+
+export type EmployeesAssignResponse =
+  EmployeesAssignResponses[keyof EmployeesAssignResponses];
+
+export type EmployeesConfirmEmployeeData = {
+  body: ConfirmRequest;
+  path: {
+    /**
+     * Employee Id
+     */
+    employee_id: string;
+  };
+  query?: never;
+  url: "/api/v1/employees/{employee_id}/confirm";
+};
+
+export type EmployeesConfirmEmployeeErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type EmployeesConfirmEmployeeError =
+  EmployeesConfirmEmployeeErrors[keyof EmployeesConfirmEmployeeErrors];
+
+export type EmployeesConfirmEmployeeResponses = {
+  /**
+   * Successful Response
+   */
+  200: EmployeeDetail;
+};
+
+export type EmployeesConfirmEmployeeResponse =
+  EmployeesConfirmEmployeeResponses[keyof EmployeesConfirmEmployeeResponses];
+
+export type EmployeesListDocumentsData = {
+  body?: never;
+  path: {
+    /**
+     * Employee Id
+     */
+    employee_id: string;
+  };
+  query?: never;
+  url: "/api/v1/employees/{employee_id}/documents";
+};
+
+export type EmployeesListDocumentsErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type EmployeesListDocumentsError =
+  EmployeesListDocumentsErrors[keyof EmployeesListDocumentsErrors];
+
+export type EmployeesListDocumentsResponses = {
+  /**
+   * Response Employees-List Documents
+   *
+   * Successful Response
+   */
+  200: Array<DocumentOut>;
+};
+
+export type EmployeesListDocumentsResponse =
+  EmployeesListDocumentsResponses[keyof EmployeesListDocumentsResponses];
+
+export type EmployeesAddDocumentData = {
+  body: DocumentCreate;
+  path: {
+    /**
+     * Employee Id
+     */
+    employee_id: string;
+  };
+  query?: never;
+  url: "/api/v1/employees/{employee_id}/documents";
+};
+
+export type EmployeesAddDocumentErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type EmployeesAddDocumentError =
+  EmployeesAddDocumentErrors[keyof EmployeesAddDocumentErrors];
+
+export type EmployeesAddDocumentResponses = {
+  /**
+   * Successful Response
+   */
+  201: DocumentOut;
+};
+
+export type EmployeesAddDocumentResponse =
+  EmployeesAddDocumentResponses[keyof EmployeesAddDocumentResponses];
+
+export type EmployeesListEventsData = {
+  body?: never;
+  path: {
+    /**
+     * Employee Id
+     */
+    employee_id: string;
+  };
+  query?: never;
+  url: "/api/v1/employees/{employee_id}/events";
+};
+
+export type EmployeesListEventsErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type EmployeesListEventsError =
+  EmployeesListEventsErrors[keyof EmployeesListEventsErrors];
+
+export type EmployeesListEventsResponses = {
+  /**
+   * Response Employees-List Events
+   *
+   * Successful Response
+   */
+  200: Array<EventOut>;
+};
+
+export type EmployeesListEventsResponse =
+  EmployeesListEventsResponses[keyof EmployeesListEventsResponses];
+
+export type EmployeesExitEmployeeData = {
+  body: ExitRequest;
+  path: {
+    /**
+     * Employee Id
+     */
+    employee_id: string;
+  };
+  query?: never;
+  url: "/api/v1/employees/{employee_id}/exit";
+};
+
+export type EmployeesExitEmployeeErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type EmployeesExitEmployeeError =
+  EmployeesExitEmployeeErrors[keyof EmployeesExitEmployeeErrors];
+
+export type EmployeesExitEmployeeResponses = {
+  /**
+   * Successful Response
+   */
+  200: EmployeeDetail;
+};
+
+export type EmployeesExitEmployeeResponse =
+  EmployeesExitEmployeeResponses[keyof EmployeesExitEmployeeResponses];
 
 export type OrgListCostCentresData = {
   body?: never;

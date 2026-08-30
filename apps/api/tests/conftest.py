@@ -52,6 +52,9 @@ TENANT_TABLES = (
     "cost_centres",
     "employment_categories",
     "org_units",
+    "employee_assignments",
+    "employee_documents",
+    "employee_events",
 )
 
 
@@ -111,8 +114,9 @@ def make_tenant(
     employee = Employee(
         company_id=company.id,
         employee_code="EMP-001",
-        full_name=f"{slug.title()} Employee",
-        email=f"emp001@{slug}.com.np",
+        first_name=slug.title(),
+        last_name="Employee",
+        work_email=f"emp001@{slug}.com.np",
         status=EmployeeStatus.ACTIVE,
         joined_on=date(2024, 1, 15),
     )

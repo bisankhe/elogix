@@ -105,6 +105,20 @@ the migrations work rather than trusting `metadata.create_all`.
 - **UI work starts from `src/components/ui.tsx`**, not from inline styles. The prototype
   had 19 shared components imported by zero of 545 pages and 23,567 inline styles; these
   primitives exist so that using them is easier than not.
+- **Enum columns use `enum_column()` from `modules/employee/enums.py`**, not
+  `String(...)`. A plain string column loads back as `str`, so
+  `employee.status is EmployeeStatus.EXITED` is silently always false — that bug let an
+  already-exited employee be exited again. `native_enum=False` also avoids leaving a
+  Postgres type behind for a downgrade to forget.
+- **An employee's placement is dated, never overwritten.** Department, designation,
+  grade and position live in `employee_assignments` with `effective_from`/`effective_to`,
+  and the open row (`effective_to IS NULL`) is the current one. Payroll in phase 06 needs
+  to know where someone sat *in the month being paid*. Never add these as columns on
+  `employees`, and never add salary there either.
+- **A migration touching a populated table needs three steps**: add the column nullable,
+  backfill with `op.execute`, then `alter_column(..., nullable=False)`. Autogenerate
+  emits a NOT NULL column with no default, which fails outright. The same applies in
+  reverse in `downgrade` — see the phase 03 revision for both directions.
 - **`migrations/versions/` is excluded from ruff.** It is machine output; don't reformat
   it by hand.
 - **Never `pkill -f <name>`** — the pattern matches the issuing shell's own command line.
@@ -160,10 +174,11 @@ This is a dependency chain, not a priority ranking — each phase produces the t
 next one needs, so nothing gets built twice against mocked inputs. Payroll is last in the
 core *deliberately*: it consumes phases 03–05, and its tests get written before its code.
 
-**Current state: phases 00, 01 and 02 are done**, proven by 58 tests against a real
-Postgres with the schema built by running the migrations from zero. Module access is
-denied server-side, no endpoint returns another tenant's rows, and a tenant can be
-provisioned into a complete org chart through the UI.
+**Current state: phases 00–03 are done**, proven by 78 tests against a real Postgres
+with the schema built by running the migrations from zero. Module access is denied
+server-side, no endpoint returns another tenant's rows, a tenant can be provisioned into
+a complete org chart, and an employee can be hired, edited, documented and offboarded
+with history preserved.
 
 Phase 01 originally shipped row-level security as a second isolation layer; it was
 removed by decision on 2026-08-30, so tenant isolation is the query filters alone. If it
@@ -173,9 +188,9 @@ even on a `FORCE ROW LEVEL SECURITY` table — the app would need a `NOSUPERUSER
 
 `modules/employee` is deliberately thin — phase 03 owns its real field set.
 
-**Phase 03 (employee master) is next.** It is the most-referenced entity in the product;
-`modules/employee` is currently a thin placeholder from phase 00 and phase 03 owns its
-real field set, documents and lifecycle states.
+**Phase 04 (attendance and roster) is next.** Shifts, rosters, punches, daily records
+and regularisation. It is the highest-frequency screen in any HRMS and produces the
+inputs payroll consumes, so its outputs need to be right before phase 06 reads them.
 
 ---
 

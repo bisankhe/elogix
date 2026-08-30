@@ -17,6 +17,45 @@ export const zAccessToken = z.object({
 });
 
 /**
+ * AssignmentReason
+ */
+export const zAssignmentReason = z.enum([
+  "hire",
+  "confirmation",
+  "transfer",
+  "promotion",
+  "demotion",
+  "redesignation",
+  "exit",
+]);
+
+/**
+ * AssignmentOut
+ */
+export const zAssignmentOut = z.object({
+  cost_centre_id: z.uuid().nullable(),
+  designation_id: z.uuid().nullable(),
+  effective_from: z.iso.date(),
+  effective_to: z.iso.date().nullable(),
+  employment_category_id: z.uuid().nullable(),
+  grade_level_id: z.uuid().nullable(),
+  id: z.uuid(),
+  manager_id: z.uuid().nullable(),
+  note: z.string().nullable(),
+  org_unit_id: z.uuid(),
+  position_id: z.uuid().nullable(),
+  reason: zAssignmentReason,
+  work_location_id: z.uuid().nullable(),
+});
+
+/**
+ * ConfirmRequest
+ */
+export const zConfirmRequest = z.object({
+  confirmed_on: z.iso.date(),
+});
+
+/**
  * CostCentreCreate
  */
 export const zCostCentreCreate = z.object({
@@ -63,32 +102,90 @@ export const zDesignationOut = z.object({
 });
 
 /**
+ * DocumentType
+ */
+export const zDocumentType = z.enum([
+  "citizenship",
+  "passport",
+  "cv",
+  "academic",
+  "training",
+  "contract",
+  "appointment_letter",
+  "experience_letter",
+  "medical",
+  "other",
+]);
+
+/**
+ * DocumentCreate
+ */
+export const zDocumentCreate = z.object({
+  document_type: zDocumentType,
+  expires_on: z.iso.date().nullish(),
+  issued_on: z.iso.date().nullish(),
+  storage_key: z.string().max(500).nullish(),
+  title: z.string().min(1).max(200),
+});
+
+/**
+ * DocumentOut
+ */
+export const zDocumentOut = z.object({
+  document_type: zDocumentType,
+  expires_on: z.iso.date().nullable(),
+  id: z.uuid(),
+  is_verified: z.boolean(),
+  issued_on: z.iso.date().nullable(),
+  storage_key: z.string().nullable(),
+  title: z.string(),
+});
+
+/**
+ * EmployeeEventType
+ */
+export const zEmployeeEventType = z.enum([
+  "hired",
+  "confirmed",
+  "assigned",
+  "suspended",
+  "reinstated",
+  "exited",
+]);
+
+/**
  * EmployeeStatus
  */
 export const zEmployeeStatus = z.enum([
-  "active",
   "probation",
+  "active",
   "suspended",
   "exited",
 ]);
 
 /**
- * EmployeeOut
+ * EmployeeSummary
+ *
+ * The list row. Deliberately small — an employee list is the highest-traffic
+ * screen in the product and does not need the full record.
  */
-export const zEmployeeOut = z.object({
-  email: z.string().nullable(),
+export const zEmployeeSummary = z.object({
   employee_code: z.string(),
-  full_name: z.string(),
+  first_name: z.string(),
+  full_name: z.string().readonly(),
   id: z.uuid(),
   joined_on: z.iso.date(),
+  last_name: z.string(),
+  middle_name: z.string().nullable(),
   status: zEmployeeStatus,
+  work_email: z.string().nullable(),
 });
 
 /**
  * EmployeeList
  */
 export const zEmployeeList = z.object({
-  items: z.array(zEmployeeOut),
+  items: z.array(zEmployeeSummary),
   total: z.int(),
 });
 
@@ -140,6 +237,29 @@ export const zEmploymentCategoryOut = z.object({
 });
 
 /**
+ * EventOut
+ */
+export const zEventOut = z.object({
+  event_type: zEmployeeEventType,
+  id: z.uuid(),
+  note: z.string().nullable(),
+  occurred_on: z.iso.date(),
+});
+
+/**
+ * ExitRequest
+ */
+export const zExitRequest = z.object({
+  exited_on: z.iso.date(),
+  reason: z.string().min(1).max(2000),
+});
+
+/**
+ * Gender
+ */
+export const zGender = z.enum(["female", "male", "other", "undisclosed"]);
+
+/**
  * GradeLevelCreate
  */
 export const zGradeLevelCreate = z.object({
@@ -170,6 +290,85 @@ export const zLoginRequest = z.object({
   company_slug: z.string().min(1).max(63),
   email: z.email(),
   password: z.string().min(1).max(256),
+});
+
+/**
+ * MaritalStatus
+ *
+ * Not cosmetic: Nepal's income tax slabs differ for single and married filers, so
+ * payroll reads this in phase 06.
+ */
+export const zMaritalStatus = z.enum(["single", "married"]);
+
+/**
+ * EmployeeDetail
+ */
+export const zEmployeeDetail = z.object({
+  address: z.string().nullable(),
+  bank_account_number: z.string().nullable(),
+  bank_name: z.string().nullable(),
+  blood_group: z.string().nullable(),
+  citizenship_number: z.string().nullable(),
+  confirmed_on: z.iso.date().nullable(),
+  current_assignment: zAssignmentOut.nullish(),
+  date_of_birth: z.iso.date().nullable(),
+  district: z.string().nullable(),
+  emergency_contact_name: z.string().nullable(),
+  emergency_contact_phone: z.string().nullable(),
+  employee_code: z.string(),
+  exit_reason: z.string().nullable(),
+  exited_on: z.iso.date().nullable(),
+  first_name: z.string(),
+  full_name: z.string().readonly(),
+  full_name_nepali: z.string().nullable(),
+  gender: zGender,
+  id: z.uuid(),
+  joined_on: z.iso.date(),
+  last_name: z.string(),
+  marital_status: zMaritalStatus,
+  middle_name: z.string().nullable(),
+  nationality: z.string(),
+  pan_number: z.string().nullable(),
+  personal_email: z.string().nullable(),
+  phone: z.string().nullable(),
+  probation_ends_on: z.iso.date().nullable(),
+  provident_fund_number: z.string().nullable(),
+  province: z.string().nullable(),
+  ssf_number: z.string().nullable(),
+  status: zEmployeeStatus,
+  work_email: z.string().nullable(),
+});
+
+/**
+ * EmployeeUpdate
+ *
+ * Personal details only. Placement changes go through /assignments, and lifecycle
+ * changes through /confirm and /exit, so history cannot be edited away.
+ */
+export const zEmployeeUpdate = z.object({
+  address: z.string().nullish(),
+  bank_account_number: z.string().max(64).nullish(),
+  bank_name: z.string().max(128).nullish(),
+  blood_group: z.string().max(8).nullish(),
+  citizenship_number: z.string().max(64).nullish(),
+  date_of_birth: z.iso.date().nullish(),
+  district: z.string().max(64).nullish(),
+  emergency_contact_name: z.string().max(200).nullish(),
+  emergency_contact_phone: z.string().max(32).nullish(),
+  first_name: z.string().min(1).max(100).nullish(),
+  full_name_nepali: z.string().max(200).nullish(),
+  gender: zGender.nullish(),
+  last_name: z.string().min(1).max(100).nullish(),
+  marital_status: zMaritalStatus.nullish(),
+  middle_name: z.string().max(100).nullish(),
+  nationality: z.string().max(64).nullish(),
+  pan_number: z.string().max(32).nullish(),
+  personal_email: z.email().nullish(),
+  phone: z.string().max(32).nullish(),
+  provident_fund_number: z.string().max(32).nullish(),
+  province: z.string().max(64).nullish(),
+  ssf_number: z.string().max(32).nullish(),
+  work_email: z.email().nullish(),
 });
 
 /**
@@ -262,6 +461,71 @@ export const zOrgUnitUpdate = z.object({
   kind: zOrgUnitKind.nullish(),
   name: z.string().min(1).max(200).nullish(),
   parent_id: z.uuid().nullish(),
+});
+
+/**
+ * Placement
+ *
+ * Where an employee sits. The same shape whether hiring or moving someone.
+ */
+export const zPlacement = z.object({
+  cost_centre_id: z.uuid().nullish(),
+  designation_id: z.uuid().nullish(),
+  employment_category_id: z.uuid().nullish(),
+  grade_level_id: z.uuid().nullish(),
+  manager_id: z.uuid().nullish(),
+  org_unit_id: z.uuid(),
+  position_id: z.uuid().nullish(),
+  work_location_id: z.uuid().nullish(),
+});
+
+/**
+ * AssignmentRequest
+ */
+export const zAssignmentRequest = z.object({
+  effective_from: z.iso.date(),
+  note: z.string().nullish(),
+  placement: zPlacement,
+  reason: zAssignmentReason.optional().default("transfer"),
+});
+
+/**
+ * HireRequest
+ *
+ * One call creates the person, their opening assignment and the HIRED event.
+ */
+export const zHireRequest = z.object({
+  address: z.string().nullish(),
+  bank_account_number: z.string().max(64).nullish(),
+  bank_name: z.string().max(128).nullish(),
+  blood_group: z.string().max(8).nullish(),
+  citizenship_number: z.string().max(64).nullish(),
+  date_of_birth: z.iso.date().nullish(),
+  district: z.string().max(64).nullish(),
+  emergency_contact_name: z.string().max(200).nullish(),
+  emergency_contact_phone: z.string().max(32).nullish(),
+  employee_code: z
+    .string()
+    .min(1)
+    .max(32)
+    .regex(/^[A-Za-z0-9][A-Za-z0-9._-]*$/),
+  first_name: z.string().min(1).max(100),
+  full_name_nepali: z.string().max(200).nullish(),
+  gender: zGender.optional().default("undisclosed"),
+  joined_on: z.iso.date(),
+  last_name: z.string().min(1).max(100),
+  marital_status: zMaritalStatus.optional().default("single"),
+  middle_name: z.string().max(100).nullish(),
+  nationality: z.string().max(64).optional().default("Nepali"),
+  pan_number: z.string().max(32).nullish(),
+  personal_email: z.email().nullish(),
+  phone: z.string().max(32).nullish(),
+  placement: zPlacement,
+  probation_ends_on: z.iso.date().nullish(),
+  provident_fund_number: z.string().max(32).nullish(),
+  province: z.string().max(64).nullish(),
+  ssf_number: z.string().max(32).nullish(),
+  work_email: z.email().nullish(),
 });
 
 /**
@@ -392,6 +656,69 @@ export const zWorkLocationOut = z.object({
 });
 
 /**
+ * EmployeeDetail
+ */
+export const zEmployeeDetailWritable = z.object({
+  address: z.string().nullable(),
+  bank_account_number: z.string().nullable(),
+  bank_name: z.string().nullable(),
+  blood_group: z.string().nullable(),
+  citizenship_number: z.string().nullable(),
+  confirmed_on: z.iso.date().nullable(),
+  current_assignment: zAssignmentOut.nullish(),
+  date_of_birth: z.iso.date().nullable(),
+  district: z.string().nullable(),
+  emergency_contact_name: z.string().nullable(),
+  emergency_contact_phone: z.string().nullable(),
+  employee_code: z.string(),
+  exit_reason: z.string().nullable(),
+  exited_on: z.iso.date().nullable(),
+  first_name: z.string(),
+  full_name_nepali: z.string().nullable(),
+  gender: zGender,
+  id: z.uuid(),
+  joined_on: z.iso.date(),
+  last_name: z.string(),
+  marital_status: zMaritalStatus,
+  middle_name: z.string().nullable(),
+  nationality: z.string(),
+  pan_number: z.string().nullable(),
+  personal_email: z.string().nullable(),
+  phone: z.string().nullable(),
+  probation_ends_on: z.iso.date().nullable(),
+  provident_fund_number: z.string().nullable(),
+  province: z.string().nullable(),
+  ssf_number: z.string().nullable(),
+  status: zEmployeeStatus,
+  work_email: z.string().nullable(),
+});
+
+/**
+ * EmployeeSummary
+ *
+ * The list row. Deliberately small — an employee list is the highest-traffic
+ * screen in the product and does not need the full record.
+ */
+export const zEmployeeSummaryWritable = z.object({
+  employee_code: z.string(),
+  first_name: z.string(),
+  id: z.uuid(),
+  joined_on: z.iso.date(),
+  last_name: z.string(),
+  middle_name: z.string().nullable(),
+  status: zEmployeeStatus,
+  work_email: z.string().nullable(),
+});
+
+/**
+ * EmployeeList
+ */
+export const zEmployeeListWritable = z.object({
+  items: z.array(zEmployeeSummaryWritable),
+  total: z.int(),
+});
+
+/**
  * Response Meta-Health
  *
  * Successful Response
@@ -426,6 +753,9 @@ export const zAuthMeResponse = zUserOut;
 export const zAuthRefreshResponse = zAccessToken;
 
 export const zEmployeesListEmployeesQuery = z.object({
+  status: zEmployeeStatus.nullish(),
+  org_unit_id: z.uuid().nullish(),
+  q: z.string().max(100).nullish(),
   limit: z.int().gte(1).lte(200).optional().default(50),
   offset: z.int().gte(0).optional().default(0),
 });
@@ -435,6 +765,13 @@ export const zEmployeesListEmployeesQuery = z.object({
  */
 export const zEmployeesListEmployeesResponse = zEmployeeList;
 
+export const zEmployeesHireBody = zHireRequest;
+
+/**
+ * Successful Response
+ */
+export const zEmployeesHireResponse = zEmployeeDetail;
+
 export const zEmployeesGetEmployeePath = z.object({
   employee_id: z.uuid(),
 });
@@ -442,7 +779,95 @@ export const zEmployeesGetEmployeePath = z.object({
 /**
  * Successful Response
  */
-export const zEmployeesGetEmployeeResponse = zEmployeeOut;
+export const zEmployeesGetEmployeeResponse = zEmployeeDetail;
+
+export const zEmployeesUpdateEmployeeBody = zEmployeeUpdate;
+
+export const zEmployeesUpdateEmployeePath = z.object({
+  employee_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zEmployeesUpdateEmployeeResponse = zEmployeeDetail;
+
+export const zEmployeesListAssignmentsPath = z.object({
+  employee_id: z.uuid(),
+});
+
+/**
+ * Response Employees-List Assignments
+ *
+ * Successful Response
+ */
+export const zEmployeesListAssignmentsResponse = z.array(zAssignmentOut);
+
+export const zEmployeesAssignBody = zAssignmentRequest;
+
+export const zEmployeesAssignPath = z.object({
+  employee_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zEmployeesAssignResponse = zAssignmentOut;
+
+export const zEmployeesConfirmEmployeeBody = zConfirmRequest;
+
+export const zEmployeesConfirmEmployeePath = z.object({
+  employee_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zEmployeesConfirmEmployeeResponse = zEmployeeDetail;
+
+export const zEmployeesListDocumentsPath = z.object({
+  employee_id: z.uuid(),
+});
+
+/**
+ * Response Employees-List Documents
+ *
+ * Successful Response
+ */
+export const zEmployeesListDocumentsResponse = z.array(zDocumentOut);
+
+export const zEmployeesAddDocumentBody = zDocumentCreate;
+
+export const zEmployeesAddDocumentPath = z.object({
+  employee_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zEmployeesAddDocumentResponse = zDocumentOut;
+
+export const zEmployeesListEventsPath = z.object({
+  employee_id: z.uuid(),
+});
+
+/**
+ * Response Employees-List Events
+ *
+ * Successful Response
+ */
+export const zEmployeesListEventsResponse = z.array(zEventOut);
+
+export const zEmployeesExitEmployeeBody = zExitRequest;
+
+export const zEmployeesExitEmployeePath = z.object({
+  employee_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zEmployeesExitEmployeeResponse = zEmployeeDetail;
 
 export const zOrgListCostCentresQuery = z.object({
   include_inactive: z.boolean().optional().default(false),

@@ -15,8 +15,17 @@ import {
   authLogout,
   authMe,
   authRefresh,
+  employeesAddDocument,
+  employeesAssign,
+  employeesConfirmEmployee,
+  employeesExitEmployee,
   employeesGetEmployee,
+  employeesHire,
+  employeesListAssignments,
+  employeesListDocuments,
   employeesListEmployees,
+  employeesListEvents,
+  employeesUpdateEmployee,
   metaHealth,
   type Options,
   orgCreateCostCentre,
@@ -57,12 +66,39 @@ import type {
   AuthRefreshData,
   AuthRefreshError,
   AuthRefreshResponse,
+  EmployeesAddDocumentData,
+  EmployeesAddDocumentError,
+  EmployeesAddDocumentResponse,
+  EmployeesAssignData,
+  EmployeesAssignError,
+  EmployeesAssignResponse,
+  EmployeesConfirmEmployeeData,
+  EmployeesConfirmEmployeeError,
+  EmployeesConfirmEmployeeResponse,
+  EmployeesExitEmployeeData,
+  EmployeesExitEmployeeError,
+  EmployeesExitEmployeeResponse,
   EmployeesGetEmployeeData,
   EmployeesGetEmployeeError,
   EmployeesGetEmployeeResponse,
+  EmployeesHireData,
+  EmployeesHireError,
+  EmployeesHireResponse,
+  EmployeesListAssignmentsData,
+  EmployeesListAssignmentsError,
+  EmployeesListAssignmentsResponse,
+  EmployeesListDocumentsData,
+  EmployeesListDocumentsError,
+  EmployeesListDocumentsResponse,
   EmployeesListEmployeesData,
   EmployeesListEmployeesError,
   EmployeesListEmployeesResponse,
+  EmployeesListEventsData,
+  EmployeesListEventsError,
+  EmployeesListEventsResponse,
+  EmployeesUpdateEmployeeData,
+  EmployeesUpdateEmployeeError,
+  EmployeesUpdateEmployeeResponse,
   MetaHealthData,
   MetaHealthResponse,
   OrgCreateCostCentreData,
@@ -459,6 +495,35 @@ export const employeesListEmployeesInfiniteOptions = (
   return opts as Omit<typeof opts, "initialData">;
 };
 
+/**
+ * Hire
+ *
+ * Create the person, their opening assignment and the HIRED event in one call.
+ */
+export const employeesHireMutation = (
+  options?: Partial<Options<EmployeesHireData>>,
+): UseMutationOptions<
+  EmployeesHireResponse,
+  EmployeesHireError,
+  Options<EmployeesHireData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    EmployeesHireResponse,
+    EmployeesHireError,
+    Options<EmployeesHireData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await employeesHire({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
 export const employeesGetEmployeeQueryKey = (
   options: Options<EmployeesGetEmployeeData>,
 ) => createQueryKey("employeesGetEmployee", options);
@@ -486,6 +551,227 @@ export const employeesGetEmployeeOptions = (
     },
     queryKey: employeesGetEmployeeQueryKey(options),
   });
+
+/**
+ * Update Employee
+ */
+export const employeesUpdateEmployeeMutation = (
+  options?: Partial<Options<EmployeesUpdateEmployeeData>>,
+): UseMutationOptions<
+  EmployeesUpdateEmployeeResponse,
+  EmployeesUpdateEmployeeError,
+  Options<EmployeesUpdateEmployeeData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    EmployeesUpdateEmployeeResponse,
+    EmployeesUpdateEmployeeError,
+    Options<EmployeesUpdateEmployeeData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await employeesUpdateEmployee({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const employeesListAssignmentsQueryKey = (
+  options: Options<EmployeesListAssignmentsData>,
+) => createQueryKey("employeesListAssignments", options);
+
+/**
+ * List Assignments
+ */
+export const employeesListAssignmentsOptions = (
+  options: Options<EmployeesListAssignmentsData>,
+) =>
+  queryOptions<
+    EmployeesListAssignmentsResponse,
+    EmployeesListAssignmentsError,
+    EmployeesListAssignmentsResponse,
+    ReturnType<typeof employeesListAssignmentsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await employeesListAssignments({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: employeesListAssignmentsQueryKey(options),
+  });
+
+/**
+ * Assign
+ *
+ * Transfer, promote or redesignate. Closes the previous assignment.
+ */
+export const employeesAssignMutation = (
+  options?: Partial<Options<EmployeesAssignData>>,
+): UseMutationOptions<
+  EmployeesAssignResponse,
+  EmployeesAssignError,
+  Options<EmployeesAssignData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    EmployeesAssignResponse,
+    EmployeesAssignError,
+    Options<EmployeesAssignData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await employeesAssign({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Confirm Employee
+ */
+export const employeesConfirmEmployeeMutation = (
+  options?: Partial<Options<EmployeesConfirmEmployeeData>>,
+): UseMutationOptions<
+  EmployeesConfirmEmployeeResponse,
+  EmployeesConfirmEmployeeError,
+  Options<EmployeesConfirmEmployeeData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    EmployeesConfirmEmployeeResponse,
+    EmployeesConfirmEmployeeError,
+    Options<EmployeesConfirmEmployeeData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await employeesConfirmEmployee({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const employeesListDocumentsQueryKey = (
+  options: Options<EmployeesListDocumentsData>,
+) => createQueryKey("employeesListDocuments", options);
+
+/**
+ * List Documents
+ */
+export const employeesListDocumentsOptions = (
+  options: Options<EmployeesListDocumentsData>,
+) =>
+  queryOptions<
+    EmployeesListDocumentsResponse,
+    EmployeesListDocumentsError,
+    EmployeesListDocumentsResponse,
+    ReturnType<typeof employeesListDocumentsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await employeesListDocuments({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: employeesListDocumentsQueryKey(options),
+  });
+
+/**
+ * Add Document
+ */
+export const employeesAddDocumentMutation = (
+  options?: Partial<Options<EmployeesAddDocumentData>>,
+): UseMutationOptions<
+  EmployeesAddDocumentResponse,
+  EmployeesAddDocumentError,
+  Options<EmployeesAddDocumentData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    EmployeesAddDocumentResponse,
+    EmployeesAddDocumentError,
+    Options<EmployeesAddDocumentData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await employeesAddDocument({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const employeesListEventsQueryKey = (
+  options: Options<EmployeesListEventsData>,
+) => createQueryKey("employeesListEvents", options);
+
+/**
+ * List Events
+ */
+export const employeesListEventsOptions = (
+  options: Options<EmployeesListEventsData>,
+) =>
+  queryOptions<
+    EmployeesListEventsResponse,
+    EmployeesListEventsError,
+    EmployeesListEventsResponse,
+    ReturnType<typeof employeesListEventsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await employeesListEvents({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: employeesListEventsQueryKey(options),
+  });
+
+/**
+ * Exit Employee
+ */
+export const employeesExitEmployeeMutation = (
+  options?: Partial<Options<EmployeesExitEmployeeData>>,
+): UseMutationOptions<
+  EmployeesExitEmployeeResponse,
+  EmployeesExitEmployeeError,
+  Options<EmployeesExitEmployeeData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    EmployeesExitEmployeeResponse,
+    EmployeesExitEmployeeError,
+    Options<EmployeesExitEmployeeData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await employeesExitEmployee({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
 
 export const orgListCostCentresQueryKey = (
   options?: Options<OrgListCostCentresData>,

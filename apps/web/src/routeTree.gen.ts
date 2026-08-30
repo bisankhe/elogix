@@ -13,7 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
-import { Route as AppEmployeesRouteImport } from './routes/_app/employees'
+import { Route as AppEmployeesIndexRouteImport } from './routes/_app/employees.index'
+import { Route as AppEmployeesEmployeeIdRouteImport } from './routes/_app/employees.$employeeId'
 import { Route as AppOrgGradesRouteImport } from './routes/_app/org/grades'
 import { Route as AppOrgLocationsRouteImport } from './routes/_app/org/locations'
 import { Route as AppOrgPositionsRouteImport } from './routes/_app/org/positions'
@@ -38,9 +39,14 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
-const AppEmployeesRoute = AppEmployeesRouteImport.update({
-  id: '/employees',
-  path: '/employees',
+const AppEmployeesIndexRoute = AppEmployeesIndexRouteImport.update({
+  id: '/employees/',
+  path: '/employees/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEmployeesEmployeeIdRoute = AppEmployeesEmployeeIdRouteImport.update({
+  id: '/employees/$employeeId',
+  path: '/employees/$employeeId',
   getParentRoute: () => AppRoute,
 } as any)
 const AppOrgGradesRoute = AppOrgGradesRouteImport.update({
@@ -68,21 +74,23 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/dashboard': typeof AppDashboardRoute
-  '/employees': typeof AppEmployeesRoute
+  '/employees/$employeeId': typeof AppEmployeesEmployeeIdRoute
   '/org/grades': typeof AppOrgGradesRoute
   '/org/locations': typeof AppOrgLocationsRoute
   '/org/positions': typeof AppOrgPositionsRoute
   '/org/units': typeof AppOrgUnitsRoute
+  '/employees/': typeof AppEmployeesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/dashboard': typeof AppDashboardRoute
-  '/employees': typeof AppEmployeesRoute
+  '/employees/$employeeId': typeof AppEmployeesEmployeeIdRoute
   '/org/grades': typeof AppOrgGradesRoute
   '/org/locations': typeof AppOrgLocationsRoute
   '/org/positions': typeof AppOrgPositionsRoute
   '/org/units': typeof AppOrgUnitsRoute
+  '/employees': typeof AppEmployeesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -90,11 +98,12 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/_app/dashboard': typeof AppDashboardRoute
-  '/_app/employees': typeof AppEmployeesRoute
+  '/_app/employees/$employeeId': typeof AppEmployeesEmployeeIdRoute
   '/_app/org/grades': typeof AppOrgGradesRoute
   '/_app/org/locations': typeof AppOrgLocationsRoute
   '/_app/org/positions': typeof AppOrgPositionsRoute
   '/_app/org/units': typeof AppOrgUnitsRoute
+  '/_app/employees/': typeof AppEmployeesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -102,32 +111,35 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/dashboard'
-    | '/employees'
+    | '/employees/$employeeId'
     | '/org/grades'
     | '/org/locations'
     | '/org/positions'
     | '/org/units'
+    | '/employees/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
     | '/dashboard'
-    | '/employees'
+    | '/employees/$employeeId'
     | '/org/grades'
     | '/org/locations'
     | '/org/positions'
     | '/org/units'
+    | '/employees'
   id:
     | '__root__'
     | '/'
     | '/_app'
     | '/login'
     | '/_app/dashboard'
-    | '/_app/employees'
+    | '/_app/employees/$employeeId'
     | '/_app/org/grades'
     | '/_app/org/locations'
     | '/_app/org/positions'
     | '/_app/org/units'
+    | '/_app/employees/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -166,11 +178,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/employees': {
-      id: '/_app/employees'
+    '/_app/employees/': {
+      id: '/_app/employees/'
       path: '/employees'
-      fullPath: '/employees'
-      preLoaderRoute: typeof AppEmployeesRouteImport
+      fullPath: '/employees/'
+      preLoaderRoute: typeof AppEmployeesIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/employees/$employeeId': {
+      id: '/_app/employees/$employeeId'
+      path: '/employees/$employeeId'
+      fullPath: '/employees/$employeeId'
+      preLoaderRoute: typeof AppEmployeesEmployeeIdRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/org/grades': {
@@ -206,20 +225,22 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppDashboardRoute: typeof AppDashboardRoute
-  AppEmployeesRoute: typeof AppEmployeesRoute
+  AppEmployeesEmployeeIdRoute: typeof AppEmployeesEmployeeIdRoute
   AppOrgGradesRoute: typeof AppOrgGradesRoute
   AppOrgLocationsRoute: typeof AppOrgLocationsRoute
   AppOrgPositionsRoute: typeof AppOrgPositionsRoute
   AppOrgUnitsRoute: typeof AppOrgUnitsRoute
+  AppEmployeesIndexRoute: typeof AppEmployeesIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppDashboardRoute: AppDashboardRoute,
-  AppEmployeesRoute: AppEmployeesRoute,
+  AppEmployeesEmployeeIdRoute: AppEmployeesEmployeeIdRoute,
   AppOrgGradesRoute: AppOrgGradesRoute,
   AppOrgLocationsRoute: AppOrgLocationsRoute,
   AppOrgPositionsRoute: AppOrgPositionsRoute,
   AppOrgUnitsRoute: AppOrgUnitsRoute,
+  AppEmployeesIndexRoute: AppEmployeesIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

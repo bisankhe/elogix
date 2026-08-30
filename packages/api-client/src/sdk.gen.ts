@@ -22,12 +22,39 @@ import type {
   AuthRefreshData,
   AuthRefreshErrors,
   AuthRefreshResponses,
+  EmployeesAddDocumentData,
+  EmployeesAddDocumentErrors,
+  EmployeesAddDocumentResponses,
+  EmployeesAssignData,
+  EmployeesAssignErrors,
+  EmployeesAssignResponses,
+  EmployeesConfirmEmployeeData,
+  EmployeesConfirmEmployeeErrors,
+  EmployeesConfirmEmployeeResponses,
+  EmployeesExitEmployeeData,
+  EmployeesExitEmployeeErrors,
+  EmployeesExitEmployeeResponses,
   EmployeesGetEmployeeData,
   EmployeesGetEmployeeErrors,
   EmployeesGetEmployeeResponses,
+  EmployeesHireData,
+  EmployeesHireErrors,
+  EmployeesHireResponses,
+  EmployeesListAssignmentsData,
+  EmployeesListAssignmentsErrors,
+  EmployeesListAssignmentsResponses,
+  EmployeesListDocumentsData,
+  EmployeesListDocumentsErrors,
+  EmployeesListDocumentsResponses,
   EmployeesListEmployeesData,
   EmployeesListEmployeesErrors,
   EmployeesListEmployeesResponses,
+  EmployeesListEventsData,
+  EmployeesListEventsErrors,
+  EmployeesListEventsResponses,
+  EmployeesUpdateEmployeeData,
+  EmployeesUpdateEmployeeErrors,
+  EmployeesUpdateEmployeeResponses,
   MetaHealthData,
   MetaHealthResponses,
   OrgCreateCostCentreData,
@@ -232,6 +259,28 @@ export const employeesListEmployees = <ThrowOnError extends boolean = false>(
   });
 
 /**
+ * Hire
+ *
+ * Create the person, their opening assignment and the HIRED event in one call.
+ */
+export const employeesHire = <ThrowOnError extends boolean = false>(
+  options: Options<EmployeesHireData, ThrowOnError>,
+): RequestResult<EmployeesHireResponses, EmployeesHireErrors, ThrowOnError> =>
+  (options.client ?? client).post<
+    EmployeesHireResponses,
+    EmployeesHireErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/employees",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
  * Get Employee
  */
 export const employeesGetEmployee = <ThrowOnError extends boolean = false>(
@@ -249,6 +298,188 @@ export const employeesGetEmployee = <ThrowOnError extends boolean = false>(
     security: [{ scheme: "bearer", type: "http" }],
     url: "/api/v1/employees/{employee_id}",
     ...options,
+  });
+
+/**
+ * Update Employee
+ */
+export const employeesUpdateEmployee = <ThrowOnError extends boolean = false>(
+  options: Options<EmployeesUpdateEmployeeData, ThrowOnError>,
+): RequestResult<
+  EmployeesUpdateEmployeeResponses,
+  EmployeesUpdateEmployeeErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).patch<
+    EmployeesUpdateEmployeeResponses,
+    EmployeesUpdateEmployeeErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/employees/{employee_id}",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * List Assignments
+ */
+export const employeesListAssignments = <ThrowOnError extends boolean = false>(
+  options: Options<EmployeesListAssignmentsData, ThrowOnError>,
+): RequestResult<
+  EmployeesListAssignmentsResponses,
+  EmployeesListAssignmentsErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    EmployeesListAssignmentsResponses,
+    EmployeesListAssignmentsErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/employees/{employee_id}/assignments",
+    ...options,
+  });
+
+/**
+ * Assign
+ *
+ * Transfer, promote or redesignate. Closes the previous assignment.
+ */
+export const employeesAssign = <ThrowOnError extends boolean = false>(
+  options: Options<EmployeesAssignData, ThrowOnError>,
+): RequestResult<
+  EmployeesAssignResponses,
+  EmployeesAssignErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    EmployeesAssignResponses,
+    EmployeesAssignErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/employees/{employee_id}/assignments",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Confirm Employee
+ */
+export const employeesConfirmEmployee = <ThrowOnError extends boolean = false>(
+  options: Options<EmployeesConfirmEmployeeData, ThrowOnError>,
+): RequestResult<
+  EmployeesConfirmEmployeeResponses,
+  EmployeesConfirmEmployeeErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    EmployeesConfirmEmployeeResponses,
+    EmployeesConfirmEmployeeErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/employees/{employee_id}/confirm",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * List Documents
+ */
+export const employeesListDocuments = <ThrowOnError extends boolean = false>(
+  options: Options<EmployeesListDocumentsData, ThrowOnError>,
+): RequestResult<
+  EmployeesListDocumentsResponses,
+  EmployeesListDocumentsErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    EmployeesListDocumentsResponses,
+    EmployeesListDocumentsErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/employees/{employee_id}/documents",
+    ...options,
+  });
+
+/**
+ * Add Document
+ */
+export const employeesAddDocument = <ThrowOnError extends boolean = false>(
+  options: Options<EmployeesAddDocumentData, ThrowOnError>,
+): RequestResult<
+  EmployeesAddDocumentResponses,
+  EmployeesAddDocumentErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    EmployeesAddDocumentResponses,
+    EmployeesAddDocumentErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/employees/{employee_id}/documents",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * List Events
+ */
+export const employeesListEvents = <ThrowOnError extends boolean = false>(
+  options: Options<EmployeesListEventsData, ThrowOnError>,
+): RequestResult<
+  EmployeesListEventsResponses,
+  EmployeesListEventsErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    EmployeesListEventsResponses,
+    EmployeesListEventsErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/employees/{employee_id}/events",
+    ...options,
+  });
+
+/**
+ * Exit Employee
+ */
+export const employeesExitEmployee = <ThrowOnError extends boolean = false>(
+  options: Options<EmployeesExitEmployeeData, ThrowOnError>,
+): RequestResult<
+  EmployeesExitEmployeeResponses,
+  EmployeesExitEmployeeErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    EmployeesExitEmployeeResponses,
+    EmployeesExitEmployeeErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/employees/{employee_id}/exit",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
   });
 
 /**
