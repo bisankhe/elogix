@@ -59,6 +59,32 @@ docker exec elogix_dev_db psql -U elogix -d elogix -c "CREATE DATABASE elogix_te
 The suite drops and rebuilds `public` by running the migrations from zero, so it proves
 the migrations work rather than trusting `metadata.create_all`.
 
+### Seeing the UI
+
+There is no Claude browser extension here, but a real headed Chromium runs against a
+virtual display, which is enough to verify screens and to catch console errors:
+
+```bash
+npx playwright install --with-deps chromium   # once
+Xvfb :99 -screen 0 1600x1000x24 &             # a display to render into
+cd apps/web && DISPLAY=:99 node scripts/screenshot.mjs
+```
+
+The script logs in, captures every screen to `/tmp/elogix-shots/`, and exits non-zero on
+any console error, page error or 4xx/5xx response — so it doubles as a smoke test.
+`headless: false` is deliberate: it renders through the same path a user's browser does.
+
+To *watch* it live rather than screenshot it, add a VNC bridge and open port 6080:
+
+```bash
+sudo apt-get install -y x11vnc novnc websockify
+x11vnc -display :99 -forever -shared -nopw -rfbport 5901 &
+websockify --web=/usr/share/novnc 6080 localhost:5901 &
+```
+
+A `401` on `/api/v1/auth/refresh` during a cold load is expected, not a bug: the app
+asks for a new access token on startup and there is no refresh cookie until you sign in.
+
 ---
 
 ## Gotchas

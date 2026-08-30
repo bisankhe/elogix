@@ -18,20 +18,26 @@ function Dashboard() {
   const positions = useQuery(orgListPositionsOptions())
   const entitlements = useQuery(authEntitlementsOptions())
 
-  const headcount = positions.data?.reduce((sum, p) => sum + p.headcount, 0) ?? 0
+  const headcount = positions.data?.reduce((sum, p) => sum + p.headcount, 0)
+  const filled = employees.data?.total ?? 0
+  // A real zero is information; only a not-yet-loaded value should read as blank.
+  const stat = (v: number | undefined) => (v === undefined ? '—' : v)
 
   return (
     <>
-      <PageHeader
-        title="Dashboard"
-        subtitle="Organization at a glance"
-      />
+      <PageHeader title="Dashboard" subtitle="Organization at a glance" />
 
       <div className="mb-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Employees" value={employees.data?.total ?? '—'} tone="blue" />
-        <StatCard label="Org units" value={units.data?.length ?? '—'} tone="violet" />
-        <StatCard label="Positions" value={positions.data?.length ?? '—'} tone="cyan" />
-        <StatCard label="Budgeted headcount" value={headcount || '—'} tone="green" />
+        <StatCard label="Employees" value={stat(employees.data?.total)} tone="blue" />
+        <StatCard label="Org units" value={stat(units.data?.length)} tone="violet" />
+        <StatCard label="Positions" value={stat(positions.data?.length)} tone="cyan" />
+        <StatCard
+          label="Budgeted headcount"
+          value={
+            headcount === undefined ? '—' : `${filled} / ${headcount}`
+          }
+          tone={headcount !== undefined && filled > headcount ? 'red' : 'green'}
+        />
       </div>
 
       <Card className="p-5">

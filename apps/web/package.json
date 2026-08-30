@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@hey-api/openapi-ts": "^0.99.0",
+    "@playwright/test": "^1.62.1",
     "@tanstack/router-plugin": "^1.168.35",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",

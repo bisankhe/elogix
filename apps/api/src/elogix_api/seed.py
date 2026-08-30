@@ -31,6 +31,7 @@ from elogix_api.modules.org.models import (
     GradeLevel,
     OrgUnit,
     OrgUnitKind,
+    Position,
     WorkLocation,
 )
 
@@ -225,7 +226,64 @@ def _seed_org(db: Session, company_id: uuid.UUID) -> None:
             )
         )
 
-    print("created org chart: 8 units, 5 grades, 3 cost centres, 3 locations, 4 categories")
+    db.flush()
+    units = {
+        u.code: u
+        for u in db.execute(
+            select(OrgUnit).where(OrgUnit.company_id == company_id)
+        ).scalars()
+    }
+    designations = {
+        d.code: d
+        for d in db.execute(
+            select(Designation).where(Designation.company_id == company_id)
+        ).scalars()
+    }
+    locations = {
+        loc.code: loc
+        for loc in db.execute(
+            select(WorkLocation).where(WorkLocation.company_id == company_id)
+        ).scalars()
+    }
+    categories = {
+        c.code: c
+        for c in db.execute(
+            select(EmploymentCategory).where(EmploymentCategory.company_id == company_id)
+        ).scalars()
+    }
+    cost_centres = {
+        c.code: c
+        for c in db.execute(
+            select(CostCentre).where(CostCentre.company_id == company_id)
+        ).scalars()
+    }
+
+    for code, title, unit_code, desig, cc, headcount in (
+        ("POS-ENG-01", "Software Engineer", "ENG", "SE", "CC-ENG", 4),
+        ("POS-ENG-02", "Senior Software Engineer", "ENG", "SSE", "CC-ENG", 2),
+        ("POS-ENG-03", "Engineering Head", "ENG", "HOD", "CC-ENG", 1),
+        ("POS-FIN-01", "Accountant", "FIN", "ACC", "CC-HO", 2),
+        ("POS-HR-01", "HR Officer", "HR", "HRO", "CC-HO", 2),
+        ("POS-OPS-01", "Operations Officer", "OPS", "HRO", "CC-OPS", 3),
+    ):
+        db.add(
+            Position(
+                company_id=company_id,
+                code=code,
+                title=title,
+                org_unit_id=units[unit_code].id,
+                designation_id=designations[desig].id,
+                cost_centre_id=cost_centres[cc].id,
+                work_location_id=locations["LOC-KTM"].id,
+                employment_category_id=categories["PERM"].id,
+                headcount=headcount,
+            )
+        )
+
+    print(
+        f"created org chart: {len(units)} units, 5 grades, {len(cost_centres)} cost centres, "
+        f"{len(locations)} locations, {len(categories)} categories, 6 positions"
+    )
 
 if __name__ == "__main__":
     main()
