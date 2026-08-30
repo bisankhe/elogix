@@ -117,6 +117,120 @@ export type AdjustmentOut = {
 };
 
 /**
+ * ApplicationCreate
+ */
+export type ApplicationCreate = {
+  /**
+   * Applied On
+   */
+  applied_on?: string | null;
+  /**
+   * Candidate Id
+   */
+  candidate_id: string;
+  /**
+   * Requisition Id
+   */
+  requisition_id: string;
+};
+
+/**
+ * ApplicationDetail
+ */
+export type ApplicationDetail = {
+  /**
+   * Applied On
+   */
+  applied_on: string;
+  /**
+   * Candidate Email
+   */
+  candidate_email: string;
+  /**
+   * Candidate Id
+   */
+  candidate_id: string;
+  /**
+   * Candidate Name
+   */
+  candidate_name: string;
+  /**
+   * Closed At
+   */
+  closed_at: string | null;
+  /**
+   * Events
+   */
+  events?: Array<ElogixApiModulesRecruitmentSchemasEventOut>;
+  /**
+   * Id
+   */
+  id: string;
+  outcome: StageOutcome | null;
+  /**
+   * Requisition Code
+   */
+  requisition_code: string;
+  /**
+   * Requisition Id
+   */
+  requisition_id: string;
+  /**
+   * Stage Id
+   */
+  stage_id: string;
+  /**
+   * Stage Name
+   */
+  stage_name: string;
+};
+
+/**
+ * ApplicationMove
+ */
+export type ApplicationMove = {
+  /**
+   * Note
+   */
+  note?: string | null;
+  /**
+   * To Stage Id
+   */
+  to_stage_id: string;
+};
+
+/**
+ * ApplicationOut
+ */
+export type ApplicationOut = {
+  /**
+   * Applied On
+   */
+  applied_on: string;
+  /**
+   * Candidate Id
+   */
+  candidate_id: string;
+  /**
+   * Closed At
+   */
+  closed_at: string | null;
+  /**
+   * Id
+   */
+  id: string;
+  outcome: StageOutcome | null;
+  /**
+   * Requisition Id
+   */
+  requisition_id: string;
+  /**
+   * Stage Id
+   */
+  stage_id: string;
+};
+
+/**
  * AssignmentOut
  */
 export type AssignmentOut = {
@@ -237,6 +351,70 @@ export type BodyEmployeesUploadDocumentFile = {
    * File
    */
   file: Blob | File;
+};
+
+/**
+ * CandidateCreate
+ */
+export type CandidateCreate = {
+  /**
+   * Email
+   */
+  email: string;
+  /**
+   * Full Name
+   */
+  full_name: string;
+  /**
+   * Notes
+   */
+  notes?: string | null;
+  /**
+   * Phone
+   */
+  phone?: string | null;
+  /**
+   * Source
+   */
+  source?: string | null;
+};
+
+/**
+ * CandidateOut
+ */
+export type CandidateOut = {
+  /**
+   * Created At
+   */
+  created_at: string;
+  /**
+   * Email
+   */
+  email: string;
+  /**
+   * Full Name
+   */
+  full_name: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Notes
+   */
+  notes: string | null;
+  /**
+   * Phone
+   */
+  phone: string | null;
+  /**
+   * Resume Filename
+   */
+  resume_filename: string | null;
+  /**
+   * Source
+   */
+  source: string | null;
 };
 
 /**
@@ -1073,25 +1251,6 @@ export type EntitlementsOut = {
    */
   modules: Array<ModuleCode>;
   plan_tier: PlanTier;
-};
-
-/**
- * EventOut
- */
-export type EventOut = {
-  event_type: EmployeeEventType;
-  /**
-   * Id
-   */
-  id: string;
-  /**
-   * Note
-   */
-  note: string | null;
-  /**
-   * Occurred On
-   */
-  occurred_on: string;
 };
 
 /**
@@ -2349,6 +2508,152 @@ export type MyProfile = {
 };
 
 /**
+ * OfferCreate
+ */
+export type OfferCreate = {
+  /**
+   * Basic
+   */
+  basic: number | string;
+  /**
+   * Expires On
+   */
+  expires_on: string;
+  /**
+   * Notes
+   */
+  notes?: string | null;
+  /**
+   * Starts On
+   */
+  starts_on: string;
+};
+
+/**
+ * OfferOut
+ */
+export type OfferOut = {
+  /**
+   * Application Id
+   */
+  application_id: string;
+  /**
+   * Basic
+   */
+  basic: string;
+  /**
+   * Decline Reason
+   */
+  decline_reason: string | null;
+  /**
+   * Employee Id
+   */
+  employee_id: string | null;
+  /**
+   * Expires On
+   */
+  expires_on: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Notes
+   */
+  notes: string | null;
+  /**
+   * Responded At
+   */
+  responded_at: string | null;
+  /**
+   * Sent At
+   */
+  sent_at: string | null;
+  /**
+   * Starts On
+   */
+  starts_on: string;
+  status: OfferStatus;
+};
+
+/**
+ * OfferResponse
+ */
+export type OfferResponse = {
+  /**
+   * Accept
+   */
+  accept: boolean;
+  /**
+   * Reason
+   */
+  reason?: string | null;
+};
+
+/**
+ * OfferSent
+ *
+ * Returned once, on send.
+ *
+ * The token is in the response and in no list endpoint, because it is a credential:
+ * whoever holds it can answer the offer. It goes to the candidate's own link and
+ * nowhere else.
+ */
+export type OfferSent = {
+  /**
+   * Application Id
+   */
+  application_id: string;
+  /**
+   * Basic
+   */
+  basic: string;
+  /**
+   * Decline Reason
+   */
+  decline_reason: string | null;
+  /**
+   * Employee Id
+   */
+  employee_id: string | null;
+  /**
+   * Expires On
+   */
+  expires_on: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Notes
+   */
+  notes: string | null;
+  /**
+   * Responded At
+   */
+  responded_at: string | null;
+  /**
+   * Response Token
+   */
+  response_token: string;
+  /**
+   * Sent At
+   */
+  sent_at: string | null;
+  /**
+   * Starts On
+   */
+  starts_on: string;
+  status: OfferStatus;
+};
+
+/**
+ * OfferStatus
+ */
+export type OfferStatus =
+  "draft" | "sent" | "accepted" | "declined" | "withdrawn" | "expired";
+
+/**
  * OrgUnitCreate
  */
 export type OrgUnitCreate = {
@@ -3111,6 +3416,39 @@ export type ProcessResult = {
 };
 
 /**
+ * PublicOffer
+ *
+ * What a candidate sees at their link.
+ *
+ * Deliberately thin. No candidate id, no application id, no requisition code, no
+ * internal notes — a token holder is a candidate, not a user of this system, and
+ * everything beyond the terms they are being asked to accept is the company's.
+ */
+export type PublicOffer = {
+  /**
+   * Basic
+   */
+  basic: string;
+  /**
+   * Company
+   */
+  company: string;
+  /**
+   * Expires On
+   */
+  expires_on: string;
+  /**
+   * Starts On
+   */
+  starts_on: string;
+  status: OfferStatus;
+  /**
+   * Title
+   */
+  title: string;
+};
+
+/**
  * PunchCreate
  */
 export type PunchCreate = {
@@ -3260,6 +3598,146 @@ export type RegularisationOut = {
  * RequestStatus
  */
 export type RequestStatus = "pending" | "approved" | "rejected" | "cancelled";
+
+/**
+ * RequisitionCreate
+ */
+export type RequisitionCreate = {
+  /**
+   * Code
+   */
+  code: string;
+  /**
+   * Description
+   */
+  description?: string | null;
+  /**
+   * Openings
+   */
+  openings?: number;
+  /**
+   * Position Id
+   */
+  position_id: string;
+  /**
+   * Target Start Date
+   */
+  target_start_date?: string | null;
+  /**
+   * Title
+   */
+  title: string;
+};
+
+/**
+ * RequisitionDetail
+ *
+ * With the budget it draws against, because that is the question a reader has.
+ */
+export type RequisitionDetail = {
+  /**
+   * Approved At
+   */
+  approved_at: string | null;
+  /**
+   * Closed At
+   */
+  closed_at: string | null;
+  /**
+   * Code
+   */
+  code: string;
+  /**
+   * Committed
+   */
+  committed: number;
+  /**
+   * Description
+   */
+  description: string | null;
+  /**
+   * Filled
+   */
+  filled: number;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Openings
+   */
+  openings: number;
+  /**
+   * Position Headcount
+   */
+  position_headcount: number;
+  /**
+   * Position Id
+   */
+  position_id: string;
+  /**
+   * Position Title
+   */
+  position_title: string;
+  status: RequisitionStatus;
+  /**
+   * Target Start Date
+   */
+  target_start_date: string | null;
+  /**
+   * Title
+   */
+  title: string;
+};
+
+/**
+ * RequisitionOut
+ */
+export type RequisitionOut = {
+  /**
+   * Approved At
+   */
+  approved_at: string | null;
+  /**
+   * Closed At
+   */
+  closed_at: string | null;
+  /**
+   * Code
+   */
+  code: string;
+  /**
+   * Description
+   */
+  description: string | null;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Openings
+   */
+  openings: number;
+  /**
+   * Position Id
+   */
+  position_id: string;
+  status: RequisitionStatus;
+  /**
+   * Target Start Date
+   */
+  target_start_date: string | null;
+  /**
+   * Title
+   */
+  title: string;
+};
+
+/**
+ * RequisitionStatus
+ */
+export type RequisitionStatus =
+  "draft" | "open" | "on_hold" | "filled" | "cancelled";
 
 /**
  * RoleCode
@@ -3837,6 +4315,67 @@ export type SlabOut = {
 };
 
 /**
+ * StageCreate
+ */
+export type StageCreate = {
+  /**
+   * Code
+   */
+  code: string;
+  /**
+   * Is Terminal
+   */
+  is_terminal?: boolean;
+  /**
+   * Name
+   */
+  name: string;
+  outcome?: StageOutcome | null;
+  /**
+   * Sequence
+   */
+  sequence: number;
+};
+
+/**
+ * StageOut
+ */
+export type StageOut = {
+  /**
+   * Code
+   */
+  code: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Is Active
+   */
+  is_active: boolean;
+  /**
+   * Is Terminal
+   */
+  is_terminal: boolean;
+  /**
+   * Name
+   */
+  name: string;
+  outcome: StageOutcome | null;
+  /**
+   * Sequence
+   */
+  sequence: number;
+};
+
+/**
+ * StageOutcome
+ *
+ * What reaching a terminal stage means. Non-terminal stages have none.
+ */
+export type StageOutcome = "hired" | "rejected" | "withdrawn";
+
+/**
  * TaxBandOut
  */
 export type TaxBandOut = {
@@ -4064,6 +4603,25 @@ export type WorkLocationOut = {
 };
 
 /**
+ * EventOut
+ */
+export type ElogixApiModulesEmployeeSchemasEventOut = {
+  event_type: EmployeeEventType;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Note
+   */
+  note: string | null;
+  /**
+   * Occurred On
+   */
+  occurred_on: string;
+};
+
+/**
  * ApprovalResult
  */
 export type ElogixApiModulesPayrollSchemasApprovalResult = {
@@ -4071,6 +4629,36 @@ export type ElogixApiModulesPayrollSchemasApprovalResult = {
    * Attendance Days Locked
    */
   attendance_days_locked: number;
+};
+
+/**
+ * EventOut
+ */
+export type ElogixApiModulesRecruitmentSchemasEventOut = {
+  /**
+   * From Stage Id
+   */
+  from_stage_id: string | null;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Moved By
+   */
+  moved_by: string | null;
+  /**
+   * Note
+   */
+  note: string | null;
+  /**
+   * Occurred At
+   */
+  occurred_at: string;
+  /**
+   * To Stage Id
+   */
+  to_stage_id: string;
 };
 
 /**
@@ -5458,7 +6046,7 @@ export type EmployeesListEventsResponses = {
    *
    * Successful Response
    */
-  200: Array<EventOut>;
+  200: Array<ElogixApiModulesEmployeeSchemasEventOut>;
 };
 
 export type EmployeesListEventsResponse =
@@ -6066,6 +6654,70 @@ export type LeaveUpdateTypeResponses = {
 
 export type LeaveUpdateTypeResponse =
   LeaveUpdateTypeResponses[keyof LeaveUpdateTypeResponses];
+
+export type OfferResponseViewOfferData = {
+  body?: never;
+  path: {
+    /**
+     * Token
+     */
+    token: string;
+  };
+  query?: never;
+  url: "/api/v1/offer-response/{token}";
+};
+
+export type OfferResponseViewOfferErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OfferResponseViewOfferError =
+  OfferResponseViewOfferErrors[keyof OfferResponseViewOfferErrors];
+
+export type OfferResponseViewOfferResponses = {
+  /**
+   * Successful Response
+   */
+  200: PublicOffer;
+};
+
+export type OfferResponseViewOfferResponse =
+  OfferResponseViewOfferResponses[keyof OfferResponseViewOfferResponses];
+
+export type OfferResponseRespondData = {
+  body: OfferResponse;
+  path: {
+    /**
+     * Token
+     */
+    token: string;
+  };
+  query?: never;
+  url: "/api/v1/offer-response/{token}";
+};
+
+export type OfferResponseRespondErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OfferResponseRespondError =
+  OfferResponseRespondErrors[keyof OfferResponseRespondErrors];
+
+export type OfferResponseRespondResponses = {
+  /**
+   * Successful Response
+   */
+  200: PublicOffer;
+};
+
+export type OfferResponseRespondResponse =
+  OfferResponseRespondResponses[keyof OfferResponseRespondResponses];
 
 export type OrgListCostCentresData = {
   body?: never;
@@ -7112,6 +7764,523 @@ export type PayrollUpdateTaxScaleResponses = {
 
 export type PayrollUpdateTaxScaleResponse =
   PayrollUpdateTaxScaleResponses[keyof PayrollUpdateTaxScaleResponses];
+
+export type RecruitmentListApplicationsData = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * Requisition Id
+     */
+    requisition_id?: string | null;
+    /**
+     * Stage Id
+     */
+    stage_id?: string | null;
+    /**
+     * Open Only
+     */
+    open_only?: boolean;
+  };
+  url: "/api/v1/recruitment/applications";
+};
+
+export type RecruitmentListApplicationsErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type RecruitmentListApplicationsError =
+  RecruitmentListApplicationsErrors[keyof RecruitmentListApplicationsErrors];
+
+export type RecruitmentListApplicationsResponses = {
+  /**
+   * Response Recruitment-List Applications
+   *
+   * Successful Response
+   */
+  200: Array<ApplicationOut>;
+};
+
+export type RecruitmentListApplicationsResponse =
+  RecruitmentListApplicationsResponses[keyof RecruitmentListApplicationsResponses];
+
+export type RecruitmentCreateApplicationData = {
+  body: ApplicationCreate;
+  path?: never;
+  query?: never;
+  url: "/api/v1/recruitment/applications";
+};
+
+export type RecruitmentCreateApplicationErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type RecruitmentCreateApplicationError =
+  RecruitmentCreateApplicationErrors[keyof RecruitmentCreateApplicationErrors];
+
+export type RecruitmentCreateApplicationResponses = {
+  /**
+   * Successful Response
+   */
+  201: ApplicationOut;
+};
+
+export type RecruitmentCreateApplicationResponse =
+  RecruitmentCreateApplicationResponses[keyof RecruitmentCreateApplicationResponses];
+
+export type RecruitmentGetApplicationData = {
+  body?: never;
+  path: {
+    /**
+     * App Id
+     */
+    app_id: string;
+  };
+  query?: never;
+  url: "/api/v1/recruitment/applications/{app_id}";
+};
+
+export type RecruitmentGetApplicationErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type RecruitmentGetApplicationError =
+  RecruitmentGetApplicationErrors[keyof RecruitmentGetApplicationErrors];
+
+export type RecruitmentGetApplicationResponses = {
+  /**
+   * Successful Response
+   */
+  200: ApplicationDetail;
+};
+
+export type RecruitmentGetApplicationResponse =
+  RecruitmentGetApplicationResponses[keyof RecruitmentGetApplicationResponses];
+
+export type RecruitmentMoveApplicationData = {
+  body: ApplicationMove;
+  path: {
+    /**
+     * App Id
+     */
+    app_id: string;
+  };
+  query?: never;
+  url: "/api/v1/recruitment/applications/{app_id}/move";
+};
+
+export type RecruitmentMoveApplicationErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type RecruitmentMoveApplicationError =
+  RecruitmentMoveApplicationErrors[keyof RecruitmentMoveApplicationErrors];
+
+export type RecruitmentMoveApplicationResponses = {
+  /**
+   * Successful Response
+   */
+  200: ApplicationOut;
+};
+
+export type RecruitmentMoveApplicationResponse =
+  RecruitmentMoveApplicationResponses[keyof RecruitmentMoveApplicationResponses];
+
+export type RecruitmentCreateOfferData = {
+  body: OfferCreate;
+  path: {
+    /**
+     * App Id
+     */
+    app_id: string;
+  };
+  query?: never;
+  url: "/api/v1/recruitment/applications/{app_id}/offer";
+};
+
+export type RecruitmentCreateOfferErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type RecruitmentCreateOfferError =
+  RecruitmentCreateOfferErrors[keyof RecruitmentCreateOfferErrors];
+
+export type RecruitmentCreateOfferResponses = {
+  /**
+   * Successful Response
+   */
+  201: OfferOut;
+};
+
+export type RecruitmentCreateOfferResponse =
+  RecruitmentCreateOfferResponses[keyof RecruitmentCreateOfferResponses];
+
+export type RecruitmentListCandidatesData = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * Q
+     */
+    q?: string | null;
+  };
+  url: "/api/v1/recruitment/candidates";
+};
+
+export type RecruitmentListCandidatesErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type RecruitmentListCandidatesError =
+  RecruitmentListCandidatesErrors[keyof RecruitmentListCandidatesErrors];
+
+export type RecruitmentListCandidatesResponses = {
+  /**
+   * Response Recruitment-List Candidates
+   *
+   * Successful Response
+   */
+  200: Array<CandidateOut>;
+};
+
+export type RecruitmentListCandidatesResponse =
+  RecruitmentListCandidatesResponses[keyof RecruitmentListCandidatesResponses];
+
+export type RecruitmentCreateCandidateData = {
+  body: CandidateCreate;
+  path?: never;
+  query?: never;
+  url: "/api/v1/recruitment/candidates";
+};
+
+export type RecruitmentCreateCandidateErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type RecruitmentCreateCandidateError =
+  RecruitmentCreateCandidateErrors[keyof RecruitmentCreateCandidateErrors];
+
+export type RecruitmentCreateCandidateResponses = {
+  /**
+   * Successful Response
+   */
+  201: CandidateOut;
+};
+
+export type RecruitmentCreateCandidateResponse =
+  RecruitmentCreateCandidateResponses[keyof RecruitmentCreateCandidateResponses];
+
+export type RecruitmentListOffersData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/api/v1/recruitment/offers";
+};
+
+export type RecruitmentListOffersResponses = {
+  /**
+   * Response Recruitment-List Offers
+   *
+   * Successful Response
+   */
+  200: Array<OfferOut>;
+};
+
+export type RecruitmentListOffersResponse =
+  RecruitmentListOffersResponses[keyof RecruitmentListOffersResponses];
+
+export type RecruitmentSendOfferData = {
+  body?: never;
+  path: {
+    /**
+     * Offer Id
+     */
+    offer_id: string;
+  };
+  query?: never;
+  url: "/api/v1/recruitment/offers/{offer_id}/send";
+};
+
+export type RecruitmentSendOfferErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type RecruitmentSendOfferError =
+  RecruitmentSendOfferErrors[keyof RecruitmentSendOfferErrors];
+
+export type RecruitmentSendOfferResponses = {
+  /**
+   * Successful Response
+   */
+  200: OfferSent;
+};
+
+export type RecruitmentSendOfferResponse =
+  RecruitmentSendOfferResponses[keyof RecruitmentSendOfferResponses];
+
+export type RecruitmentWithdrawOfferData = {
+  body?: never;
+  path: {
+    /**
+     * Offer Id
+     */
+    offer_id: string;
+  };
+  query?: never;
+  url: "/api/v1/recruitment/offers/{offer_id}/withdraw";
+};
+
+export type RecruitmentWithdrawOfferErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type RecruitmentWithdrawOfferError =
+  RecruitmentWithdrawOfferErrors[keyof RecruitmentWithdrawOfferErrors];
+
+export type RecruitmentWithdrawOfferResponses = {
+  /**
+   * Successful Response
+   */
+  200: OfferOut;
+};
+
+export type RecruitmentWithdrawOfferResponse =
+  RecruitmentWithdrawOfferResponses[keyof RecruitmentWithdrawOfferResponses];
+
+export type RecruitmentListRequisitionsData = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * Status
+     */
+    status?: RequisitionStatus | null;
+  };
+  url: "/api/v1/recruitment/requisitions";
+};
+
+export type RecruitmentListRequisitionsErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type RecruitmentListRequisitionsError =
+  RecruitmentListRequisitionsErrors[keyof RecruitmentListRequisitionsErrors];
+
+export type RecruitmentListRequisitionsResponses = {
+  /**
+   * Response Recruitment-List Requisitions
+   *
+   * Successful Response
+   */
+  200: Array<RequisitionOut>;
+};
+
+export type RecruitmentListRequisitionsResponse =
+  RecruitmentListRequisitionsResponses[keyof RecruitmentListRequisitionsResponses];
+
+export type RecruitmentCreateRequisitionData = {
+  body: RequisitionCreate;
+  path?: never;
+  query?: never;
+  url: "/api/v1/recruitment/requisitions";
+};
+
+export type RecruitmentCreateRequisitionErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type RecruitmentCreateRequisitionError =
+  RecruitmentCreateRequisitionErrors[keyof RecruitmentCreateRequisitionErrors];
+
+export type RecruitmentCreateRequisitionResponses = {
+  /**
+   * Successful Response
+   */
+  201: RequisitionDetail;
+};
+
+export type RecruitmentCreateRequisitionResponse =
+  RecruitmentCreateRequisitionResponses[keyof RecruitmentCreateRequisitionResponses];
+
+export type RecruitmentGetRequisitionData = {
+  body?: never;
+  path: {
+    /**
+     * Req Id
+     */
+    req_id: string;
+  };
+  query?: never;
+  url: "/api/v1/recruitment/requisitions/{req_id}";
+};
+
+export type RecruitmentGetRequisitionErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type RecruitmentGetRequisitionError =
+  RecruitmentGetRequisitionErrors[keyof RecruitmentGetRequisitionErrors];
+
+export type RecruitmentGetRequisitionResponses = {
+  /**
+   * Successful Response
+   */
+  200: RequisitionDetail;
+};
+
+export type RecruitmentGetRequisitionResponse =
+  RecruitmentGetRequisitionResponses[keyof RecruitmentGetRequisitionResponses];
+
+export type RecruitmentCloseRequisitionData = {
+  body?: never;
+  path: {
+    /**
+     * Req Id
+     */
+    req_id: string;
+  };
+  query?: {
+    /**
+     * Cancelled
+     */
+    cancelled?: boolean;
+  };
+  url: "/api/v1/recruitment/requisitions/{req_id}/close";
+};
+
+export type RecruitmentCloseRequisitionErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type RecruitmentCloseRequisitionError =
+  RecruitmentCloseRequisitionErrors[keyof RecruitmentCloseRequisitionErrors];
+
+export type RecruitmentCloseRequisitionResponses = {
+  /**
+   * Successful Response
+   */
+  200: RequisitionOut;
+};
+
+export type RecruitmentCloseRequisitionResponse =
+  RecruitmentCloseRequisitionResponses[keyof RecruitmentCloseRequisitionResponses];
+
+export type RecruitmentOpenRequisitionData = {
+  body?: never;
+  path: {
+    /**
+     * Req Id
+     */
+    req_id: string;
+  };
+  query?: never;
+  url: "/api/v1/recruitment/requisitions/{req_id}/open";
+};
+
+export type RecruitmentOpenRequisitionErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type RecruitmentOpenRequisitionError =
+  RecruitmentOpenRequisitionErrors[keyof RecruitmentOpenRequisitionErrors];
+
+export type RecruitmentOpenRequisitionResponses = {
+  /**
+   * Successful Response
+   */
+  200: RequisitionOut;
+};
+
+export type RecruitmentOpenRequisitionResponse =
+  RecruitmentOpenRequisitionResponses[keyof RecruitmentOpenRequisitionResponses];
+
+export type RecruitmentListStagesData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/api/v1/recruitment/stages";
+};
+
+export type RecruitmentListStagesResponses = {
+  /**
+   * Response Recruitment-List Stages
+   *
+   * Successful Response
+   */
+  200: Array<StageOut>;
+};
+
+export type RecruitmentListStagesResponse =
+  RecruitmentListStagesResponses[keyof RecruitmentListStagesResponses];
+
+export type RecruitmentCreateStageData = {
+  body: StageCreate;
+  path?: never;
+  query?: never;
+  url: "/api/v1/recruitment/stages";
+};
+
+export type RecruitmentCreateStageErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type RecruitmentCreateStageError =
+  RecruitmentCreateStageErrors[keyof RecruitmentCreateStageErrors];
+
+export type RecruitmentCreateStageResponses = {
+  /**
+   * Successful Response
+   */
+  201: StageOut;
+};
+
+export type RecruitmentCreateStageResponse =
+  RecruitmentCreateStageResponses[keyof RecruitmentCreateStageResponses];
 
 export type ReportsHeadcountData = {
   body?: never;

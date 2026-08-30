@@ -182,6 +182,12 @@ import type {
   LeaveUpdateTypeResponses,
   MetaHealthData,
   MetaHealthResponses,
+  OfferResponseRespondData,
+  OfferResponseRespondErrors,
+  OfferResponseRespondResponses,
+  OfferResponseViewOfferData,
+  OfferResponseViewOfferErrors,
+  OfferResponseViewOfferResponses,
   OrgCreateCostCentreData,
   OrgCreateCostCentreErrors,
   OrgCreateCostCentreResponses,
@@ -283,6 +289,55 @@ import type {
   PayrollUpdateTaxScaleData,
   PayrollUpdateTaxScaleErrors,
   PayrollUpdateTaxScaleResponses,
+  RecruitmentCloseRequisitionData,
+  RecruitmentCloseRequisitionErrors,
+  RecruitmentCloseRequisitionResponses,
+  RecruitmentCreateApplicationData,
+  RecruitmentCreateApplicationErrors,
+  RecruitmentCreateApplicationResponses,
+  RecruitmentCreateCandidateData,
+  RecruitmentCreateCandidateErrors,
+  RecruitmentCreateCandidateResponses,
+  RecruitmentCreateOfferData,
+  RecruitmentCreateOfferErrors,
+  RecruitmentCreateOfferResponses,
+  RecruitmentCreateRequisitionData,
+  RecruitmentCreateRequisitionErrors,
+  RecruitmentCreateRequisitionResponses,
+  RecruitmentCreateStageData,
+  RecruitmentCreateStageErrors,
+  RecruitmentCreateStageResponses,
+  RecruitmentGetApplicationData,
+  RecruitmentGetApplicationErrors,
+  RecruitmentGetApplicationResponses,
+  RecruitmentGetRequisitionData,
+  RecruitmentGetRequisitionErrors,
+  RecruitmentGetRequisitionResponses,
+  RecruitmentListApplicationsData,
+  RecruitmentListApplicationsErrors,
+  RecruitmentListApplicationsResponses,
+  RecruitmentListCandidatesData,
+  RecruitmentListCandidatesErrors,
+  RecruitmentListCandidatesResponses,
+  RecruitmentListOffersData,
+  RecruitmentListOffersResponses,
+  RecruitmentListRequisitionsData,
+  RecruitmentListRequisitionsErrors,
+  RecruitmentListRequisitionsResponses,
+  RecruitmentListStagesData,
+  RecruitmentListStagesResponses,
+  RecruitmentMoveApplicationData,
+  RecruitmentMoveApplicationErrors,
+  RecruitmentMoveApplicationResponses,
+  RecruitmentOpenRequisitionData,
+  RecruitmentOpenRequisitionErrors,
+  RecruitmentOpenRequisitionResponses,
+  RecruitmentSendOfferData,
+  RecruitmentSendOfferErrors,
+  RecruitmentSendOfferResponses,
+  RecruitmentWithdrawOfferData,
+  RecruitmentWithdrawOfferErrors,
+  RecruitmentWithdrawOfferResponses,
   ReportsHeadcountData,
   ReportsHeadcountErrors,
   ReportsHeadcountResponses,
@@ -1683,6 +1738,52 @@ export const leaveUpdateType = <ThrowOnError extends boolean = false>(
   });
 
 /**
+ * View Offer
+ *
+ * What the candidate sees. Only the terms they are being asked to accept.
+ */
+export const offerResponseViewOffer = <ThrowOnError extends boolean = false>(
+  options: Options<OfferResponseViewOfferData, ThrowOnError>,
+): RequestResult<
+  OfferResponseViewOfferResponses,
+  OfferResponseViewOfferErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    OfferResponseViewOfferResponses,
+    OfferResponseViewOfferErrors,
+    ThrowOnError
+  >({ url: "/api/v1/offer-response/{token}", ...options });
+
+/**
+ * Respond
+ *
+ * Accept or decline.
+ *
+ * Accepting also moves the application to the pipeline's hired stage, so the board
+ * and the offer cannot disagree about whether someone was hired.
+ */
+export const offerResponseRespond = <ThrowOnError extends boolean = false>(
+  options: Options<OfferResponseRespondData, ThrowOnError>,
+): RequestResult<
+  OfferResponseRespondResponses,
+  OfferResponseRespondErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    OfferResponseRespondResponses,
+    OfferResponseRespondErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/offer-response/{token}",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
  * List Cost Centres
  */
 export const orgListCostCentres = <ThrowOnError extends boolean = false>(
@@ -2412,6 +2513,405 @@ export const payrollUpdateTaxScale = <ThrowOnError extends boolean = false>(
   >({
     security: [{ scheme: "bearer", type: "http" }],
     url: "/api/v1/payroll/tax-scales/{scale_id}",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * List Applications
+ *
+ * Ordered by when they arrived.
+ *
+ * Not by a score. The prototype sorted this list by an `ai_score` a language model
+ * wrote, which decided who a recruiter looked at first and therefore who got hired.
+ */
+export const recruitmentListApplications = <
+  ThrowOnError extends boolean = false,
+>(
+  options?: Options<RecruitmentListApplicationsData, ThrowOnError>,
+): RequestResult<
+  RecruitmentListApplicationsResponses,
+  RecruitmentListApplicationsErrors,
+  ThrowOnError
+> =>
+  (options?.client ?? client).get<
+    RecruitmentListApplicationsResponses,
+    RecruitmentListApplicationsErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/recruitment/applications",
+    ...options,
+  });
+
+/**
+ * Create Application
+ */
+export const recruitmentCreateApplication = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<RecruitmentCreateApplicationData, ThrowOnError>,
+): RequestResult<
+  RecruitmentCreateApplicationResponses,
+  RecruitmentCreateApplicationErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    RecruitmentCreateApplicationResponses,
+    RecruitmentCreateApplicationErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/recruitment/applications",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Get Application
+ *
+ * One application with its whole history — every stage, who moved it, and why.
+ */
+export const recruitmentGetApplication = <ThrowOnError extends boolean = false>(
+  options: Options<RecruitmentGetApplicationData, ThrowOnError>,
+): RequestResult<
+  RecruitmentGetApplicationResponses,
+  RecruitmentGetApplicationErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    RecruitmentGetApplicationResponses,
+    RecruitmentGetApplicationErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/recruitment/applications/{app_id}",
+    ...options,
+  });
+
+/**
+ * Move Application
+ *
+ * Move to another stage. Appends to the history; never overwrites it.
+ */
+export const recruitmentMoveApplication = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<RecruitmentMoveApplicationData, ThrowOnError>,
+): RequestResult<
+  RecruitmentMoveApplicationResponses,
+  RecruitmentMoveApplicationErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    RecruitmentMoveApplicationResponses,
+    RecruitmentMoveApplicationErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/recruitment/applications/{app_id}/move",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Create Offer
+ */
+export const recruitmentCreateOffer = <ThrowOnError extends boolean = false>(
+  options: Options<RecruitmentCreateOfferData, ThrowOnError>,
+): RequestResult<
+  RecruitmentCreateOfferResponses,
+  RecruitmentCreateOfferErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    RecruitmentCreateOfferResponses,
+    RecruitmentCreateOfferErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/recruitment/applications/{app_id}/offer",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * List Candidates
+ */
+export const recruitmentListCandidates = <ThrowOnError extends boolean = false>(
+  options?: Options<RecruitmentListCandidatesData, ThrowOnError>,
+): RequestResult<
+  RecruitmentListCandidatesResponses,
+  RecruitmentListCandidatesErrors,
+  ThrowOnError
+> =>
+  (options?.client ?? client).get<
+    RecruitmentListCandidatesResponses,
+    RecruitmentListCandidatesErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/recruitment/candidates",
+    ...options,
+  });
+
+/**
+ * Create Candidate
+ */
+export const recruitmentCreateCandidate = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<RecruitmentCreateCandidateData, ThrowOnError>,
+): RequestResult<
+  RecruitmentCreateCandidateResponses,
+  RecruitmentCreateCandidateErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    RecruitmentCreateCandidateResponses,
+    RecruitmentCreateCandidateErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/recruitment/candidates",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * List Offers
+ *
+ * Never includes `response_token`. It is a credential, not a field.
+ */
+export const recruitmentListOffers = <ThrowOnError extends boolean = false>(
+  options?: Options<RecruitmentListOffersData, ThrowOnError>,
+): RequestResult<RecruitmentListOffersResponses, unknown, ThrowOnError> =>
+  (options?.client ?? client).get<
+    RecruitmentListOffersResponses,
+    unknown,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/recruitment/offers",
+    ...options,
+  });
+
+/**
+ * Send Offer
+ *
+ * Mark it sent and return the candidate's response token, once.
+ *
+ * The token is not in any list endpoint. Whoever holds it can answer the offer, which
+ * makes it a credential — it belongs in the candidate's link and nowhere else.
+ */
+export const recruitmentSendOffer = <ThrowOnError extends boolean = false>(
+  options: Options<RecruitmentSendOfferData, ThrowOnError>,
+): RequestResult<
+  RecruitmentSendOfferResponses,
+  RecruitmentSendOfferErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    RecruitmentSendOfferResponses,
+    RecruitmentSendOfferErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/recruitment/offers/{offer_id}/send",
+    ...options,
+  });
+
+/**
+ * Withdraw Offer
+ */
+export const recruitmentWithdrawOffer = <ThrowOnError extends boolean = false>(
+  options: Options<RecruitmentWithdrawOfferData, ThrowOnError>,
+): RequestResult<
+  RecruitmentWithdrawOfferResponses,
+  RecruitmentWithdrawOfferErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    RecruitmentWithdrawOfferResponses,
+    RecruitmentWithdrawOfferErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/recruitment/offers/{offer_id}/withdraw",
+    ...options,
+  });
+
+/**
+ * List Requisitions
+ */
+export const recruitmentListRequisitions = <
+  ThrowOnError extends boolean = false,
+>(
+  options?: Options<RecruitmentListRequisitionsData, ThrowOnError>,
+): RequestResult<
+  RecruitmentListRequisitionsResponses,
+  RecruitmentListRequisitionsErrors,
+  ThrowOnError
+> =>
+  (options?.client ?? client).get<
+    RecruitmentListRequisitionsResponses,
+    RecruitmentListRequisitionsErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/recruitment/requisitions",
+    ...options,
+  });
+
+/**
+ * Create Requisition
+ *
+ * Raise a requisition against a budgeted position.
+ */
+export const recruitmentCreateRequisition = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<RecruitmentCreateRequisitionData, ThrowOnError>,
+): RequestResult<
+  RecruitmentCreateRequisitionResponses,
+  RecruitmentCreateRequisitionErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    RecruitmentCreateRequisitionResponses,
+    RecruitmentCreateRequisitionErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/recruitment/requisitions",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Get Requisition
+ */
+export const recruitmentGetRequisition = <ThrowOnError extends boolean = false>(
+  options: Options<RecruitmentGetRequisitionData, ThrowOnError>,
+): RequestResult<
+  RecruitmentGetRequisitionResponses,
+  RecruitmentGetRequisitionErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    RecruitmentGetRequisitionResponses,
+    RecruitmentGetRequisitionErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/recruitment/requisitions/{req_id}",
+    ...options,
+  });
+
+/**
+ * Close Requisition
+ *
+ * Filled, or cancelled. Either way it stops accepting applications and stops
+ * counting against the position's budget.
+ */
+export const recruitmentCloseRequisition = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<RecruitmentCloseRequisitionData, ThrowOnError>,
+): RequestResult<
+  RecruitmentCloseRequisitionResponses,
+  RecruitmentCloseRequisitionErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    RecruitmentCloseRequisitionResponses,
+    RecruitmentCloseRequisitionErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/recruitment/requisitions/{req_id}/close",
+    ...options,
+  });
+
+/**
+ * Open Requisition
+ *
+ * Approve it, which is what lets applications be taken against it.
+ */
+export const recruitmentOpenRequisition = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<RecruitmentOpenRequisitionData, ThrowOnError>,
+): RequestResult<
+  RecruitmentOpenRequisitionResponses,
+  RecruitmentOpenRequisitionErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    RecruitmentOpenRequisitionResponses,
+    RecruitmentOpenRequisitionErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/recruitment/requisitions/{req_id}/open",
+    ...options,
+  });
+
+/**
+ * List Stages
+ *
+ * The company's hiring stages. Seeds the default pipeline on first read.
+ */
+export const recruitmentListStages = <ThrowOnError extends boolean = false>(
+  options?: Options<RecruitmentListStagesData, ThrowOnError>,
+): RequestResult<RecruitmentListStagesResponses, unknown, ThrowOnError> =>
+  (options?.client ?? client).get<
+    RecruitmentListStagesResponses,
+    unknown,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/recruitment/stages",
+    ...options,
+  });
+
+/**
+ * Create Stage
+ *
+ * Add a stage. A hiring process differs between a bank and a construction firm.
+ */
+export const recruitmentCreateStage = <ThrowOnError extends boolean = false>(
+  options: Options<RecruitmentCreateStageData, ThrowOnError>,
+): RequestResult<
+  RecruitmentCreateStageResponses,
+  RecruitmentCreateStageErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    RecruitmentCreateStageResponses,
+    RecruitmentCreateStageErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/recruitment/stages",
     ...options,
     headers: {
       "Content-Type": "application/json",

@@ -71,6 +71,8 @@ import {
   leaveListTypes,
   leaveUpdateType,
   metaHealth,
+  offerResponseRespond,
+  offerResponseViewOffer,
   type Options,
   orgCreateCostCentre,
   orgCreateDesignation,
@@ -107,6 +109,23 @@ import {
   payrollSalaryHistory,
   payrollSetSalary,
   payrollUpdateTaxScale,
+  recruitmentCloseRequisition,
+  recruitmentCreateApplication,
+  recruitmentCreateCandidate,
+  recruitmentCreateOffer,
+  recruitmentCreateRequisition,
+  recruitmentCreateStage,
+  recruitmentGetApplication,
+  recruitmentGetRequisition,
+  recruitmentListApplications,
+  recruitmentListCandidates,
+  recruitmentListOffers,
+  recruitmentListRequisitions,
+  recruitmentListStages,
+  recruitmentMoveApplication,
+  recruitmentOpenRequisition,
+  recruitmentSendOffer,
+  recruitmentWithdrawOffer,
   reportsHeadcount,
   reportsLeaveBalances,
   reportsPayrollRegister,
@@ -291,6 +310,12 @@ import type {
   LeaveUpdateTypeResponse,
   MetaHealthData,
   MetaHealthResponse,
+  OfferResponseRespondData,
+  OfferResponseRespondError,
+  OfferResponseRespondResponse,
+  OfferResponseViewOfferData,
+  OfferResponseViewOfferError,
+  OfferResponseViewOfferResponse,
   OrgCreateCostCentreData,
   OrgCreateCostCentreError,
   OrgCreateCostCentreResponse,
@@ -392,6 +417,55 @@ import type {
   PayrollUpdateTaxScaleData,
   PayrollUpdateTaxScaleError,
   PayrollUpdateTaxScaleResponse,
+  RecruitmentCloseRequisitionData,
+  RecruitmentCloseRequisitionError,
+  RecruitmentCloseRequisitionResponse,
+  RecruitmentCreateApplicationData,
+  RecruitmentCreateApplicationError,
+  RecruitmentCreateApplicationResponse,
+  RecruitmentCreateCandidateData,
+  RecruitmentCreateCandidateError,
+  RecruitmentCreateCandidateResponse,
+  RecruitmentCreateOfferData,
+  RecruitmentCreateOfferError,
+  RecruitmentCreateOfferResponse,
+  RecruitmentCreateRequisitionData,
+  RecruitmentCreateRequisitionError,
+  RecruitmentCreateRequisitionResponse,
+  RecruitmentCreateStageData,
+  RecruitmentCreateStageError,
+  RecruitmentCreateStageResponse,
+  RecruitmentGetApplicationData,
+  RecruitmentGetApplicationError,
+  RecruitmentGetApplicationResponse,
+  RecruitmentGetRequisitionData,
+  RecruitmentGetRequisitionError,
+  RecruitmentGetRequisitionResponse,
+  RecruitmentListApplicationsData,
+  RecruitmentListApplicationsError,
+  RecruitmentListApplicationsResponse,
+  RecruitmentListCandidatesData,
+  RecruitmentListCandidatesError,
+  RecruitmentListCandidatesResponse,
+  RecruitmentListOffersData,
+  RecruitmentListOffersResponse,
+  RecruitmentListRequisitionsData,
+  RecruitmentListRequisitionsError,
+  RecruitmentListRequisitionsResponse,
+  RecruitmentListStagesData,
+  RecruitmentListStagesResponse,
+  RecruitmentMoveApplicationData,
+  RecruitmentMoveApplicationError,
+  RecruitmentMoveApplicationResponse,
+  RecruitmentOpenRequisitionData,
+  RecruitmentOpenRequisitionError,
+  RecruitmentOpenRequisitionResponse,
+  RecruitmentSendOfferData,
+  RecruitmentSendOfferError,
+  RecruitmentSendOfferResponse,
+  RecruitmentWithdrawOfferData,
+  RecruitmentWithdrawOfferError,
+  RecruitmentWithdrawOfferResponse,
   ReportsHeadcountData,
   ReportsHeadcountError,
   ReportsHeadcountResponse,
@@ -2309,6 +2383,68 @@ export const leaveUpdateTypeMutation = (
   return mutationOptions;
 };
 
+export const offerResponseViewOfferQueryKey = (
+  options: Options<OfferResponseViewOfferData>,
+) => createQueryKey("offerResponseViewOffer", options);
+
+/**
+ * View Offer
+ *
+ * What the candidate sees. Only the terms they are being asked to accept.
+ */
+export const offerResponseViewOfferOptions = (
+  options: Options<OfferResponseViewOfferData>,
+) =>
+  queryOptions<
+    OfferResponseViewOfferResponse,
+    OfferResponseViewOfferError,
+    OfferResponseViewOfferResponse,
+    ReturnType<typeof offerResponseViewOfferQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await offerResponseViewOffer({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: offerResponseViewOfferQueryKey(options),
+  });
+
+/**
+ * Respond
+ *
+ * Accept or decline.
+ *
+ * Accepting also moves the application to the pipeline's hired stage, so the board
+ * and the offer cannot disagree about whether someone was hired.
+ */
+export const offerResponseRespondMutation = (
+  options?: Partial<Options<OfferResponseRespondData>>,
+): UseMutationOptions<
+  OfferResponseRespondResponse,
+  OfferResponseRespondError,
+  Options<OfferResponseRespondData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    OfferResponseRespondResponse,
+    OfferResponseRespondError,
+    Options<OfferResponseRespondData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await offerResponseRespond({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
 export const orgListCostCentresQueryKey = (
   options?: Options<OrgListCostCentresData>,
 ) => createQueryKey("orgListCostCentres", options);
@@ -3267,6 +3403,499 @@ export const payrollUpdateTaxScaleMutation = (
   > = {
     mutationFn: async (fnOptions) => {
       const { data } = await payrollUpdateTaxScale({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const recruitmentListApplicationsQueryKey = (
+  options?: Options<RecruitmentListApplicationsData>,
+) => createQueryKey("recruitmentListApplications", options);
+
+/**
+ * List Applications
+ *
+ * Ordered by when they arrived.
+ *
+ * Not by a score. The prototype sorted this list by an `ai_score` a language model
+ * wrote, which decided who a recruiter looked at first and therefore who got hired.
+ */
+export const recruitmentListApplicationsOptions = (
+  options?: Options<RecruitmentListApplicationsData>,
+) =>
+  queryOptions<
+    RecruitmentListApplicationsResponse,
+    RecruitmentListApplicationsError,
+    RecruitmentListApplicationsResponse,
+    ReturnType<typeof recruitmentListApplicationsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await recruitmentListApplications({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: recruitmentListApplicationsQueryKey(options),
+  });
+
+/**
+ * Create Application
+ */
+export const recruitmentCreateApplicationMutation = (
+  options?: Partial<Options<RecruitmentCreateApplicationData>>,
+): UseMutationOptions<
+  RecruitmentCreateApplicationResponse,
+  RecruitmentCreateApplicationError,
+  Options<RecruitmentCreateApplicationData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    RecruitmentCreateApplicationResponse,
+    RecruitmentCreateApplicationError,
+    Options<RecruitmentCreateApplicationData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await recruitmentCreateApplication({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const recruitmentGetApplicationQueryKey = (
+  options: Options<RecruitmentGetApplicationData>,
+) => createQueryKey("recruitmentGetApplication", options);
+
+/**
+ * Get Application
+ *
+ * One application with its whole history — every stage, who moved it, and why.
+ */
+export const recruitmentGetApplicationOptions = (
+  options: Options<RecruitmentGetApplicationData>,
+) =>
+  queryOptions<
+    RecruitmentGetApplicationResponse,
+    RecruitmentGetApplicationError,
+    RecruitmentGetApplicationResponse,
+    ReturnType<typeof recruitmentGetApplicationQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await recruitmentGetApplication({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: recruitmentGetApplicationQueryKey(options),
+  });
+
+/**
+ * Move Application
+ *
+ * Move to another stage. Appends to the history; never overwrites it.
+ */
+export const recruitmentMoveApplicationMutation = (
+  options?: Partial<Options<RecruitmentMoveApplicationData>>,
+): UseMutationOptions<
+  RecruitmentMoveApplicationResponse,
+  RecruitmentMoveApplicationError,
+  Options<RecruitmentMoveApplicationData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    RecruitmentMoveApplicationResponse,
+    RecruitmentMoveApplicationError,
+    Options<RecruitmentMoveApplicationData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await recruitmentMoveApplication({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Create Offer
+ */
+export const recruitmentCreateOfferMutation = (
+  options?: Partial<Options<RecruitmentCreateOfferData>>,
+): UseMutationOptions<
+  RecruitmentCreateOfferResponse,
+  RecruitmentCreateOfferError,
+  Options<RecruitmentCreateOfferData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    RecruitmentCreateOfferResponse,
+    RecruitmentCreateOfferError,
+    Options<RecruitmentCreateOfferData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await recruitmentCreateOffer({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const recruitmentListCandidatesQueryKey = (
+  options?: Options<RecruitmentListCandidatesData>,
+) => createQueryKey("recruitmentListCandidates", options);
+
+/**
+ * List Candidates
+ */
+export const recruitmentListCandidatesOptions = (
+  options?: Options<RecruitmentListCandidatesData>,
+) =>
+  queryOptions<
+    RecruitmentListCandidatesResponse,
+    RecruitmentListCandidatesError,
+    RecruitmentListCandidatesResponse,
+    ReturnType<typeof recruitmentListCandidatesQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await recruitmentListCandidates({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: recruitmentListCandidatesQueryKey(options),
+  });
+
+/**
+ * Create Candidate
+ */
+export const recruitmentCreateCandidateMutation = (
+  options?: Partial<Options<RecruitmentCreateCandidateData>>,
+): UseMutationOptions<
+  RecruitmentCreateCandidateResponse,
+  RecruitmentCreateCandidateError,
+  Options<RecruitmentCreateCandidateData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    RecruitmentCreateCandidateResponse,
+    RecruitmentCreateCandidateError,
+    Options<RecruitmentCreateCandidateData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await recruitmentCreateCandidate({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const recruitmentListOffersQueryKey = (
+  options?: Options<RecruitmentListOffersData>,
+) => createQueryKey("recruitmentListOffers", options);
+
+/**
+ * List Offers
+ *
+ * Never includes `response_token`. It is a credential, not a field.
+ */
+export const recruitmentListOffersOptions = (
+  options?: Options<RecruitmentListOffersData>,
+) =>
+  queryOptions<
+    RecruitmentListOffersResponse,
+    DefaultError,
+    RecruitmentListOffersResponse,
+    ReturnType<typeof recruitmentListOffersQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await recruitmentListOffers({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: recruitmentListOffersQueryKey(options),
+  });
+
+/**
+ * Send Offer
+ *
+ * Mark it sent and return the candidate's response token, once.
+ *
+ * The token is not in any list endpoint. Whoever holds it can answer the offer, which
+ * makes it a credential — it belongs in the candidate's link and nowhere else.
+ */
+export const recruitmentSendOfferMutation = (
+  options?: Partial<Options<RecruitmentSendOfferData>>,
+): UseMutationOptions<
+  RecruitmentSendOfferResponse,
+  RecruitmentSendOfferError,
+  Options<RecruitmentSendOfferData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    RecruitmentSendOfferResponse,
+    RecruitmentSendOfferError,
+    Options<RecruitmentSendOfferData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await recruitmentSendOffer({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Withdraw Offer
+ */
+export const recruitmentWithdrawOfferMutation = (
+  options?: Partial<Options<RecruitmentWithdrawOfferData>>,
+): UseMutationOptions<
+  RecruitmentWithdrawOfferResponse,
+  RecruitmentWithdrawOfferError,
+  Options<RecruitmentWithdrawOfferData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    RecruitmentWithdrawOfferResponse,
+    RecruitmentWithdrawOfferError,
+    Options<RecruitmentWithdrawOfferData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await recruitmentWithdrawOffer({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const recruitmentListRequisitionsQueryKey = (
+  options?: Options<RecruitmentListRequisitionsData>,
+) => createQueryKey("recruitmentListRequisitions", options);
+
+/**
+ * List Requisitions
+ */
+export const recruitmentListRequisitionsOptions = (
+  options?: Options<RecruitmentListRequisitionsData>,
+) =>
+  queryOptions<
+    RecruitmentListRequisitionsResponse,
+    RecruitmentListRequisitionsError,
+    RecruitmentListRequisitionsResponse,
+    ReturnType<typeof recruitmentListRequisitionsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await recruitmentListRequisitions({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: recruitmentListRequisitionsQueryKey(options),
+  });
+
+/**
+ * Create Requisition
+ *
+ * Raise a requisition against a budgeted position.
+ */
+export const recruitmentCreateRequisitionMutation = (
+  options?: Partial<Options<RecruitmentCreateRequisitionData>>,
+): UseMutationOptions<
+  RecruitmentCreateRequisitionResponse,
+  RecruitmentCreateRequisitionError,
+  Options<RecruitmentCreateRequisitionData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    RecruitmentCreateRequisitionResponse,
+    RecruitmentCreateRequisitionError,
+    Options<RecruitmentCreateRequisitionData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await recruitmentCreateRequisition({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const recruitmentGetRequisitionQueryKey = (
+  options: Options<RecruitmentGetRequisitionData>,
+) => createQueryKey("recruitmentGetRequisition", options);
+
+/**
+ * Get Requisition
+ */
+export const recruitmentGetRequisitionOptions = (
+  options: Options<RecruitmentGetRequisitionData>,
+) =>
+  queryOptions<
+    RecruitmentGetRequisitionResponse,
+    RecruitmentGetRequisitionError,
+    RecruitmentGetRequisitionResponse,
+    ReturnType<typeof recruitmentGetRequisitionQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await recruitmentGetRequisition({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: recruitmentGetRequisitionQueryKey(options),
+  });
+
+/**
+ * Close Requisition
+ *
+ * Filled, or cancelled. Either way it stops accepting applications and stops
+ * counting against the position's budget.
+ */
+export const recruitmentCloseRequisitionMutation = (
+  options?: Partial<Options<RecruitmentCloseRequisitionData>>,
+): UseMutationOptions<
+  RecruitmentCloseRequisitionResponse,
+  RecruitmentCloseRequisitionError,
+  Options<RecruitmentCloseRequisitionData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    RecruitmentCloseRequisitionResponse,
+    RecruitmentCloseRequisitionError,
+    Options<RecruitmentCloseRequisitionData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await recruitmentCloseRequisition({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Open Requisition
+ *
+ * Approve it, which is what lets applications be taken against it.
+ */
+export const recruitmentOpenRequisitionMutation = (
+  options?: Partial<Options<RecruitmentOpenRequisitionData>>,
+): UseMutationOptions<
+  RecruitmentOpenRequisitionResponse,
+  RecruitmentOpenRequisitionError,
+  Options<RecruitmentOpenRequisitionData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    RecruitmentOpenRequisitionResponse,
+    RecruitmentOpenRequisitionError,
+    Options<RecruitmentOpenRequisitionData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await recruitmentOpenRequisition({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const recruitmentListStagesQueryKey = (
+  options?: Options<RecruitmentListStagesData>,
+) => createQueryKey("recruitmentListStages", options);
+
+/**
+ * List Stages
+ *
+ * The company's hiring stages. Seeds the default pipeline on first read.
+ */
+export const recruitmentListStagesOptions = (
+  options?: Options<RecruitmentListStagesData>,
+) =>
+  queryOptions<
+    RecruitmentListStagesResponse,
+    DefaultError,
+    RecruitmentListStagesResponse,
+    ReturnType<typeof recruitmentListStagesQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await recruitmentListStages({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: recruitmentListStagesQueryKey(options),
+  });
+
+/**
+ * Create Stage
+ *
+ * Add a stage. A hiring process differs between a bank and a construction firm.
+ */
+export const recruitmentCreateStageMutation = (
+  options?: Partial<Options<RecruitmentCreateStageData>>,
+): UseMutationOptions<
+  RecruitmentCreateStageResponse,
+  RecruitmentCreateStageError,
+  Options<RecruitmentCreateStageData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    RecruitmentCreateStageResponse,
+    RecruitmentCreateStageError,
+    Options<RecruitmentCreateStageData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await recruitmentCreateStage({
         ...options,
         ...fnOptions,
         throwOnError: true,

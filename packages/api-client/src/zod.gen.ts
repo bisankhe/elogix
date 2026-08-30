@@ -43,6 +43,23 @@ export const zAccrualResult = z.object({
 });
 
 /**
+ * ApplicationCreate
+ */
+export const zApplicationCreate = z.object({
+  applied_on: z.iso.date().nullish(),
+  candidate_id: z.uuid(),
+  requisition_id: z.uuid(),
+});
+
+/**
+ * ApplicationMove
+ */
+export const zApplicationMove = z.object({
+  note: z.string().max(2000).nullish(),
+  to_stage_id: z.uuid(),
+});
+
+/**
  * AssignmentReason
  */
 export const zAssignmentReason = z.enum([
@@ -91,6 +108,31 @@ export const zBalanceOut = z.object({
  */
 export const zBodyEmployeesUploadDocumentFile = z.object({
   file: z.string(),
+});
+
+/**
+ * CandidateCreate
+ */
+export const zCandidateCreate = z.object({
+  email: z.email(),
+  full_name: z.string().min(1).max(200),
+  notes: z.string().nullish(),
+  phone: z.string().max(32).nullish(),
+  source: z.string().max(64).nullish(),
+});
+
+/**
+ * CandidateOut
+ */
+export const zCandidateOut = z.object({
+  created_at: z.iso.datetime(),
+  email: z.string(),
+  full_name: z.string(),
+  id: z.uuid(),
+  notes: z.string().nullable(),
+  phone: z.string().nullable(),
+  resume_filename: z.string().nullable(),
+  source: z.string().nullable(),
 });
 
 /**
@@ -372,16 +414,6 @@ export const zEmploymentCategoryOut = z.object({
   name: z.string(),
   notice_days: z.int(),
   probation_months: z.int(),
-});
-
-/**
- * EventOut
- */
-export const zEventOut = z.object({
-  event_type: zEmployeeEventType,
-  id: z.uuid(),
-  note: z.string().nullable(),
-  occurred_on: z.iso.date(),
 });
 
 /**
@@ -1008,6 +1040,84 @@ export const zMyProfile = z.object({
 });
 
 /**
+ * OfferCreate
+ */
+export const zOfferCreate = z.object({
+  basic: z.union([
+    z.number().gt(0),
+    z
+      .string()
+      .regex(
+        /^(?!^[-+.]*$)[+-]?0*(?:\d{0,12}|(?=[\d.]{1,15}0*$)\d{0,12}\.\d{0,2}0*$)/,
+      ),
+  ]),
+  expires_on: z.iso.date(),
+  notes: z.string().max(2000).nullish(),
+  starts_on: z.iso.date(),
+});
+
+/**
+ * OfferResponse
+ */
+export const zOfferResponse = z.object({
+  accept: z.boolean(),
+  reason: z.string().max(2000).nullish(),
+});
+
+/**
+ * OfferStatus
+ */
+export const zOfferStatus = z.enum([
+  "draft",
+  "sent",
+  "accepted",
+  "declined",
+  "withdrawn",
+  "expired",
+]);
+
+/**
+ * OfferOut
+ */
+export const zOfferOut = z.object({
+  application_id: z.uuid(),
+  basic: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  decline_reason: z.string().nullable(),
+  employee_id: z.uuid().nullable(),
+  expires_on: z.iso.date(),
+  id: z.uuid(),
+  notes: z.string().nullable(),
+  responded_at: z.iso.datetime().nullable(),
+  sent_at: z.iso.datetime().nullable(),
+  starts_on: z.iso.date(),
+  status: zOfferStatus,
+});
+
+/**
+ * OfferSent
+ *
+ * Returned once, on send.
+ *
+ * The token is in the response and in no list endpoint, because it is a credential:
+ * whoever holds it can answer the offer. It goes to the candidate's own link and
+ * nowhere else.
+ */
+export const zOfferSent = z.object({
+  application_id: z.uuid(),
+  basic: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  decline_reason: z.string().nullable(),
+  employee_id: z.uuid().nullable(),
+  expires_on: z.iso.date(),
+  id: z.uuid(),
+  notes: z.string().nullable(),
+  responded_at: z.iso.datetime().nullable(),
+  response_token: z.string(),
+  sent_at: z.iso.datetime().nullable(),
+  starts_on: z.iso.date(),
+  status: zOfferStatus,
+});
+
+/**
  * OrgUnitKind
  *
  * Depth labels for the single org tree. Ordered broadest to narrowest.
@@ -1367,6 +1477,24 @@ export const zProcessResult = z.object({
 });
 
 /**
+ * PublicOffer
+ *
+ * What a candidate sees at their link.
+ *
+ * Deliberately thin. No candidate id, no application id, no requisition code, no
+ * internal notes — a token holder is a candidate, not a user of this system, and
+ * everything beyond the terms they are being asked to accept is the company's.
+ */
+export const zPublicOffer = z.object({
+  basic: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  company: z.string(),
+  expires_on: z.iso.date(),
+  starts_on: z.iso.date(),
+  status: zOfferStatus,
+  title: z.string(),
+});
+
+/**
  * PunchDirection
  */
 export const zPunchDirection = z.enum(["in", "out"]);
@@ -1450,6 +1578,71 @@ export const zRegularisationOut = z.object({
   requested_out: z.iso.datetime().nullable(),
   status: zRequestStatus,
   work_date: z.iso.date(),
+});
+
+/**
+ * RequisitionCreate
+ */
+export const zRequisitionCreate = z.object({
+  code: z
+    .string()
+    .min(1)
+    .max(32)
+    .regex(/^[A-Za-z0-9][A-Za-z0-9._-]*$/),
+  description: z.string().nullish(),
+  openings: z.int().gte(1).lte(999).optional().default(1),
+  position_id: z.uuid(),
+  target_start_date: z.iso.date().nullish(),
+  title: z.string().min(1).max(200),
+});
+
+/**
+ * RequisitionStatus
+ */
+export const zRequisitionStatus = z.enum([
+  "draft",
+  "open",
+  "on_hold",
+  "filled",
+  "cancelled",
+]);
+
+/**
+ * RequisitionDetail
+ *
+ * With the budget it draws against, because that is the question a reader has.
+ */
+export const zRequisitionDetail = z.object({
+  approved_at: z.iso.datetime().nullable(),
+  closed_at: z.iso.datetime().nullable(),
+  code: z.string(),
+  committed: z.int(),
+  description: z.string().nullable(),
+  filled: z.int(),
+  id: z.uuid(),
+  openings: z.int(),
+  position_headcount: z.int(),
+  position_id: z.uuid(),
+  position_title: z.string(),
+  status: zRequisitionStatus,
+  target_start_date: z.iso.date().nullable(),
+  title: z.string(),
+});
+
+/**
+ * RequisitionOut
+ */
+export const zRequisitionOut = z.object({
+  approved_at: z.iso.datetime().nullable(),
+  closed_at: z.iso.datetime().nullable(),
+  code: z.string(),
+  description: z.string().nullable(),
+  id: z.uuid(),
+  openings: z.int(),
+  position_id: z.uuid(),
+  status: zRequisitionStatus,
+  target_start_date: z.iso.date().nullable(),
+  title: z.string(),
 });
 
 /**
@@ -1776,6 +1969,54 @@ export const zSlabOut = z.object({
 });
 
 /**
+ * StageOutcome
+ *
+ * What reaching a terminal stage means. Non-terminal stages have none.
+ */
+export const zStageOutcome = z.enum(["hired", "rejected", "withdrawn"]);
+
+/**
+ * ApplicationOut
+ */
+export const zApplicationOut = z.object({
+  applied_on: z.iso.date(),
+  candidate_id: z.uuid(),
+  closed_at: z.iso.datetime().nullable(),
+  id: z.uuid(),
+  outcome: zStageOutcome.nullable(),
+  requisition_id: z.uuid(),
+  stage_id: z.uuid(),
+});
+
+/**
+ * StageCreate
+ */
+export const zStageCreate = z.object({
+  code: z
+    .string()
+    .min(1)
+    .max(32)
+    .regex(/^[A-Z0-9_]+$/),
+  is_terminal: z.boolean().optional().default(false),
+  name: z.string().min(1).max(120),
+  outcome: zStageOutcome.nullish(),
+  sequence: z.int().gte(1).lte(999),
+});
+
+/**
+ * StageOut
+ */
+export const zStageOut = z.object({
+  code: z.string(),
+  id: z.uuid(),
+  is_active: z.boolean(),
+  is_terminal: z.boolean(),
+  name: z.string(),
+  outcome: zStageOutcome.nullable(),
+  sequence: z.int(),
+});
+
+/**
  * TaxBandOut
  */
 export const zTaxBandOut = z.object({
@@ -1920,10 +2161,53 @@ export const zWorkLocationOut = z.object({
 });
 
 /**
+ * EventOut
+ */
+export const zElogixApiModulesEmployeeSchemasEventOut = z.object({
+  event_type: zEmployeeEventType,
+  id: z.uuid(),
+  note: z.string().nullable(),
+  occurred_on: z.iso.date(),
+});
+
+/**
  * ApprovalResult
  */
 export const zElogixApiModulesPayrollSchemasApprovalResult = z.object({
   attendance_days_locked: z.int(),
+});
+
+/**
+ * EventOut
+ */
+export const zElogixApiModulesRecruitmentSchemasEventOut = z.object({
+  from_stage_id: z.uuid().nullable(),
+  id: z.uuid(),
+  moved_by: z.uuid().nullable(),
+  note: z.string().nullable(),
+  occurred_at: z.iso.datetime(),
+  to_stage_id: z.uuid(),
+});
+
+/**
+ * ApplicationDetail
+ */
+export const zApplicationDetail = z.object({
+  applied_on: z.iso.date(),
+  candidate_email: z.string(),
+  candidate_id: z.uuid(),
+  candidate_name: z.string(),
+  closed_at: z.iso.datetime().nullable(),
+  events: z
+    .array(zElogixApiModulesRecruitmentSchemasEventOut)
+    .optional()
+    .default([]),
+  id: z.uuid(),
+  outcome: zStageOutcome.nullable(),
+  requisition_code: z.string(),
+  requisition_id: z.uuid(),
+  stage_id: z.uuid(),
+  stage_name: z.string(),
 });
 
 /**
@@ -2356,7 +2640,9 @@ export const zEmployeesListEventsPath = z.object({
  *
  * Successful Response
  */
-export const zEmployeesListEventsResponse = z.array(zEventOut);
+export const zEmployeesListEventsResponse = z.array(
+  zElogixApiModulesEmployeeSchemasEventOut,
+);
 
 export const zEmployeesExitEmployeeBody = zExitRequest;
 
@@ -2547,6 +2833,26 @@ export const zLeaveUpdateTypePath = z.object({
  * Successful Response
  */
 export const zLeaveUpdateTypeResponse = zLeaveTypeOut;
+
+export const zOfferResponseViewOfferPath = z.object({
+  token: z.string(),
+});
+
+/**
+ * Successful Response
+ */
+export const zOfferResponseViewOfferResponse = zPublicOffer;
+
+export const zOfferResponseRespondBody = zOfferResponse;
+
+export const zOfferResponseRespondPath = z.object({
+  token: z.string(),
+});
+
+/**
+ * Successful Response
+ */
+export const zOfferResponseRespondResponse = zPublicOffer;
 
 export const zOrgListCostCentresQuery = z.object({
   include_inactive: z.boolean().optional().default(false),
@@ -2868,6 +3174,163 @@ export const zPayrollUpdateTaxScalePath = z.object({
  * Successful Response
  */
 export const zPayrollUpdateTaxScaleResponse = zTaxScaleOut;
+
+export const zRecruitmentListApplicationsQuery = z.object({
+  requisition_id: z.uuid().nullish(),
+  stage_id: z.uuid().nullish(),
+  open_only: z.boolean().optional().default(false),
+});
+
+/**
+ * Response Recruitment-List Applications
+ *
+ * Successful Response
+ */
+export const zRecruitmentListApplicationsResponse = z.array(zApplicationOut);
+
+export const zRecruitmentCreateApplicationBody = zApplicationCreate;
+
+/**
+ * Successful Response
+ */
+export const zRecruitmentCreateApplicationResponse = zApplicationOut;
+
+export const zRecruitmentGetApplicationPath = z.object({
+  app_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zRecruitmentGetApplicationResponse = zApplicationDetail;
+
+export const zRecruitmentMoveApplicationBody = zApplicationMove;
+
+export const zRecruitmentMoveApplicationPath = z.object({
+  app_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zRecruitmentMoveApplicationResponse = zApplicationOut;
+
+export const zRecruitmentCreateOfferBody = zOfferCreate;
+
+export const zRecruitmentCreateOfferPath = z.object({
+  app_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zRecruitmentCreateOfferResponse = zOfferOut;
+
+export const zRecruitmentListCandidatesQuery = z.object({
+  q: z.string().max(200).nullish(),
+});
+
+/**
+ * Response Recruitment-List Candidates
+ *
+ * Successful Response
+ */
+export const zRecruitmentListCandidatesResponse = z.array(zCandidateOut);
+
+export const zRecruitmentCreateCandidateBody = zCandidateCreate;
+
+/**
+ * Successful Response
+ */
+export const zRecruitmentCreateCandidateResponse = zCandidateOut;
+
+/**
+ * Response Recruitment-List Offers
+ *
+ * Successful Response
+ */
+export const zRecruitmentListOffersResponse = z.array(zOfferOut);
+
+export const zRecruitmentSendOfferPath = z.object({
+  offer_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zRecruitmentSendOfferResponse = zOfferSent;
+
+export const zRecruitmentWithdrawOfferPath = z.object({
+  offer_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zRecruitmentWithdrawOfferResponse = zOfferOut;
+
+export const zRecruitmentListRequisitionsQuery = z.object({
+  status: zRequisitionStatus.nullish(),
+});
+
+/**
+ * Response Recruitment-List Requisitions
+ *
+ * Successful Response
+ */
+export const zRecruitmentListRequisitionsResponse = z.array(zRequisitionOut);
+
+export const zRecruitmentCreateRequisitionBody = zRequisitionCreate;
+
+/**
+ * Successful Response
+ */
+export const zRecruitmentCreateRequisitionResponse = zRequisitionDetail;
+
+export const zRecruitmentGetRequisitionPath = z.object({
+  req_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zRecruitmentGetRequisitionResponse = zRequisitionDetail;
+
+export const zRecruitmentCloseRequisitionPath = z.object({
+  req_id: z.uuid(),
+});
+
+export const zRecruitmentCloseRequisitionQuery = z.object({
+  cancelled: z.boolean().optional().default(false),
+});
+
+/**
+ * Successful Response
+ */
+export const zRecruitmentCloseRequisitionResponse = zRequisitionOut;
+
+export const zRecruitmentOpenRequisitionPath = z.object({
+  req_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zRecruitmentOpenRequisitionResponse = zRequisitionOut;
+
+/**
+ * Response Recruitment-List Stages
+ *
+ * Successful Response
+ */
+export const zRecruitmentListStagesResponse = z.array(zStageOut);
+
+export const zRecruitmentCreateStageBody = zStageCreate;
+
+/**
+ * Successful Response
+ */
+export const zRecruitmentCreateStageResponse = zStageOut;
 
 export const zReportsHeadcountQuery = z.object({
   group_by: z

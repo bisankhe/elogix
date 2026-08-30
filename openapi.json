@@ -173,6 +173,216 @@
         "title": "AdjustmentOut",
         "type": "object"
       },
+      "ApplicationCreate": {
+        "properties": {
+          "applied_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Applied On"
+          },
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "requisition_id": {
+            "format": "uuid",
+            "title": "Requisition Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "candidate_id",
+          "requisition_id"
+        ],
+        "title": "ApplicationCreate",
+        "type": "object"
+      },
+      "ApplicationDetail": {
+        "properties": {
+          "applied_on": {
+            "format": "date",
+            "title": "Applied On",
+            "type": "string"
+          },
+          "candidate_email": {
+            "title": "Candidate Email",
+            "type": "string"
+          },
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "candidate_name": {
+            "title": "Candidate Name",
+            "type": "string"
+          },
+          "closed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closed At"
+          },
+          "events": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/elogix_api__modules__recruitment__schemas__EventOut"
+            },
+            "title": "Events",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StageOutcome"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "requisition_code": {
+            "title": "Requisition Code",
+            "type": "string"
+          },
+          "requisition_id": {
+            "format": "uuid",
+            "title": "Requisition Id",
+            "type": "string"
+          },
+          "stage_id": {
+            "format": "uuid",
+            "title": "Stage Id",
+            "type": "string"
+          },
+          "stage_name": {
+            "title": "Stage Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "candidate_id",
+          "requisition_id",
+          "stage_id",
+          "applied_on",
+          "outcome",
+          "closed_at",
+          "candidate_name",
+          "candidate_email",
+          "requisition_code",
+          "stage_name"
+        ],
+        "title": "ApplicationDetail",
+        "type": "object"
+      },
+      "ApplicationMove": {
+        "properties": {
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "to_stage_id": {
+            "format": "uuid",
+            "title": "To Stage Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "to_stage_id"
+        ],
+        "title": "ApplicationMove",
+        "type": "object"
+      },
+      "ApplicationOut": {
+        "properties": {
+          "applied_on": {
+            "format": "date",
+            "title": "Applied On",
+            "type": "string"
+          },
+          "candidate_id": {
+            "format": "uuid",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "closed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closed At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StageOutcome"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "requisition_id": {
+            "format": "uuid",
+            "title": "Requisition Id",
+            "type": "string"
+          },
+          "stage_id": {
+            "format": "uuid",
+            "title": "Stage Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "candidate_id",
+          "requisition_id",
+          "stage_id",
+          "applied_on",
+          "outcome",
+          "closed_at"
+        ],
+        "title": "ApplicationOut",
+        "type": "object"
+      },
       "AssignmentOut": {
         "properties": {
           "cost_centre_id": {
@@ -417,6 +627,140 @@
           "file"
         ],
         "title": "Body_employees-upload_document_file",
+        "type": "object"
+      },
+      "CandidateCreate": {
+        "properties": {
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "full_name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Full Name",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          }
+        },
+        "required": [
+          "full_name",
+          "email"
+        ],
+        "title": "CandidateCreate",
+        "type": "object"
+      },
+      "CandidateOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "full_name": {
+            "title": "Full Name",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "resume_filename": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resume Filename"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          }
+        },
+        "required": [
+          "id",
+          "full_name",
+          "email",
+          "phone",
+          "source",
+          "notes",
+          "resume_filename",
+          "created_at"
+        ],
+        "title": "CandidateOut",
         "type": "object"
       },
       "CarryForwardRequest": {
@@ -2098,42 +2442,6 @@
           "modules"
         ],
         "title": "EntitlementsOut",
-        "type": "object"
-      },
-      "EventOut": {
-        "properties": {
-          "event_type": {
-            "$ref": "#/components/schemas/EmployeeEventType"
-          },
-          "id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
-          },
-          "note": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Note"
-          },
-          "occurred_on": {
-            "format": "date",
-            "title": "Occurred On",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "event_type",
-          "occurred_on",
-          "note"
-        ],
-        "title": "EventOut",
         "type": "object"
       },
       "ExitInitiator": {
@@ -4409,6 +4717,305 @@
         "title": "MyProfile",
         "type": "object"
       },
+      "OfferCreate": {
+        "properties": {
+          "basic": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,12}|(?=[\\d.]{1,15}0*$)\\d{0,12}\\.\\d{0,2}0*$)",
+                "type": "string"
+              }
+            ],
+            "title": "Basic"
+          },
+          "expires_on": {
+            "format": "date",
+            "title": "Expires On",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "starts_on": {
+            "format": "date",
+            "title": "Starts On",
+            "type": "string"
+          }
+        },
+        "required": [
+          "basic",
+          "starts_on",
+          "expires_on"
+        ],
+        "title": "OfferCreate",
+        "type": "object"
+      },
+      "OfferOut": {
+        "properties": {
+          "application_id": {
+            "format": "uuid",
+            "title": "Application Id",
+            "type": "string"
+          },
+          "basic": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Basic",
+            "type": "string"
+          },
+          "decline_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decline Reason"
+          },
+          "employee_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Employee Id"
+          },
+          "expires_on": {
+            "format": "date",
+            "title": "Expires On",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "responded_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Responded At"
+          },
+          "sent_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent At"
+          },
+          "starts_on": {
+            "format": "date",
+            "title": "Starts On",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OfferStatus"
+          }
+        },
+        "required": [
+          "id",
+          "application_id",
+          "basic",
+          "starts_on",
+          "expires_on",
+          "status",
+          "notes",
+          "sent_at",
+          "responded_at",
+          "decline_reason",
+          "employee_id"
+        ],
+        "title": "OfferOut",
+        "type": "object"
+      },
+      "OfferResponse": {
+        "properties": {
+          "accept": {
+            "title": "Accept",
+            "type": "boolean"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "required": [
+          "accept"
+        ],
+        "title": "OfferResponse",
+        "type": "object"
+      },
+      "OfferSent": {
+        "description": "Returned once, on send.\n\nThe token is in the response and in no list endpoint, because it is a credential:\nwhoever holds it can answer the offer. It goes to the candidate's own link and\nnowhere else.",
+        "properties": {
+          "application_id": {
+            "format": "uuid",
+            "title": "Application Id",
+            "type": "string"
+          },
+          "basic": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Basic",
+            "type": "string"
+          },
+          "decline_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decline Reason"
+          },
+          "employee_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Employee Id"
+          },
+          "expires_on": {
+            "format": "date",
+            "title": "Expires On",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "responded_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Responded At"
+          },
+          "response_token": {
+            "title": "Response Token",
+            "type": "string"
+          },
+          "sent_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent At"
+          },
+          "starts_on": {
+            "format": "date",
+            "title": "Starts On",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OfferStatus"
+          }
+        },
+        "required": [
+          "id",
+          "application_id",
+          "basic",
+          "starts_on",
+          "expires_on",
+          "status",
+          "notes",
+          "sent_at",
+          "responded_at",
+          "decline_reason",
+          "employee_id",
+          "response_token"
+        ],
+        "title": "OfferSent",
+        "type": "object"
+      },
+      "OfferStatus": {
+        "enum": [
+          "draft",
+          "sent",
+          "accepted",
+          "declined",
+          "withdrawn",
+          "expired"
+        ],
+        "title": "OfferStatus",
+        "type": "string"
+      },
       "OrgUnitCreate": {
         "properties": {
           "code": {
@@ -5717,6 +6324,47 @@
         "title": "ProcessResult",
         "type": "object"
       },
+      "PublicOffer": {
+        "description": "What a candidate sees at their link.\n\nDeliberately thin. No candidate id, no application id, no requisition code, no\ninternal notes \u2014 a token holder is a candidate, not a user of this system, and\neverything beyond the terms they are being asked to accept is the company's.",
+        "properties": {
+          "basic": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Basic",
+            "type": "string"
+          },
+          "company": {
+            "title": "Company",
+            "type": "string"
+          },
+          "expires_on": {
+            "format": "date",
+            "title": "Expires On",
+            "type": "string"
+          },
+          "starts_on": {
+            "format": "date",
+            "title": "Starts On",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OfferStatus"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "company",
+          "title",
+          "basic",
+          "starts_on",
+          "expires_on",
+          "status"
+        ],
+        "title": "PublicOffer",
+        "type": "object"
+      },
       "PunchCreate": {
         "properties": {
           "device_id": {
@@ -6021,6 +6669,277 @@
           "cancelled"
         ],
         "title": "RequestStatus",
+        "type": "string"
+      },
+      "RequisitionCreate": {
+        "properties": {
+          "code": {
+            "maxLength": 32,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$",
+            "title": "Code",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "openings": {
+            "default": 1,
+            "maximum": 999.0,
+            "minimum": 1.0,
+            "title": "Openings",
+            "type": "integer"
+          },
+          "position_id": {
+            "format": "uuid",
+            "title": "Position Id",
+            "type": "string"
+          },
+          "target_start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Start Date"
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "position_id",
+          "title"
+        ],
+        "title": "RequisitionCreate",
+        "type": "object"
+      },
+      "RequisitionDetail": {
+        "description": "With the budget it draws against, because that is the question a reader has.",
+        "properties": {
+          "approved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved At"
+          },
+          "closed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closed At"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "committed": {
+            "title": "Committed",
+            "type": "integer"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "filled": {
+            "title": "Filled",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "openings": {
+            "title": "Openings",
+            "type": "integer"
+          },
+          "position_headcount": {
+            "title": "Position Headcount",
+            "type": "integer"
+          },
+          "position_id": {
+            "format": "uuid",
+            "title": "Position Id",
+            "type": "string"
+          },
+          "position_title": {
+            "title": "Position Title",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/RequisitionStatus"
+          },
+          "target_start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Start Date"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "position_id",
+          "title",
+          "description",
+          "openings",
+          "status",
+          "target_start_date",
+          "approved_at",
+          "closed_at",
+          "position_title",
+          "position_headcount",
+          "filled",
+          "committed"
+        ],
+        "title": "RequisitionDetail",
+        "type": "object"
+      },
+      "RequisitionOut": {
+        "properties": {
+          "approved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved At"
+          },
+          "closed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closed At"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "openings": {
+            "title": "Openings",
+            "type": "integer"
+          },
+          "position_id": {
+            "format": "uuid",
+            "title": "Position Id",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/RequisitionStatus"
+          },
+          "target_start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Start Date"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "position_id",
+          "title",
+          "description",
+          "openings",
+          "status",
+          "target_start_date",
+          "approved_at",
+          "closed_at"
+        ],
+        "title": "RequisitionOut",
+        "type": "object"
+      },
+      "RequisitionStatus": {
+        "enum": [
+          "draft",
+          "open",
+          "on_hold",
+          "filled",
+          "cancelled"
+        ],
+        "title": "RequisitionStatus",
         "type": "string"
       },
       "RoleCode": {
@@ -7097,6 +8016,111 @@
         "title": "SlabOut",
         "type": "object"
       },
+      "StageCreate": {
+        "properties": {
+          "code": {
+            "maxLength": 32,
+            "minLength": 1,
+            "pattern": "^[A-Z0-9_]+$",
+            "title": "Code",
+            "type": "string"
+          },
+          "is_terminal": {
+            "default": false,
+            "title": "Is Terminal",
+            "type": "boolean"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StageOutcome"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sequence": {
+            "maximum": 999.0,
+            "minimum": 1.0,
+            "title": "Sequence",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "sequence"
+        ],
+        "title": "StageCreate",
+        "type": "object"
+      },
+      "StageOut": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "is_terminal": {
+            "title": "Is Terminal",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StageOutcome"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sequence": {
+            "title": "Sequence",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name",
+          "sequence",
+          "is_terminal",
+          "outcome",
+          "is_active"
+        ],
+        "title": "StageOut",
+        "type": "object"
+      },
+      "StageOutcome": {
+        "description": "What reaching a terminal stage means. Non-terminal stages have none.",
+        "enum": [
+          "hired",
+          "rejected",
+          "withdrawn"
+        ],
+        "title": "StageOutcome",
+        "type": "string"
+      },
       "TaxBandOut": {
         "properties": {
           "amount": {
@@ -7481,6 +8505,42 @@
         "title": "WorkLocationOut",
         "type": "object"
       },
+      "elogix_api__modules__employee__schemas__EventOut": {
+        "properties": {
+          "event_type": {
+            "$ref": "#/components/schemas/EmployeeEventType"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "occurred_on": {
+            "format": "date",
+            "title": "Occurred On",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "event_type",
+          "occurred_on",
+          "note"
+        ],
+        "title": "EventOut",
+        "type": "object"
+      },
       "elogix_api__modules__payroll__schemas__ApprovalResult": {
         "properties": {
           "attendance_days_locked": {
@@ -7492,6 +8552,70 @@
           "attendance_days_locked"
         ],
         "title": "ApprovalResult",
+        "type": "object"
+      },
+      "elogix_api__modules__recruitment__schemas__EventOut": {
+        "properties": {
+          "from_stage_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Stage Id"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "moved_by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Moved By"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "to_stage_id": {
+            "format": "uuid",
+            "title": "To Stage Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "from_stage_id",
+          "to_stage_id",
+          "moved_by",
+          "occurred_at",
+          "note"
+        ],
+        "title": "EventOut",
         "type": "object"
       },
       "elogix_api__modules__settlement__schemas__ApprovalResult": {
@@ -9571,7 +10695,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/EventOut"
+                    "$ref": "#/components/schemas/elogix_api__modules__employee__schemas__EventOut"
                   },
                   "title": "Response Employees-List Events",
                   "type": "array"
@@ -10646,6 +11770,100 @@
         "summary": "Update Type",
         "tags": [
           "leave"
+        ]
+      }
+    },
+    "/api/v1/offer-response/{token}": {
+      "get": {
+        "description": "What the candidate sees. Only the terms they are being asked to accept.",
+        "operationId": "offer-response-view_offer",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicOffer"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "View Offer",
+        "tags": [
+          "offer-response"
+        ]
+      },
+      "post": {
+        "description": "Accept or decline.\n\nAccepting also moves the application to the pipeline's hired stage, so the board\nand the offer cannot disagree about whether someone was hired.",
+        "operationId": "offer-response-respond",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OfferResponse"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicOffer"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Respond",
+        "tags": [
+          "offer-response"
         ]
       }
     },
@@ -12271,6 +13489,869 @@
         "summary": "Update Tax Scale",
         "tags": [
           "payroll"
+        ]
+      }
+    },
+    "/api/v1/recruitment/applications": {
+      "get": {
+        "description": "Ordered by when they arrived.\n\nNot by a score. The prototype sorted this list by an `ai_score` a language model\nwrote, which decided who a recruiter looked at first and therefore who got hired.",
+        "operationId": "recruitment-list_applications",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "requisition_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Requisition Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "stage_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Stage Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "open_only",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Open Only",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ApplicationOut"
+                  },
+                  "title": "Response Recruitment-List Applications",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Applications",
+        "tags": [
+          "recruitment"
+        ]
+      },
+      "post": {
+        "operationId": "recruitment-create_application",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplicationCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Application",
+        "tags": [
+          "recruitment"
+        ]
+      }
+    },
+    "/api/v1/recruitment/applications/{app_id}": {
+      "get": {
+        "description": "One application with its whole history \u2014 every stage, who moved it, and why.",
+        "operationId": "recruitment-get_application",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "App Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Application",
+        "tags": [
+          "recruitment"
+        ]
+      }
+    },
+    "/api/v1/recruitment/applications/{app_id}/move": {
+      "post": {
+        "description": "Move to another stage. Appends to the history; never overwrites it.",
+        "operationId": "recruitment-move_application",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "App Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplicationMove"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Move Application",
+        "tags": [
+          "recruitment"
+        ]
+      }
+    },
+    "/api/v1/recruitment/applications/{app_id}/offer": {
+      "post": {
+        "operationId": "recruitment-create_offer",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "App Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OfferCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Offer",
+        "tags": [
+          "recruitment"
+        ]
+      }
+    },
+    "/api/v1/recruitment/candidates": {
+      "get": {
+        "operationId": "recruitment-list_candidates",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CandidateOut"
+                  },
+                  "title": "Response Recruitment-List Candidates",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Candidates",
+        "tags": [
+          "recruitment"
+        ]
+      },
+      "post": {
+        "operationId": "recruitment-create_candidate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CandidateCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandidateOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Candidate",
+        "tags": [
+          "recruitment"
+        ]
+      }
+    },
+    "/api/v1/recruitment/offers": {
+      "get": {
+        "description": "Never includes `response_token`. It is a credential, not a field.",
+        "operationId": "recruitment-list_offers",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/OfferOut"
+                  },
+                  "title": "Response Recruitment-List Offers",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Offers",
+        "tags": [
+          "recruitment"
+        ]
+      }
+    },
+    "/api/v1/recruitment/offers/{offer_id}/send": {
+      "post": {
+        "description": "Mark it sent and return the candidate's response token, once.\n\nThe token is not in any list endpoint. Whoever holds it can answer the offer, which\nmakes it a credential \u2014 it belongs in the candidate's link and nowhere else.",
+        "operationId": "recruitment-send_offer",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "offer_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Offer Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferSent"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Send Offer",
+        "tags": [
+          "recruitment"
+        ]
+      }
+    },
+    "/api/v1/recruitment/offers/{offer_id}/withdraw": {
+      "post": {
+        "operationId": "recruitment-withdraw_offer",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "offer_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Offer Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Withdraw Offer",
+        "tags": [
+          "recruitment"
+        ]
+      }
+    },
+    "/api/v1/recruitment/requisitions": {
+      "get": {
+        "operationId": "recruitment-list_requisitions",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/RequisitionStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RequisitionOut"
+                  },
+                  "title": "Response Recruitment-List Requisitions",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Requisitions",
+        "tags": [
+          "recruitment"
+        ]
+      },
+      "post": {
+        "description": "Raise a requisition against a budgeted position.",
+        "operationId": "recruitment-create_requisition",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequisitionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequisitionDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Requisition",
+        "tags": [
+          "recruitment"
+        ]
+      }
+    },
+    "/api/v1/recruitment/requisitions/{req_id}": {
+      "get": {
+        "operationId": "recruitment-get_requisition",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "req_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Req Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequisitionDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Requisition",
+        "tags": [
+          "recruitment"
+        ]
+      }
+    },
+    "/api/v1/recruitment/requisitions/{req_id}/close": {
+      "post": {
+        "description": "Filled, or cancelled. Either way it stops accepting applications and stops\ncounting against the position's budget.",
+        "operationId": "recruitment-close_requisition",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "req_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Req Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cancelled",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Cancelled",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequisitionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Close Requisition",
+        "tags": [
+          "recruitment"
+        ]
+      }
+    },
+    "/api/v1/recruitment/requisitions/{req_id}/open": {
+      "post": {
+        "description": "Approve it, which is what lets applications be taken against it.",
+        "operationId": "recruitment-open_requisition",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "req_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Req Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequisitionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Open Requisition",
+        "tags": [
+          "recruitment"
+        ]
+      }
+    },
+    "/api/v1/recruitment/stages": {
+      "get": {
+        "description": "The company's hiring stages. Seeds the default pipeline on first read.",
+        "operationId": "recruitment-list_stages",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StageOut"
+                  },
+                  "title": "Response Recruitment-List Stages",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Stages",
+        "tags": [
+          "recruitment"
+        ]
+      },
+      "post": {
+        "description": "Add a stage. A hiring process differs between a bank and a construction firm.",
+        "operationId": "recruitment-create_stage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StageCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StageOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Stage",
+        "tags": [
+          "recruitment"
         ]
       }
     },
