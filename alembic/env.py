@@ -45,7 +45,7 @@ def get_url() -> str:
     return f'postgresql://{user}:{pw}@{host}:{port}/{db}'
 
 DATABASE_URL = get_url()
-
+print(DATABASE_URL)
 config = context.config
 config.set_main_option('sqlalchemy.url', DATABASE_URL)
 if config.config_file_name:
