@@ -258,7 +258,7 @@ export const performanceAPI = {
   create     : (data)        => api.post('/performance', data),
   goals      : (empId)       => api.get(`/goals?employee_id=${empId}`),
   kpis       : ()            => api.get('/kpi'),
-  360feedback: (empId)       => api.get(`/pms360?employee_id=${empId}`),
+  'feedback360': (empId)     => api.get(`/pms360?employee_id=${empId}`),
 }
 
 // ── SaaS Admin ────────────────────────────────────────────────────────
@@ -294,5 +294,61 @@ export const healthCheck = () =>
   fetch('/api/health').then(r => r.json()).catch(() => ({ status: 'error' }))
 
 // ── Default export ────────────────────────────────────────────────────
-export default api
 export { apiFetch, getToken, getTenantSlug, getSession }
+
+// ── eLogixAPI — backward-compatible alias (used by LoginPage, RegisterPage, useTenant) ──
+// Old code imports { eLogixAPI } from '../utils/api.js'
+// This object maps all old method names to the new api.* equivalents
+export const eLogixAPI = {
+  // Auth
+  login           : (data)         => api.post('/auth/login', data),
+  logout          : ()             => api.post('/auth/logout', {}),
+  me              : ()             => api.get('/auth/me'),
+  register        : (data)         => api.post('/auth/register', data),
+
+  // Company registration (used by RegisterPage)
+  createCompany   : (data)         => api.post('/elogix-admin/v1/register-company', {
+    name          : data.company_name,
+    slug          : data.slug,
+    plan          : data.plan || 'trial',
+    business_type : data.business_type,
+    admin_email   : data.admin_email,
+    admin_name    : data.admin_name,
+    phone         : data.phone || '',
+    country       : data.country || 'Nepal',
+    currency      : data.currency || 'NPR',
+    industry      : data.business_label,
+    modules       : data.modules || [],
+  }),
+
+  // Employees
+  getEmployees    : (params = '')  => api.get(`/employees${params ? '?' + params : ''}`),
+  getEmployee     : (id)           => api.get(`/employees/${id}`),
+  createEmployee  : (data)         => api.post('/employees', data),
+  updateEmployee  : (id, data)     => api.patch(`/employees/${id}`, data),
+  deleteEmployee  : (id)           => api.delete(`/employees/${id}`),
+
+  // Attendance
+  getAttendance   : (m, d)         => api.get(`/attendance?month=${m}&date=${d}`),
+  punchAttendance : (data)         => api.post('/attendance/punch', data),
+
+  // Leave
+  getLeaveBalance : (params = '')  => api.get(`/leave/balance${params ? '?' + params : ''}`),
+  applyLeave      : (data)         => api.post('/leave', data),
+
+  // Payroll
+  getSalarySheet  : (params = '')  => api.get(`/payroll/salary-sheet${params ? '?' + params : ''}`),
+  calculateSalary : (data)         => api.post('/salary-tax/calculate', data),
+
+  // Roster
+  getRoster       : (params = '')  => api.get(`/roster${params ? '?' + params : ''}`),
+
+  // Users
+  getUsers        : (params = '')  => api.get(`/company-users${params ? '?' + params : ''}`),
+
+  // Companies (SaaS admin)
+  getCompanies    : ()             => api.get('/elogix-admin/v1/companies'),
+  approveCompany  : (slug, data)   => api.post(`/elogix-admin/v1/companies/${slug}/approve`, data),
+}
+
+export default api
