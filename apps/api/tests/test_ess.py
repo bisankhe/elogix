@@ -28,14 +28,21 @@ from elogix_api.modules.identity.models import PlanTier, User
 from elogix_api.modules.payroll.models import PayrollRun, Payslip, RunStatus
 from tests.conftest import PASSWORD, auth, make_tenant
 
-# (method, path, body). Every route in `modules/ess/router.py`.
+# (method, path, body, expected status). Every read route in `modules/ess/router.py`.
+#
+# The by-id routes are given the *colleague's* id and must answer 404: filtered on my
+# employee id rather than checked after the fact, so someone else's row is
+# indistinguishable from one that does not exist. The collection routes answer 200 and
+# must simply contain nothing of theirs.
 ESS_ROUTES = [
-    ("GET", "/api/v1/ess/me", None),
-    ("GET", "/api/v1/ess/attendance?year=2026&month=3", None),
-    ("GET", "/api/v1/ess/leave/balances", None),
-    ("GET", "/api/v1/ess/leave/requests", None),
-    ("GET", "/api/v1/ess/payslips", None),
-    ("GET", "/api/v1/ess/documents", None),
+    ("GET", "/api/v1/ess/me", None, 200),
+    ("GET", "/api/v1/ess/attendance?year=2026&month=3", None, 200),
+    ("GET", "/api/v1/ess/leave/balances", None, 200),
+    ("GET", "/api/v1/ess/leave/requests", None, 200),
+    ("GET", "/api/v1/ess/payslips", None, 200),
+    ("GET", "/api/v1/ess/documents", None, 200),
+    ("GET", "/api/v1/ess/payslips/{colleague_payslip_id}", None, 404),
+    ("GET", "/api/v1/ess/documents/{colleague_document_id}/file", None, 404),
 ]
 
 # What only the colleague has. If any of it comes back, the boundary leaked.
@@ -130,7 +137,7 @@ def tenant(db: Session) -> tuple[Employee, User, Employee]:
 # ── The boundary ──────────────────────────────────────────────────────
 
 
-@pytest.mark.parametrize(("method", "path", "body"), ESS_ROUTES)
+@pytest.mark.parametrize(("method", "path", "body", "expected"), ESS_ROUTES)
 def test_no_ess_route_returns_a_colleagues_data(
     client: TestClient,
     db: Session,
@@ -138,14 +145,34 @@ def test_no_ess_route_returns_a_colleagues_data(
     method: str,
     path: str,
     body: dict | None,
+    expected: int,
 ) -> None:
     """The sweep. Same tenant, different person — nothing may cross."""
-    _, _, colleague = tenant
+    _, admin, colleague = tenant
     headers = sign_in(client, "admin@acme.com.np")
 
-    response = client.request(method, path, headers=headers, json=body)
+    theirs = (
+        db.query(Payslip)
+        .filter(Payslip.employee_id == colleague.id, Payslip.company_id == admin.company_id)
+        .one()
+    )
+    their_document = (
+        db.query(EmployeeDocument)
+        .filter(
+            EmployeeDocument.employee_id == colleague.id,
+            EmployeeDocument.company_id == admin.company_id,
+        )
+        .one()
+    )
 
-    assert response.status_code == 200, response.text
+    response = client.request(
+        method,
+        path.format(colleague_payslip_id=theirs.id, colleague_document_id=their_document.id),
+        headers=headers,
+        json=body,
+    )
+
+    assert response.status_code == expected, response.text
     for marker in (*COLLEAGUE_MARKERS, str(colleague.id)):
         assert marker not in response.text, f"{method} {path} leaked a colleague's data"
 

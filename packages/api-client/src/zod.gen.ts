@@ -94,6 +94,13 @@ export const zBalanceOut = z.object({
 });
 
 /**
+ * Body_employees-upload_document_file
+ */
+export const zBodyEmployeesUploadDocumentFile = z.object({
+  file: z.string(),
+});
+
+/**
  * CarryForwardRequest
  */
 export const zCarryForwardRequest = z.object({
@@ -253,13 +260,30 @@ export const zDocumentCreate = z.object({
  * DocumentOut
  */
 export const zDocumentOut = z.object({
+  checksum: z.string().nullish(),
+  content_type: z.string().nullish(),
   document_type: zDocumentType,
+  employee_id: z.uuid(),
   expires_on: z.iso.date().nullable(),
   id: z.uuid(),
   is_verified: z.boolean(),
   issued_on: z.iso.date().nullable(),
+  original_filename: z.string().nullish(),
+  size_bytes: z.int().nullish(),
   storage_key: z.string().nullable(),
   title: z.string(),
+  verified_at: z.iso.datetime().nullish(),
+  verified_by: z.string().nullish(),
+});
+
+/**
+ * DocumentVerify
+ *
+ * Who checked the paper against the person. A bare boolean would not say.
+ */
+export const zDocumentVerify = z.object({
+  is_verified: z.boolean(),
+  note: z.string().max(500).nullish(),
 });
 
 /**
@@ -373,6 +397,29 @@ export const zEventOut = z.object({
 export const zExitRequest = z.object({
   exited_on: z.iso.date(),
   reason: z.string().min(1).max(2000),
+});
+
+/**
+ * ExpiringDocument
+ */
+export const zExpiringDocument = z.object({
+  checksum: z.string().nullish(),
+  content_type: z.string().nullish(),
+  days_remaining: z.int(),
+  document_type: zDocumentType,
+  employee_code: z.string(),
+  employee_id: z.uuid(),
+  employee_name: z.string(),
+  expires_on: z.iso.date().nullable(),
+  id: z.uuid(),
+  is_verified: z.boolean(),
+  issued_on: z.iso.date().nullable(),
+  original_filename: z.string().nullish(),
+  size_bytes: z.int().nullish(),
+  storage_key: z.string().nullable(),
+  title: z.string(),
+  verified_at: z.iso.datetime().nullish(),
+  verified_by: z.string().nullish(),
 });
 
 /**
@@ -1894,6 +1941,17 @@ export const zEmployeesHireBody = zHireRequest;
  */
 export const zEmployeesHireResponse = zEmployeeDetail;
 
+export const zEmployeesExpiringDocumentsQuery = z.object({
+  within_days: z.int().gte(0).lte(365).optional().default(60),
+});
+
+/**
+ * Response Employees-Expiring Documents
+ *
+ * Successful Response
+ */
+export const zEmployeesExpiringDocumentsResponse = z.array(zExpiringDocument);
+
 export const zEmployeesGetEmployeePath = z.object({
   employee_id: z.uuid(),
 });
@@ -1969,6 +2027,36 @@ export const zEmployeesAddDocumentPath = z.object({
  */
 export const zEmployeesAddDocumentResponse = zDocumentOut;
 
+export const zEmployeesDownloadDocumentFilePath = z.object({
+  employee_id: z.uuid(),
+  document_id: z.uuid(),
+});
+
+export const zEmployeesUploadDocumentFileBody =
+  zBodyEmployeesUploadDocumentFile;
+
+export const zEmployeesUploadDocumentFilePath = z.object({
+  employee_id: z.uuid(),
+  document_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zEmployeesUploadDocumentFileResponse = zDocumentOut;
+
+export const zEmployeesVerifyDocumentBody = zDocumentVerify;
+
+export const zEmployeesVerifyDocumentPath = z.object({
+  employee_id: z.uuid(),
+  document_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zEmployeesVerifyDocumentResponse = zDocumentOut;
+
 export const zEmployeesListEventsPath = z.object({
   employee_id: z.uuid(),
 });
@@ -2007,6 +2095,10 @@ export const zEssMyAttendanceResponse = zMyAttendanceMonth;
  * Successful Response
  */
 export const zEssMyDocumentsResponse = z.array(zMyDocument);
+
+export const zEssMyDocumentFilePath = z.object({
+  document_id: z.uuid(),
+});
 
 export const zEssMyBalancesQuery = z.object({
   leave_year: z.int().gte(2000).lte(2100).nullish(),

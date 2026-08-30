@@ -1,5 +1,5 @@
 import uuid
-from datetime import date
+from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, computed_field
 
@@ -210,9 +210,29 @@ class DocumentCreate(BaseModel):
 
 class DocumentOut(_Out):
     id: uuid.UUID
+    employee_id: uuid.UUID
     document_type: DocumentType
     title: str
     storage_key: str | None
     issued_on: date | None
     expires_on: date | None
     is_verified: bool
+    verified_by: str | None = None
+    verified_at: datetime | None = None
+    original_filename: str | None = None
+    content_type: str | None = None
+    size_bytes: int | None = None
+    checksum: str | None = None
+
+
+class DocumentVerify(BaseModel):
+    """Who checked the paper against the person. A bare boolean would not say."""
+
+    is_verified: bool
+    note: str | None = Field(default=None, max_length=500)
+
+
+class ExpiringDocument(DocumentOut):
+    employee_code: str
+    employee_name: str
+    days_remaining: int

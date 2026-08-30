@@ -7,15 +7,18 @@ separation is what makes "with history preserved" true rather than aspirational.
 """
 
 import uuid
+from datetime import date, timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
 from elogix_api.core.deps import CurrentUserDep, DbDep, require_module
 from elogix_api.core.entitlements import ModuleCode
-from elogix_api.modules.employee import service
+from elogix_api.modules.employee import documents, service
 from elogix_api.modules.employee.models import (
     AssignmentReason,
     Employee,
@@ -31,12 +34,14 @@ from elogix_api.modules.employee.schemas import (
     ConfirmRequest,
     DocumentCreate,
     DocumentOut,
+    DocumentVerify,
     EmployeeDetail,
     EmployeeList,
     EmployeeSummary,
     EmployeeUpdate,
     EventOut,
     ExitRequest,
+    ExpiringDocument,
     HireRequest,
 )
 
@@ -323,6 +328,127 @@ def add_document(
         company_id=user.company_id, employee_id=employee_id, **payload.model_dump()
     )
     db.add(document)
+    db.commit()
+    db.refresh(document)
+    return document
+
+
+@router.get("/documents/expiring", response_model=list[ExpiringDocument])
+def expiring_documents(
+    user: CurrentUserDep,
+    db: DbDep,
+    within_days: Annotated[int, Query(ge=0, le=365)] = 60,
+) -> list[ExpiringDocument]:
+    """Documents that have expired or are about to, soonest first.
+
+    The reason `expires_on` is a column. A work permit or a contract that lapses
+    unnoticed is a compliance problem, and nobody finds it by opening employee records
+    one at a time.
+
+    Already-expired rows are included, with a negative `days_remaining`, because those
+    are the urgent ones — filtering them out would hide exactly the failures this is
+    for. Rows with no expiry date are not "never expiring"; they are simply not this
+    report's subject.
+    """
+    today = date.today()
+    horizon = today + timedelta(days=within_days)
+
+    rows = db.execute(
+        select(EmployeeDocument, Employee)
+        .join(Employee, Employee.id == EmployeeDocument.employee_id)
+        .where(
+            EmployeeDocument.company_id == user.company_id,
+            EmployeeDocument.expires_on.is_not(None),
+            EmployeeDocument.expires_on <= horizon,
+            # An exited employee's expired contract is not anyone's problem to chase.
+            Employee.status != EmployeeStatus.EXITED,
+        )
+        .order_by(EmployeeDocument.expires_on)
+    ).all()
+
+    return [
+        ExpiringDocument(
+            **DocumentOut.model_validate(document).model_dump(),
+            employee_code=employee.employee_code,
+            employee_name=employee.full_name,
+            days_remaining=(document.expires_on - today).days,  # type: ignore[operator]
+        )
+        for document, employee in rows
+    ]
+
+
+def _get_document(
+    db: Session, *, company_id: uuid.UUID, employee_id: uuid.UUID, document_id: uuid.UUID
+) -> EmployeeDocument:
+    """Filtered on tenant *and* employee, so a mismatched pair is a 404 and not a hint."""
+    document = db.execute(
+        select(EmployeeDocument).where(
+            EmployeeDocument.id == document_id,
+            EmployeeDocument.company_id == company_id,
+            EmployeeDocument.employee_id == employee_id,
+        )
+    ).scalar_one_or_none()
+    if document is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Document not found")
+    return document
+
+
+@router.post(
+    "/{employee_id}/documents/{document_id}/file",
+    response_model=DocumentOut,
+)
+def upload_document_file(
+    employee_id: uuid.UUID,
+    document_id: uuid.UUID,
+    user: CurrentUserDep,
+    db: DbDep,
+    file: Annotated[UploadFile, File()],
+) -> EmployeeDocument:
+    """Attach the actual file to a document record.
+
+    Separate from creating the record because the record legitimately exists first:
+    HR lists what it still needs to collect, and the expiry report is most useful for
+    exactly those rows.
+    """
+    service.get_employee(db, company_id=user.company_id, employee_id=employee_id)
+    document = _get_document(
+        db, company_id=user.company_id, employee_id=employee_id, document_id=document_id
+    )
+    return documents.store_upload(
+        db, document=document, upload=file, company_id=user.company_id
+    )
+
+
+@router.get("/{employee_id}/documents/{document_id}/file")
+def download_document_file(
+    employee_id: uuid.UUID, document_id: uuid.UUID, user: CurrentUserDep, db: DbDep
+) -> StreamingResponse:
+    """Stream the file. Always an attachment — see `documents.py` for why."""
+    service.get_employee(db, company_id=user.company_id, employee_id=employee_id)
+    document = _get_document(
+        db, company_id=user.company_id, employee_id=employee_id, document_id=document_id
+    )
+    return documents.download(document)
+
+
+@router.post("/{employee_id}/documents/{document_id}/verify", response_model=DocumentOut)
+def verify_document(
+    employee_id: uuid.UUID,
+    document_id: uuid.UUID,
+    payload: DocumentVerify,
+    user: CurrentUserDep,
+    db: DbDep,
+) -> EmployeeDocument:
+    """Mark a document checked, naming the checker.
+
+    The verifier is the caller, taken from the token rather than the body. Letting the
+    request name who verified it would make the field worth nothing.
+    """
+    service.get_employee(db, company_id=user.company_id, employee_id=employee_id)
+    document = _get_document(
+        db, company_id=user.company_id, employee_id=employee_id, document_id=document_id
+    )
+    documents.verify(document, is_verified=payload.is_verified, verifier=user.full_name)
     db.commit()
     db.refresh(document)
     return document

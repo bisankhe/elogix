@@ -14,7 +14,8 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from elogix_api.core.security import create_token
-from elogix_api.modules.employee.models import Employee
+from elogix_api.modules.employee.enums import DocumentType
+from elogix_api.modules.employee.models import Employee, EmployeeDocument
 from elogix_api.modules.identity.models import Company, RoleCode, UserRole
 from elogix_api.modules.payroll.models import PayrollRun, Payslip, RunStatus
 from tests.conftest import auth, login, make_tenant
@@ -29,6 +30,8 @@ TENANT_SCOPED_READS = [
     ("GET", "/api/v1/payroll/runs/{run_id}/payslips"),
     ("GET", "/api/v1/payroll/payslips/{payslip_id}"),
     ("GET", "/api/v1/auth/users"),
+    ("GET", "/api/v1/employees/documents/expiring"),
+    ("GET", "/api/v1/employees/{employee_id}/documents"),
 ]
 
 
@@ -66,6 +69,18 @@ def seed_payroll(
         net_pay=Decimal("50000"),
     )
     db.add(payslip)
+
+    # An expiring document too, so the expiry report has something of this tenant's to
+    # leak if its filter is ever dropped.
+    db.add(
+        EmployeeDocument(
+            company_id=company.id,
+            employee_id=employee.id,
+            document_type=DocumentType.CONTRACT,
+            title=f"{company.name} contract",
+            expires_on=date(2026, 4, 30),
+        )
+    )
     db.commit()
     return run, payslip
 

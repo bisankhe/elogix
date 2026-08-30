@@ -185,6 +185,16 @@ export type BalanceOut = {
 };
 
 /**
+ * Body_employees-upload_document_file
+ */
+export type BodyEmployeesUploadDocumentFile = {
+  /**
+   * File
+   */
+  file: Blob | File;
+};
+
+/**
  * CarryForwardRequest
  */
 export type CarryForwardRequest = {
@@ -436,7 +446,19 @@ export type DocumentCreate = {
  * DocumentOut
  */
 export type DocumentOut = {
+  /**
+   * Checksum
+   */
+  checksum?: string | null;
+  /**
+   * Content Type
+   */
+  content_type?: string | null;
   document_type: DocumentType;
+  /**
+   * Employee Id
+   */
+  employee_id: string;
   /**
    * Expires On
    */
@@ -454,6 +476,14 @@ export type DocumentOut = {
    */
   issued_on: string | null;
   /**
+   * Original Filename
+   */
+  original_filename?: string | null;
+  /**
+   * Size Bytes
+   */
+  size_bytes?: number | null;
+  /**
    * Storage Key
    */
   storage_key: string | null;
@@ -461,6 +491,14 @@ export type DocumentOut = {
    * Title
    */
   title: string;
+  /**
+   * Verified At
+   */
+  verified_at?: string | null;
+  /**
+   * Verified By
+   */
+  verified_by?: string | null;
 };
 
 /**
@@ -477,6 +515,22 @@ export type DocumentType =
   | "experience_letter"
   | "medical"
   | "other";
+
+/**
+ * DocumentVerify
+ *
+ * Who checked the paper against the person. A bare boolean would not say.
+ */
+export type DocumentVerify = {
+  /**
+   * Is Verified
+   */
+  is_verified: boolean;
+  /**
+   * Note
+   */
+  note?: string | null;
+};
 
 /**
  * EmployeeDetail
@@ -893,6 +947,77 @@ export type ExitRequest = {
    * Reason
    */
   reason: string;
+};
+
+/**
+ * ExpiringDocument
+ */
+export type ExpiringDocument = {
+  /**
+   * Checksum
+   */
+  checksum?: string | null;
+  /**
+   * Content Type
+   */
+  content_type?: string | null;
+  /**
+   * Days Remaining
+   */
+  days_remaining: number;
+  document_type: DocumentType;
+  /**
+   * Employee Code
+   */
+  employee_code: string;
+  /**
+   * Employee Id
+   */
+  employee_id: string;
+  /**
+   * Employee Name
+   */
+  employee_name: string;
+  /**
+   * Expires On
+   */
+  expires_on: string | null;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Is Verified
+   */
+  is_verified: boolean;
+  /**
+   * Issued On
+   */
+  issued_on: string | null;
+  /**
+   * Original Filename
+   */
+  original_filename?: string | null;
+  /**
+   * Size Bytes
+   */
+  size_bytes?: number | null;
+  /**
+   * Storage Key
+   */
+  storage_key: string | null;
+  /**
+   * Title
+   */
+  title: string;
+  /**
+   * Verified At
+   */
+  verified_at?: string | null;
+  /**
+   * Verified By
+   */
+  verified_by?: string | null;
 };
 
 /**
@@ -4255,6 +4380,40 @@ export type EmployeesHireResponses = {
 export type EmployeesHireResponse =
   EmployeesHireResponses[keyof EmployeesHireResponses];
 
+export type EmployeesExpiringDocumentsData = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * Within Days
+     */
+    within_days?: number;
+  };
+  url: "/api/v1/employees/documents/expiring";
+};
+
+export type EmployeesExpiringDocumentsErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type EmployeesExpiringDocumentsError =
+  EmployeesExpiringDocumentsErrors[keyof EmployeesExpiringDocumentsErrors];
+
+export type EmployeesExpiringDocumentsResponses = {
+  /**
+   * Response Employees-Expiring Documents
+   *
+   * Successful Response
+   */
+  200: Array<ExpiringDocument>;
+};
+
+export type EmployeesExpiringDocumentsResponse =
+  EmployeesExpiringDocumentsResponses[keyof EmployeesExpiringDocumentsResponses];
+
 export type EmployeesGetEmployeeData = {
   body?: never;
   path: {
@@ -4483,6 +4642,111 @@ export type EmployeesAddDocumentResponses = {
 export type EmployeesAddDocumentResponse =
   EmployeesAddDocumentResponses[keyof EmployeesAddDocumentResponses];
 
+export type EmployeesDownloadDocumentFileData = {
+  body?: never;
+  path: {
+    /**
+     * Employee Id
+     */
+    employee_id: string;
+    /**
+     * Document Id
+     */
+    document_id: string;
+  };
+  query?: never;
+  url: "/api/v1/employees/{employee_id}/documents/{document_id}/file";
+};
+
+export type EmployeesDownloadDocumentFileErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type EmployeesDownloadDocumentFileError =
+  EmployeesDownloadDocumentFileErrors[keyof EmployeesDownloadDocumentFileErrors];
+
+export type EmployeesDownloadDocumentFileResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
+
+export type EmployeesUploadDocumentFileData = {
+  body: BodyEmployeesUploadDocumentFile;
+  path: {
+    /**
+     * Employee Id
+     */
+    employee_id: string;
+    /**
+     * Document Id
+     */
+    document_id: string;
+  };
+  query?: never;
+  url: "/api/v1/employees/{employee_id}/documents/{document_id}/file";
+};
+
+export type EmployeesUploadDocumentFileErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type EmployeesUploadDocumentFileError =
+  EmployeesUploadDocumentFileErrors[keyof EmployeesUploadDocumentFileErrors];
+
+export type EmployeesUploadDocumentFileResponses = {
+  /**
+   * Successful Response
+   */
+  200: DocumentOut;
+};
+
+export type EmployeesUploadDocumentFileResponse =
+  EmployeesUploadDocumentFileResponses[keyof EmployeesUploadDocumentFileResponses];
+
+export type EmployeesVerifyDocumentData = {
+  body: DocumentVerify;
+  path: {
+    /**
+     * Employee Id
+     */
+    employee_id: string;
+    /**
+     * Document Id
+     */
+    document_id: string;
+  };
+  query?: never;
+  url: "/api/v1/employees/{employee_id}/documents/{document_id}/verify";
+};
+
+export type EmployeesVerifyDocumentErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type EmployeesVerifyDocumentError =
+  EmployeesVerifyDocumentErrors[keyof EmployeesVerifyDocumentErrors];
+
+export type EmployeesVerifyDocumentResponses = {
+  /**
+   * Successful Response
+   */
+  200: DocumentOut;
+};
+
+export type EmployeesVerifyDocumentResponse =
+  EmployeesVerifyDocumentResponses[keyof EmployeesVerifyDocumentResponses];
+
 export type EmployeesListEventsData = {
   body?: never;
   path: {
@@ -4603,6 +4867,35 @@ export type EssMyDocumentsResponses = {
 
 export type EssMyDocumentsResponse =
   EssMyDocumentsResponses[keyof EssMyDocumentsResponses];
+
+export type EssMyDocumentFileData = {
+  body?: never;
+  path: {
+    /**
+     * Document Id
+     */
+    document_id: string;
+  };
+  query?: never;
+  url: "/api/v1/ess/documents/{document_id}/file";
+};
+
+export type EssMyDocumentFileErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type EssMyDocumentFileError =
+  EssMyDocumentFileErrors[keyof EssMyDocumentFileErrors];
+
+export type EssMyDocumentFileResponses = {
+  /**
+   * Successful Response
+   */
+  200: unknown;
+};
 
 export type EssMyBalancesData = {
   body?: never;

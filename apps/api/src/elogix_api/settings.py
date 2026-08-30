@@ -31,6 +31,14 @@ class Settings(BaseSettings):
     environment: Literal["development", "test", "production"] = "development"
     cors_origins: str = "http://localhost:5173"
 
+    # Where uploaded documents land. Relative to the repo root so a fresh clone works
+    # without configuration; point it at a mounted volume in production, and see
+    # `core/storage.py` for what it would take to point it at S3 instead.
+    storage_dir: Path = REPO_ROOT / "var" / "documents"
+    # A citizenship scan or a PDF contract. Anything much larger is someone uploading
+    # the wrong thing, and an unbounded upload is a way to fill the disk.
+    max_upload_bytes: int = 10 * 1024 * 1024
+
     @field_validator("secret_key")
     @classmethod
     def _secret_is_long_enough(cls, v: str) -> str:

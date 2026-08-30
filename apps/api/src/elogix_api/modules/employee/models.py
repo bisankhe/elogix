@@ -14,9 +14,18 @@ every past payslip silently recomputes. Phase 06 owns salary structures.
 """
 
 import uuid
-from datetime import date
+from datetime import date, datetime
 
-from sqlalchemy import Boolean, Date, ForeignKey, String, Text, UniqueConstraint
+from sqlalchemy import (
+    Boolean,
+    Date,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -183,8 +192,14 @@ class EmployeeAssignment(Base, TimestampMixin):
 class EmployeeDocument(Base, TimestampMixin):
     """Metadata for one file in the digital employee file.
 
-    `storage_key` is an opaque reference, not a URL: object storage is not wired up yet,
-    and a column full of signed URLs would expire. Phase 07 attaches the real backend.
+    `storage_key` is an opaque reference, not a URL. A column full of signed URLs would
+    expire; a handle resolved at download time through `core/storage.py` does not. It is
+    also nullable throughout: HR routinely records that a document is *expected* — a
+    citizenship copy still to be collected — before any file exists, and an expiry
+    report is most useful precisely for the rows that are still empty.
+
+    Knowing a `storage_key` is not permission to read the file. Every download resolves
+    it from a row already filtered by `company_id`, and in self-service by employee too.
     """
 
     __tablename__ = "employee_documents"
@@ -205,6 +220,23 @@ class EmployeeDocument(Base, TimestampMixin):
     issued_on: Mapped[date | None] = mapped_column(Date, nullable=True)
     expires_on: Mapped[date | None] = mapped_column(Date, nullable=True)
     is_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    # A bare "verified" flag names nobody, and a document nobody will admit to checking
+    # is not checked. Same rule as `tax_scales.is_verified` in phase 06: the flag is set
+    # by naming a person, never on its own.
+    verified_by: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    verified_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    # What was uploaded, recorded so the file can be served back as itself. The name is
+    # the uploader's and is never used to build a path — see `core/storage.py`, where
+    # the key is the content hash.
+    original_filename: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    content_type: Mapped[str | None] = mapped_column(String(127), nullable=True)
+    size_bytes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # SHA-256, hex. Lets someone prove the file served today is the file uploaded then,
+    # which is the point of keeping contracts in a system at all.
+    checksum: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
 
 class EmployeeEvent(Base, TimestampMixin):

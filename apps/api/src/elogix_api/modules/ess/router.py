@@ -16,6 +16,7 @@ from datetime import date
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 
 from elogix_api.core.deps import (
@@ -25,6 +26,7 @@ from elogix_api.core.deps import (
     require_module,
 )
 from elogix_api.core.entitlements import ModuleCode
+from elogix_api.modules.employee import documents
 from elogix_api.modules.employee.models import EmployeeDocument
 from elogix_api.modules.employee.service import get_employee
 from elogix_api.modules.ess import service
@@ -297,3 +299,25 @@ def my_documents(
         )
         for row in rows
     ]
+
+
+@router.get("/documents/{document_id}/file")
+def my_document_file(
+    document_id: uuid.UUID, employee_id: CurrentEmployeeDep, user: CurrentUserDep, db: DbDep
+) -> StreamingResponse:
+    """Download one of my own documents.
+
+    Filtered on my employee id as well as the tenant, so a colleague's document id is
+    indistinguishable from one that does not exist. A self-service download that
+    checked only the tenant would hand any employee every contract in the company.
+    """
+    document = db.execute(
+        select(EmployeeDocument).where(
+            EmployeeDocument.id == document_id,
+            EmployeeDocument.company_id == user.company_id,
+            EmployeeDocument.employee_id == employee_id,
+        )
+    ).scalar_one_or_none()
+    if document is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Document not found")
+    return documents.download(document)

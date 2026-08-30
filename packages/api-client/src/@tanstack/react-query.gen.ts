@@ -38,7 +38,9 @@ import {
   employeesAddDocument,
   employeesAssign,
   employeesConfirmEmployee,
+  employeesDownloadDocumentFile,
   employeesExitEmployee,
+  employeesExpiringDocuments,
   employeesGetEmployee,
   employeesHire,
   employeesListAssignments,
@@ -46,9 +48,12 @@ import {
   employeesListEmployees,
   employeesListEvents,
   employeesUpdateEmployee,
+  employeesUploadDocumentFile,
+  employeesVerifyDocument,
   essApplyForLeave,
   essMyAttendance,
   essMyBalances,
+  essMyDocumentFile,
   essMyDocuments,
   essMyLeaveRequests,
   essMyPayslip,
@@ -183,9 +188,14 @@ import type {
   EmployeesConfirmEmployeeData,
   EmployeesConfirmEmployeeError,
   EmployeesConfirmEmployeeResponse,
+  EmployeesDownloadDocumentFileData,
+  EmployeesDownloadDocumentFileError,
   EmployeesExitEmployeeData,
   EmployeesExitEmployeeError,
   EmployeesExitEmployeeResponse,
+  EmployeesExpiringDocumentsData,
+  EmployeesExpiringDocumentsError,
+  EmployeesExpiringDocumentsResponse,
   EmployeesGetEmployeeData,
   EmployeesGetEmployeeError,
   EmployeesGetEmployeeResponse,
@@ -207,6 +217,12 @@ import type {
   EmployeesUpdateEmployeeData,
   EmployeesUpdateEmployeeError,
   EmployeesUpdateEmployeeResponse,
+  EmployeesUploadDocumentFileData,
+  EmployeesUploadDocumentFileError,
+  EmployeesUploadDocumentFileResponse,
+  EmployeesVerifyDocumentData,
+  EmployeesVerifyDocumentError,
+  EmployeesVerifyDocumentResponse,
   EssApplyForLeaveData,
   EssApplyForLeaveError,
   EssApplyForLeaveResponse,
@@ -216,6 +232,8 @@ import type {
   EssMyBalancesData,
   EssMyBalancesError,
   EssMyBalancesResponse,
+  EssMyDocumentFileData,
+  EssMyDocumentFileError,
   EssMyDocumentsData,
   EssMyDocumentsResponse,
   EssMyLeaveRequestsData,
@@ -1285,6 +1303,45 @@ export const employeesHireMutation = (
   return mutationOptions;
 };
 
+export const employeesExpiringDocumentsQueryKey = (
+  options?: Options<EmployeesExpiringDocumentsData>,
+) => createQueryKey("employeesExpiringDocuments", options);
+
+/**
+ * Expiring Documents
+ *
+ * Documents that have expired or are about to, soonest first.
+ *
+ * The reason `expires_on` is a column. A work permit or a contract that lapses
+ * unnoticed is a compliance problem, and nobody finds it by opening employee records
+ * one at a time.
+ *
+ * Already-expired rows are included, with a negative `days_remaining`, because those
+ * are the urgent ones — filtering them out would hide exactly the failures this is
+ * for. Rows with no expiry date are not "never expiring"; they are simply not this
+ * report's subject.
+ */
+export const employeesExpiringDocumentsOptions = (
+  options?: Options<EmployeesExpiringDocumentsData>,
+) =>
+  queryOptions<
+    EmployeesExpiringDocumentsResponse,
+    EmployeesExpiringDocumentsError,
+    EmployeesExpiringDocumentsResponse,
+    ReturnType<typeof employeesExpiringDocumentsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await employeesExpiringDocuments({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: employeesExpiringDocumentsQueryKey(options),
+  });
+
 export const employeesGetEmployeeQueryKey = (
   options: Options<EmployeesGetEmployeeData>,
 ) => createQueryKey("employeesGetEmployee", options);
@@ -1479,6 +1536,101 @@ export const employeesAddDocumentMutation = (
   return mutationOptions;
 };
 
+export const employeesDownloadDocumentFileQueryKey = (
+  options: Options<EmployeesDownloadDocumentFileData>,
+) => createQueryKey("employeesDownloadDocumentFile", options);
+
+/**
+ * Download Document File
+ *
+ * Stream the file. Always an attachment — see `documents.py` for why.
+ */
+export const employeesDownloadDocumentFileOptions = (
+  options: Options<EmployeesDownloadDocumentFileData>,
+) =>
+  queryOptions<
+    unknown,
+    EmployeesDownloadDocumentFileError,
+    unknown,
+    ReturnType<typeof employeesDownloadDocumentFileQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await employeesDownloadDocumentFile({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: employeesDownloadDocumentFileQueryKey(options),
+  });
+
+/**
+ * Upload Document File
+ *
+ * Attach the actual file to a document record.
+ *
+ * Separate from creating the record because the record legitimately exists first:
+ * HR lists what it still needs to collect, and the expiry report is most useful for
+ * exactly those rows.
+ */
+export const employeesUploadDocumentFileMutation = (
+  options?: Partial<Options<EmployeesUploadDocumentFileData>>,
+): UseMutationOptions<
+  EmployeesUploadDocumentFileResponse,
+  EmployeesUploadDocumentFileError,
+  Options<EmployeesUploadDocumentFileData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    EmployeesUploadDocumentFileResponse,
+    EmployeesUploadDocumentFileError,
+    Options<EmployeesUploadDocumentFileData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await employeesUploadDocumentFile({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Verify Document
+ *
+ * Mark a document checked, naming the checker.
+ *
+ * The verifier is the caller, taken from the token rather than the body. Letting the
+ * request name who verified it would make the field worth nothing.
+ */
+export const employeesVerifyDocumentMutation = (
+  options?: Partial<Options<EmployeesVerifyDocumentData>>,
+): UseMutationOptions<
+  EmployeesVerifyDocumentResponse,
+  EmployeesVerifyDocumentError,
+  Options<EmployeesVerifyDocumentData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    EmployeesVerifyDocumentResponse,
+    EmployeesVerifyDocumentError,
+    Options<EmployeesVerifyDocumentData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await employeesVerifyDocument({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
 export const employeesListEventsQueryKey = (
   options: Options<EmployeesListEventsData>,
 ) => createQueryKey("employeesListEvents", options);
@@ -1589,6 +1741,40 @@ export const essMyDocumentsOptions = (options?: Options<EssMyDocumentsData>) =>
       return data;
     },
     queryKey: essMyDocumentsQueryKey(options),
+  });
+
+export const essMyDocumentFileQueryKey = (
+  options: Options<EssMyDocumentFileData>,
+) => createQueryKey("essMyDocumentFile", options);
+
+/**
+ * My Document File
+ *
+ * Download one of my own documents.
+ *
+ * Filtered on my employee id as well as the tenant, so a colleague's document id is
+ * indistinguishable from one that does not exist. A self-service download that
+ * checked only the tenant would hand any employee every contract in the company.
+ */
+export const essMyDocumentFileOptions = (
+  options: Options<EssMyDocumentFileData>,
+) =>
+  queryOptions<
+    unknown,
+    EssMyDocumentFileError,
+    unknown,
+    ReturnType<typeof essMyDocumentFileQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await essMyDocumentFile({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: essMyDocumentFileQueryKey(options),
   });
 
 export const essMyBalancesQueryKey = (options?: Options<EssMyBalancesData>) =>

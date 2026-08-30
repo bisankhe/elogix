@@ -333,6 +333,20 @@
         "title": "BalanceOut",
         "type": "object"
       },
+      "Body_employees-upload_document_file": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_employees-upload_document_file",
+        "type": "object"
+      },
       "CarryForwardRequest": {
         "properties": {
           "from_year": {
@@ -763,8 +777,35 @@
       },
       "DocumentOut": {
         "properties": {
+          "checksum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checksum"
+          },
+          "content_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content Type"
+          },
           "document_type": {
             "$ref": "#/components/schemas/DocumentType"
+          },
+          "employee_id": {
+            "format": "uuid",
+            "title": "Employee Id",
+            "type": "string"
           },
           "expires_on": {
             "anyOf": [
@@ -799,6 +840,28 @@
             ],
             "title": "Issued On"
           },
+          "original_filename": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Original Filename"
+          },
+          "size_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Size Bytes"
+          },
           "storage_key": {
             "anyOf": [
               {
@@ -813,10 +876,34 @@
           "title": {
             "title": "Title",
             "type": "string"
+          },
+          "verified_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verified At"
+          },
+          "verified_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verified By"
           }
         },
         "required": [
           "id",
+          "employee_id",
           "document_type",
           "title",
           "storage_key",
@@ -842,6 +929,32 @@
         ],
         "title": "DocumentType",
         "type": "string"
+      },
+      "DocumentVerify": {
+        "description": "Who checked the paper against the person. A bare boolean would not say.",
+        "properties": {
+          "is_verified": {
+            "title": "Is Verified",
+            "type": "boolean"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "required": [
+          "is_verified"
+        ],
+        "title": "DocumentVerify",
+        "type": "object"
       },
       "EmployeeDetail": {
         "properties": {
@@ -1765,6 +1878,160 @@
           "reason"
         ],
         "title": "ExitRequest",
+        "type": "object"
+      },
+      "ExpiringDocument": {
+        "properties": {
+          "checksum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checksum"
+          },
+          "content_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content Type"
+          },
+          "days_remaining": {
+            "title": "Days Remaining",
+            "type": "integer"
+          },
+          "document_type": {
+            "$ref": "#/components/schemas/DocumentType"
+          },
+          "employee_code": {
+            "title": "Employee Code",
+            "type": "string"
+          },
+          "employee_id": {
+            "format": "uuid",
+            "title": "Employee Id",
+            "type": "string"
+          },
+          "employee_name": {
+            "title": "Employee Name",
+            "type": "string"
+          },
+          "expires_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires On"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_verified": {
+            "title": "Is Verified",
+            "type": "boolean"
+          },
+          "issued_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issued On"
+          },
+          "original_filename": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Original Filename"
+          },
+          "size_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Size Bytes"
+          },
+          "storage_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Storage Key"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "verified_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verified At"
+          },
+          "verified_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verified By"
+          }
+        },
+        "required": [
+          "id",
+          "employee_id",
+          "document_type",
+          "title",
+          "storage_key",
+          "issued_on",
+          "expires_on",
+          "is_verified",
+          "employee_code",
+          "employee_name",
+          "days_remaining"
+        ],
+        "title": "ExpiringDocument",
         "type": "object"
       },
       "Gender": {
@@ -7517,6 +7784,61 @@
         ]
       }
     },
+    "/api/v1/employees/documents/expiring": {
+      "get": {
+        "description": "Documents that have expired or are about to, soonest first.\n\nThe reason `expires_on` is a column. A work permit or a contract that lapses\nunnoticed is a compliance problem, and nobody finds it by opening employee records\none at a time.\n\nAlready-expired rows are included, with a negative `days_remaining`, because those\nare the urgent ones \u2014 filtering them out would hide exactly the failures this is\nfor. Rows with no expiry date are not \"never expiring\"; they are simply not this\nreport's subject.",
+        "operationId": "employees-expiring_documents",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "within_days",
+            "required": false,
+            "schema": {
+              "default": 60,
+              "maximum": 365,
+              "minimum": 0,
+              "title": "Within Days",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ExpiringDocument"
+                  },
+                  "title": "Response Employees-Expiring Documents",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Expiring Documents",
+        "tags": [
+          "employees"
+        ]
+      }
+    },
     "/api/v1/employees/{employee_id}": {
       "get": {
         "operationId": "employees-get_employee",
@@ -7896,6 +8218,199 @@
         ]
       }
     },
+    "/api/v1/employees/{employee_id}/documents/{document_id}/file": {
+      "get": {
+        "description": "Stream the file. Always an attachment \u2014 see `documents.py` for why.",
+        "operationId": "employees-download_document_file",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "employee_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Employee Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Document Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Download Document File",
+        "tags": [
+          "employees"
+        ]
+      },
+      "post": {
+        "description": "Attach the actual file to a document record.\n\nSeparate from creating the record because the record legitimately exists first:\nHR lists what it still needs to collect, and the expiry report is most useful for\nexactly those rows.",
+        "operationId": "employees-upload_document_file",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "employee_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Employee Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Document Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_employees-upload_document_file"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Upload Document File",
+        "tags": [
+          "employees"
+        ]
+      }
+    },
+    "/api/v1/employees/{employee_id}/documents/{document_id}/verify": {
+      "post": {
+        "description": "Mark a document checked, naming the checker.\n\nThe verifier is the caller, taken from the token rather than the body. Letting the\nrequest name who verified it would make the field worth nothing.",
+        "operationId": "employees-verify_document",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "employee_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Employee Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Document Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocumentVerify"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Verify Document",
+        "tags": [
+          "employees"
+        ]
+      }
+    },
     "/api/v1/employees/{employee_id}/events": {
       "get": {
         "operationId": "employees-list_events",
@@ -8092,6 +8607,53 @@
           }
         ],
         "summary": "My Documents",
+        "tags": [
+          "ess"
+        ]
+      }
+    },
+    "/api/v1/ess/documents/{document_id}/file": {
+      "get": {
+        "description": "Download one of my own documents.\n\nFiltered on my employee id as well as the tenant, so a colleague's document id is\nindistinguishable from one that does not exist. A self-service download that\nchecked only the tenant would hand any employee every contract in the company.",
+        "operationId": "ess-my_document_file",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Document Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "My Document File",
         "tags": [
           "ess"
         ]
