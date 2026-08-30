@@ -218,6 +218,8 @@ await api(acmeToken, '/attendance/process', {
   await page.getByRole('button', { name: /sign in/i }).click()
   await page.getByRole('alert').waitFor({ timeout: 5000 })
   await shot(page, '01-login-invalid-credentials', null, { full: false })
+  // Signup: the only unauthenticated write, and the first screen a new customer sees.
+  await shot(page, '01b-register-company', '/register', { full: false })
   await page.close()
 }
 

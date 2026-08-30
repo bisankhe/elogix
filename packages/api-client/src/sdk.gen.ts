@@ -80,6 +80,9 @@ import type {
   AuthRefreshData,
   AuthRefreshErrors,
   AuthRefreshResponses,
+  AuthRegisterCompanyData,
+  AuthRegisterCompanyErrors,
+  AuthRegisterCompanyResponses,
   EmployeesAddDocumentData,
   EmployeesAddDocumentErrors,
   EmployeesAddDocumentResponses,
@@ -922,6 +925,34 @@ export const authRefresh = <ThrowOnError extends boolean = false>(
     AuthRefreshErrors,
     ThrowOnError
   >({ url: "/api/v1/auth/refresh", ...options });
+
+/**
+ * Register Company
+ *
+ * Create a trial tenant and its first administrator.
+ *
+ * Always a trial: `plan_tier` is not in the request body, so a signup cannot grant
+ * itself a paid tier however it is crafted.
+ */
+export const authRegisterCompany = <ThrowOnError extends boolean = false>(
+  options: Options<AuthRegisterCompanyData, ThrowOnError>,
+): RequestResult<
+  AuthRegisterCompanyResponses,
+  AuthRegisterCompanyErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    AuthRegisterCompanyResponses,
+    AuthRegisterCompanyErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/auth/register-company",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
 
 /**
  * List Users

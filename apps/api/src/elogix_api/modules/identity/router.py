@@ -2,19 +2,37 @@ import contextlib
 import uuid
 
 import jwt
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
+from fastapi import (
+    APIRouter,
+    Cookie,
+    Depends,
+    HTTPException,
+    Request,
+    Response,
+    status,
+)
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from elogix_api.core.deps import CurrentUserDep, DbDep, require_role
+from elogix_api.core.ratelimit import SlidingWindow, enforce
 from elogix_api.core.security import decode_token, hash_password
 from elogix_api.modules.employee.service import get_employee
-from elogix_api.modules.identity.models import Company, RoleCode, User, UserRole
+from elogix_api.modules.identity import provisioning
+from elogix_api.modules.identity.models import (
+    Company,
+    PlanTier,
+    RoleCode,
+    User,
+    UserRole,
+)
 from elogix_api.modules.identity.schemas import (
     AccessToken,
     EntitlementsOut,
     LoginRequest,
+    RegisterCompany,
+    RegisteredCompany,
     UserCreate,
     UserEmployeeLink,
     UserOut,
@@ -237,3 +255,75 @@ def link_user_to_employee(
 
     db.refresh(user)
     return _to_out(db, user)
+
+
+# ── Public signup ─────────────────────────────────────────────────────
+#
+# The only unauthenticated write in the system, so it is worth being explicit about
+# what stands between it and abuse: a trial-only plan that is not an input, slug
+# validation with a reserved list, a per-IP rate limit, and a response that does not
+# reveal whether an email was already registered. See `identity/provisioning.py`.
+
+# Six an hour per address. Generous for a person filling in a form once, and slow
+# enough that a script is not worth writing.
+_SIGNUP_LIMIT = SlidingWindow(limit=6, window_seconds=3600)
+
+
+@router.post(
+    "/register-company",
+    response_model=RegisteredCompany,
+    status_code=status.HTTP_201_CREATED,
+)
+def register_company(
+    payload: RegisterCompany, request: Request, db: DbDep
+) -> RegisteredCompany:
+    """Create a trial tenant and its first administrator.
+
+    Always a trial: `plan_tier` is not in the request body, so a signup cannot grant
+    itself a paid tier however it is crafted.
+    """
+    enforce(_SIGNUP_LIMIT, request, what="signup attempts")
+
+    try:
+        slug = provisioning.validate_public_slug(payload.slug)
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from exc
+
+    taken = db.execute(select(Company).where(Company.slug == slug)).scalar_one_or_none()
+    if taken is not None:
+        # Naming the conflict is fine — a slug is public by design, and the person
+        # needs to know to pick another. The *email* is the thing not to confirm.
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            f"The company URL '{slug}' is already taken. Please choose another.",
+        )
+
+    try:
+        company, _user, _password = provisioning.provision(
+            db,
+            name=payload.company_name.strip(),
+            slug=slug,
+            admin_email=payload.admin_email,
+            admin_name=payload.admin_name.strip(),
+            plan_tier=PlanTier.TRIAL,
+            password=payload.password,
+            quiet=True,
+        )
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        # Two signups racing for the same slug. The unique index is the arbiter.
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "That company URL was taken a moment ago. Please choose another.",
+        ) from exc
+
+    return RegisteredCompany(
+        company_name=company.name,
+        slug=company.slug,
+        admin_email=payload.admin_email,
+        next_step=(
+            "Sign in, then set your PAN and SSF employer code under Company Profile — "
+            "payroll cannot file a return without them."
+        ),
+    )

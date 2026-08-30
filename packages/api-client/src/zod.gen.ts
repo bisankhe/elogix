@@ -1765,6 +1765,42 @@ export const zPunchOut = z.object({
 });
 
 /**
+ * RegisterCompany
+ *
+ * Public signup. Note what is *not* here: the plan.
+ *
+ * A signup always creates a trial tenant, so no request can grant itself a paid tier.
+ * Changing a plan is a commercial decision and belongs behind whatever tier ends up
+ * managing tenants.
+ */
+export const zRegisterCompany = z.object({
+  admin_email: z.email(),
+  admin_name: z.string().min(1).max(200),
+  company_name: z.string().min(2).max(200),
+  password: z.string().min(12).max(128),
+  slug: z
+    .string()
+    .min(3)
+    .max(63)
+    .regex(/^[a-z0-9][a-z0-9-]*[a-z0-9]$/),
+});
+
+/**
+ * RegisteredCompany
+ *
+ * What a brand-new tenant is told.
+ *
+ * No ids. The person who just signed up needs to know where to log in, not the
+ * primary keys of rows they have never seen.
+ */
+export const zRegisteredCompany = z.object({
+  admin_email: z.string(),
+  company_name: z.string(),
+  next_step: z.string(),
+  slug: z.string(),
+});
+
+/**
  * RegularisationCreate
  */
 export const zRegularisationCreate = z.object({
@@ -2707,6 +2743,13 @@ export const zAuthMeResponse = zUserOut;
  * Successful Response
  */
 export const zAuthRefreshResponse = zAccessToken;
+
+export const zAuthRegisterCompanyBody = zRegisterCompany;
+
+/**
+ * Successful Response
+ */
+export const zAuthRegisterCompanyResponse = zRegisteredCompany;
 
 /**
  * Response Auth-List Users

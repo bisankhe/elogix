@@ -7686,6 +7686,79 @@
         "title": "PunchSource",
         "type": "string"
       },
+      "RegisterCompany": {
+        "description": "Public signup. Note what is *not* here: the plan.\n\nA signup always creates a trial tenant, so no request can grant itself a paid tier.\nChanging a plan is a commercial decision and belongs behind whatever tier ends up\nmanaging tenants.",
+        "properties": {
+          "admin_email": {
+            "format": "email",
+            "title": "Admin Email",
+            "type": "string"
+          },
+          "admin_name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Admin Name",
+            "type": "string"
+          },
+          "company_name": {
+            "maxLength": 200,
+            "minLength": 2,
+            "title": "Company Name",
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 128,
+            "minLength": 12,
+            "title": "Password",
+            "type": "string"
+          },
+          "slug": {
+            "maxLength": 63,
+            "minLength": 3,
+            "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$",
+            "title": "Slug",
+            "type": "string"
+          }
+        },
+        "required": [
+          "company_name",
+          "slug",
+          "admin_name",
+          "admin_email",
+          "password"
+        ],
+        "title": "RegisterCompany",
+        "type": "object"
+      },
+      "RegisteredCompany": {
+        "description": "What a brand-new tenant is told.\n\nNo ids. The person who just signed up needs to know where to log in, not the\nprimary keys of rows they have never seen.",
+        "properties": {
+          "admin_email": {
+            "title": "Admin Email",
+            "type": "string"
+          },
+          "company_name": {
+            "title": "Company Name",
+            "type": "string"
+          },
+          "next_step": {
+            "title": "Next Step",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          }
+        },
+        "required": [
+          "company_name",
+          "slug",
+          "admin_email",
+          "next_step"
+        ],
+        "title": "RegisteredCompany",
+        "type": "object"
+      },
       "RegularisationCreate": {
         "properties": {
           "employee_id": {
@@ -10993,6 +11066,48 @@
           }
         },
         "summary": "Refresh",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/register-company": {
+      "post": {
+        "description": "Create a trial tenant and its first administrator.\n\nAlways a trial: `plan_tier` is not in the request body, so a signup cannot grant\nitself a paid tier however it is crafted.",
+        "operationId": "auth-register_company",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterCompany"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisteredCompany"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Register Company",
         "tags": [
           "auth"
         ]

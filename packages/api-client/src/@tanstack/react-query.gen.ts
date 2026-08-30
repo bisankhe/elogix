@@ -35,6 +35,7 @@ import {
   authLogout,
   authMe,
   authRefresh,
+  authRegisterCompany,
   employeesAddDocument,
   employeesAssign,
   employeesConfirmEmployee,
@@ -228,6 +229,9 @@ import type {
   AuthRefreshData,
   AuthRefreshError,
   AuthRefreshResponse,
+  AuthRegisterCompanyData,
+  AuthRegisterCompanyError,
+  AuthRegisterCompanyResponse,
   EmployeesAddDocumentData,
   EmployeesAddDocumentError,
   EmployeesAddDocumentResponse,
@@ -1253,6 +1257,38 @@ export const authRefreshMutation = (
   > = {
     mutationFn: async (fnOptions) => {
       const { data } = await authRefresh({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Register Company
+ *
+ * Create a trial tenant and its first administrator.
+ *
+ * Always a trial: `plan_tier` is not in the request body, so a signup cannot grant
+ * itself a paid tier however it is crafted.
+ */
+export const authRegisterCompanyMutation = (
+  options?: Partial<Options<AuthRegisterCompanyData>>,
+): UseMutationOptions<
+  AuthRegisterCompanyResponse,
+  AuthRegisterCompanyError,
+  Options<AuthRegisterCompanyData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    AuthRegisterCompanyResponse,
+    AuthRegisterCompanyError,
+    Options<AuthRegisterCompanyData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await authRegisterCompany({
         ...options,
         ...fnOptions,
         throwOnError: true,

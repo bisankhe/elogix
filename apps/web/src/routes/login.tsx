@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
-import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 
 import { authLogin } from '@elogix/api-client'
@@ -69,6 +69,13 @@ function LoginPage() {
         >
           {login.isPending ? 'Signing in…' : 'Sign in'}
         </button>
+
+        <p className="text-center text-sm text-neutral-500">
+          New here?{' '}
+          <Link to="/register" className="font-medium text-blue-700 hover:underline">
+            Set up your company
+          </Link>
+        </p>
       </form>
     </main>
   )

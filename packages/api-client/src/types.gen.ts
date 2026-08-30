@@ -4064,6 +4064,65 @@ export type PunchSource =
   "biometric" | "web" | "mobile" | "manual" | "regularisation";
 
 /**
+ * RegisterCompany
+ *
+ * Public signup. Note what is *not* here: the plan.
+ *
+ * A signup always creates a trial tenant, so no request can grant itself a paid tier.
+ * Changing a plan is a commercial decision and belongs behind whatever tier ends up
+ * managing tenants.
+ */
+export type RegisterCompany = {
+  /**
+   * Admin Email
+   */
+  admin_email: string;
+  /**
+   * Admin Name
+   */
+  admin_name: string;
+  /**
+   * Company Name
+   */
+  company_name: string;
+  /**
+   * Password
+   */
+  password: string;
+  /**
+   * Slug
+   */
+  slug: string;
+};
+
+/**
+ * RegisteredCompany
+ *
+ * What a brand-new tenant is told.
+ *
+ * No ids. The person who just signed up needs to know where to log in, not the
+ * primary keys of rows they have never seen.
+ */
+export type RegisteredCompany = {
+  /**
+   * Admin Email
+   */
+  admin_email: string;
+  /**
+   * Company Name
+   */
+  company_name: string;
+  /**
+   * Next Step
+   */
+  next_step: string;
+  /**
+   * Slug
+   */
+  slug: string;
+};
+
+/**
  * RegularisationCreate
  */
 export type RegularisationCreate = {
@@ -6068,6 +6127,33 @@ export type AuthRefreshResponses = {
 
 export type AuthRefreshResponse =
   AuthRefreshResponses[keyof AuthRefreshResponses];
+
+export type AuthRegisterCompanyData = {
+  body: RegisterCompany;
+  path?: never;
+  query?: never;
+  url: "/api/v1/auth/register-company";
+};
+
+export type AuthRegisterCompanyErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type AuthRegisterCompanyError =
+  AuthRegisterCompanyErrors[keyof AuthRegisterCompanyErrors];
+
+export type AuthRegisterCompanyResponses = {
+  /**
+   * Successful Response
+   */
+  201: RegisteredCompany;
+};
+
+export type AuthRegisterCompanyResponse =
+  AuthRegisterCompanyResponses[keyof AuthRegisterCompanyResponses];
 
 export type AuthListUsersData = {
   body?: never;
