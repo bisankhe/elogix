@@ -110,6 +110,15 @@ import {
   reportsHeadcount,
   reportsLeaveBalances,
   reportsPayrollRegister,
+  settlementsAddAdjustment,
+  settlementsApproveSettlement,
+  settlementsCancelSettlement,
+  settlementsCreateSettlement,
+  settlementsDueSettlements,
+  settlementsGetSettlement,
+  settlementsListSettlements,
+  settlementsMarkPaid,
+  settlementsRecomputeSettlement,
 } from "../sdk.gen";
 import type {
   AttendanceAssignRosterData,
@@ -392,6 +401,33 @@ import type {
   ReportsPayrollRegisterData,
   ReportsPayrollRegisterError,
   ReportsPayrollRegisterResponse,
+  SettlementsAddAdjustmentData,
+  SettlementsAddAdjustmentError,
+  SettlementsAddAdjustmentResponse,
+  SettlementsApproveSettlementData,
+  SettlementsApproveSettlementError,
+  SettlementsApproveSettlementResponse,
+  SettlementsCancelSettlementData,
+  SettlementsCancelSettlementError,
+  SettlementsCancelSettlementResponse,
+  SettlementsCreateSettlementData,
+  SettlementsCreateSettlementError,
+  SettlementsCreateSettlementResponse,
+  SettlementsDueSettlementsData,
+  SettlementsDueSettlementsError,
+  SettlementsDueSettlementsResponse,
+  SettlementsGetSettlementData,
+  SettlementsGetSettlementError,
+  SettlementsGetSettlementResponse,
+  SettlementsListSettlementsData,
+  SettlementsListSettlementsError,
+  SettlementsListSettlementsResponse,
+  SettlementsMarkPaidData,
+  SettlementsMarkPaidError,
+  SettlementsMarkPaidResponse,
+  SettlementsRecomputeSettlementData,
+  SettlementsRecomputeSettlementError,
+  SettlementsRecomputeSettlementResponse,
 } from "../types.gen";
 
 export type QueryKey<TOptions extends Options> = [
@@ -3338,3 +3374,277 @@ export const reportsPayrollRegisterOptions = (
     },
     queryKey: reportsPayrollRegisterQueryKey(options),
   });
+
+export const settlementsListSettlementsQueryKey = (
+  options?: Options<SettlementsListSettlementsData>,
+) => createQueryKey("settlementsListSettlements", options);
+
+/**
+ * List Settlements
+ */
+export const settlementsListSettlementsOptions = (
+  options?: Options<SettlementsListSettlementsData>,
+) =>
+  queryOptions<
+    SettlementsListSettlementsResponse,
+    SettlementsListSettlementsError,
+    SettlementsListSettlementsResponse,
+    ReturnType<typeof settlementsListSettlementsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await settlementsListSettlements({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: settlementsListSettlementsQueryKey(options),
+  });
+
+/**
+ * Create Settlement
+ *
+ * Raise a settlement for someone who has left, and compute it straight away.
+ *
+ * Computing on creation rather than leaving it as an empty draft: the fifteen-day
+ * clock starts at the last working day, not at whenever someone remembers to press a
+ * button, so the figures should exist from the moment the record does.
+ */
+export const settlementsCreateSettlementMutation = (
+  options?: Partial<Options<SettlementsCreateSettlementData>>,
+): UseMutationOptions<
+  SettlementsCreateSettlementResponse,
+  SettlementsCreateSettlementError,
+  Options<SettlementsCreateSettlementData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    SettlementsCreateSettlementResponse,
+    SettlementsCreateSettlementError,
+    Options<SettlementsCreateSettlementData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await settlementsCreateSettlement({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const settlementsDueSettlementsQueryKey = (
+  options?: Options<SettlementsDueSettlementsData>,
+) => createQueryKey("settlementsDueSettlements", options);
+
+/**
+ * Due Settlements
+ *
+ * Settlements against their statutory clock, most urgent first.
+ *
+ * The whole reason `deadline` is a column. An unpaid final settlement is a compliance
+ * failure with a date attached, and nobody finds it by opening leaver records one at a
+ * time. Already-overdue rows come first with a negative `days_remaining` — those are
+ * the ones that matter, and filtering them out would hide the failures this exists for.
+ */
+export const settlementsDueSettlementsOptions = (
+  options?: Options<SettlementsDueSettlementsData>,
+) =>
+  queryOptions<
+    SettlementsDueSettlementsResponse,
+    SettlementsDueSettlementsError,
+    SettlementsDueSettlementsResponse,
+    ReturnType<typeof settlementsDueSettlementsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await settlementsDueSettlements({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: settlementsDueSettlementsQueryKey(options),
+  });
+
+export const settlementsGetSettlementQueryKey = (
+  options: Options<SettlementsGetSettlementData>,
+) => createQueryKey("settlementsGetSettlement", options);
+
+/**
+ * Get Settlement
+ */
+export const settlementsGetSettlementOptions = (
+  options: Options<SettlementsGetSettlementData>,
+) =>
+  queryOptions<
+    SettlementsGetSettlementResponse,
+    SettlementsGetSettlementError,
+    SettlementsGetSettlementResponse,
+    ReturnType<typeof settlementsGetSettlementQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await settlementsGetSettlement({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: settlementsGetSettlementQueryKey(options),
+  });
+
+/**
+ * Add Adjustment
+ *
+ * Add a hand-entered line, then recompute so the totals include it.
+ */
+export const settlementsAddAdjustmentMutation = (
+  options?: Partial<Options<SettlementsAddAdjustmentData>>,
+): UseMutationOptions<
+  SettlementsAddAdjustmentResponse,
+  SettlementsAddAdjustmentError,
+  Options<SettlementsAddAdjustmentData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    SettlementsAddAdjustmentResponse,
+    SettlementsAddAdjustmentError,
+    Options<SettlementsAddAdjustmentData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await settlementsAddAdjustment({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Approve Settlement
+ *
+ * Approve, consuming the leave it pays out in the same transaction.
+ */
+export const settlementsApproveSettlementMutation = (
+  options?: Partial<Options<SettlementsApproveSettlementData>>,
+): UseMutationOptions<
+  SettlementsApproveSettlementResponse,
+  SettlementsApproveSettlementError,
+  Options<SettlementsApproveSettlementData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    SettlementsApproveSettlementResponse,
+    SettlementsApproveSettlementError,
+    Options<SettlementsApproveSettlementData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await settlementsApproveSettlement({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Cancel Settlement
+ *
+ * Cancel, freeing the employee for a new settlement.
+ *
+ * Refused once approved: approving posted encashment rows into the leave ledger, and
+ * a cancel that left them there would show a balance paid out against a settlement
+ * that officially never happened. Reversing them is a decision with money attached
+ * and needs its own deliberate operation rather than a status change.
+ */
+export const settlementsCancelSettlementMutation = (
+  options?: Partial<Options<SettlementsCancelSettlementData>>,
+): UseMutationOptions<
+  SettlementsCancelSettlementResponse,
+  SettlementsCancelSettlementError,
+  Options<SettlementsCancelSettlementData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    SettlementsCancelSettlementResponse,
+    SettlementsCancelSettlementError,
+    Options<SettlementsCancelSettlementData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await settlementsCancelSettlement({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Recompute Settlement
+ *
+ * Recompute from current data. Refused once approved — that is a snapshot.
+ */
+export const settlementsRecomputeSettlementMutation = (
+  options?: Partial<Options<SettlementsRecomputeSettlementData>>,
+): UseMutationOptions<
+  SettlementsRecomputeSettlementResponse,
+  SettlementsRecomputeSettlementError,
+  Options<SettlementsRecomputeSettlementData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    SettlementsRecomputeSettlementResponse,
+    SettlementsRecomputeSettlementError,
+    Options<SettlementsRecomputeSettlementData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await settlementsRecomputeSettlement({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Mark Paid
+ *
+ * Record the disbursement date, which is what stops the statutory clock.
+ */
+export const settlementsMarkPaidMutation = (
+  options?: Partial<Options<SettlementsMarkPaidData>>,
+): UseMutationOptions<
+  SettlementsMarkPaidResponse,
+  SettlementsMarkPaidError,
+  Options<SettlementsMarkPaidData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    SettlementsMarkPaidResponse,
+    SettlementsMarkPaidError,
+    Options<SettlementsMarkPaidData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await settlementsMarkPaid({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};

@@ -28,6 +28,7 @@ const PAGES = [
   ['reports-headcount', '/reports?report=headcount&group_by=department'],
   ['reports-leave-balances', '/reports?report=leave-balances'],
   ['reports-payroll-register', '/reports?report=payroll-register'],
+  ['settlements', '/settlements'],
   ['me-profile', '/me?tab=profile'],
   ['me-attendance', '/me?tab=attendance&year=2026&month=3'],
   ['me-leave', '/me?tab=leave'],

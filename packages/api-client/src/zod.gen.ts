@@ -43,13 +43,6 @@ export const zAccrualResult = z.object({
 });
 
 /**
- * ApprovalResult
- */
-export const zApprovalResult = z.object({
-  attendance_days_locked: z.int(),
-});
-
-/**
  * AssignmentReason
  */
 export const zAssignmentReason = z.enum([
@@ -392,6 +385,13 @@ export const zEventOut = z.object({
 });
 
 /**
+ * ExitInitiator
+ *
+ * Who ended the employment. Decides which way notice pay flows.
+ */
+export const zExitInitiator = z.enum(["employee", "employer", "neither"]);
+
+/**
  * ExitRequest
  */
 export const zExitRequest = z.object({
@@ -652,6 +652,58 @@ export const zLedgerEntryOut = z.object({
 });
 
 /**
+ * LineKind
+ */
+export const zLineKind = z.enum(["earning", "deduction"]);
+
+/**
+ * AdjustmentCreate
+ *
+ * A hand-added line. `reason` is required, not optional.
+ *
+ * An unexplained deduction from a final payment is the thing this system exists to
+ * make impossible, so there is no way to add one without saying why.
+ */
+export const zAdjustmentCreate = z.object({
+  amount: z.union([
+    z.number().gt(0),
+    z
+      .string()
+      .regex(
+        /^(?!^[-+.]*$)[+-]?0*(?:\d{0,12}|(?=[\d.]{1,15}0*$)\d{0,12}\.\d{0,2}0*$)/,
+      ),
+  ]),
+  kind: zLineKind,
+  label: z.string().min(1).max(200),
+  reason: z.string().min(1).max(2000),
+  taxable: z.boolean().optional().default(true),
+});
+
+/**
+ * AdjustmentOut
+ */
+export const zAdjustmentOut = z.object({
+  amount: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  id: z.uuid(),
+  kind: zLineKind,
+  label: z.string(),
+  reason: z.string(),
+  taxable: z.boolean(),
+});
+
+/**
+ * LineOut
+ */
+export const zLineOut = z.object({
+  amount: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  basis: z.string(),
+  code: z.string(),
+  kind: zLineKind,
+  label: z.string(),
+  taxable: z.boolean(),
+});
+
+/**
  * LoginRequest
  */
 export const zLoginRequest = z.object({
@@ -737,6 +789,13 @@ export const zEmployeeUpdate = z.object({
   province: z.string().max(64).nullish(),
   ssf_number: z.string().max(32).nullish(),
   work_email: z.email().nullish(),
+});
+
+/**
+ * MarkPaid
+ */
+export const zMarkPaid = z.object({
+  paid_on: z.iso.date(),
 });
 
 /**
@@ -1534,6 +1593,129 @@ export const zSalarySet = z.object({
 });
 
 /**
+ * SettlementCreate
+ */
+export const zSettlementCreate = z.object({
+  employee_id: z.uuid(),
+  fiscal_year: z.string().max(16).optional().default("2082-83"),
+  initiator: zExitInitiator,
+  last_working_day: z.iso.date(),
+  notice_days_required: z.int().gte(0).lte(365).nullish(),
+  notice_days_served: z.int().gte(0).lte(365).optional().default(0),
+  reason: z.string().max(2000).nullish(),
+  resignation_date: z.iso.date().nullish(),
+});
+
+/**
+ * SettlementStatus
+ */
+export const zSettlementStatus = z.enum([
+  "draft",
+  "computed",
+  "approved",
+  "paid",
+  "cancelled",
+]);
+
+/**
+ * DueSettlement
+ *
+ * A settlement against its statutory clock.
+ */
+export const zDueSettlement = z.object({
+  approved_at: z.iso.datetime().nullable(),
+  basic_at_exit: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  computed_at: z.iso.datetime().nullable(),
+  contributed_to_ssf: z.boolean(),
+  days_remaining: z.int(),
+  deadline: z.iso.date(),
+  employee_code: z.string(),
+  employee_id: z.uuid(),
+  employee_name: z.string(),
+  fiscal_year: z.string(),
+  gross_earnings: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  id: z.uuid(),
+  initiator: zExitInitiator,
+  is_overdue: z.boolean(),
+  last_working_day: z.iso.date(),
+  net_payable: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  notes: z.string().nullable(),
+  notice_days_required: z.int(),
+  notice_days_served: z.int(),
+  paid_on: z.iso.date().nullable(),
+  reason: z.string().nullable(),
+  resignation_date: z.iso.date().nullable(),
+  status: zSettlementStatus,
+  tax: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  taxable_earnings: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  total_deductions: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  ytd_tax_withheld: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  ytd_taxable: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+});
+
+/**
+ * SettlementDetail
+ */
+export const zSettlementDetail = z.object({
+  adjustments: z.array(zAdjustmentOut).optional().default([]),
+  approved_at: z.iso.datetime().nullable(),
+  basic_at_exit: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  computed_at: z.iso.datetime().nullable(),
+  contributed_to_ssf: z.boolean(),
+  deadline: z.iso.date(),
+  employee_id: z.uuid(),
+  fiscal_year: z.string(),
+  gross_earnings: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  id: z.uuid(),
+  initiator: zExitInitiator,
+  last_working_day: z.iso.date(),
+  lines: z.array(zLineOut).optional().default([]),
+  net_payable: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  notes: z.string().nullable(),
+  notice_days_required: z.int(),
+  notice_days_served: z.int(),
+  paid_on: z.iso.date().nullable(),
+  reason: z.string().nullable(),
+  resignation_date: z.iso.date().nullable(),
+  status: zSettlementStatus,
+  tax: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  taxable_earnings: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  total_deductions: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  ytd_tax_withheld: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  ytd_taxable: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+});
+
+/**
+ * SettlementOut
+ */
+export const zSettlementOut = z.object({
+  approved_at: z.iso.datetime().nullable(),
+  basic_at_exit: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  computed_at: z.iso.datetime().nullable(),
+  contributed_to_ssf: z.boolean(),
+  deadline: z.iso.date(),
+  employee_id: z.uuid(),
+  fiscal_year: z.string(),
+  gross_earnings: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  id: z.uuid(),
+  initiator: zExitInitiator,
+  last_working_day: z.iso.date(),
+  net_payable: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  notes: z.string().nullable(),
+  notice_days_required: z.int(),
+  notice_days_served: z.int(),
+  paid_on: z.iso.date().nullable(),
+  reason: z.string().nullable(),
+  resignation_date: z.iso.date().nullable(),
+  status: zSettlementStatus,
+  tax: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  taxable_earnings: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  total_deductions: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  ytd_tax_withheld: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  ytd_taxable: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+});
+
+/**
  * ShiftCreate
  */
 export const zShiftCreate = z.object({
@@ -1735,6 +1917,20 @@ export const zWorkLocationOut = z.object({
   id: z.uuid(),
   is_active: z.boolean(),
   name: z.string(),
+});
+
+/**
+ * ApprovalResult
+ */
+export const zElogixApiModulesPayrollSchemasApprovalResult = z.object({
+  attendance_days_locked: z.int(),
+});
+
+/**
+ * ApprovalResult
+ */
+export const zElogixApiModulesSettlementSchemasApprovalResult = z.object({
+  leave_balances_encashed: z.int(),
 });
 
 /**
@@ -2606,7 +2802,8 @@ export const zPayrollApproveRunPath = z.object({
 /**
  * Successful Response
  */
-export const zPayrollApproveRunResponse = zApprovalResult;
+export const zPayrollApproveRunResponse =
+  zElogixApiModulesPayrollSchemasApprovalResult;
 
 export const zPayrollComputeRunPath = z.object({
   run_id: z.uuid(),
@@ -2707,3 +2904,91 @@ export const zReportsPayrollRegisterQuery = z.object({
  * Successful Response
  */
 export const zReportsPayrollRegisterResponse = zPayrollRegister;
+
+export const zSettlementsListSettlementsQuery = z.object({
+  status: zSettlementStatus.nullish(),
+});
+
+/**
+ * Response Settlements-List Settlements
+ *
+ * Successful Response
+ */
+export const zSettlementsListSettlementsResponse = z.array(zSettlementOut);
+
+export const zSettlementsCreateSettlementBody = zSettlementCreate;
+
+/**
+ * Successful Response
+ */
+export const zSettlementsCreateSettlementResponse = zSettlementDetail;
+
+export const zSettlementsDueSettlementsQuery = z.object({
+  within_days: z.int().gte(0).lte(180).optional().default(30),
+});
+
+/**
+ * Response Settlements-Due Settlements
+ *
+ * Successful Response
+ */
+export const zSettlementsDueSettlementsResponse = z.array(zDueSettlement);
+
+export const zSettlementsGetSettlementPath = z.object({
+  settlement_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zSettlementsGetSettlementResponse = zSettlementDetail;
+
+export const zSettlementsAddAdjustmentBody = zAdjustmentCreate;
+
+export const zSettlementsAddAdjustmentPath = z.object({
+  settlement_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zSettlementsAddAdjustmentResponse = zAdjustmentOut;
+
+export const zSettlementsApproveSettlementPath = z.object({
+  settlement_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zSettlementsApproveSettlementResponse =
+  zElogixApiModulesSettlementSchemasApprovalResult;
+
+export const zSettlementsCancelSettlementPath = z.object({
+  settlement_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zSettlementsCancelSettlementResponse = zSettlementOut;
+
+export const zSettlementsRecomputeSettlementPath = z.object({
+  settlement_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zSettlementsRecomputeSettlementResponse = zSettlementDetail;
+
+export const zSettlementsMarkPaidBody = zMarkPaid;
+
+export const zSettlementsMarkPaidPath = z.object({
+  settlement_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zSettlementsMarkPaidResponse = zSettlementOut;

@@ -62,13 +62,58 @@ export type AccrualResult = {
 };
 
 /**
- * ApprovalResult
+ * AdjustmentCreate
+ *
+ * A hand-added line. `reason` is required, not optional.
+ *
+ * An unexplained deduction from a final payment is the thing this system exists to
+ * make impossible, so there is no way to add one without saying why.
  */
-export type ApprovalResult = {
+export type AdjustmentCreate = {
   /**
-   * Attendance Days Locked
+   * Amount
    */
-  attendance_days_locked: number;
+  amount: number | string;
+  kind: LineKind;
+  /**
+   * Label
+   */
+  label: string;
+  /**
+   * Reason
+   */
+  reason: string;
+  /**
+   * Taxable
+   */
+  taxable?: boolean;
+};
+
+/**
+ * AdjustmentOut
+ */
+export type AdjustmentOut = {
+  /**
+   * Amount
+   */
+  amount: string;
+  /**
+   * Id
+   */
+  id: string;
+  kind: LineKind;
+  /**
+   * Label
+   */
+  label: string;
+  /**
+   * Reason
+   */
+  reason: string;
+  /**
+   * Taxable
+   */
+  taxable: boolean;
 };
 
 /**
@@ -533,6 +578,120 @@ export type DocumentVerify = {
 };
 
 /**
+ * DueSettlement
+ *
+ * A settlement against its statutory clock.
+ */
+export type DueSettlement = {
+  /**
+   * Approved At
+   */
+  approved_at: string | null;
+  /**
+   * Basic At Exit
+   */
+  basic_at_exit: string;
+  /**
+   * Computed At
+   */
+  computed_at: string | null;
+  /**
+   * Contributed To Ssf
+   */
+  contributed_to_ssf: boolean;
+  /**
+   * Days Remaining
+   */
+  days_remaining: number;
+  /**
+   * Deadline
+   */
+  deadline: string;
+  /**
+   * Employee Code
+   */
+  employee_code: string;
+  /**
+   * Employee Id
+   */
+  employee_id: string;
+  /**
+   * Employee Name
+   */
+  employee_name: string;
+  /**
+   * Fiscal Year
+   */
+  fiscal_year: string;
+  /**
+   * Gross Earnings
+   */
+  gross_earnings: string;
+  /**
+   * Id
+   */
+  id: string;
+  initiator: ExitInitiator;
+  /**
+   * Is Overdue
+   */
+  is_overdue: boolean;
+  /**
+   * Last Working Day
+   */
+  last_working_day: string;
+  /**
+   * Net Payable
+   */
+  net_payable: string;
+  /**
+   * Notes
+   */
+  notes: string | null;
+  /**
+   * Notice Days Required
+   */
+  notice_days_required: number;
+  /**
+   * Notice Days Served
+   */
+  notice_days_served: number;
+  /**
+   * Paid On
+   */
+  paid_on: string | null;
+  /**
+   * Reason
+   */
+  reason: string | null;
+  /**
+   * Resignation Date
+   */
+  resignation_date: string | null;
+  status: SettlementStatus;
+  /**
+   * Tax
+   */
+  tax: string;
+  /**
+   * Taxable Earnings
+   */
+  taxable_earnings: string;
+  /**
+   * Total Deductions
+   */
+  total_deductions: string;
+  /**
+   * Ytd Tax Withheld
+   */
+  ytd_tax_withheld: string;
+  /**
+   * Ytd Taxable
+   */
+  ytd_taxable: string;
+};
+
+/**
  * EmployeeDetail
  */
 export type EmployeeDetail = {
@@ -934,6 +1093,13 @@ export type EventOut = {
    */
   occurred_on: string;
 };
+
+/**
+ * ExitInitiator
+ *
+ * Who ended the employment. Decides which way notice pay flows.
+ */
+export type ExitInitiator = "employee" | "employer" | "neither";
 
 /**
  * ExitRequest
@@ -1583,6 +1749,38 @@ export type LedgerEntryOut = {
 };
 
 /**
+ * LineKind
+ */
+export type LineKind = "earning" | "deduction";
+
+/**
+ * LineOut
+ */
+export type LineOut = {
+  /**
+   * Amount
+   */
+  amount: string;
+  /**
+   * Basis
+   */
+  basis: string;
+  /**
+   * Code
+   */
+  code: string;
+  kind: LineKind;
+  /**
+   * Label
+   */
+  label: string;
+  /**
+   * Taxable
+   */
+  taxable: boolean;
+};
+
+/**
  * LoginRequest
  */
 export type LoginRequest = {
@@ -1607,6 +1805,16 @@ export type LoginRequest = {
  * payroll reads this in phase 06.
  */
 export type MaritalStatus = "single" | "married";
+
+/**
+ * MarkPaid
+ */
+export type MarkPaid = {
+  /**
+   * Paid On
+   */
+  paid_on: string;
+};
 
 /**
  * ModuleCode
@@ -3280,6 +3488,247 @@ export type SalarySet = {
 };
 
 /**
+ * SettlementCreate
+ */
+export type SettlementCreate = {
+  /**
+   * Employee Id
+   */
+  employee_id: string;
+  /**
+   * Fiscal Year
+   */
+  fiscal_year?: string;
+  initiator: ExitInitiator;
+  /**
+   * Last Working Day
+   */
+  last_working_day: string;
+  /**
+   * Notice Days Required
+   */
+  notice_days_required?: number | null;
+  /**
+   * Notice Days Served
+   */
+  notice_days_served?: number;
+  /**
+   * Reason
+   */
+  reason?: string | null;
+  /**
+   * Resignation Date
+   */
+  resignation_date?: string | null;
+};
+
+/**
+ * SettlementDetail
+ */
+export type SettlementDetail = {
+  /**
+   * Adjustments
+   */
+  adjustments?: Array<AdjustmentOut>;
+  /**
+   * Approved At
+   */
+  approved_at: string | null;
+  /**
+   * Basic At Exit
+   */
+  basic_at_exit: string;
+  /**
+   * Computed At
+   */
+  computed_at: string | null;
+  /**
+   * Contributed To Ssf
+   */
+  contributed_to_ssf: boolean;
+  /**
+   * Deadline
+   */
+  deadline: string;
+  /**
+   * Employee Id
+   */
+  employee_id: string;
+  /**
+   * Fiscal Year
+   */
+  fiscal_year: string;
+  /**
+   * Gross Earnings
+   */
+  gross_earnings: string;
+  /**
+   * Id
+   */
+  id: string;
+  initiator: ExitInitiator;
+  /**
+   * Last Working Day
+   */
+  last_working_day: string;
+  /**
+   * Lines
+   */
+  lines?: Array<LineOut>;
+  /**
+   * Net Payable
+   */
+  net_payable: string;
+  /**
+   * Notes
+   */
+  notes: string | null;
+  /**
+   * Notice Days Required
+   */
+  notice_days_required: number;
+  /**
+   * Notice Days Served
+   */
+  notice_days_served: number;
+  /**
+   * Paid On
+   */
+  paid_on: string | null;
+  /**
+   * Reason
+   */
+  reason: string | null;
+  /**
+   * Resignation Date
+   */
+  resignation_date: string | null;
+  status: SettlementStatus;
+  /**
+   * Tax
+   */
+  tax: string;
+  /**
+   * Taxable Earnings
+   */
+  taxable_earnings: string;
+  /**
+   * Total Deductions
+   */
+  total_deductions: string;
+  /**
+   * Ytd Tax Withheld
+   */
+  ytd_tax_withheld: string;
+  /**
+   * Ytd Taxable
+   */
+  ytd_taxable: string;
+};
+
+/**
+ * SettlementOut
+ */
+export type SettlementOut = {
+  /**
+   * Approved At
+   */
+  approved_at: string | null;
+  /**
+   * Basic At Exit
+   */
+  basic_at_exit: string;
+  /**
+   * Computed At
+   */
+  computed_at: string | null;
+  /**
+   * Contributed To Ssf
+   */
+  contributed_to_ssf: boolean;
+  /**
+   * Deadline
+   */
+  deadline: string;
+  /**
+   * Employee Id
+   */
+  employee_id: string;
+  /**
+   * Fiscal Year
+   */
+  fiscal_year: string;
+  /**
+   * Gross Earnings
+   */
+  gross_earnings: string;
+  /**
+   * Id
+   */
+  id: string;
+  initiator: ExitInitiator;
+  /**
+   * Last Working Day
+   */
+  last_working_day: string;
+  /**
+   * Net Payable
+   */
+  net_payable: string;
+  /**
+   * Notes
+   */
+  notes: string | null;
+  /**
+   * Notice Days Required
+   */
+  notice_days_required: number;
+  /**
+   * Notice Days Served
+   */
+  notice_days_served: number;
+  /**
+   * Paid On
+   */
+  paid_on: string | null;
+  /**
+   * Reason
+   */
+  reason: string | null;
+  /**
+   * Resignation Date
+   */
+  resignation_date: string | null;
+  status: SettlementStatus;
+  /**
+   * Tax
+   */
+  tax: string;
+  /**
+   * Taxable Earnings
+   */
+  taxable_earnings: string;
+  /**
+   * Total Deductions
+   */
+  total_deductions: string;
+  /**
+   * Ytd Tax Withheld
+   */
+  ytd_tax_withheld: string;
+  /**
+   * Ytd Taxable
+   */
+  ytd_taxable: string;
+};
+
+/**
+ * SettlementStatus
+ */
+export type SettlementStatus =
+  "draft" | "computed" | "approved" | "paid" | "cancelled";
+
+/**
  * ShiftCreate
  */
 export type ShiftCreate = {
@@ -3612,6 +4061,26 @@ export type WorkLocationOut = {
    * Name
    */
   name: string;
+};
+
+/**
+ * ApprovalResult
+ */
+export type ElogixApiModulesPayrollSchemasApprovalResult = {
+  /**
+   * Attendance Days Locked
+   */
+  attendance_days_locked: number;
+};
+
+/**
+ * ApprovalResult
+ */
+export type ElogixApiModulesSettlementSchemasApprovalResult = {
+  /**
+   * Leave Balances Encashed
+   */
+  leave_balances_encashed: number;
 };
 
 /**
@@ -6450,7 +6919,7 @@ export type PayrollApproveRunResponses = {
   /**
    * Successful Response
    */
-  200: ApprovalResult;
+  200: ElogixApiModulesPayrollSchemasApprovalResult;
 };
 
 export type PayrollApproveRunResponse =
@@ -6752,3 +7221,290 @@ export type ReportsPayrollRegisterResponses = {
 
 export type ReportsPayrollRegisterResponse =
   ReportsPayrollRegisterResponses[keyof ReportsPayrollRegisterResponses];
+
+export type SettlementsListSettlementsData = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * Status
+     */
+    status?: SettlementStatus | null;
+  };
+  url: "/api/v1/settlements";
+};
+
+export type SettlementsListSettlementsErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type SettlementsListSettlementsError =
+  SettlementsListSettlementsErrors[keyof SettlementsListSettlementsErrors];
+
+export type SettlementsListSettlementsResponses = {
+  /**
+   * Response Settlements-List Settlements
+   *
+   * Successful Response
+   */
+  200: Array<SettlementOut>;
+};
+
+export type SettlementsListSettlementsResponse =
+  SettlementsListSettlementsResponses[keyof SettlementsListSettlementsResponses];
+
+export type SettlementsCreateSettlementData = {
+  body: SettlementCreate;
+  path?: never;
+  query?: never;
+  url: "/api/v1/settlements";
+};
+
+export type SettlementsCreateSettlementErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type SettlementsCreateSettlementError =
+  SettlementsCreateSettlementErrors[keyof SettlementsCreateSettlementErrors];
+
+export type SettlementsCreateSettlementResponses = {
+  /**
+   * Successful Response
+   */
+  201: SettlementDetail;
+};
+
+export type SettlementsCreateSettlementResponse =
+  SettlementsCreateSettlementResponses[keyof SettlementsCreateSettlementResponses];
+
+export type SettlementsDueSettlementsData = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * Within Days
+     */
+    within_days?: number;
+  };
+  url: "/api/v1/settlements/due";
+};
+
+export type SettlementsDueSettlementsErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type SettlementsDueSettlementsError =
+  SettlementsDueSettlementsErrors[keyof SettlementsDueSettlementsErrors];
+
+export type SettlementsDueSettlementsResponses = {
+  /**
+   * Response Settlements-Due Settlements
+   *
+   * Successful Response
+   */
+  200: Array<DueSettlement>;
+};
+
+export type SettlementsDueSettlementsResponse =
+  SettlementsDueSettlementsResponses[keyof SettlementsDueSettlementsResponses];
+
+export type SettlementsGetSettlementData = {
+  body?: never;
+  path: {
+    /**
+     * Settlement Id
+     */
+    settlement_id: string;
+  };
+  query?: never;
+  url: "/api/v1/settlements/{settlement_id}";
+};
+
+export type SettlementsGetSettlementErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type SettlementsGetSettlementError =
+  SettlementsGetSettlementErrors[keyof SettlementsGetSettlementErrors];
+
+export type SettlementsGetSettlementResponses = {
+  /**
+   * Successful Response
+   */
+  200: SettlementDetail;
+};
+
+export type SettlementsGetSettlementResponse =
+  SettlementsGetSettlementResponses[keyof SettlementsGetSettlementResponses];
+
+export type SettlementsAddAdjustmentData = {
+  body: AdjustmentCreate;
+  path: {
+    /**
+     * Settlement Id
+     */
+    settlement_id: string;
+  };
+  query?: never;
+  url: "/api/v1/settlements/{settlement_id}/adjustments";
+};
+
+export type SettlementsAddAdjustmentErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type SettlementsAddAdjustmentError =
+  SettlementsAddAdjustmentErrors[keyof SettlementsAddAdjustmentErrors];
+
+export type SettlementsAddAdjustmentResponses = {
+  /**
+   * Successful Response
+   */
+  201: AdjustmentOut;
+};
+
+export type SettlementsAddAdjustmentResponse =
+  SettlementsAddAdjustmentResponses[keyof SettlementsAddAdjustmentResponses];
+
+export type SettlementsApproveSettlementData = {
+  body?: never;
+  path: {
+    /**
+     * Settlement Id
+     */
+    settlement_id: string;
+  };
+  query?: never;
+  url: "/api/v1/settlements/{settlement_id}/approve";
+};
+
+export type SettlementsApproveSettlementErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type SettlementsApproveSettlementError =
+  SettlementsApproveSettlementErrors[keyof SettlementsApproveSettlementErrors];
+
+export type SettlementsApproveSettlementResponses = {
+  /**
+   * Successful Response
+   */
+  200: ElogixApiModulesSettlementSchemasApprovalResult;
+};
+
+export type SettlementsApproveSettlementResponse =
+  SettlementsApproveSettlementResponses[keyof SettlementsApproveSettlementResponses];
+
+export type SettlementsCancelSettlementData = {
+  body?: never;
+  path: {
+    /**
+     * Settlement Id
+     */
+    settlement_id: string;
+  };
+  query?: never;
+  url: "/api/v1/settlements/{settlement_id}/cancel";
+};
+
+export type SettlementsCancelSettlementErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type SettlementsCancelSettlementError =
+  SettlementsCancelSettlementErrors[keyof SettlementsCancelSettlementErrors];
+
+export type SettlementsCancelSettlementResponses = {
+  /**
+   * Successful Response
+   */
+  200: SettlementOut;
+};
+
+export type SettlementsCancelSettlementResponse =
+  SettlementsCancelSettlementResponses[keyof SettlementsCancelSettlementResponses];
+
+export type SettlementsRecomputeSettlementData = {
+  body?: never;
+  path: {
+    /**
+     * Settlement Id
+     */
+    settlement_id: string;
+  };
+  query?: never;
+  url: "/api/v1/settlements/{settlement_id}/compute";
+};
+
+export type SettlementsRecomputeSettlementErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type SettlementsRecomputeSettlementError =
+  SettlementsRecomputeSettlementErrors[keyof SettlementsRecomputeSettlementErrors];
+
+export type SettlementsRecomputeSettlementResponses = {
+  /**
+   * Successful Response
+   */
+  200: SettlementDetail;
+};
+
+export type SettlementsRecomputeSettlementResponse =
+  SettlementsRecomputeSettlementResponses[keyof SettlementsRecomputeSettlementResponses];
+
+export type SettlementsMarkPaidData = {
+  body: MarkPaid;
+  path: {
+    /**
+     * Settlement Id
+     */
+    settlement_id: string;
+  };
+  query?: never;
+  url: "/api/v1/settlements/{settlement_id}/pay";
+};
+
+export type SettlementsMarkPaidErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type SettlementsMarkPaidError =
+  SettlementsMarkPaidErrors[keyof SettlementsMarkPaidErrors];
+
+export type SettlementsMarkPaidResponses = {
+  /**
+   * Successful Response
+   */
+  200: SettlementOut;
+};
+
+export type SettlementsMarkPaidResponse =
+  SettlementsMarkPaidResponses[keyof SettlementsMarkPaidResponses];

@@ -35,6 +35,8 @@ TENANT_SCOPED_READS = [
     ("GET", "/api/v1/reports/headcount"),
     ("GET", "/api/v1/reports/leave-balances"),
     ("GET", "/api/v1/reports/payroll-register/{run_id}"),
+    ("GET", "/api/v1/settlements"),
+    ("GET", "/api/v1/settlements/due"),
 ]
 
 

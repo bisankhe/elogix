@@ -93,6 +93,7 @@ const NAV: NavGroup[] = [
     children: [
       { to: '/payroll', label: 'Payroll Runs', module: 'payroll' },
       { to: '/reports', label: 'Reports', module: 'reports' },
+      { to: '/settlements', label: 'Final Settlement', module: 'payroll' },
     ],
   },
   {

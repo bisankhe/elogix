@@ -473,6 +473,44 @@ def assert_no_overlap(
         )
 
 
+def post_encashment(
+    db: Session,
+    *,
+    company_id: uuid.UUID,
+    employee_id: uuid.UUID,
+    leave_type_id: uuid.UUID,
+    leave_year: int,
+    entry_date: date,
+    days: Decimal,
+    note: str,
+) -> LeaveLedgerEntry:
+    """Pay a balance out and consume it, in one signed row.
+
+    Public because settlement needs it at exit and the ledger belongs to this module.
+    `days` is the positive balance being paid; the row posted is its negative, so the
+    `SUM` that defines the balance lands on zero. Nothing decrements a counter — see
+    this module's docstring for why that matters when two approvers race.
+
+    Does not commit: the caller owns the transaction, and the whole point is that the
+    payout and its consumption commit together or not at all.
+    """
+    if days <= ZERO:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT, "There is no balance to encash"
+        )
+    return _post(
+        db,
+        company_id=company_id,
+        employee_id=employee_id,
+        leave_type_id=leave_type_id,
+        leave_year=leave_year,
+        entry_date=entry_date,
+        kind=LedgerEntryKind.ENCASHMENT,
+        days=-days,
+        note=note,
+    )
+
+
 def create_request(
     db: Session,
     *,

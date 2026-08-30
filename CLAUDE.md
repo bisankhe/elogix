@@ -251,21 +251,22 @@ folder boundary: phase 03 is `modules/employee/` and nothing else.
 
 00 walking skeleton · 01 identity, tenancy, entitlements · 02 org structure ·
 03 employee master · 04 attendance and roster · 05 leave · 06 payroll, tax, SSF ·
-07 self-service, documents, reports
+07 self-service, documents, reports · 08 exit and final settlement
 
 This is a dependency chain, not a priority ranking — each phase produces the tables the
 next one needs, so nothing gets built twice against mocked inputs. Payroll is last in the
 core *deliberately*: it consumes phases 03–05, and its tests get written before its code.
 
-**Current state: phases 00–07 are done**, proven by 271 tests against a real Postgres
+**Current state: phases 00–08 are done**, proven by 327 tests against a real Postgres
 with the schema built by running the migrations from zero. Module access is denied
 server-side, no endpoint returns another tenant's rows, a tenant can be provisioned into
 a complete org chart, an employee can be hired through to offboarded with history
 preserved, a month of attendance can be captured, corrected and exported as payroll
 input, leave balances accrue across a full year with approvals adjusting them
 atomically, that attendance export and those balances turn into payslips whose every
-figure is reproducible by hand, and a person can sign in and see their own record —
-and only their own.
+figure is reproducible by hand, a person can sign in and see their own record — and
+only their own — and a leaver can be paid what they are owed, itemised, against the
+statutory fifteen-day clock.
 
 Phase 01 originally shipped row-level security as a second isolation layer; it was
 removed by decision on 2026-08-30, so tenant isolation is the query filters alone. If it
@@ -274,6 +275,10 @@ even on a `FORCE ROW LEVEL SECURITY` table — the app would need a `NOSUPERUSER
 `NOBYPASSRLS` role, which is why the removed version had two database URLs.
 
 `modules/employee` is deliberately thin — phase 03 owns its real field set.
+
+`modules/settlement` is gated on `ModuleCode.PAYROLL` rather than a module of its own:
+a company able to pay salaries but not final dues would be the wrong way round, since
+the final payment is the one with a legal deadline.
 
 **Phase 06 shipped with its tax tables unverified, and that is a release blocker, not
 a footnote.** The engine is done and every number in it is proven against a hand
@@ -316,17 +321,38 @@ Three things from phase 07 that constrain what comes next:
   free text somebody typed. `core/csv_export.py` guards text and deliberately does not
   guard numbers.
 
-**Phase 08 is unscoped.** The core is complete; what remains from the prototype's
-taxonomy is ATS, performance, training, vendor, compliance and the AI proxy, none of
-which have been designed.
+**Phase 08 closed a hole rather than opening a tier.** Phase 03's "done when" —
+hired, edited, documented, offboarded, history preserved — was satisfied, but that is
+offboarding in the *record* sense. Full-and-final settlement fell between phase 03 and
+phase 06 with nobody owning it, and it is a legal obligation with a deadline. Four rules
+it established:
+
+- **Gratuity is not owed twice.** The employer's 20% SSF contribution is PF 10% +
+  gratuity 8.33% + insurance 1.67%, so for an enrolled employee the gratuity has already
+  gone into the fund monthly. It accrues only for someone not contributing.
+  `EmployeeSalary.contributes_to_ssf` decides. Unverified, like the slabs.
+- **Notice pay changes sign with who ended it.** `ExitInitiator` is required input, not
+  an assumption — backwards moves money the wrong way.
+- **Settlement tax is the marginal charge**: tax on (year-to-date + settlement) less tax
+  on year-to-date, plus any shortfall under-withheld earlier, because this is the last
+  payment that can collect it. Over-withholding is *not* refunded out of a settlement.
+- **Every line carries a `basis` string.** "Gratuity: 0.00" starts an argument; "nil,
+  because it was already paid monthly into SSF" ends one.
+
+**Phase 09 is next: ATS and onboarding** — the rebuild artifact's v2 tier, and the
+natural pair since recruitment feeds onboarding feeds the employee master. The artifact
+also flags the public career portal as the one genuine case for a separate SSR app;
+that is a decision for the start of 09, not before.
 
 ---
 
 ## Decisions still open
 
-- **Who signs off on the tax and labour rules?** Needs a named human before payroll ships.
-  The prototype's engine triple-deducts SSF; the slab table could not be verified from
-  code alone.
+- **Who signs off on the tax and labour rules?** Needs a named human before payroll or
+  any settlement ships. The prototype's engine triple-deducts SSF; the slab table could
+  not be verified from code alone. Phase 08 added three more to the same list, all in
+  `nepal/settlement.py`: the gratuity rule, the 15-day deadline, and whether a leaver's
+  whole encashable balance is paid out or only the part above the carry-forward ceiling.
 
 ---
 

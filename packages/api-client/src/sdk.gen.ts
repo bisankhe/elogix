@@ -292,6 +292,33 @@ import type {
   ReportsPayrollRegisterData,
   ReportsPayrollRegisterErrors,
   ReportsPayrollRegisterResponses,
+  SettlementsAddAdjustmentData,
+  SettlementsAddAdjustmentErrors,
+  SettlementsAddAdjustmentResponses,
+  SettlementsApproveSettlementData,
+  SettlementsApproveSettlementErrors,
+  SettlementsApproveSettlementResponses,
+  SettlementsCancelSettlementData,
+  SettlementsCancelSettlementErrors,
+  SettlementsCancelSettlementResponses,
+  SettlementsCreateSettlementData,
+  SettlementsCreateSettlementErrors,
+  SettlementsCreateSettlementResponses,
+  SettlementsDueSettlementsData,
+  SettlementsDueSettlementsErrors,
+  SettlementsDueSettlementsResponses,
+  SettlementsGetSettlementData,
+  SettlementsGetSettlementErrors,
+  SettlementsGetSettlementResponses,
+  SettlementsListSettlementsData,
+  SettlementsListSettlementsErrors,
+  SettlementsListSettlementsResponses,
+  SettlementsMarkPaidData,
+  SettlementsMarkPaidErrors,
+  SettlementsMarkPaidResponses,
+  SettlementsRecomputeSettlementData,
+  SettlementsRecomputeSettlementErrors,
+  SettlementsRecomputeSettlementResponses,
 } from "./types.gen";
 
 export type Options<
@@ -2464,4 +2491,234 @@ export const reportsPayrollRegister = <ThrowOnError extends boolean = false>(
     security: [{ scheme: "bearer", type: "http" }],
     url: "/api/v1/reports/payroll-register/{run_id}",
     ...options,
+  });
+
+/**
+ * List Settlements
+ */
+export const settlementsListSettlements = <
+  ThrowOnError extends boolean = false,
+>(
+  options?: Options<SettlementsListSettlementsData, ThrowOnError>,
+): RequestResult<
+  SettlementsListSettlementsResponses,
+  SettlementsListSettlementsErrors,
+  ThrowOnError
+> =>
+  (options?.client ?? client).get<
+    SettlementsListSettlementsResponses,
+    SettlementsListSettlementsErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/settlements",
+    ...options,
+  });
+
+/**
+ * Create Settlement
+ *
+ * Raise a settlement for someone who has left, and compute it straight away.
+ *
+ * Computing on creation rather than leaving it as an empty draft: the fifteen-day
+ * clock starts at the last working day, not at whenever someone remembers to press a
+ * button, so the figures should exist from the moment the record does.
+ */
+export const settlementsCreateSettlement = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<SettlementsCreateSettlementData, ThrowOnError>,
+): RequestResult<
+  SettlementsCreateSettlementResponses,
+  SettlementsCreateSettlementErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    SettlementsCreateSettlementResponses,
+    SettlementsCreateSettlementErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/settlements",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Due Settlements
+ *
+ * Settlements against their statutory clock, most urgent first.
+ *
+ * The whole reason `deadline` is a column. An unpaid final settlement is a compliance
+ * failure with a date attached, and nobody finds it by opening leaver records one at a
+ * time. Already-overdue rows come first with a negative `days_remaining` — those are
+ * the ones that matter, and filtering them out would hide the failures this exists for.
+ */
+export const settlementsDueSettlements = <ThrowOnError extends boolean = false>(
+  options?: Options<SettlementsDueSettlementsData, ThrowOnError>,
+): RequestResult<
+  SettlementsDueSettlementsResponses,
+  SettlementsDueSettlementsErrors,
+  ThrowOnError
+> =>
+  (options?.client ?? client).get<
+    SettlementsDueSettlementsResponses,
+    SettlementsDueSettlementsErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/settlements/due",
+    ...options,
+  });
+
+/**
+ * Get Settlement
+ */
+export const settlementsGetSettlement = <ThrowOnError extends boolean = false>(
+  options: Options<SettlementsGetSettlementData, ThrowOnError>,
+): RequestResult<
+  SettlementsGetSettlementResponses,
+  SettlementsGetSettlementErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    SettlementsGetSettlementResponses,
+    SettlementsGetSettlementErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/settlements/{settlement_id}",
+    ...options,
+  });
+
+/**
+ * Add Adjustment
+ *
+ * Add a hand-entered line, then recompute so the totals include it.
+ */
+export const settlementsAddAdjustment = <ThrowOnError extends boolean = false>(
+  options: Options<SettlementsAddAdjustmentData, ThrowOnError>,
+): RequestResult<
+  SettlementsAddAdjustmentResponses,
+  SettlementsAddAdjustmentErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    SettlementsAddAdjustmentResponses,
+    SettlementsAddAdjustmentErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/settlements/{settlement_id}/adjustments",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Approve Settlement
+ *
+ * Approve, consuming the leave it pays out in the same transaction.
+ */
+export const settlementsApproveSettlement = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<SettlementsApproveSettlementData, ThrowOnError>,
+): RequestResult<
+  SettlementsApproveSettlementResponses,
+  SettlementsApproveSettlementErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    SettlementsApproveSettlementResponses,
+    SettlementsApproveSettlementErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/settlements/{settlement_id}/approve",
+    ...options,
+  });
+
+/**
+ * Cancel Settlement
+ *
+ * Cancel, freeing the employee for a new settlement.
+ *
+ * Refused once approved: approving posted encashment rows into the leave ledger, and
+ * a cancel that left them there would show a balance paid out against a settlement
+ * that officially never happened. Reversing them is a decision with money attached
+ * and needs its own deliberate operation rather than a status change.
+ */
+export const settlementsCancelSettlement = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<SettlementsCancelSettlementData, ThrowOnError>,
+): RequestResult<
+  SettlementsCancelSettlementResponses,
+  SettlementsCancelSettlementErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    SettlementsCancelSettlementResponses,
+    SettlementsCancelSettlementErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/settlements/{settlement_id}/cancel",
+    ...options,
+  });
+
+/**
+ * Recompute Settlement
+ *
+ * Recompute from current data. Refused once approved — that is a snapshot.
+ */
+export const settlementsRecomputeSettlement = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<SettlementsRecomputeSettlementData, ThrowOnError>,
+): RequestResult<
+  SettlementsRecomputeSettlementResponses,
+  SettlementsRecomputeSettlementErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    SettlementsRecomputeSettlementResponses,
+    SettlementsRecomputeSettlementErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/settlements/{settlement_id}/compute",
+    ...options,
+  });
+
+/**
+ * Mark Paid
+ *
+ * Record the disbursement date, which is what stops the statutory clock.
+ */
+export const settlementsMarkPaid = <ThrowOnError extends boolean = false>(
+  options: Options<SettlementsMarkPaidData, ThrowOnError>,
+): RequestResult<
+  SettlementsMarkPaidResponses,
+  SettlementsMarkPaidErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    SettlementsMarkPaidResponses,
+    SettlementsMarkPaidErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/settlements/{settlement_id}/pay",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
   });

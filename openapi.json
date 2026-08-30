@@ -88,17 +88,89 @@
         "title": "AccrualResult",
         "type": "object"
       },
-      "ApprovalResult": {
+      "AdjustmentCreate": {
+        "description": "A hand-added line. `reason` is required, not optional.\n\nAn unexplained deduction from a final payment is the thing this system exists to\nmake impossible, so there is no way to add one without saying why.",
         "properties": {
-          "attendance_days_locked": {
-            "title": "Attendance Days Locked",
-            "type": "integer"
+          "amount": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,12}|(?=[\\d.]{1,15}0*$)\\d{0,12}\\.\\d{0,2}0*$)",
+                "type": "string"
+              }
+            ],
+            "title": "Amount"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/LineKind"
+          },
+          "label": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          },
+          "taxable": {
+            "default": true,
+            "title": "Taxable",
+            "type": "boolean"
           }
         },
         "required": [
-          "attendance_days_locked"
+          "kind",
+          "label",
+          "amount",
+          "reason"
         ],
-        "title": "ApprovalResult",
+        "title": "AdjustmentCreate",
+        "type": "object"
+      },
+      "AdjustmentOut": {
+        "properties": {
+          "amount": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Amount",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/LineKind"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "taxable": {
+            "title": "Taxable",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "label",
+          "amount",
+          "reason",
+          "taxable"
+        ],
+        "title": "AdjustmentOut",
         "type": "object"
       },
       "AssignmentOut": {
@@ -954,6 +1026,211 @@
           "is_verified"
         ],
         "title": "DocumentVerify",
+        "type": "object"
+      },
+      "DueSettlement": {
+        "description": "A settlement against its statutory clock.",
+        "properties": {
+          "approved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved At"
+          },
+          "basic_at_exit": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Basic At Exit",
+            "type": "string"
+          },
+          "computed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Computed At"
+          },
+          "contributed_to_ssf": {
+            "title": "Contributed To Ssf",
+            "type": "boolean"
+          },
+          "days_remaining": {
+            "title": "Days Remaining",
+            "type": "integer"
+          },
+          "deadline": {
+            "format": "date",
+            "title": "Deadline",
+            "type": "string"
+          },
+          "employee_code": {
+            "title": "Employee Code",
+            "type": "string"
+          },
+          "employee_id": {
+            "format": "uuid",
+            "title": "Employee Id",
+            "type": "string"
+          },
+          "employee_name": {
+            "title": "Employee Name",
+            "type": "string"
+          },
+          "fiscal_year": {
+            "title": "Fiscal Year",
+            "type": "string"
+          },
+          "gross_earnings": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Gross Earnings",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "initiator": {
+            "$ref": "#/components/schemas/ExitInitiator"
+          },
+          "is_overdue": {
+            "title": "Is Overdue",
+            "type": "boolean"
+          },
+          "last_working_day": {
+            "format": "date",
+            "title": "Last Working Day",
+            "type": "string"
+          },
+          "net_payable": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Net Payable",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "notice_days_required": {
+            "title": "Notice Days Required",
+            "type": "integer"
+          },
+          "notice_days_served": {
+            "title": "Notice Days Served",
+            "type": "integer"
+          },
+          "paid_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid On"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "resignation_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resignation Date"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SettlementStatus"
+          },
+          "tax": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Tax",
+            "type": "string"
+          },
+          "taxable_earnings": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Taxable Earnings",
+            "type": "string"
+          },
+          "total_deductions": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Deductions",
+            "type": "string"
+          },
+          "ytd_tax_withheld": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ytd Tax Withheld",
+            "type": "string"
+          },
+          "ytd_taxable": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ytd Taxable",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "employee_id",
+          "last_working_day",
+          "resignation_date",
+          "initiator",
+          "fiscal_year",
+          "reason",
+          "notice_days_required",
+          "notice_days_served",
+          "deadline",
+          "status",
+          "gross_earnings",
+          "taxable_earnings",
+          "total_deductions",
+          "tax",
+          "net_payable",
+          "basic_at_exit",
+          "contributed_to_ssf",
+          "ytd_taxable",
+          "ytd_tax_withheld",
+          "computed_at",
+          "approved_at",
+          "paid_on",
+          "notes",
+          "employee_code",
+          "employee_name",
+          "days_remaining",
+          "is_overdue"
+        ],
+        "title": "DueSettlement",
         "type": "object"
       },
       "EmployeeDetail": {
@@ -1858,6 +2135,16 @@
         ],
         "title": "EventOut",
         "type": "object"
+      },
+      "ExitInitiator": {
+        "description": "Who ended the employment. Decides which way notice pay flows.",
+        "enum": [
+          "employee",
+          "employer",
+          "neither"
+        ],
+        "title": "ExitInitiator",
+        "type": "string"
       },
       "ExitRequest": {
         "properties": {
@@ -3114,6 +3401,52 @@
         "title": "LedgerEntryOut",
         "type": "object"
       },
+      "LineKind": {
+        "enum": [
+          "earning",
+          "deduction"
+        ],
+        "title": "LineKind",
+        "type": "string"
+      },
+      "LineOut": {
+        "properties": {
+          "amount": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Amount",
+            "type": "string"
+          },
+          "basis": {
+            "title": "Basis",
+            "type": "string"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/LineKind"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "taxable": {
+            "title": "Taxable",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "kind",
+          "code",
+          "label",
+          "amount",
+          "basis",
+          "taxable"
+        ],
+        "title": "LineOut",
+        "type": "object"
+      },
       "LoginRequest": {
         "properties": {
           "company_slug": {
@@ -3150,6 +3483,20 @@
         ],
         "title": "MaritalStatus",
         "type": "string"
+      },
+      "MarkPaid": {
+        "properties": {
+          "paid_on": {
+            "format": "date",
+            "title": "Paid On",
+            "type": "string"
+          }
+        },
+        "required": [
+          "paid_on"
+        ],
+        "title": "MarkPaid",
+        "type": "object"
       },
       "ModuleCode": {
         "enum": [
@@ -6100,6 +6447,475 @@
         "title": "SalarySet",
         "type": "object"
       },
+      "SettlementCreate": {
+        "properties": {
+          "employee_id": {
+            "format": "uuid",
+            "title": "Employee Id",
+            "type": "string"
+          },
+          "fiscal_year": {
+            "default": "2082-83",
+            "maxLength": 16,
+            "title": "Fiscal Year",
+            "type": "string"
+          },
+          "initiator": {
+            "$ref": "#/components/schemas/ExitInitiator"
+          },
+          "last_working_day": {
+            "format": "date",
+            "title": "Last Working Day",
+            "type": "string"
+          },
+          "notice_days_required": {
+            "anyOf": [
+              {
+                "maximum": 365.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notice Days Required"
+          },
+          "notice_days_served": {
+            "default": 0,
+            "maximum": 365.0,
+            "minimum": 0.0,
+            "title": "Notice Days Served",
+            "type": "integer"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "resignation_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resignation Date"
+          }
+        },
+        "required": [
+          "employee_id",
+          "last_working_day",
+          "initiator"
+        ],
+        "title": "SettlementCreate",
+        "type": "object"
+      },
+      "SettlementDetail": {
+        "properties": {
+          "adjustments": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/AdjustmentOut"
+            },
+            "title": "Adjustments",
+            "type": "array"
+          },
+          "approved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved At"
+          },
+          "basic_at_exit": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Basic At Exit",
+            "type": "string"
+          },
+          "computed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Computed At"
+          },
+          "contributed_to_ssf": {
+            "title": "Contributed To Ssf",
+            "type": "boolean"
+          },
+          "deadline": {
+            "format": "date",
+            "title": "Deadline",
+            "type": "string"
+          },
+          "employee_id": {
+            "format": "uuid",
+            "title": "Employee Id",
+            "type": "string"
+          },
+          "fiscal_year": {
+            "title": "Fiscal Year",
+            "type": "string"
+          },
+          "gross_earnings": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Gross Earnings",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "initiator": {
+            "$ref": "#/components/schemas/ExitInitiator"
+          },
+          "last_working_day": {
+            "format": "date",
+            "title": "Last Working Day",
+            "type": "string"
+          },
+          "lines": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/LineOut"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "net_payable": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Net Payable",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "notice_days_required": {
+            "title": "Notice Days Required",
+            "type": "integer"
+          },
+          "notice_days_served": {
+            "title": "Notice Days Served",
+            "type": "integer"
+          },
+          "paid_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid On"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "resignation_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resignation Date"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SettlementStatus"
+          },
+          "tax": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Tax",
+            "type": "string"
+          },
+          "taxable_earnings": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Taxable Earnings",
+            "type": "string"
+          },
+          "total_deductions": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Deductions",
+            "type": "string"
+          },
+          "ytd_tax_withheld": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ytd Tax Withheld",
+            "type": "string"
+          },
+          "ytd_taxable": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ytd Taxable",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "employee_id",
+          "last_working_day",
+          "resignation_date",
+          "initiator",
+          "fiscal_year",
+          "reason",
+          "notice_days_required",
+          "notice_days_served",
+          "deadline",
+          "status",
+          "gross_earnings",
+          "taxable_earnings",
+          "total_deductions",
+          "tax",
+          "net_payable",
+          "basic_at_exit",
+          "contributed_to_ssf",
+          "ytd_taxable",
+          "ytd_tax_withheld",
+          "computed_at",
+          "approved_at",
+          "paid_on",
+          "notes"
+        ],
+        "title": "SettlementDetail",
+        "type": "object"
+      },
+      "SettlementOut": {
+        "properties": {
+          "approved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved At"
+          },
+          "basic_at_exit": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Basic At Exit",
+            "type": "string"
+          },
+          "computed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Computed At"
+          },
+          "contributed_to_ssf": {
+            "title": "Contributed To Ssf",
+            "type": "boolean"
+          },
+          "deadline": {
+            "format": "date",
+            "title": "Deadline",
+            "type": "string"
+          },
+          "employee_id": {
+            "format": "uuid",
+            "title": "Employee Id",
+            "type": "string"
+          },
+          "fiscal_year": {
+            "title": "Fiscal Year",
+            "type": "string"
+          },
+          "gross_earnings": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Gross Earnings",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "initiator": {
+            "$ref": "#/components/schemas/ExitInitiator"
+          },
+          "last_working_day": {
+            "format": "date",
+            "title": "Last Working Day",
+            "type": "string"
+          },
+          "net_payable": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Net Payable",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "notice_days_required": {
+            "title": "Notice Days Required",
+            "type": "integer"
+          },
+          "notice_days_served": {
+            "title": "Notice Days Served",
+            "type": "integer"
+          },
+          "paid_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid On"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "resignation_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resignation Date"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SettlementStatus"
+          },
+          "tax": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Tax",
+            "type": "string"
+          },
+          "taxable_earnings": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Taxable Earnings",
+            "type": "string"
+          },
+          "total_deductions": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Deductions",
+            "type": "string"
+          },
+          "ytd_tax_withheld": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ytd Tax Withheld",
+            "type": "string"
+          },
+          "ytd_taxable": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ytd Taxable",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "employee_id",
+          "last_working_day",
+          "resignation_date",
+          "initiator",
+          "fiscal_year",
+          "reason",
+          "notice_days_required",
+          "notice_days_served",
+          "deadline",
+          "status",
+          "gross_earnings",
+          "taxable_earnings",
+          "total_deductions",
+          "tax",
+          "net_payable",
+          "basic_at_exit",
+          "contributed_to_ssf",
+          "ytd_taxable",
+          "ytd_tax_withheld",
+          "computed_at",
+          "approved_at",
+          "paid_on",
+          "notes"
+        ],
+        "title": "SettlementOut",
+        "type": "object"
+      },
+      "SettlementStatus": {
+        "enum": [
+          "draft",
+          "computed",
+          "approved",
+          "paid",
+          "cancelled"
+        ],
+        "title": "SettlementStatus",
+        "type": "string"
+      },
       "ShiftCreate": {
         "properties": {
           "break_minutes": {
@@ -6663,6 +7479,32 @@
           "is_active"
         ],
         "title": "WorkLocationOut",
+        "type": "object"
+      },
+      "elogix_api__modules__payroll__schemas__ApprovalResult": {
+        "properties": {
+          "attendance_days_locked": {
+            "title": "Attendance Days Locked",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "attendance_days_locked"
+        ],
+        "title": "ApprovalResult",
+        "type": "object"
+      },
+      "elogix_api__modules__settlement__schemas__ApprovalResult": {
+        "properties": {
+          "leave_balances_encashed": {
+            "title": "Leave Balances Encashed",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "leave_balances_encashed"
+        ],
+        "title": "ApprovalResult",
         "type": "object"
       }
     },
@@ -11088,7 +11930,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApprovalResult"
+                  "$ref": "#/components/schemas/elogix_api__modules__payroll__schemas__ApprovalResult"
                 }
               }
             },
@@ -11632,6 +12474,477 @@
         "summary": "Payroll Register",
         "tags": [
           "reports"
+        ]
+      }
+    },
+    "/api/v1/settlements": {
+      "get": {
+        "operationId": "settlements-list_settlements",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/SettlementStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SettlementOut"
+                  },
+                  "title": "Response Settlements-List Settlements",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Settlements",
+        "tags": [
+          "settlements"
+        ]
+      },
+      "post": {
+        "description": "Raise a settlement for someone who has left, and compute it straight away.\n\nComputing on creation rather than leaving it as an empty draft: the fifteen-day\nclock starts at the last working day, not at whenever someone remembers to press a\nbutton, so the figures should exist from the moment the record does.",
+        "operationId": "settlements-create_settlement",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettlementCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettlementDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Settlement",
+        "tags": [
+          "settlements"
+        ]
+      }
+    },
+    "/api/v1/settlements/due": {
+      "get": {
+        "description": "Settlements against their statutory clock, most urgent first.\n\nThe whole reason `deadline` is a column. An unpaid final settlement is a compliance\nfailure with a date attached, and nobody finds it by opening leaver records one at a\ntime. Already-overdue rows come first with a negative `days_remaining` \u2014 those are\nthe ones that matter, and filtering them out would hide the failures this exists for.",
+        "operationId": "settlements-due_settlements",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "within_days",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "maximum": 180,
+              "minimum": 0,
+              "title": "Within Days",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DueSettlement"
+                  },
+                  "title": "Response Settlements-Due Settlements",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Due Settlements",
+        "tags": [
+          "settlements"
+        ]
+      }
+    },
+    "/api/v1/settlements/{settlement_id}": {
+      "get": {
+        "operationId": "settlements-get_settlement",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "settlement_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Settlement Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettlementDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Settlement",
+        "tags": [
+          "settlements"
+        ]
+      }
+    },
+    "/api/v1/settlements/{settlement_id}/adjustments": {
+      "post": {
+        "description": "Add a hand-entered line, then recompute so the totals include it.",
+        "operationId": "settlements-add_adjustment",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "settlement_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Settlement Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdjustmentCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdjustmentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Add Adjustment",
+        "tags": [
+          "settlements"
+        ]
+      }
+    },
+    "/api/v1/settlements/{settlement_id}/approve": {
+      "post": {
+        "description": "Approve, consuming the leave it pays out in the same transaction.",
+        "operationId": "settlements-approve_settlement",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "settlement_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Settlement Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/elogix_api__modules__settlement__schemas__ApprovalResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Approve Settlement",
+        "tags": [
+          "settlements"
+        ]
+      }
+    },
+    "/api/v1/settlements/{settlement_id}/cancel": {
+      "post": {
+        "description": "Cancel, freeing the employee for a new settlement.\n\nRefused once approved: approving posted encashment rows into the leave ledger, and\na cancel that left them there would show a balance paid out against a settlement\nthat officially never happened. Reversing them is a decision with money attached\nand needs its own deliberate operation rather than a status change.",
+        "operationId": "settlements-cancel_settlement",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "settlement_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Settlement Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettlementOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Cancel Settlement",
+        "tags": [
+          "settlements"
+        ]
+      }
+    },
+    "/api/v1/settlements/{settlement_id}/compute": {
+      "post": {
+        "description": "Recompute from current data. Refused once approved \u2014 that is a snapshot.",
+        "operationId": "settlements-recompute_settlement",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "settlement_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Settlement Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettlementDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Recompute Settlement",
+        "tags": [
+          "settlements"
+        ]
+      }
+    },
+    "/api/v1/settlements/{settlement_id}/pay": {
+      "post": {
+        "description": "Record the disbursement date, which is what stops the statutory clock.",
+        "operationId": "settlements-mark_paid",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "settlement_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Settlement Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkPaid"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettlementOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Mark Paid",
+        "tags": [
+          "settlements"
         ]
       }
     }
