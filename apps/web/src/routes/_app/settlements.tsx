@@ -33,6 +33,7 @@ import {
 } from '@/components/ui'
 import type { PillTone } from '@/components/ui'
 import { apiErrorMessage } from '@/lib/errors'
+import { invalidate } from '@/lib/queries'
 
 const STATUS_TONE: Record<string, PillTone> = {
   draft: 'slate',
@@ -69,10 +70,9 @@ function SettlementsPage() {
     notice_days_served: '0',
   })
 
-  const invalidate = () => {
+  const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: settlementsListSettlementsQueryKey() })
-    void queryClient.invalidateQueries({ queryKey: ['settlementsDueSettlements'] })
-    void queryClient.invalidateQueries({ queryKey: ['settlementsGetSettlement'] })
+    invalidate(queryClient, 'settlementsDueSettlements', 'settlementsGetSettlement')
   }
 
   const create = useMutation({
@@ -92,7 +92,7 @@ function SettlementsPage() {
     },
     onSuccess: (settlement) => {
       void navigate({ search: { id: settlement.id } })
-      invalidate()
+      refresh()
     },
   })
 
@@ -220,7 +220,7 @@ function SettlementsPage() {
         </div>
       </div>
 
-      {search.id && <SettlementDetail id={search.id} onChanged={invalidate} />}
+      {search.id && <SettlementDetail id={search.id} onChanged={refresh} />}
     </>
   )
 }

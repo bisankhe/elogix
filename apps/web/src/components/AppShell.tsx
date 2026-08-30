@@ -70,7 +70,10 @@ const NAV: NavGroup[] = [
     id: 'emp-lifecycle',
     icon: '🔄',
     label: 'Employee Lifecycle',
-    children: [{ to: '/employees', label: 'Employee Database', module: 'employee' }],
+    children: [
+      { to: '/employees', label: 'Employee Database', module: 'employee' },
+      { to: '/hiring', label: 'Hiring', module: 'ats' },
+    ],
   },
   {
     id: 'workforce-ops',

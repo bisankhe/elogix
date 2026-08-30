@@ -14,11 +14,13 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppAttendanceRouteImport } from './routes/_app/attendance'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
+import { Route as AppHiringRouteImport } from './routes/_app/hiring'
 import { Route as AppLeaveRouteImport } from './routes/_app/leave'
 import { Route as AppMeRouteImport } from './routes/_app/me'
 import { Route as AppPayrollRouteImport } from './routes/_app/payroll'
 import { Route as AppReportsRouteImport } from './routes/_app/reports'
 import { Route as AppSettlementsRouteImport } from './routes/_app/settlements'
+import { Route as OfferTokenRouteImport } from './routes/offer.$token'
 import { Route as AppEmployeesIndexRouteImport } from './routes/_app/employees.index'
 import { Route as AppEmployeesEmployeeIdRouteImport } from './routes/_app/employees.$employeeId'
 import { Route as AppOrgGradesRouteImport } from './routes/_app/org/grades'
@@ -50,6 +52,11 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
+const AppHiringRoute = AppHiringRouteImport.update({
+  id: '/hiring',
+  path: '/hiring',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppLeaveRoute = AppLeaveRouteImport.update({
   id: '/leave',
   path: '/leave',
@@ -74,6 +81,11 @@ const AppSettlementsRoute = AppSettlementsRouteImport.update({
   id: '/settlements',
   path: '/settlements',
   getParentRoute: () => AppRoute,
+} as any)
+const OfferTokenRoute = OfferTokenRouteImport.update({
+  id: '/offer/$token',
+  path: '/offer/$token',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AppEmployeesIndexRoute = AppEmployeesIndexRouteImport.update({
   id: '/employees/',
@@ -111,11 +123,13 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/attendance': typeof AppAttendanceRoute
   '/dashboard': typeof AppDashboardRoute
+  '/hiring': typeof AppHiringRoute
   '/leave': typeof AppLeaveRoute
   '/me': typeof AppMeRoute
   '/payroll': typeof AppPayrollRoute
   '/reports': typeof AppReportsRoute
   '/settlements': typeof AppSettlementsRoute
+  '/offer/$token': typeof OfferTokenRoute
   '/employees/$employeeId': typeof AppEmployeesEmployeeIdRoute
   '/org/grades': typeof AppOrgGradesRoute
   '/org/locations': typeof AppOrgLocationsRoute
@@ -128,11 +142,13 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/attendance': typeof AppAttendanceRoute
   '/dashboard': typeof AppDashboardRoute
+  '/hiring': typeof AppHiringRoute
   '/leave': typeof AppLeaveRoute
   '/me': typeof AppMeRoute
   '/payroll': typeof AppPayrollRoute
   '/reports': typeof AppReportsRoute
   '/settlements': typeof AppSettlementsRoute
+  '/offer/$token': typeof OfferTokenRoute
   '/employees/$employeeId': typeof AppEmployeesEmployeeIdRoute
   '/org/grades': typeof AppOrgGradesRoute
   '/org/locations': typeof AppOrgLocationsRoute
@@ -147,11 +163,13 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_app/attendance': typeof AppAttendanceRoute
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/hiring': typeof AppHiringRoute
   '/_app/leave': typeof AppLeaveRoute
   '/_app/me': typeof AppMeRoute
   '/_app/payroll': typeof AppPayrollRoute
   '/_app/reports': typeof AppReportsRoute
   '/_app/settlements': typeof AppSettlementsRoute
+  '/offer/$token': typeof OfferTokenRoute
   '/_app/employees/$employeeId': typeof AppEmployeesEmployeeIdRoute
   '/_app/org/grades': typeof AppOrgGradesRoute
   '/_app/org/locations': typeof AppOrgLocationsRoute
@@ -166,11 +184,13 @@ export interface FileRouteTypes {
     | '/login'
     | '/attendance'
     | '/dashboard'
+    | '/hiring'
     | '/leave'
     | '/me'
     | '/payroll'
     | '/reports'
     | '/settlements'
+    | '/offer/$token'
     | '/employees/$employeeId'
     | '/org/grades'
     | '/org/locations'
@@ -183,11 +203,13 @@ export interface FileRouteTypes {
     | '/login'
     | '/attendance'
     | '/dashboard'
+    | '/hiring'
     | '/leave'
     | '/me'
     | '/payroll'
     | '/reports'
     | '/settlements'
+    | '/offer/$token'
     | '/employees/$employeeId'
     | '/org/grades'
     | '/org/locations'
@@ -201,11 +223,13 @@ export interface FileRouteTypes {
     | '/login'
     | '/_app/attendance'
     | '/_app/dashboard'
+    | '/_app/hiring'
     | '/_app/leave'
     | '/_app/me'
     | '/_app/payroll'
     | '/_app/reports'
     | '/_app/settlements'
+    | '/offer/$token'
     | '/_app/employees/$employeeId'
     | '/_app/org/grades'
     | '/_app/org/locations'
@@ -218,6 +242,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
+  OfferTokenRoute: typeof OfferTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -257,6 +282,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/hiring': {
+      id: '/_app/hiring'
+      path: '/hiring'
+      fullPath: '/hiring'
+      preLoaderRoute: typeof AppHiringRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/leave': {
       id: '/_app/leave'
       path: '/leave'
@@ -291,6 +323,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/settlements'
       preLoaderRoute: typeof AppSettlementsRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/offer/$token': {
+      id: '/offer/$token'
+      path: '/offer/$token'
+      fullPath: '/offer/$token'
+      preLoaderRoute: typeof OfferTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_app/employees/': {
       id: '/_app/employees/'
@@ -340,6 +379,7 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppAttendanceRoute: typeof AppAttendanceRoute
   AppDashboardRoute: typeof AppDashboardRoute
+  AppHiringRoute: typeof AppHiringRoute
   AppLeaveRoute: typeof AppLeaveRoute
   AppMeRoute: typeof AppMeRoute
   AppPayrollRoute: typeof AppPayrollRoute
@@ -356,6 +396,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAttendanceRoute: AppAttendanceRoute,
   AppDashboardRoute: AppDashboardRoute,
+  AppHiringRoute: AppHiringRoute,
   AppLeaveRoute: AppLeaveRoute,
   AppMeRoute: AppMeRoute,
   AppPayrollRoute: AppPayrollRoute,
@@ -375,6 +416,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
+  OfferTokenRoute: OfferTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

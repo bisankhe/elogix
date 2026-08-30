@@ -155,6 +155,13 @@ replaced the API's exact reason with a guess.
   `UniqueConstraint("company_id", "code")` and `UniqueConstraint("company_id", "rank")`
   both resolve to `uq_<table>_company_id` and the second fails at CREATE TABLE. See
   `GradeLevel.__table_args__`.
+- **Invalidate a generated query with `invalidate()` from `lib/queries.ts`**, never
+  with a bare string key. The generated client builds keys as
+  `[{_id: 'opName', baseUrl, path}]`, so `invalidateQueries({queryKey: ['opName']})`
+  matches nothing and fails *silently* — the write lands, nothing refetches, and the
+  screen shows stale data until a reload. Eleven of these had accumulated across five
+  screens, the oldest since phase 05, and the one that surfaced it was an onboarding
+  button that stayed on "Onboard as employee" after the employee had been created.
 - **UI work starts from `src/components/ui.tsx`**, not from inline styles. The prototype
   had 19 shared components imported by zero of 545 pages and 23,567 inline styles; these
   primitives exist so that using them is easier than not.
@@ -251,13 +258,14 @@ folder boundary: phase 03 is `modules/employee/` and nothing else.
 
 00 walking skeleton · 01 identity, tenancy, entitlements · 02 org structure ·
 03 employee master · 04 attendance and roster · 05 leave · 06 payroll, tax, SSF ·
-07 self-service, documents, reports · 08 exit and final settlement
+07 self-service, documents, reports · 08 exit and final settlement ·
+09 hiring and onboarding
 
 This is a dependency chain, not a priority ranking — each phase produces the tables the
 next one needs, so nothing gets built twice against mocked inputs. Payroll is last in the
 core *deliberately*: it consumes phases 03–05, and its tests get written before its code.
 
-**Current state: phases 00–08 are done**, proven by 327 tests against a real Postgres
+**Current state: phases 00–09 are done**, proven by 370 tests against a real Postgres
 with the schema built by running the migrations from zero. Module access is denied
 server-side, no endpoint returns another tenant's rows, a tenant can be provisioned into
 a complete org chart, an employee can be hired through to offboarded with history
@@ -266,7 +274,8 @@ input, leave balances accrue across a full year with approvals adjusting them
 atomically, that attendance export and those balances turn into payslips whose every
 figure is reproducible by hand, a person can sign in and see their own record — and
 only their own — and a leaver can be paid what they are owed, itemised, against the
-statutory fifteen-day clock.
+statutory fifteen-day clock. A candidate can be taken from requisition to accepted
+offer to a person on the payroll, with the salary they agreed to.
 
 Phase 01 originally shipped row-level security as a second isolation layer; it was
 removed by decision on 2026-08-30, so tenant isolation is the query filters alone. If it
@@ -339,10 +348,28 @@ it established:
 - **Every line carries a `basis` string.** "Gratuity: 0.00" starts an argument; "nil,
   because it was already paid monthly into SSF" ends one.
 
-**Phase 09 is next: ATS and onboarding** — the rebuild artifact's v2 tier, and the
-natural pair since recruitment feeds onboarding feeds the employee master. The artifact
-also flags the public career portal as the one genuine case for a separate SSR app;
-that is a decision for the start of 09, not before.
+**Phase 09 (hiring) departs from the prototype's ATS on three points**, all about who
+is allowed to decide something:
+
+- **No AI score.** `ATSApplication.ai_score` was written by a language model and
+  `list_applications` ordered by it, so an LLM decided who a recruiter looked at first.
+  Applications are ordered by arrival; a test asserts no field named `*score*` exists.
+- **Every stage move is a row.** `application_events` is append-only, and a rejection
+  without a reason is refused — it is the decision most likely to be challenged later.
+- **The candidate's offer link is an unguessable token on an unauthenticated router**,
+  never the offer's id. A candidate has no login and no tenant. The token is returned
+  once on send and appears in no list, because whoever holds it can answer the offer.
+
+Requisitions draw against `Position.headcount`, which is what that column was for, and
+onboarding copies placement from the requisition's position and the offered salary
+straight into `employee_salaries` — so nothing between the offer letter and payroll is
+retyped.
+
+**Phase 10 is unscoped.** What remains from the artifact's tiers is performance and
+goals, training, then the v3 business tier (vendor and outsource management, compliance,
+finance) and the optional AI and BI layer. The artifact also flags the public career
+portal as the one genuine case for a separate SSR app — worth deciding when the ATS
+grows a public face, which it has not yet.
 
 ---
 

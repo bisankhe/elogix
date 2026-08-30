@@ -289,7 +289,7 @@ function LeaveTab() {
     reason: '',
   })
 
-  const invalidate = () =>
+  const refresh = () =>
     void queryClient.invalidateQueries({ queryKey: essMyLeaveRequestsQueryKey() })
 
   const apply = useMutation({
@@ -302,7 +302,7 @@ function LeaveTab() {
     },
     onSuccess: () => {
       setForm({ leave_type_id: '', start_date: '', end_date: '', reason: '' })
-      invalidate()
+      refresh()
     },
   })
 
@@ -311,7 +311,7 @@ function LeaveTab() {
       const { error } = await essWithdrawLeaveRequest({ path: { request_id: id } })
       if (error) throw new Error(apiErrorMessage(error, 'Could not withdraw the request'))
     },
-    onSuccess: invalidate,
+    onSuccess: refresh,
   })
 
   const nameOf = new Map(types.data?.map((t) => [t.id, t.name]))

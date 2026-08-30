@@ -14,6 +14,7 @@ import {
 import { Button, Card, Cell, PageHeader, Pill, Row, Select, StatCard, Table } from '@/components/ui'
 import type { PillTone } from '@/components/ui'
 import { apiErrorMessage } from '@/lib/errors'
+import { invalidate } from '@/lib/queries'
 
 const STATUS_TONE: Record<string, PillTone> = {
   pending: 'amber',
@@ -62,7 +63,7 @@ function LeavePage() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: leaveListRequestsQueryKey() })
-      void queryClient.invalidateQueries({ queryKey: ['leaveBalances'] })
+      invalidate(queryClient, 'leaveBalances')
     },
   })
 

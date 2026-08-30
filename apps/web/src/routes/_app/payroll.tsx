@@ -25,6 +25,7 @@ import {
 } from '@/components/ui'
 import type { PillTone } from '@/components/ui'
 import { apiErrorMessage } from '@/lib/errors'
+import { invalidate } from '@/lib/queries'
 
 const STATUS_TONE: Record<string, PillTone> = {
   draft: 'slate',
@@ -55,9 +56,9 @@ function PayrollPage() {
     enabled: Boolean(activeRun),
   })
 
-  const invalidate = () => {
+  const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: payrollListRunsQueryKey() })
-    void queryClient.invalidateQueries({ queryKey: ['payrollListPayslips'] })
+    invalidate(queryClient, 'payrollListPayslips')
   }
 
   const create = useMutation({
@@ -75,7 +76,7 @@ function PayrollPage() {
     },
     onSuccess: (run) => {
       setSelectedRun(run.id)
-      invalidate()
+      refresh()
     },
   })
 
@@ -85,7 +86,7 @@ function PayrollPage() {
       const { error } = await call({ path: { run_id: id } })
       if (error) throw new Error(apiErrorMessage(error, `Could not ${action} the run`))
     },
-    onSuccess: invalidate,
+    onSuccess: refresh,
   })
 
   const nameOf = new Map(employees.data?.items.map((e) => [e.id, e.full_name]))
