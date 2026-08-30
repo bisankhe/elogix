@@ -6,14 +6,26 @@ Idempotent: re-running leaves the existing rows alone. Development credentials o
 nothing here is used by tests, which build their own fixtures.
 """
 
+import uuid
 from datetime import date
 
 from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from elogix_api.core.security import hash_password
 from elogix_api.db.session import SessionLocal
 from elogix_api.modules.employee.models import Employee, EmployeeStatus
 from elogix_api.modules.identity.models import Company, PlanTier, RoleCode, User, UserRole
+from elogix_api.modules.org.models import (
+    CostCentre,
+    Designation,
+    EmploymentCategory,
+    EmploymentType,
+    GradeLevel,
+    OrgUnit,
+    OrgUnitKind,
+    WorkLocation,
+)
 
 COMPANY_SLUG = "acme"
 LOGIN_EMAIL = "admin@acme.com.np"
@@ -55,6 +67,8 @@ def main() -> None:
             )
             print(f"created user {LOGIN_EMAIL} with role {RoleCode.SUPER_ADMIN}")
 
+        _seed_org(db, company.id)
+
         existing = db.execute(
             select(Employee.employee_code).where(Employee.company_id == company.id)
         ).scalars()
@@ -83,6 +97,104 @@ def main() -> None:
 
     print(f"\nlog in with  {LOGIN_EMAIL} / {LOGIN_PASSWORD}  at company '{COMPANY_SLUG}'")
 
+
+def _seed_org(db: Session, company_id: uuid.UUID) -> None:
+    """A small but realistic Nepali org chart, so the UI has something true to render."""
+    if db.execute(
+        select(OrgUnit.id).where(OrgUnit.company_id == company_id)
+    ).first() is not None:
+        return
+
+    def unit(code: str, name: str, kind: OrgUnitKind, parent: OrgUnit | None) -> OrgUnit:
+        row = OrgUnit(
+            company_id=company_id,
+            code=code,
+            name=name,
+            kind=kind,
+            parent_id=parent.id if parent else None,
+            depth=(parent.depth + 1) if parent else 0,
+        )
+        db.add(row)
+        db.flush()
+        return row
+
+    group = unit("ACME", "Acme Group", OrgUnitKind.GROUP, None)
+    ktm = unit("KTM", "Kathmandu Head Office", OrgUnitKind.BRANCH, group)
+    pkr = unit("PKR", "Pokhara Branch", OrgUnitKind.BRANCH, group)
+    for code, name, parent in (
+        ("ENG", "Engineering", ktm),
+        ("FIN", "Finance", ktm),
+        ("HR", "Human Resources", ktm),
+        ("OPS", "Operations", pkr),
+    ):
+        dept = unit(code, name, OrgUnitKind.DEPARTMENT, parent)
+        if code == "ENG":
+            unit("ENG-QA", "Quality Assurance", OrgUnitKind.TEAM, dept)
+            unit("ENG-PLT", "Platform", OrgUnitKind.TEAM, dept)
+
+    for code, name, rank in (
+        ("G1", "Assistant", 1),
+        ("G2", "Officer", 2),
+        ("G3", "Senior Officer", 3),
+        ("G4", "Manager", 4),
+        ("G5", "Head of Department", 5),
+    ):
+        db.add(GradeLevel(company_id=company_id, code=code, name=name, rank=rank))
+
+    for code, name in (
+        ("CC-HO", "Head Office"),
+        ("CC-ENG", "Engineering"),
+        ("CC-OPS", "Field Operations"),
+    ):
+        db.add(CostCentre(company_id=company_id, code=code, name=name))
+
+    for code, name, district in (
+        ("LOC-KTM", "Kathmandu Office", "Kathmandu"),
+        ("LOC-PKR", "Pokhara Office", "Kaski"),
+        ("LOC-WFH", "Remote", None),
+    ):
+        db.add(WorkLocation(company_id=company_id, code=code, name=name, district=district))
+
+    # Nepal Labour Act 2074: probation capped at six months, overtime at 1.5x basic.
+    for code, name, kind, probation, notice, ot in (
+        ("PERM", "Permanent", EmploymentType.PERMANENT, 6, 30, True),
+        ("CONT", "Contract", EmploymentType.CONTRACT, 0, 15, True),
+        ("CASU", "Casual", EmploymentType.CASUAL, 0, 0, True),
+        ("INTN", "Intern", EmploymentType.INTERN, 0, 7, False),
+    ):
+        db.add(
+            EmploymentCategory(
+                company_id=company_id,
+                code=code,
+                name=name,
+                employment_type=kind,
+                probation_months=probation,
+                notice_days=notice,
+                is_overtime_eligible=ot,
+            )
+        )
+
+    db.flush()
+    grades = {
+        g.code: g
+        for g in db.execute(
+            select(GradeLevel).where(GradeLevel.company_id == company_id)
+        ).scalars()
+    }
+    for code, name, grade in (
+        ("SE", "Software Engineer", "G2"),
+        ("SSE", "Senior Software Engineer", "G3"),
+        ("ACC", "Accountant", "G2"),
+        ("HRO", "HR Officer", "G2"),
+        ("HOD", "Head of Department", "G5"),
+    ):
+        db.add(
+            Designation(
+                company_id=company_id, code=code, name=name, grade_level_id=grades[grade].id
+            )
+        )
+
+    print("created org chart: 8 units, 5 grades, 3 cost centres, 3 locations, 4 categories")
 
 if __name__ == "__main__":
     main()

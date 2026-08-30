@@ -39,7 +39,20 @@ ALEMBIC_INI = os.path.join(_API_DIR, "alembic.ini")
 
 # Every table carrying a company_id. Keep in step with the models — the isolation tests
 # are the only thing standing between a forgotten filter and a cross-tenant leak.
-TENANT_TABLES = ("users", "employees", "user_roles", "company_modules", "auth_sessions")
+TENANT_TABLES = (
+    "users",
+    "employees",
+    "user_roles",
+    "company_modules",
+    "auth_sessions",
+    "positions",
+    "designations",
+    "grade_levels",
+    "work_locations",
+    "cost_centres",
+    "employment_categories",
+    "org_units",
+)
 
 
 @pytest.fixture(scope="session", autouse=True)

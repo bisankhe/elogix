@@ -6,15 +6,21 @@ registration, so a broken route file became a silent 404 with nothing in the log
 broken import stops the process.
 """
 
-from fastapi import FastAPI
+import logging
+
+from fastapi import FastAPI, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
-from sqlalchemy import text
+from sqlalchemy import func, select
 
 from elogix_api.db.session import engine
 from elogix_api.modules.employee import router as employee_router
 from elogix_api.modules.identity import router as identity_router
+from elogix_api.modules.identity.models import Company
+from elogix_api.modules.org import router as org_router
 from elogix_api.settings import get_settings
+
+logger = logging.getLogger("elogix")
 
 
 def _operation_id(route: APIRoute) -> str:
@@ -48,18 +54,33 @@ def create_app() -> FastAPI:
 
     # ── Module routers ────────────────────────────────────────────────
     app.include_router(identity_router.router, prefix="/api/v1")
+    app.include_router(org_router.router, prefix="/api/v1")
     app.include_router(employee_router.router, prefix="/api/v1")
 
     @app.get("/api/health", tags=["meta"])
-    def health() -> dict[str, str]:
+    def health(response: Response) -> dict[str, str]:
+        """Liveness plus a real database read.
+
+        `SELECT 1` is not enough: it needs no table privileges and no schema, so it
+        answers "connected" for a role that cannot read a single row and for a database
+        with no tables at all. This once reported a healthy database while every request
+        was failing with `permission denied for table companies`.
+
+        Reading a real table exercises connectivity, privileges and the migrations
+        together. Unhealthy returns 503, not 200 — a health check that always returns OK
+        tells a load balancer nothing.
+        """
         try:
             with engine.connect() as conn:
-                conn.execute(text("SELECT 1"))
+                conn.execute(select(func.count()).select_from(Company))
             database = "connected"
         except Exception:
+            logger.exception("health check failed")
             database = "unavailable"
+            response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+
         return {
-            "status": "ok",
+            "status": "ok" if database == "connected" else "degraded",
             "environment": settings.environment,
             "database": database,
         }

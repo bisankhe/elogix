@@ -28,6 +28,86 @@ export type AccessToken = {
 };
 
 /**
+ * CostCentreCreate
+ */
+export type CostCentreCreate = {
+  /**
+   * Code
+   */
+  code: string;
+  /**
+   * Name
+   */
+  name: string;
+};
+
+/**
+ * CostCentreOut
+ */
+export type CostCentreOut = {
+  /**
+   * Code
+   */
+  code: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Is Active
+   */
+  is_active: boolean;
+  /**
+   * Name
+   */
+  name: string;
+};
+
+/**
+ * DesignationCreate
+ */
+export type DesignationCreate = {
+  /**
+   * Code
+   */
+  code: string;
+  /**
+   * Grade Level Id
+   */
+  grade_level_id?: string | null;
+  /**
+   * Name
+   */
+  name: string;
+};
+
+/**
+ * DesignationOut
+ */
+export type DesignationOut = {
+  /**
+   * Code
+   */
+  code: string;
+  /**
+   * Grade Level Id
+   */
+  grade_level_id: string | null;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Is Active
+   */
+  is_active: boolean;
+  /**
+   * Name
+   */
+  name: string;
+};
+
+/**
  * EmployeeList
  */
 export type EmployeeList = {
@@ -74,6 +154,84 @@ export type EmployeeOut = {
 export type EmployeeStatus = "active" | "probation" | "suspended" | "exited";
 
 /**
+ * EmploymentCategoryCreate
+ */
+export type EmploymentCategoryCreate = {
+  /**
+   * Code
+   */
+  code: string;
+  employment_type: EmploymentType;
+  /**
+   * Is Overtime Eligible
+   */
+  is_overtime_eligible?: boolean;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Notice Days
+   */
+  notice_days?: number;
+  /**
+   * Probation Months
+   */
+  probation_months?: number;
+};
+
+/**
+ * EmploymentCategoryOut
+ */
+export type EmploymentCategoryOut = {
+  /**
+   * Code
+   */
+  code: string;
+  employment_type: EmploymentType;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Is Active
+   */
+  is_active: boolean;
+  /**
+   * Is Overtime Eligible
+   */
+  is_overtime_eligible: boolean;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Notice Days
+   */
+  notice_days: number;
+  /**
+   * Probation Months
+   */
+  probation_months: number;
+};
+
+/**
+ * EmploymentType
+ *
+ * Nepal Labour Act 2074 recognises these employment categories.
+ */
+export type EmploymentType =
+  | "permanent"
+  | "probation"
+  | "contract"
+  | "casual"
+  | "part_time"
+  | "trainee"
+  | "intern"
+  | "outsourced"
+  | "consultant";
+
+/**
  * EntitlementsOut
  *
  * What the frontend may use to decide what to show. Never what the server uses to
@@ -89,6 +247,50 @@ export type EntitlementsOut = {
    */
   modules: Array<ModuleCode>;
   plan_tier: PlanTier;
+};
+
+/**
+ * GradeLevelCreate
+ */
+export type GradeLevelCreate = {
+  /**
+   * Code
+   */
+  code: string;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Rank
+   */
+  rank: number;
+};
+
+/**
+ * GradeLevelOut
+ */
+export type GradeLevelOut = {
+  /**
+   * Code
+   */
+  code: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Is Active
+   */
+  is_active: boolean;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Rank
+   */
+  rank: number;
 };
 
 /**
@@ -139,12 +341,225 @@ export type ModuleCode =
   | "ai";
 
 /**
+ * OrgUnitCreate
+ */
+export type OrgUnitCreate = {
+  /**
+   * Code
+   */
+  code: string;
+  kind?: OrgUnitKind;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Parent Id
+   */
+  parent_id?: string | null;
+};
+
+/**
+ * OrgUnitKind
+ *
+ * Depth labels for the single org tree. Ordered broadest to narrowest.
+ */
+export type OrgUnitKind =
+  | "group"
+  | "company"
+  | "branch"
+  | "business_unit"
+  | "division"
+  | "department"
+  | "section"
+  | "team";
+
+/**
+ * OrgUnitNode
+ *
+ * One node with its subtree, for rendering the chart in a single request.
+ */
+export type OrgUnitNode = {
+  /**
+   * Children
+   */
+  children?: Array<OrgUnitNode>;
+  /**
+   * Code
+   */
+  code: string;
+  /**
+   * Depth
+   */
+  depth: number;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Is Active
+   */
+  is_active: boolean;
+  kind: OrgUnitKind;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Parent Id
+   */
+  parent_id: string | null;
+};
+
+/**
+ * OrgUnitOut
+ */
+export type OrgUnitOut = {
+  /**
+   * Code
+   */
+  code: string;
+  /**
+   * Depth
+   */
+  depth: number;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Is Active
+   */
+  is_active: boolean;
+  kind: OrgUnitKind;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Parent Id
+   */
+  parent_id: string | null;
+};
+
+/**
+ * OrgUnitUpdate
+ */
+export type OrgUnitUpdate = {
+  /**
+   * Is Active
+   */
+  is_active?: boolean | null;
+  kind?: OrgUnitKind | null;
+  /**
+   * Name
+   */
+  name?: string | null;
+  /**
+   * Parent Id
+   */
+  parent_id?: string | null;
+};
+
+/**
  * PlanTier
  *
  * The five-tier plan ladder. Also the build order — each tier is roughly a phase.
  */
 export type PlanTier =
   "trial" | "starter" | "growth" | "business" | "enterprise";
+
+/**
+ * PositionCreate
+ */
+export type PositionCreate = {
+  /**
+   * Code
+   */
+  code: string;
+  /**
+   * Cost Centre Id
+   */
+  cost_centre_id?: string | null;
+  /**
+   * Designation Id
+   */
+  designation_id?: string | null;
+  /**
+   * Employment Category Id
+   */
+  employment_category_id?: string | null;
+  /**
+   * Headcount
+   */
+  headcount?: number;
+  /**
+   * Org Unit Id
+   */
+  org_unit_id: string;
+  /**
+   * Reports To Id
+   */
+  reports_to_id?: string | null;
+  /**
+   * Title
+   */
+  title: string;
+  /**
+   * Work Location Id
+   */
+  work_location_id?: string | null;
+};
+
+/**
+ * PositionOut
+ */
+export type PositionOut = {
+  /**
+   * Code
+   */
+  code: string;
+  /**
+   * Cost Centre Id
+   */
+  cost_centre_id: string | null;
+  /**
+   * Designation Id
+   */
+  designation_id: string | null;
+  /**
+   * Employment Category Id
+   */
+  employment_category_id: string | null;
+  /**
+   * Headcount
+   */
+  headcount: number;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Is Active
+   */
+  is_active: boolean;
+  /**
+   * Org Unit Id
+   */
+  org_unit_id: string;
+  /**
+   * Reports To Id
+   */
+  reports_to_id: string | null;
+  /**
+   * Title
+   */
+  title: string;
+  /**
+   * Work Location Id
+   */
+  work_location_id: string | null;
+};
 
 /**
  * RoleCode
@@ -204,6 +619,58 @@ export type ValidationError = {
    * Error Type
    */
   type: string;
+};
+
+/**
+ * WorkLocationCreate
+ */
+export type WorkLocationCreate = {
+  /**
+   * Address
+   */
+  address?: string | null;
+  /**
+   * Code
+   */
+  code: string;
+  /**
+   * District
+   */
+  district?: string | null;
+  /**
+   * Name
+   */
+  name: string;
+};
+
+/**
+ * WorkLocationOut
+ */
+export type WorkLocationOut = {
+  /**
+   * Address
+   */
+  address: string | null;
+  /**
+   * Code
+   */
+  code: string;
+  /**
+   * District
+   */
+  district: string | null;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Is Active
+   */
+  is_active: boolean;
+  /**
+   * Name
+   */
+  name: string;
 };
 
 export type MetaHealthData = {
@@ -402,3 +869,705 @@ export type EmployeesGetEmployeeResponses = {
 
 export type EmployeesGetEmployeeResponse =
   EmployeesGetEmployeeResponses[keyof EmployeesGetEmployeeResponses];
+
+export type OrgListCostCentresData = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * Include Inactive
+     */
+    include_inactive?: boolean;
+  };
+  url: "/api/v1/org/cost-centres";
+};
+
+export type OrgListCostCentresErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgListCostCentresError =
+  OrgListCostCentresErrors[keyof OrgListCostCentresErrors];
+
+export type OrgListCostCentresResponses = {
+  /**
+   * Response Org-List Cost Centres
+   *
+   * Successful Response
+   */
+  200: Array<CostCentreOut>;
+};
+
+export type OrgListCostCentresResponse =
+  OrgListCostCentresResponses[keyof OrgListCostCentresResponses];
+
+export type OrgCreateCostCentreData = {
+  body: CostCentreCreate;
+  path?: never;
+  query?: never;
+  url: "/api/v1/org/cost-centres";
+};
+
+export type OrgCreateCostCentreErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgCreateCostCentreError =
+  OrgCreateCostCentreErrors[keyof OrgCreateCostCentreErrors];
+
+export type OrgCreateCostCentreResponses = {
+  /**
+   * Successful Response
+   */
+  201: CostCentreOut;
+};
+
+export type OrgCreateCostCentreResponse =
+  OrgCreateCostCentreResponses[keyof OrgCreateCostCentreResponses];
+
+export type OrgDeactivateCostCentreData = {
+  body?: never;
+  path: {
+    /**
+     * Record Id
+     */
+    record_id: string;
+  };
+  query?: never;
+  url: "/api/v1/org/cost-centres/{record_id}";
+};
+
+export type OrgDeactivateCostCentreErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgDeactivateCostCentreError =
+  OrgDeactivateCostCentreErrors[keyof OrgDeactivateCostCentreErrors];
+
+export type OrgDeactivateCostCentreResponses = {
+  /**
+   * Successful Response
+   */
+  204: void;
+};
+
+export type OrgDeactivateCostCentreResponse =
+  OrgDeactivateCostCentreResponses[keyof OrgDeactivateCostCentreResponses];
+
+export type OrgListDesignationsData = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * Include Inactive
+     */
+    include_inactive?: boolean;
+  };
+  url: "/api/v1/org/designations";
+};
+
+export type OrgListDesignationsErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgListDesignationsError =
+  OrgListDesignationsErrors[keyof OrgListDesignationsErrors];
+
+export type OrgListDesignationsResponses = {
+  /**
+   * Response Org-List Designations
+   *
+   * Successful Response
+   */
+  200: Array<DesignationOut>;
+};
+
+export type OrgListDesignationsResponse =
+  OrgListDesignationsResponses[keyof OrgListDesignationsResponses];
+
+export type OrgCreateDesignationData = {
+  body: DesignationCreate;
+  path?: never;
+  query?: never;
+  url: "/api/v1/org/designations";
+};
+
+export type OrgCreateDesignationErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgCreateDesignationError =
+  OrgCreateDesignationErrors[keyof OrgCreateDesignationErrors];
+
+export type OrgCreateDesignationResponses = {
+  /**
+   * Successful Response
+   */
+  201: DesignationOut;
+};
+
+export type OrgCreateDesignationResponse =
+  OrgCreateDesignationResponses[keyof OrgCreateDesignationResponses];
+
+export type OrgDeactivateDesignationData = {
+  body?: never;
+  path: {
+    /**
+     * Record Id
+     */
+    record_id: string;
+  };
+  query?: never;
+  url: "/api/v1/org/designations/{record_id}";
+};
+
+export type OrgDeactivateDesignationErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgDeactivateDesignationError =
+  OrgDeactivateDesignationErrors[keyof OrgDeactivateDesignationErrors];
+
+export type OrgDeactivateDesignationResponses = {
+  /**
+   * Successful Response
+   */
+  204: void;
+};
+
+export type OrgDeactivateDesignationResponse =
+  OrgDeactivateDesignationResponses[keyof OrgDeactivateDesignationResponses];
+
+export type OrgListEmploymentCategoriesData = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * Include Inactive
+     */
+    include_inactive?: boolean;
+  };
+  url: "/api/v1/org/employment-categories";
+};
+
+export type OrgListEmploymentCategoriesErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgListEmploymentCategoriesError =
+  OrgListEmploymentCategoriesErrors[keyof OrgListEmploymentCategoriesErrors];
+
+export type OrgListEmploymentCategoriesResponses = {
+  /**
+   * Response Org-List Employment Categories
+   *
+   * Successful Response
+   */
+  200: Array<EmploymentCategoryOut>;
+};
+
+export type OrgListEmploymentCategoriesResponse =
+  OrgListEmploymentCategoriesResponses[keyof OrgListEmploymentCategoriesResponses];
+
+export type OrgCreateEmploymentCategoryData = {
+  body: EmploymentCategoryCreate;
+  path?: never;
+  query?: never;
+  url: "/api/v1/org/employment-categories";
+};
+
+export type OrgCreateEmploymentCategoryErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgCreateEmploymentCategoryError =
+  OrgCreateEmploymentCategoryErrors[keyof OrgCreateEmploymentCategoryErrors];
+
+export type OrgCreateEmploymentCategoryResponses = {
+  /**
+   * Successful Response
+   */
+  201: EmploymentCategoryOut;
+};
+
+export type OrgCreateEmploymentCategoryResponse =
+  OrgCreateEmploymentCategoryResponses[keyof OrgCreateEmploymentCategoryResponses];
+
+export type OrgDeactivateEmploymentCategoryData = {
+  body?: never;
+  path: {
+    /**
+     * Record Id
+     */
+    record_id: string;
+  };
+  query?: never;
+  url: "/api/v1/org/employment-categories/{record_id}";
+};
+
+export type OrgDeactivateEmploymentCategoryErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgDeactivateEmploymentCategoryError =
+  OrgDeactivateEmploymentCategoryErrors[keyof OrgDeactivateEmploymentCategoryErrors];
+
+export type OrgDeactivateEmploymentCategoryResponses = {
+  /**
+   * Successful Response
+   */
+  204: void;
+};
+
+export type OrgDeactivateEmploymentCategoryResponse =
+  OrgDeactivateEmploymentCategoryResponses[keyof OrgDeactivateEmploymentCategoryResponses];
+
+export type OrgListGradeLevelsData = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * Include Inactive
+     */
+    include_inactive?: boolean;
+  };
+  url: "/api/v1/org/grade-levels";
+};
+
+export type OrgListGradeLevelsErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgListGradeLevelsError =
+  OrgListGradeLevelsErrors[keyof OrgListGradeLevelsErrors];
+
+export type OrgListGradeLevelsResponses = {
+  /**
+   * Response Org-List Grade Levels
+   *
+   * Successful Response
+   */
+  200: Array<GradeLevelOut>;
+};
+
+export type OrgListGradeLevelsResponse =
+  OrgListGradeLevelsResponses[keyof OrgListGradeLevelsResponses];
+
+export type OrgCreateGradeLevelData = {
+  body: GradeLevelCreate;
+  path?: never;
+  query?: never;
+  url: "/api/v1/org/grade-levels";
+};
+
+export type OrgCreateGradeLevelErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgCreateGradeLevelError =
+  OrgCreateGradeLevelErrors[keyof OrgCreateGradeLevelErrors];
+
+export type OrgCreateGradeLevelResponses = {
+  /**
+   * Successful Response
+   */
+  201: GradeLevelOut;
+};
+
+export type OrgCreateGradeLevelResponse =
+  OrgCreateGradeLevelResponses[keyof OrgCreateGradeLevelResponses];
+
+export type OrgDeactivateGradeLevelData = {
+  body?: never;
+  path: {
+    /**
+     * Record Id
+     */
+    record_id: string;
+  };
+  query?: never;
+  url: "/api/v1/org/grade-levels/{record_id}";
+};
+
+export type OrgDeactivateGradeLevelErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgDeactivateGradeLevelError =
+  OrgDeactivateGradeLevelErrors[keyof OrgDeactivateGradeLevelErrors];
+
+export type OrgDeactivateGradeLevelResponses = {
+  /**
+   * Successful Response
+   */
+  204: void;
+};
+
+export type OrgDeactivateGradeLevelResponse =
+  OrgDeactivateGradeLevelResponses[keyof OrgDeactivateGradeLevelResponses];
+
+export type OrgListPositionsData = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * Org Unit Id
+     */
+    org_unit_id?: string | null;
+    /**
+     * Include Inactive
+     */
+    include_inactive?: boolean;
+  };
+  url: "/api/v1/org/positions";
+};
+
+export type OrgListPositionsErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgListPositionsError =
+  OrgListPositionsErrors[keyof OrgListPositionsErrors];
+
+export type OrgListPositionsResponses = {
+  /**
+   * Response Org-List Positions
+   *
+   * Successful Response
+   */
+  200: Array<PositionOut>;
+};
+
+export type OrgListPositionsResponse =
+  OrgListPositionsResponses[keyof OrgListPositionsResponses];
+
+export type OrgCreatePositionData = {
+  body: PositionCreate;
+  path?: never;
+  query?: never;
+  url: "/api/v1/org/positions";
+};
+
+export type OrgCreatePositionErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgCreatePositionError =
+  OrgCreatePositionErrors[keyof OrgCreatePositionErrors];
+
+export type OrgCreatePositionResponses = {
+  /**
+   * Successful Response
+   */
+  201: PositionOut;
+};
+
+export type OrgCreatePositionResponse =
+  OrgCreatePositionResponses[keyof OrgCreatePositionResponses];
+
+export type OrgDeactivatePositionData = {
+  body?: never;
+  path: {
+    /**
+     * Position Id
+     */
+    position_id: string;
+  };
+  query?: never;
+  url: "/api/v1/org/positions/{position_id}";
+};
+
+export type OrgDeactivatePositionErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgDeactivatePositionError =
+  OrgDeactivatePositionErrors[keyof OrgDeactivatePositionErrors];
+
+export type OrgDeactivatePositionResponses = {
+  /**
+   * Successful Response
+   */
+  204: void;
+};
+
+export type OrgDeactivatePositionResponse =
+  OrgDeactivatePositionResponses[keyof OrgDeactivatePositionResponses];
+
+export type OrgOrgTreeData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/api/v1/org/tree";
+};
+
+export type OrgOrgTreeResponses = {
+  /**
+   * Response Org-Org Tree
+   *
+   * Successful Response
+   */
+  200: Array<OrgUnitNode>;
+};
+
+export type OrgOrgTreeResponse = OrgOrgTreeResponses[keyof OrgOrgTreeResponses];
+
+export type OrgListUnitsData = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * Include Inactive
+     */
+    include_inactive?: boolean;
+  };
+  url: "/api/v1/org/units";
+};
+
+export type OrgListUnitsErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgListUnitsError = OrgListUnitsErrors[keyof OrgListUnitsErrors];
+
+export type OrgListUnitsResponses = {
+  /**
+   * Response Org-List Units
+   *
+   * Successful Response
+   */
+  200: Array<OrgUnitOut>;
+};
+
+export type OrgListUnitsResponse =
+  OrgListUnitsResponses[keyof OrgListUnitsResponses];
+
+export type OrgCreateUnitData = {
+  body: OrgUnitCreate;
+  path?: never;
+  query?: never;
+  url: "/api/v1/org/units";
+};
+
+export type OrgCreateUnitErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgCreateUnitError = OrgCreateUnitErrors[keyof OrgCreateUnitErrors];
+
+export type OrgCreateUnitResponses = {
+  /**
+   * Successful Response
+   */
+  201: OrgUnitOut;
+};
+
+export type OrgCreateUnitResponse =
+  OrgCreateUnitResponses[keyof OrgCreateUnitResponses];
+
+export type OrgDeactivateUnitData = {
+  body?: never;
+  path: {
+    /**
+     * Unit Id
+     */
+    unit_id: string;
+  };
+  query?: never;
+  url: "/api/v1/org/units/{unit_id}";
+};
+
+export type OrgDeactivateUnitErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgDeactivateUnitError =
+  OrgDeactivateUnitErrors[keyof OrgDeactivateUnitErrors];
+
+export type OrgDeactivateUnitResponses = {
+  /**
+   * Successful Response
+   */
+  204: void;
+};
+
+export type OrgDeactivateUnitResponse =
+  OrgDeactivateUnitResponses[keyof OrgDeactivateUnitResponses];
+
+export type OrgUpdateUnitData = {
+  body: OrgUnitUpdate;
+  path: {
+    /**
+     * Unit Id
+     */
+    unit_id: string;
+  };
+  query?: never;
+  url: "/api/v1/org/units/{unit_id}";
+};
+
+export type OrgUpdateUnitErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgUpdateUnitError = OrgUpdateUnitErrors[keyof OrgUpdateUnitErrors];
+
+export type OrgUpdateUnitResponses = {
+  /**
+   * Successful Response
+   */
+  200: OrgUnitOut;
+};
+
+export type OrgUpdateUnitResponse =
+  OrgUpdateUnitResponses[keyof OrgUpdateUnitResponses];
+
+export type OrgListWorkLocationsData = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * Include Inactive
+     */
+    include_inactive?: boolean;
+  };
+  url: "/api/v1/org/work-locations";
+};
+
+export type OrgListWorkLocationsErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgListWorkLocationsError =
+  OrgListWorkLocationsErrors[keyof OrgListWorkLocationsErrors];
+
+export type OrgListWorkLocationsResponses = {
+  /**
+   * Response Org-List Work Locations
+   *
+   * Successful Response
+   */
+  200: Array<WorkLocationOut>;
+};
+
+export type OrgListWorkLocationsResponse =
+  OrgListWorkLocationsResponses[keyof OrgListWorkLocationsResponses];
+
+export type OrgCreateWorkLocationData = {
+  body: WorkLocationCreate;
+  path?: never;
+  query?: never;
+  url: "/api/v1/org/work-locations";
+};
+
+export type OrgCreateWorkLocationErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgCreateWorkLocationError =
+  OrgCreateWorkLocationErrors[keyof OrgCreateWorkLocationErrors];
+
+export type OrgCreateWorkLocationResponses = {
+  /**
+   * Successful Response
+   */
+  201: WorkLocationOut;
+};
+
+export type OrgCreateWorkLocationResponse =
+  OrgCreateWorkLocationResponses[keyof OrgCreateWorkLocationResponses];
+
+export type OrgDeactivateWorkLocationData = {
+  body?: never;
+  path: {
+    /**
+     * Record Id
+     */
+    record_id: string;
+  };
+  query?: never;
+  url: "/api/v1/org/work-locations/{record_id}";
+};
+
+export type OrgDeactivateWorkLocationErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type OrgDeactivateWorkLocationError =
+  OrgDeactivateWorkLocationErrors[keyof OrgDeactivateWorkLocationErrors];
+
+export type OrgDeactivateWorkLocationResponses = {
+  /**
+   * Successful Response
+   */
+  204: void;
+};
+
+export type OrgDeactivateWorkLocationResponse =
+  OrgDeactivateWorkLocationResponses[keyof OrgDeactivateWorkLocationResponses];

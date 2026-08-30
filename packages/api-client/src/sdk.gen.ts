@@ -30,6 +30,74 @@ import type {
   EmployeesListEmployeesResponses,
   MetaHealthData,
   MetaHealthResponses,
+  OrgCreateCostCentreData,
+  OrgCreateCostCentreErrors,
+  OrgCreateCostCentreResponses,
+  OrgCreateDesignationData,
+  OrgCreateDesignationErrors,
+  OrgCreateDesignationResponses,
+  OrgCreateEmploymentCategoryData,
+  OrgCreateEmploymentCategoryErrors,
+  OrgCreateEmploymentCategoryResponses,
+  OrgCreateGradeLevelData,
+  OrgCreateGradeLevelErrors,
+  OrgCreateGradeLevelResponses,
+  OrgCreatePositionData,
+  OrgCreatePositionErrors,
+  OrgCreatePositionResponses,
+  OrgCreateUnitData,
+  OrgCreateUnitErrors,
+  OrgCreateUnitResponses,
+  OrgCreateWorkLocationData,
+  OrgCreateWorkLocationErrors,
+  OrgCreateWorkLocationResponses,
+  OrgDeactivateCostCentreData,
+  OrgDeactivateCostCentreErrors,
+  OrgDeactivateCostCentreResponses,
+  OrgDeactivateDesignationData,
+  OrgDeactivateDesignationErrors,
+  OrgDeactivateDesignationResponses,
+  OrgDeactivateEmploymentCategoryData,
+  OrgDeactivateEmploymentCategoryErrors,
+  OrgDeactivateEmploymentCategoryResponses,
+  OrgDeactivateGradeLevelData,
+  OrgDeactivateGradeLevelErrors,
+  OrgDeactivateGradeLevelResponses,
+  OrgDeactivatePositionData,
+  OrgDeactivatePositionErrors,
+  OrgDeactivatePositionResponses,
+  OrgDeactivateUnitData,
+  OrgDeactivateUnitErrors,
+  OrgDeactivateUnitResponses,
+  OrgDeactivateWorkLocationData,
+  OrgDeactivateWorkLocationErrors,
+  OrgDeactivateWorkLocationResponses,
+  OrgListCostCentresData,
+  OrgListCostCentresErrors,
+  OrgListCostCentresResponses,
+  OrgListDesignationsData,
+  OrgListDesignationsErrors,
+  OrgListDesignationsResponses,
+  OrgListEmploymentCategoriesData,
+  OrgListEmploymentCategoriesErrors,
+  OrgListEmploymentCategoriesResponses,
+  OrgListGradeLevelsData,
+  OrgListGradeLevelsErrors,
+  OrgListGradeLevelsResponses,
+  OrgListPositionsData,
+  OrgListPositionsErrors,
+  OrgListPositionsResponses,
+  OrgListUnitsData,
+  OrgListUnitsErrors,
+  OrgListUnitsResponses,
+  OrgListWorkLocationsData,
+  OrgListWorkLocationsErrors,
+  OrgListWorkLocationsResponses,
+  OrgOrgTreeData,
+  OrgOrgTreeResponses,
+  OrgUpdateUnitData,
+  OrgUpdateUnitErrors,
+  OrgUpdateUnitResponses,
 } from "./types.gen";
 
 export type Options<
@@ -52,6 +120,17 @@ export type Options<
 
 /**
  * Health
+ *
+ * Liveness plus a real database read.
+ *
+ * `SELECT 1` is not enough: it needs no table privileges and no schema, so it
+ * answers "connected" for a role that cannot read a single row and for a database
+ * with no tables at all. This once reported a healthy database while every request
+ * was failing with `permission denied for table companies`.
+ *
+ * Reading a real table exercises connectivity, privileges and the migrations
+ * together. Unhealthy returns 503, not 200 — a health check that always returns OK
+ * tells a load balancer nothing.
  */
 export const metaHealth = <ThrowOnError extends boolean = false>(
   options?: Options<MetaHealthData, ThrowOnError>,
@@ -169,5 +248,485 @@ export const employeesGetEmployee = <ThrowOnError extends boolean = false>(
   >({
     security: [{ scheme: "bearer", type: "http" }],
     url: "/api/v1/employees/{employee_id}",
+    ...options,
+  });
+
+/**
+ * List Cost Centres
+ */
+export const orgListCostCentres = <ThrowOnError extends boolean = false>(
+  options?: Options<OrgListCostCentresData, ThrowOnError>,
+): RequestResult<
+  OrgListCostCentresResponses,
+  OrgListCostCentresErrors,
+  ThrowOnError
+> =>
+  (options?.client ?? client).get<
+    OrgListCostCentresResponses,
+    OrgListCostCentresErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/cost-centres",
+    ...options,
+  });
+
+/**
+ * Create Cost Centre
+ */
+export const orgCreateCostCentre = <ThrowOnError extends boolean = false>(
+  options: Options<OrgCreateCostCentreData, ThrowOnError>,
+): RequestResult<
+  OrgCreateCostCentreResponses,
+  OrgCreateCostCentreErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    OrgCreateCostCentreResponses,
+    OrgCreateCostCentreErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/cost-centres",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Deactivate Cost Centre
+ */
+export const orgDeactivateCostCentre = <ThrowOnError extends boolean = false>(
+  options: Options<OrgDeactivateCostCentreData, ThrowOnError>,
+): RequestResult<
+  OrgDeactivateCostCentreResponses,
+  OrgDeactivateCostCentreErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).delete<
+    OrgDeactivateCostCentreResponses,
+    OrgDeactivateCostCentreErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/cost-centres/{record_id}",
+    ...options,
+  });
+
+/**
+ * List Designations
+ */
+export const orgListDesignations = <ThrowOnError extends boolean = false>(
+  options?: Options<OrgListDesignationsData, ThrowOnError>,
+): RequestResult<
+  OrgListDesignationsResponses,
+  OrgListDesignationsErrors,
+  ThrowOnError
+> =>
+  (options?.client ?? client).get<
+    OrgListDesignationsResponses,
+    OrgListDesignationsErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/designations",
+    ...options,
+  });
+
+/**
+ * Create Designation
+ */
+export const orgCreateDesignation = <ThrowOnError extends boolean = false>(
+  options: Options<OrgCreateDesignationData, ThrowOnError>,
+): RequestResult<
+  OrgCreateDesignationResponses,
+  OrgCreateDesignationErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    OrgCreateDesignationResponses,
+    OrgCreateDesignationErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/designations",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Deactivate Designation
+ */
+export const orgDeactivateDesignation = <ThrowOnError extends boolean = false>(
+  options: Options<OrgDeactivateDesignationData, ThrowOnError>,
+): RequestResult<
+  OrgDeactivateDesignationResponses,
+  OrgDeactivateDesignationErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).delete<
+    OrgDeactivateDesignationResponses,
+    OrgDeactivateDesignationErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/designations/{record_id}",
+    ...options,
+  });
+
+/**
+ * List Employment Categories
+ */
+export const orgListEmploymentCategories = <
+  ThrowOnError extends boolean = false,
+>(
+  options?: Options<OrgListEmploymentCategoriesData, ThrowOnError>,
+): RequestResult<
+  OrgListEmploymentCategoriesResponses,
+  OrgListEmploymentCategoriesErrors,
+  ThrowOnError
+> =>
+  (options?.client ?? client).get<
+    OrgListEmploymentCategoriesResponses,
+    OrgListEmploymentCategoriesErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/employment-categories",
+    ...options,
+  });
+
+/**
+ * Create Employment Category
+ */
+export const orgCreateEmploymentCategory = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<OrgCreateEmploymentCategoryData, ThrowOnError>,
+): RequestResult<
+  OrgCreateEmploymentCategoryResponses,
+  OrgCreateEmploymentCategoryErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    OrgCreateEmploymentCategoryResponses,
+    OrgCreateEmploymentCategoryErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/employment-categories",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Deactivate Employment Category
+ */
+export const orgDeactivateEmploymentCategory = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<OrgDeactivateEmploymentCategoryData, ThrowOnError>,
+): RequestResult<
+  OrgDeactivateEmploymentCategoryResponses,
+  OrgDeactivateEmploymentCategoryErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).delete<
+    OrgDeactivateEmploymentCategoryResponses,
+    OrgDeactivateEmploymentCategoryErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/employment-categories/{record_id}",
+    ...options,
+  });
+
+/**
+ * List Grade Levels
+ */
+export const orgListGradeLevels = <ThrowOnError extends boolean = false>(
+  options?: Options<OrgListGradeLevelsData, ThrowOnError>,
+): RequestResult<
+  OrgListGradeLevelsResponses,
+  OrgListGradeLevelsErrors,
+  ThrowOnError
+> =>
+  (options?.client ?? client).get<
+    OrgListGradeLevelsResponses,
+    OrgListGradeLevelsErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/grade-levels",
+    ...options,
+  });
+
+/**
+ * Create Grade Level
+ */
+export const orgCreateGradeLevel = <ThrowOnError extends boolean = false>(
+  options: Options<OrgCreateGradeLevelData, ThrowOnError>,
+): RequestResult<
+  OrgCreateGradeLevelResponses,
+  OrgCreateGradeLevelErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    OrgCreateGradeLevelResponses,
+    OrgCreateGradeLevelErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/grade-levels",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Deactivate Grade Level
+ */
+export const orgDeactivateGradeLevel = <ThrowOnError extends boolean = false>(
+  options: Options<OrgDeactivateGradeLevelData, ThrowOnError>,
+): RequestResult<
+  OrgDeactivateGradeLevelResponses,
+  OrgDeactivateGradeLevelErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).delete<
+    OrgDeactivateGradeLevelResponses,
+    OrgDeactivateGradeLevelErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/grade-levels/{record_id}",
+    ...options,
+  });
+
+/**
+ * List Positions
+ */
+export const orgListPositions = <ThrowOnError extends boolean = false>(
+  options?: Options<OrgListPositionsData, ThrowOnError>,
+): RequestResult<
+  OrgListPositionsResponses,
+  OrgListPositionsErrors,
+  ThrowOnError
+> =>
+  (options?.client ?? client).get<
+    OrgListPositionsResponses,
+    OrgListPositionsErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/positions",
+    ...options,
+  });
+
+/**
+ * Create Position
+ */
+export const orgCreatePosition = <ThrowOnError extends boolean = false>(
+  options: Options<OrgCreatePositionData, ThrowOnError>,
+): RequestResult<
+  OrgCreatePositionResponses,
+  OrgCreatePositionErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    OrgCreatePositionResponses,
+    OrgCreatePositionErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/positions",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Deactivate Position
+ */
+export const orgDeactivatePosition = <ThrowOnError extends boolean = false>(
+  options: Options<OrgDeactivatePositionData, ThrowOnError>,
+): RequestResult<
+  OrgDeactivatePositionResponses,
+  OrgDeactivatePositionErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).delete<
+    OrgDeactivatePositionResponses,
+    OrgDeactivatePositionErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/positions/{position_id}",
+    ...options,
+  });
+
+/**
+ * Org Tree
+ *
+ * The whole chart in one request — one query, assembled in memory, no N+1.
+ */
+export const orgOrgTree = <ThrowOnError extends boolean = false>(
+  options?: Options<OrgOrgTreeData, ThrowOnError>,
+): RequestResult<OrgOrgTreeResponses, unknown, ThrowOnError> =>
+  (options?.client ?? client).get<OrgOrgTreeResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/tree",
+    ...options,
+  });
+
+/**
+ * List Units
+ */
+export const orgListUnits = <ThrowOnError extends boolean = false>(
+  options?: Options<OrgListUnitsData, ThrowOnError>,
+): RequestResult<OrgListUnitsResponses, OrgListUnitsErrors, ThrowOnError> =>
+  (options?.client ?? client).get<
+    OrgListUnitsResponses,
+    OrgListUnitsErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/units",
+    ...options,
+  });
+
+/**
+ * Create Unit
+ */
+export const orgCreateUnit = <ThrowOnError extends boolean = false>(
+  options: Options<OrgCreateUnitData, ThrowOnError>,
+): RequestResult<OrgCreateUnitResponses, OrgCreateUnitErrors, ThrowOnError> =>
+  (options.client ?? client).post<
+    OrgCreateUnitResponses,
+    OrgCreateUnitErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/units",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Deactivate Unit
+ */
+export const orgDeactivateUnit = <ThrowOnError extends boolean = false>(
+  options: Options<OrgDeactivateUnitData, ThrowOnError>,
+): RequestResult<
+  OrgDeactivateUnitResponses,
+  OrgDeactivateUnitErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).delete<
+    OrgDeactivateUnitResponses,
+    OrgDeactivateUnitErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/units/{unit_id}",
+    ...options,
+  });
+
+/**
+ * Update Unit
+ */
+export const orgUpdateUnit = <ThrowOnError extends boolean = false>(
+  options: Options<OrgUpdateUnitData, ThrowOnError>,
+): RequestResult<OrgUpdateUnitResponses, OrgUpdateUnitErrors, ThrowOnError> =>
+  (options.client ?? client).patch<
+    OrgUpdateUnitResponses,
+    OrgUpdateUnitErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/units/{unit_id}",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * List Work Locations
+ */
+export const orgListWorkLocations = <ThrowOnError extends boolean = false>(
+  options?: Options<OrgListWorkLocationsData, ThrowOnError>,
+): RequestResult<
+  OrgListWorkLocationsResponses,
+  OrgListWorkLocationsErrors,
+  ThrowOnError
+> =>
+  (options?.client ?? client).get<
+    OrgListWorkLocationsResponses,
+    OrgListWorkLocationsErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/work-locations",
+    ...options,
+  });
+
+/**
+ * Create Work Location
+ */
+export const orgCreateWorkLocation = <ThrowOnError extends boolean = false>(
+  options: Options<OrgCreateWorkLocationData, ThrowOnError>,
+): RequestResult<
+  OrgCreateWorkLocationResponses,
+  OrgCreateWorkLocationErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    OrgCreateWorkLocationResponses,
+    OrgCreateWorkLocationErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/work-locations",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Deactivate Work Location
+ */
+export const orgDeactivateWorkLocation = <ThrowOnError extends boolean = false>(
+  options: Options<OrgDeactivateWorkLocationData, ThrowOnError>,
+): RequestResult<
+  OrgDeactivateWorkLocationResponses,
+  OrgDeactivateWorkLocationErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).delete<
+    OrgDeactivateWorkLocationResponses,
+    OrgDeactivateWorkLocationErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/org/work-locations/{record_id}",
     ...options,
   });

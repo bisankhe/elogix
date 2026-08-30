@@ -8,7 +8,7 @@ import { isAuthenticated, setAccessToken } from '@/lib/auth'
 
 export const Route = createFileRoute('/login')({
   beforeLoad: () => {
-    if (isAuthenticated()) throw redirect({ to: '/employees' })
+    if (isAuthenticated()) throw redirect({ to: '/dashboard' })
   },
   component: LoginPage,
 })
@@ -31,7 +31,7 @@ function LoginPage() {
       // Only the access token comes back in the body; the refresh token is an httpOnly
       // cookie the browser stores and no script here can see.
       setAccessToken(access_token)
-      void navigate({ to: '/employees' })
+      void navigate({ to: '/dashboard' })
     },
   })
 

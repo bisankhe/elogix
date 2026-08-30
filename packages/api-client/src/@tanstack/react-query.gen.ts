@@ -19,6 +19,29 @@ import {
   employeesListEmployees,
   metaHealth,
   type Options,
+  orgCreateCostCentre,
+  orgCreateDesignation,
+  orgCreateEmploymentCategory,
+  orgCreateGradeLevel,
+  orgCreatePosition,
+  orgCreateUnit,
+  orgCreateWorkLocation,
+  orgDeactivateCostCentre,
+  orgDeactivateDesignation,
+  orgDeactivateEmploymentCategory,
+  orgDeactivateGradeLevel,
+  orgDeactivatePosition,
+  orgDeactivateUnit,
+  orgDeactivateWorkLocation,
+  orgListCostCentres,
+  orgListDesignations,
+  orgListEmploymentCategories,
+  orgListGradeLevels,
+  orgListPositions,
+  orgListUnits,
+  orgListWorkLocations,
+  orgOrgTree,
+  orgUpdateUnit,
 } from "../sdk.gen";
 import type {
   AuthEntitlementsData,
@@ -42,6 +65,74 @@ import type {
   EmployeesListEmployeesResponse,
   MetaHealthData,
   MetaHealthResponse,
+  OrgCreateCostCentreData,
+  OrgCreateCostCentreError,
+  OrgCreateCostCentreResponse,
+  OrgCreateDesignationData,
+  OrgCreateDesignationError,
+  OrgCreateDesignationResponse,
+  OrgCreateEmploymentCategoryData,
+  OrgCreateEmploymentCategoryError,
+  OrgCreateEmploymentCategoryResponse,
+  OrgCreateGradeLevelData,
+  OrgCreateGradeLevelError,
+  OrgCreateGradeLevelResponse,
+  OrgCreatePositionData,
+  OrgCreatePositionError,
+  OrgCreatePositionResponse,
+  OrgCreateUnitData,
+  OrgCreateUnitError,
+  OrgCreateUnitResponse,
+  OrgCreateWorkLocationData,
+  OrgCreateWorkLocationError,
+  OrgCreateWorkLocationResponse,
+  OrgDeactivateCostCentreData,
+  OrgDeactivateCostCentreError,
+  OrgDeactivateCostCentreResponse,
+  OrgDeactivateDesignationData,
+  OrgDeactivateDesignationError,
+  OrgDeactivateDesignationResponse,
+  OrgDeactivateEmploymentCategoryData,
+  OrgDeactivateEmploymentCategoryError,
+  OrgDeactivateEmploymentCategoryResponse,
+  OrgDeactivateGradeLevelData,
+  OrgDeactivateGradeLevelError,
+  OrgDeactivateGradeLevelResponse,
+  OrgDeactivatePositionData,
+  OrgDeactivatePositionError,
+  OrgDeactivatePositionResponse,
+  OrgDeactivateUnitData,
+  OrgDeactivateUnitError,
+  OrgDeactivateUnitResponse,
+  OrgDeactivateWorkLocationData,
+  OrgDeactivateWorkLocationError,
+  OrgDeactivateWorkLocationResponse,
+  OrgListCostCentresData,
+  OrgListCostCentresError,
+  OrgListCostCentresResponse,
+  OrgListDesignationsData,
+  OrgListDesignationsError,
+  OrgListDesignationsResponse,
+  OrgListEmploymentCategoriesData,
+  OrgListEmploymentCategoriesError,
+  OrgListEmploymentCategoriesResponse,
+  OrgListGradeLevelsData,
+  OrgListGradeLevelsError,
+  OrgListGradeLevelsResponse,
+  OrgListPositionsData,
+  OrgListPositionsError,
+  OrgListPositionsResponse,
+  OrgListUnitsData,
+  OrgListUnitsError,
+  OrgListUnitsResponse,
+  OrgListWorkLocationsData,
+  OrgListWorkLocationsError,
+  OrgListWorkLocationsResponse,
+  OrgOrgTreeData,
+  OrgOrgTreeResponse,
+  OrgUpdateUnitData,
+  OrgUpdateUnitError,
+  OrgUpdateUnitResponse,
 } from "../types.gen";
 
 export type QueryKey<TOptions extends Options> = [
@@ -89,6 +180,17 @@ export const metaHealthQueryKey = (options?: Options<MetaHealthData>) =>
 
 /**
  * Health
+ *
+ * Liveness plus a real database read.
+ *
+ * `SELECT 1` is not enough: it needs no table privileges and no schema, so it
+ * answers "connected" for a role that cannot read a single row and for a database
+ * with no tables at all. This once reported a healthy database while every request
+ * was failing with `permission denied for table companies`.
+ *
+ * Reading a real table exercises connectivity, privileges and the migrations
+ * together. Unhealthy returns 503, not 200 — a health check that always returns OK
+ * tells a load balancer nothing.
  */
 export const metaHealthOptions = (options?: Options<MetaHealthData>) =>
   queryOptions<
@@ -384,3 +486,628 @@ export const employeesGetEmployeeOptions = (
     },
     queryKey: employeesGetEmployeeQueryKey(options),
   });
+
+export const orgListCostCentresQueryKey = (
+  options?: Options<OrgListCostCentresData>,
+) => createQueryKey("orgListCostCentres", options);
+
+/**
+ * List Cost Centres
+ */
+export const orgListCostCentresOptions = (
+  options?: Options<OrgListCostCentresData>,
+) =>
+  queryOptions<
+    OrgListCostCentresResponse,
+    OrgListCostCentresError,
+    OrgListCostCentresResponse,
+    ReturnType<typeof orgListCostCentresQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await orgListCostCentres({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: orgListCostCentresQueryKey(options),
+  });
+
+/**
+ * Create Cost Centre
+ */
+export const orgCreateCostCentreMutation = (
+  options?: Partial<Options<OrgCreateCostCentreData>>,
+): UseMutationOptions<
+  OrgCreateCostCentreResponse,
+  OrgCreateCostCentreError,
+  Options<OrgCreateCostCentreData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    OrgCreateCostCentreResponse,
+    OrgCreateCostCentreError,
+    Options<OrgCreateCostCentreData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await orgCreateCostCentre({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Deactivate Cost Centre
+ */
+export const orgDeactivateCostCentreMutation = (
+  options?: Partial<Options<OrgDeactivateCostCentreData>>,
+): UseMutationOptions<
+  OrgDeactivateCostCentreResponse,
+  OrgDeactivateCostCentreError,
+  Options<OrgDeactivateCostCentreData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    OrgDeactivateCostCentreResponse,
+    OrgDeactivateCostCentreError,
+    Options<OrgDeactivateCostCentreData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await orgDeactivateCostCentre({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const orgListDesignationsQueryKey = (
+  options?: Options<OrgListDesignationsData>,
+) => createQueryKey("orgListDesignations", options);
+
+/**
+ * List Designations
+ */
+export const orgListDesignationsOptions = (
+  options?: Options<OrgListDesignationsData>,
+) =>
+  queryOptions<
+    OrgListDesignationsResponse,
+    OrgListDesignationsError,
+    OrgListDesignationsResponse,
+    ReturnType<typeof orgListDesignationsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await orgListDesignations({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: orgListDesignationsQueryKey(options),
+  });
+
+/**
+ * Create Designation
+ */
+export const orgCreateDesignationMutation = (
+  options?: Partial<Options<OrgCreateDesignationData>>,
+): UseMutationOptions<
+  OrgCreateDesignationResponse,
+  OrgCreateDesignationError,
+  Options<OrgCreateDesignationData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    OrgCreateDesignationResponse,
+    OrgCreateDesignationError,
+    Options<OrgCreateDesignationData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await orgCreateDesignation({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Deactivate Designation
+ */
+export const orgDeactivateDesignationMutation = (
+  options?: Partial<Options<OrgDeactivateDesignationData>>,
+): UseMutationOptions<
+  OrgDeactivateDesignationResponse,
+  OrgDeactivateDesignationError,
+  Options<OrgDeactivateDesignationData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    OrgDeactivateDesignationResponse,
+    OrgDeactivateDesignationError,
+    Options<OrgDeactivateDesignationData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await orgDeactivateDesignation({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const orgListEmploymentCategoriesQueryKey = (
+  options?: Options<OrgListEmploymentCategoriesData>,
+) => createQueryKey("orgListEmploymentCategories", options);
+
+/**
+ * List Employment Categories
+ */
+export const orgListEmploymentCategoriesOptions = (
+  options?: Options<OrgListEmploymentCategoriesData>,
+) =>
+  queryOptions<
+    OrgListEmploymentCategoriesResponse,
+    OrgListEmploymentCategoriesError,
+    OrgListEmploymentCategoriesResponse,
+    ReturnType<typeof orgListEmploymentCategoriesQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await orgListEmploymentCategories({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: orgListEmploymentCategoriesQueryKey(options),
+  });
+
+/**
+ * Create Employment Category
+ */
+export const orgCreateEmploymentCategoryMutation = (
+  options?: Partial<Options<OrgCreateEmploymentCategoryData>>,
+): UseMutationOptions<
+  OrgCreateEmploymentCategoryResponse,
+  OrgCreateEmploymentCategoryError,
+  Options<OrgCreateEmploymentCategoryData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    OrgCreateEmploymentCategoryResponse,
+    OrgCreateEmploymentCategoryError,
+    Options<OrgCreateEmploymentCategoryData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await orgCreateEmploymentCategory({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Deactivate Employment Category
+ */
+export const orgDeactivateEmploymentCategoryMutation = (
+  options?: Partial<Options<OrgDeactivateEmploymentCategoryData>>,
+): UseMutationOptions<
+  OrgDeactivateEmploymentCategoryResponse,
+  OrgDeactivateEmploymentCategoryError,
+  Options<OrgDeactivateEmploymentCategoryData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    OrgDeactivateEmploymentCategoryResponse,
+    OrgDeactivateEmploymentCategoryError,
+    Options<OrgDeactivateEmploymentCategoryData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await orgDeactivateEmploymentCategory({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const orgListGradeLevelsQueryKey = (
+  options?: Options<OrgListGradeLevelsData>,
+) => createQueryKey("orgListGradeLevels", options);
+
+/**
+ * List Grade Levels
+ */
+export const orgListGradeLevelsOptions = (
+  options?: Options<OrgListGradeLevelsData>,
+) =>
+  queryOptions<
+    OrgListGradeLevelsResponse,
+    OrgListGradeLevelsError,
+    OrgListGradeLevelsResponse,
+    ReturnType<typeof orgListGradeLevelsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await orgListGradeLevels({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: orgListGradeLevelsQueryKey(options),
+  });
+
+/**
+ * Create Grade Level
+ */
+export const orgCreateGradeLevelMutation = (
+  options?: Partial<Options<OrgCreateGradeLevelData>>,
+): UseMutationOptions<
+  OrgCreateGradeLevelResponse,
+  OrgCreateGradeLevelError,
+  Options<OrgCreateGradeLevelData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    OrgCreateGradeLevelResponse,
+    OrgCreateGradeLevelError,
+    Options<OrgCreateGradeLevelData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await orgCreateGradeLevel({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Deactivate Grade Level
+ */
+export const orgDeactivateGradeLevelMutation = (
+  options?: Partial<Options<OrgDeactivateGradeLevelData>>,
+): UseMutationOptions<
+  OrgDeactivateGradeLevelResponse,
+  OrgDeactivateGradeLevelError,
+  Options<OrgDeactivateGradeLevelData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    OrgDeactivateGradeLevelResponse,
+    OrgDeactivateGradeLevelError,
+    Options<OrgDeactivateGradeLevelData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await orgDeactivateGradeLevel({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const orgListPositionsQueryKey = (
+  options?: Options<OrgListPositionsData>,
+) => createQueryKey("orgListPositions", options);
+
+/**
+ * List Positions
+ */
+export const orgListPositionsOptions = (
+  options?: Options<OrgListPositionsData>,
+) =>
+  queryOptions<
+    OrgListPositionsResponse,
+    OrgListPositionsError,
+    OrgListPositionsResponse,
+    ReturnType<typeof orgListPositionsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await orgListPositions({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: orgListPositionsQueryKey(options),
+  });
+
+/**
+ * Create Position
+ */
+export const orgCreatePositionMutation = (
+  options?: Partial<Options<OrgCreatePositionData>>,
+): UseMutationOptions<
+  OrgCreatePositionResponse,
+  OrgCreatePositionError,
+  Options<OrgCreatePositionData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    OrgCreatePositionResponse,
+    OrgCreatePositionError,
+    Options<OrgCreatePositionData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await orgCreatePosition({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Deactivate Position
+ */
+export const orgDeactivatePositionMutation = (
+  options?: Partial<Options<OrgDeactivatePositionData>>,
+): UseMutationOptions<
+  OrgDeactivatePositionResponse,
+  OrgDeactivatePositionError,
+  Options<OrgDeactivatePositionData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    OrgDeactivatePositionResponse,
+    OrgDeactivatePositionError,
+    Options<OrgDeactivatePositionData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await orgDeactivatePosition({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const orgOrgTreeQueryKey = (options?: Options<OrgOrgTreeData>) =>
+  createQueryKey("orgOrgTree", options);
+
+/**
+ * Org Tree
+ *
+ * The whole chart in one request — one query, assembled in memory, no N+1.
+ */
+export const orgOrgTreeOptions = (options?: Options<OrgOrgTreeData>) =>
+  queryOptions<
+    OrgOrgTreeResponse,
+    DefaultError,
+    OrgOrgTreeResponse,
+    ReturnType<typeof orgOrgTreeQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await orgOrgTree({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: orgOrgTreeQueryKey(options),
+  });
+
+export const orgListUnitsQueryKey = (options?: Options<OrgListUnitsData>) =>
+  createQueryKey("orgListUnits", options);
+
+/**
+ * List Units
+ */
+export const orgListUnitsOptions = (options?: Options<OrgListUnitsData>) =>
+  queryOptions<
+    OrgListUnitsResponse,
+    OrgListUnitsError,
+    OrgListUnitsResponse,
+    ReturnType<typeof orgListUnitsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await orgListUnits({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: orgListUnitsQueryKey(options),
+  });
+
+/**
+ * Create Unit
+ */
+export const orgCreateUnitMutation = (
+  options?: Partial<Options<OrgCreateUnitData>>,
+): UseMutationOptions<
+  OrgCreateUnitResponse,
+  OrgCreateUnitError,
+  Options<OrgCreateUnitData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    OrgCreateUnitResponse,
+    OrgCreateUnitError,
+    Options<OrgCreateUnitData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await orgCreateUnit({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Deactivate Unit
+ */
+export const orgDeactivateUnitMutation = (
+  options?: Partial<Options<OrgDeactivateUnitData>>,
+): UseMutationOptions<
+  OrgDeactivateUnitResponse,
+  OrgDeactivateUnitError,
+  Options<OrgDeactivateUnitData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    OrgDeactivateUnitResponse,
+    OrgDeactivateUnitError,
+    Options<OrgDeactivateUnitData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await orgDeactivateUnit({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Update Unit
+ */
+export const orgUpdateUnitMutation = (
+  options?: Partial<Options<OrgUpdateUnitData>>,
+): UseMutationOptions<
+  OrgUpdateUnitResponse,
+  OrgUpdateUnitError,
+  Options<OrgUpdateUnitData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    OrgUpdateUnitResponse,
+    OrgUpdateUnitError,
+    Options<OrgUpdateUnitData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await orgUpdateUnit({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const orgListWorkLocationsQueryKey = (
+  options?: Options<OrgListWorkLocationsData>,
+) => createQueryKey("orgListWorkLocations", options);
+
+/**
+ * List Work Locations
+ */
+export const orgListWorkLocationsOptions = (
+  options?: Options<OrgListWorkLocationsData>,
+) =>
+  queryOptions<
+    OrgListWorkLocationsResponse,
+    OrgListWorkLocationsError,
+    OrgListWorkLocationsResponse,
+    ReturnType<typeof orgListWorkLocationsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await orgListWorkLocations({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: orgListWorkLocationsQueryKey(options),
+  });
+
+/**
+ * Create Work Location
+ */
+export const orgCreateWorkLocationMutation = (
+  options?: Partial<Options<OrgCreateWorkLocationData>>,
+): UseMutationOptions<
+  OrgCreateWorkLocationResponse,
+  OrgCreateWorkLocationError,
+  Options<OrgCreateWorkLocationData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    OrgCreateWorkLocationResponse,
+    OrgCreateWorkLocationError,
+    Options<OrgCreateWorkLocationData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await orgCreateWorkLocation({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Deactivate Work Location
+ */
+export const orgDeactivateWorkLocationMutation = (
+  options?: Partial<Options<OrgDeactivateWorkLocationData>>,
+): UseMutationOptions<
+  OrgDeactivateWorkLocationResponse,
+  OrgDeactivateWorkLocationError,
+  Options<OrgDeactivateWorkLocationData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    OrgDeactivateWorkLocationResponse,
+    OrgDeactivateWorkLocationError,
+    Options<OrgDeactivateWorkLocationData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await orgDeactivateWorkLocation({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};

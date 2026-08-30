@@ -10,17 +10,22 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as EmployeesRouteImport } from './routes/employees'
+import { Route as AppRouteImport } from './routes/_app'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
+import { Route as AppEmployeesRouteImport } from './routes/_app/employees'
+import { Route as AppOrgGradesRouteImport } from './routes/_app/org/grades'
+import { Route as AppOrgLocationsRouteImport } from './routes/_app/org/locations'
+import { Route as AppOrgPositionsRouteImport } from './routes/_app/org/positions'
+import { Route as AppOrgUnitsRouteImport } from './routes/_app/org/units'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EmployeesRoute = EmployeesRouteImport.update({
-  id: '/employees',
-  path: '/employees',
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -28,34 +33,106 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppDashboardRoute = AppDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEmployeesRoute = AppEmployeesRouteImport.update({
+  id: '/employees',
+  path: '/employees',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOrgGradesRoute = AppOrgGradesRouteImport.update({
+  id: '/org/grades',
+  path: '/org/grades',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOrgLocationsRoute = AppOrgLocationsRouteImport.update({
+  id: '/org/locations',
+  path: '/org/locations',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOrgPositionsRoute = AppOrgPositionsRouteImport.update({
+  id: '/org/positions',
+  path: '/org/positions',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOrgUnitsRoute = AppOrgUnitsRouteImport.update({
+  id: '/org/units',
+  path: '/org/units',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/employees': typeof EmployeesRoute
   '/login': typeof LoginRoute
+  '/dashboard': typeof AppDashboardRoute
+  '/employees': typeof AppEmployeesRoute
+  '/org/grades': typeof AppOrgGradesRoute
+  '/org/locations': typeof AppOrgLocationsRoute
+  '/org/positions': typeof AppOrgPositionsRoute
+  '/org/units': typeof AppOrgUnitsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/employees': typeof EmployeesRoute
   '/login': typeof LoginRoute
+  '/dashboard': typeof AppDashboardRoute
+  '/employees': typeof AppEmployeesRoute
+  '/org/grades': typeof AppOrgGradesRoute
+  '/org/locations': typeof AppOrgLocationsRoute
+  '/org/positions': typeof AppOrgPositionsRoute
+  '/org/units': typeof AppOrgUnitsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/employees': typeof EmployeesRoute
+  '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
+  '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/employees': typeof AppEmployeesRoute
+  '/_app/org/grades': typeof AppOrgGradesRoute
+  '/_app/org/locations': typeof AppOrgLocationsRoute
+  '/_app/org/positions': typeof AppOrgPositionsRoute
+  '/_app/org/units': typeof AppOrgUnitsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/employees' | '/login'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/dashboard'
+    | '/employees'
+    | '/org/grades'
+    | '/org/locations'
+    | '/org/positions'
+    | '/org/units'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/employees' | '/login'
-  id: '__root__' | '/' | '/employees' | '/login'
+  to:
+    | '/'
+    | '/login'
+    | '/dashboard'
+    | '/employees'
+    | '/org/grades'
+    | '/org/locations'
+    | '/org/positions'
+    | '/org/units'
+  id:
+    | '__root__'
+    | '/'
+    | '/_app'
+    | '/login'
+    | '/_app/dashboard'
+    | '/_app/employees'
+    | '/_app/org/grades'
+    | '/_app/org/locations'
+    | '/_app/org/positions'
+    | '/_app/org/units'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  EmployeesRoute: typeof EmployeesRoute
+  AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
 }
 
@@ -68,11 +145,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/employees': {
-      id: '/employees'
-      path: '/employees'
-      fullPath: '/employees'
-      preLoaderRoute: typeof EmployeesRouteImport
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -82,12 +159,74 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/dashboard': {
+      id: '/_app/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/employees': {
+      id: '/_app/employees'
+      path: '/employees'
+      fullPath: '/employees'
+      preLoaderRoute: typeof AppEmployeesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/org/grades': {
+      id: '/_app/org/grades'
+      path: '/org/grades'
+      fullPath: '/org/grades'
+      preLoaderRoute: typeof AppOrgGradesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/org/locations': {
+      id: '/_app/org/locations'
+      path: '/org/locations'
+      fullPath: '/org/locations'
+      preLoaderRoute: typeof AppOrgLocationsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/org/positions': {
+      id: '/_app/org/positions'
+      path: '/org/positions'
+      fullPath: '/org/positions'
+      preLoaderRoute: typeof AppOrgPositionsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/org/units': {
+      id: '/_app/org/units'
+      path: '/org/units'
+      fullPath: '/org/units'
+      preLoaderRoute: typeof AppOrgUnitsRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
+interface AppRouteChildren {
+  AppDashboardRoute: typeof AppDashboardRoute
+  AppEmployeesRoute: typeof AppEmployeesRoute
+  AppOrgGradesRoute: typeof AppOrgGradesRoute
+  AppOrgLocationsRoute: typeof AppOrgLocationsRoute
+  AppOrgPositionsRoute: typeof AppOrgPositionsRoute
+  AppOrgUnitsRoute: typeof AppOrgUnitsRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppDashboardRoute: AppDashboardRoute,
+  AppEmployeesRoute: AppEmployeesRoute,
+  AppOrgGradesRoute: AppOrgGradesRoute,
+  AppOrgLocationsRoute: AppOrgLocationsRoute,
+  AppOrgPositionsRoute: AppOrgPositionsRoute,
+  AppOrgUnitsRoute: AppOrgUnitsRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  EmployeesRoute: EmployeesRoute,
+  AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport

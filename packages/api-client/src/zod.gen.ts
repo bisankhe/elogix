@@ -17,6 +17,52 @@ export const zAccessToken = z.object({
 });
 
 /**
+ * CostCentreCreate
+ */
+export const zCostCentreCreate = z.object({
+  code: z
+    .string()
+    .min(1)
+    .max(32)
+    .regex(/^[A-Za-z0-9][A-Za-z0-9._-]*$/),
+  name: z.string().min(1).max(200),
+});
+
+/**
+ * CostCentreOut
+ */
+export const zCostCentreOut = z.object({
+  code: z.string(),
+  id: z.uuid(),
+  is_active: z.boolean(),
+  name: z.string(),
+});
+
+/**
+ * DesignationCreate
+ */
+export const zDesignationCreate = z.object({
+  code: z
+    .string()
+    .min(1)
+    .max(32)
+    .regex(/^[A-Za-z0-9][A-Za-z0-9._-]*$/),
+  grade_level_id: z.uuid().nullish(),
+  name: z.string().min(1).max(200),
+});
+
+/**
+ * DesignationOut
+ */
+export const zDesignationOut = z.object({
+  code: z.string(),
+  grade_level_id: z.uuid().nullable(),
+  id: z.uuid(),
+  is_active: z.boolean(),
+  name: z.string(),
+});
+
+/**
  * EmployeeStatus
  */
 export const zEmployeeStatus = z.enum([
@@ -44,6 +90,77 @@ export const zEmployeeOut = z.object({
 export const zEmployeeList = z.object({
   items: z.array(zEmployeeOut),
   total: z.int(),
+});
+
+/**
+ * EmploymentType
+ *
+ * Nepal Labour Act 2074 recognises these employment categories.
+ */
+export const zEmploymentType = z.enum([
+  "permanent",
+  "probation",
+  "contract",
+  "casual",
+  "part_time",
+  "trainee",
+  "intern",
+  "outsourced",
+  "consultant",
+]);
+
+/**
+ * EmploymentCategoryCreate
+ */
+export const zEmploymentCategoryCreate = z.object({
+  code: z
+    .string()
+    .min(1)
+    .max(32)
+    .regex(/^[A-Za-z0-9][A-Za-z0-9._-]*$/),
+  employment_type: zEmploymentType,
+  is_overtime_eligible: z.boolean().optional().default(true),
+  name: z.string().min(1).max(200),
+  notice_days: z.int().gte(0).lte(365).optional().default(30),
+  probation_months: z.int().gte(0).lte(6).optional().default(0),
+});
+
+/**
+ * EmploymentCategoryOut
+ */
+export const zEmploymentCategoryOut = z.object({
+  code: z.string(),
+  employment_type: zEmploymentType,
+  id: z.uuid(),
+  is_active: z.boolean(),
+  is_overtime_eligible: z.boolean(),
+  name: z.string(),
+  notice_days: z.int(),
+  probation_months: z.int(),
+});
+
+/**
+ * GradeLevelCreate
+ */
+export const zGradeLevelCreate = z.object({
+  code: z
+    .string()
+    .min(1)
+    .max(32)
+    .regex(/^[A-Za-z0-9][A-Za-z0-9._-]*$/),
+  name: z.string().min(1).max(200),
+  rank: z.int().gte(1).lte(100),
+});
+
+/**
+ * GradeLevelOut
+ */
+export const zGradeLevelOut = z.object({
+  code: z.string(),
+  id: z.uuid(),
+  is_active: z.boolean(),
+  name: z.string(),
+  rank: z.int(),
 });
 
 /**
@@ -76,6 +193,78 @@ export const zModuleCode = z.enum([
 ]);
 
 /**
+ * OrgUnitKind
+ *
+ * Depth labels for the single org tree. Ordered broadest to narrowest.
+ */
+export const zOrgUnitKind = z.enum([
+  "group",
+  "company",
+  "branch",
+  "business_unit",
+  "division",
+  "department",
+  "section",
+  "team",
+]);
+
+/**
+ * OrgUnitCreate
+ */
+export const zOrgUnitCreate = z.object({
+  code: z
+    .string()
+    .min(1)
+    .max(32)
+    .regex(/^[A-Za-z0-9][A-Za-z0-9._-]*$/),
+  kind: zOrgUnitKind.optional().default("department"),
+  name: z.string().min(1).max(200),
+  parent_id: z.uuid().nullish(),
+});
+
+/**
+ * OrgUnitNode
+ *
+ * One node with its subtree, for rendering the chart in a single request.
+ */
+export const zOrgUnitNode = z.object({
+  children: z
+    .array(z.lazy((): any => zOrgUnitNode))
+    .optional()
+    .default([]),
+  code: z.string(),
+  depth: z.int(),
+  id: z.uuid(),
+  is_active: z.boolean(),
+  kind: zOrgUnitKind,
+  name: z.string(),
+  parent_id: z.uuid().nullable(),
+});
+
+/**
+ * OrgUnitOut
+ */
+export const zOrgUnitOut = z.object({
+  code: z.string(),
+  depth: z.int(),
+  id: z.uuid(),
+  is_active: z.boolean(),
+  kind: zOrgUnitKind,
+  name: z.string(),
+  parent_id: z.uuid().nullable(),
+});
+
+/**
+ * OrgUnitUpdate
+ */
+export const zOrgUnitUpdate = z.object({
+  is_active: z.boolean().nullish(),
+  kind: zOrgUnitKind.nullish(),
+  name: z.string().min(1).max(200).nullish(),
+  parent_id: z.uuid().nullish(),
+});
+
+/**
  * PlanTier
  *
  * The five-tier plan ladder. Also the build order — each tier is roughly a phase.
@@ -98,6 +287,42 @@ export const zEntitlementsOut = z.object({
   company_id: z.uuid(),
   modules: z.array(zModuleCode),
   plan_tier: zPlanTier,
+});
+
+/**
+ * PositionCreate
+ */
+export const zPositionCreate = z.object({
+  code: z
+    .string()
+    .min(1)
+    .max(32)
+    .regex(/^[A-Za-z0-9][A-Za-z0-9._-]*$/),
+  cost_centre_id: z.uuid().nullish(),
+  designation_id: z.uuid().nullish(),
+  employment_category_id: z.uuid().nullish(),
+  headcount: z.int().gte(0).lte(9999).optional().default(1),
+  org_unit_id: z.uuid(),
+  reports_to_id: z.uuid().nullish(),
+  title: z.string().min(1).max(200),
+  work_location_id: z.uuid().nullish(),
+});
+
+/**
+ * PositionOut
+ */
+export const zPositionOut = z.object({
+  code: z.string(),
+  cost_centre_id: z.uuid().nullable(),
+  designation_id: z.uuid().nullable(),
+  employment_category_id: z.uuid().nullable(),
+  headcount: z.int(),
+  id: z.uuid(),
+  is_active: z.boolean(),
+  org_unit_id: z.uuid(),
+  reports_to_id: z.uuid().nullable(),
+  title: z.string(),
+  work_location_id: z.uuid().nullable(),
 });
 
 /**
@@ -138,6 +363,32 @@ export const zValidationError = z.object({
  */
 export const zHttpValidationError = z.object({
   detail: z.array(zValidationError).optional(),
+});
+
+/**
+ * WorkLocationCreate
+ */
+export const zWorkLocationCreate = z.object({
+  address: z.string().max(500).nullish(),
+  code: z
+    .string()
+    .min(1)
+    .max(32)
+    .regex(/^[A-Za-z0-9][A-Za-z0-9._-]*$/),
+  district: z.string().max(100).nullish(),
+  name: z.string().min(1).max(200),
+});
+
+/**
+ * WorkLocationOut
+ */
+export const zWorkLocationOut = z.object({
+  address: z.string().nullable(),
+  code: z.string(),
+  district: z.string().nullable(),
+  id: z.uuid(),
+  is_active: z.boolean(),
+  name: z.string(),
 });
 
 /**
@@ -192,3 +443,213 @@ export const zEmployeesGetEmployeePath = z.object({
  * Successful Response
  */
 export const zEmployeesGetEmployeeResponse = zEmployeeOut;
+
+export const zOrgListCostCentresQuery = z.object({
+  include_inactive: z.boolean().optional().default(false),
+});
+
+/**
+ * Response Org-List Cost Centres
+ *
+ * Successful Response
+ */
+export const zOrgListCostCentresResponse = z.array(zCostCentreOut);
+
+export const zOrgCreateCostCentreBody = zCostCentreCreate;
+
+/**
+ * Successful Response
+ */
+export const zOrgCreateCostCentreResponse = zCostCentreOut;
+
+export const zOrgDeactivateCostCentrePath = z.object({
+  record_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zOrgDeactivateCostCentreResponse = z.void();
+
+export const zOrgListDesignationsQuery = z.object({
+  include_inactive: z.boolean().optional().default(false),
+});
+
+/**
+ * Response Org-List Designations
+ *
+ * Successful Response
+ */
+export const zOrgListDesignationsResponse = z.array(zDesignationOut);
+
+export const zOrgCreateDesignationBody = zDesignationCreate;
+
+/**
+ * Successful Response
+ */
+export const zOrgCreateDesignationResponse = zDesignationOut;
+
+export const zOrgDeactivateDesignationPath = z.object({
+  record_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zOrgDeactivateDesignationResponse = z.void();
+
+export const zOrgListEmploymentCategoriesQuery = z.object({
+  include_inactive: z.boolean().optional().default(false),
+});
+
+/**
+ * Response Org-List Employment Categories
+ *
+ * Successful Response
+ */
+export const zOrgListEmploymentCategoriesResponse = z.array(
+  zEmploymentCategoryOut,
+);
+
+export const zOrgCreateEmploymentCategoryBody = zEmploymentCategoryCreate;
+
+/**
+ * Successful Response
+ */
+export const zOrgCreateEmploymentCategoryResponse = zEmploymentCategoryOut;
+
+export const zOrgDeactivateEmploymentCategoryPath = z.object({
+  record_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zOrgDeactivateEmploymentCategoryResponse = z.void();
+
+export const zOrgListGradeLevelsQuery = z.object({
+  include_inactive: z.boolean().optional().default(false),
+});
+
+/**
+ * Response Org-List Grade Levels
+ *
+ * Successful Response
+ */
+export const zOrgListGradeLevelsResponse = z.array(zGradeLevelOut);
+
+export const zOrgCreateGradeLevelBody = zGradeLevelCreate;
+
+/**
+ * Successful Response
+ */
+export const zOrgCreateGradeLevelResponse = zGradeLevelOut;
+
+export const zOrgDeactivateGradeLevelPath = z.object({
+  record_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zOrgDeactivateGradeLevelResponse = z.void();
+
+export const zOrgListPositionsQuery = z.object({
+  org_unit_id: z.uuid().nullish(),
+  include_inactive: z.boolean().optional().default(false),
+});
+
+/**
+ * Response Org-List Positions
+ *
+ * Successful Response
+ */
+export const zOrgListPositionsResponse = z.array(zPositionOut);
+
+export const zOrgCreatePositionBody = zPositionCreate;
+
+/**
+ * Successful Response
+ */
+export const zOrgCreatePositionResponse = zPositionOut;
+
+export const zOrgDeactivatePositionPath = z.object({
+  position_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zOrgDeactivatePositionResponse = z.void();
+
+/**
+ * Response Org-Org Tree
+ *
+ * Successful Response
+ */
+export const zOrgOrgTreeResponse = z.array(zOrgUnitNode);
+
+export const zOrgListUnitsQuery = z.object({
+  include_inactive: z.boolean().optional().default(false),
+});
+
+/**
+ * Response Org-List Units
+ *
+ * Successful Response
+ */
+export const zOrgListUnitsResponse = z.array(zOrgUnitOut);
+
+export const zOrgCreateUnitBody = zOrgUnitCreate;
+
+/**
+ * Successful Response
+ */
+export const zOrgCreateUnitResponse = zOrgUnitOut;
+
+export const zOrgDeactivateUnitPath = z.object({
+  unit_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zOrgDeactivateUnitResponse = z.void();
+
+export const zOrgUpdateUnitBody = zOrgUnitUpdate;
+
+export const zOrgUpdateUnitPath = z.object({
+  unit_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zOrgUpdateUnitResponse = zOrgUnitOut;
+
+export const zOrgListWorkLocationsQuery = z.object({
+  include_inactive: z.boolean().optional().default(false),
+});
+
+/**
+ * Response Org-List Work Locations
+ *
+ * Successful Response
+ */
+export const zOrgListWorkLocationsResponse = z.array(zWorkLocationOut);
+
+export const zOrgCreateWorkLocationBody = zWorkLocationCreate;
+
+/**
+ * Successful Response
+ */
+export const zOrgCreateWorkLocationResponse = zWorkLocationOut;
+
+export const zOrgDeactivateWorkLocationPath = z.object({
+  record_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zOrgDeactivateWorkLocationResponse = z.void();
