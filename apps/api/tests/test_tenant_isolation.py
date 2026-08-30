@@ -51,7 +51,7 @@ def test_a_token_cannot_name_a_company_its_user_does_not_belong_to(
     _, acme_user, _ = make_tenant(db, "acme")
     globex_company, _, globex_employee = make_tenant(db, "globex")
 
-    crafted = create_token(user_id=acme_user.id, company_id=globex_company.id)
+    crafted = create_token(user_id=acme_user.id, company_id=globex_company.id)[0]
 
     assert client.get("/api/v1/auth/me", headers=auth(crafted)).status_code == 401
     assert (

@@ -11,9 +11,10 @@ from datetime import date
 from sqlalchemy import select
 
 from elogix_api.core.security import hash_password
+from elogix_api.core.tenancy import set_current_company
 from elogix_api.db.session import SessionLocal
 from elogix_api.modules.employee.models import Employee, EmployeeStatus
-from elogix_api.modules.identity.models import Company, User
+from elogix_api.modules.identity.models import Company, PlanTier, RoleCode, User, UserRole
 
 COMPANY_SLUG = "acme"
 LOGIN_EMAIL = "admin@acme.com.np"
@@ -27,25 +28,37 @@ def main() -> None:
         ).scalar_one_or_none()
 
         if company is None:
-            company = Company(name="Acme Nepal Pvt. Ltd.", slug=COMPANY_SLUG)
+            company = Company(
+                name="Acme Nepal Pvt. Ltd.", slug=COMPANY_SLUG, plan_tier=PlanTier.ENTERPRISE
+            )
             db.add(company)
             db.flush()
             print(f"created company {COMPANY_SLUG}")
+
+        # Everything below writes to tables under row-level security, so the tenant has
+        # to be bound first — the seed runs as the restricted runtime role, same as the
+        # application, rather than as the schema owner.
+        set_current_company(db, company.id)
 
         user = db.execute(
             select(User).where(User.company_id == company.id, User.email == LOGIN_EMAIL)
         ).scalar_one_or_none()
 
         if user is None:
+            user = User(
+                company_id=company.id,
+                email=LOGIN_EMAIL,
+                password_hash=hash_password(LOGIN_PASSWORD),
+                full_name="Acme Administrator",
+            )
+            db.add(user)
+            db.flush()
             db.add(
-                User(
-                    company_id=company.id,
-                    email=LOGIN_EMAIL,
-                    password_hash=hash_password(LOGIN_PASSWORD),
-                    full_name="Acme Administrator",
+                UserRole(
+                    company_id=company.id, user_id=user.id, role=RoleCode.SUPER_ADMIN
                 )
             )
-            print(f"created user {LOGIN_EMAIL}")
+            print(f"created user {LOGIN_EMAIL} with role {RoleCode.SUPER_ADMIN}")
 
         existing = db.execute(
             select(Employee.employee_code).where(Employee.company_id == company.id)

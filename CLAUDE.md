@@ -25,6 +25,13 @@ The prototype died of exactly two things: type drift (202 foreign keys Postgres 
 and contract drift (35 of 46 frontend calls hit routes that did not exist). Those two
 rules are the whole point. Everything else in the stack is negotiable.
 
+**A third rule, from phase 01: the application connects to Postgres as a non-superuser.**
+`DATABASE_URL` is the restricted `elogix_app` role; `DATABASE_ADMIN_URL` is the owner and
+is used only by Alembic. Postgres exempts superusers from row-level security *even on a
+`FORCE ROW LEVEL SECURITY` table*, so pointing `DATABASE_URL` at the owner turns every
+policy off while leaving the schema looking protected — which is exactly what the
+prototype did. `tests/test_rls.py::test_the_runtime_role_cannot_bypass_rls` is the guard.
+
 ---
 
 ## Run it
@@ -33,6 +40,7 @@ rules are the whole point. Everything else in the stack is negotiable.
 npm install                # workspace root — installs web + api-client
 cd apps/api && uv sync     # python deps
 cp .env.example .env       # then set SECRET_KEY to 32+ chars
+                           # note: two DB URLs, see the third rule above
 
 npm run db:up              # postgres 18 in docker, :5432
 npm run api                # FastAPI on :5000, --reload
@@ -89,7 +97,22 @@ the migrations work rather than trusting `metadata.create_all`.
   typecheck fails (or worse, the reverse). No `baseUrl`: TS 6 deprecates it.
 - **Alembic autogenerate does not drop enum types in `downgrade`.** Add an explicit
   `sa.Enum(name=...).drop(op.get_bind(), checkfirst=True)` whenever a revision creates
-  one, or a down-then-up cycle fails with "type already exists".
+  one, or a down-then-up cycle fails with "type already exists". Related: `add_column`
+  with an enum does *not* create the type the way `create_table` does — call
+  `.create(op.get_bind(), checkfirst=True)` first.
+- **A new tenant-scoped table needs four things in the same migration**: a `company_id`
+  via `company_fk()`, `ENABLE` + `FORCE ROW LEVEL SECURITY`, a `tenant_isolation` policy
+  with both `USING` and `WITH CHECK`, and its name added to `TENANT_TABLES` in the
+  migration and in `tests/conftest.py`. `tests/test_rls.py` is parametrised over that
+  list and will fail if a table is listed but unprotected.
+- **Writing tenant data outside a request means binding the tenant first.** Scripts,
+  seeds and test fixtures all run as the restricted role, so `set_current_company(db, id)`
+  is required before any insert — otherwise RLS rejects it with a confusing
+  `ProgrammingError`. `core/tenancy.py` re-applies it on every `after_begin`, because a
+  commit ends the transaction and the setting dies with it.
+- **The tenant setting must be transaction-local** (`set_config(..., true)`). Connections
+  are pooled, so a session-local setting leaks the previous request's tenant into
+  whichever request borrows that connection next.
 - **`migrations/versions/` is excluded from ruff.** It is machine output; don't reformat
   it by hand.
 - **Never `pkill -f <name>`** — the pattern matches the issuing shell's own command line.
@@ -141,20 +164,16 @@ This is a dependency chain, not a priority ranking — each phase produces the t
 next one needs, so nothing gets built twice against mocked inputs. Payroll is last in the
 core *deliberately*: it consumes phases 03–05, and its tests get written before its code.
 
-**Current state: phase 00 is done.** A fresh clone builds the database from zero
-migrations, logs in, and reads employees — proven by 17 tests that run the migrations
-from zero against a real Postgres. `modules/identity` and `modules/employee` exist and
-are deliberately thin; phases 01 and 03 own their real field sets.
+**Current state: phases 00 and 01 are done**, proven by 48 tests against a real Postgres
+with the schema built by running the migrations from zero. A tenant cannot read another
+tenant's rows even with a hand-forged query, and module access is denied server-side.
 
-**Phase 01 is next**, and it carries the two things phase 00 knowingly left as
-placeholders:
-- Tokens are stored in `localStorage` (`apps/web/src/lib/auth.ts`). Phase 01 moves the
-  refresh token to an httpOnly cookie and keeps the access token in memory.
-- Tenant isolation is enforced by application-level query filters only. Phase 01 adds
-  row-level security underneath, driven by `set_config` inside the request transaction.
-  The query filters stay — belt and braces.
-- There is no refresh endpoint yet, so sessions simply expire after
-  `ACCESS_TOKEN_TTL_MINUTES`.
+`modules/employee` is deliberately thin — phase 03 owns its real field set.
+
+**Phase 02 (organization structure) is next.** It is the cluster every other table has a
+foreign key into — group companies, branches, business units, departments, sections,
+teams, cost centres, work locations, designations, grade levels, employment categories,
+positions, reporting hierarchy — and it must be settled before anything references it.
 
 ---
 
@@ -173,6 +192,14 @@ placeholders:
 - Module routers are mounted explicitly in `main.py`, one line each. No dynamic
   discovery, no `try/except ImportError` — the prototype swallowed import errors and
   turned broken routes into silent 404s.
+- **Gate a module on the router, not the route**: `APIRouter(..., dependencies=[
+  Depends(require_module(ModuleCode.X))])`. Every endpoint added later is then covered by
+  construction rather than by the author remembering.
+- Queries in tenant-scoped modules still carry `.where(Model.company_id ==
+  current_user.company_id)` even though RLS enforces it. Two independent layers; in the
+  prototype the filters were the only layer and were applied inconsistently.
+- The frontend may read `/api/v1/auth/entitlements` to decide what to **show**. It is
+  never what decides what is **allowed** — that is `require_module`, server-side.
 - `def` endpoints by default; `async def` only for genuinely IO-bound work (the AI
   proxy). Sync SQLAlchemy is deliberate — async forbids lazy loading and fails with
   `MissingGreenlet` at runtime.

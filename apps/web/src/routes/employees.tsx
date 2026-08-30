@@ -1,9 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 
-import { authMeOptions, employeesListEmployeesOptions } from '@elogix/api-client/queries'
+import {
+  authEntitlementsOptions,
+  authMeOptions,
+  employeesListEmployeesOptions,
+} from '@elogix/api-client/queries'
 
-import { clearTokens, isAuthenticated } from '@/lib/auth'
+import { isAuthenticated, signOut } from '@/lib/auth'
 
 export const Route = createFileRoute('/employees')({
   beforeLoad: () => {
@@ -15,6 +19,7 @@ export const Route = createFileRoute('/employees')({
 function EmployeesPage() {
   const navigate = useNavigate()
   const me = useQuery(authMeOptions())
+  const entitlements = useQuery(authEntitlementsOptions())
   const employees = useQuery(employeesListEmployeesOptions())
 
   return (
@@ -28,12 +33,15 @@ function EmployeesPage() {
         </div>
         <div className="text-right text-sm text-neutral-600">
           <div>{me.data?.full_name ?? '…'}</div>
+          <div className="font-mono text-xs text-neutral-400">
+            {me.data?.roles.join(', ')}
+            {entitlements.data && ` · ${entitlements.data.plan_tier}`}
+          </div>
           <button
             type="button"
             className="text-xs underline"
             onClick={() => {
-              clearTokens()
-              void navigate({ to: '/login' })
+              void signOut().then(() => navigate({ to: '/login' }))
             }}
           >
             Sign out
@@ -44,7 +52,7 @@ function EmployeesPage() {
       {employees.isPending && <p className="text-sm text-neutral-500">Loading…</p>}
       {employees.isError && (
         <p role="alert" className="text-sm text-red-700">
-          Could not load employees.
+          Could not load employees. The module may not be enabled for this company.
         </p>
       )}
 

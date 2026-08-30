@@ -3,6 +3,20 @@
 import * as z from "zod";
 
 /**
+ * AccessToken
+ *
+ * Only the access token crosses in the body.
+ *
+ * The refresh token goes back as an httpOnly cookie so no script on the page can read
+ * it — including a script injected into the page.
+ */
+export const zAccessToken = z.object({
+  access_token: z.string(),
+  expires_in: z.int(),
+  token_type: z.string().optional().default("bearer"),
+});
+
+/**
  * EmployeeStatus
  */
 export const zEmployeeStatus = z.enum([
@@ -42,13 +56,60 @@ export const zLoginRequest = z.object({
 });
 
 /**
- * TokenPair
+ * ModuleCode
  */
-export const zTokenPair = z.object({
-  access_token: z.string(),
-  refresh_token: z.string(),
-  token_type: z.string().optional().default("bearer"),
+export const zModuleCode = z.enum([
+  "org",
+  "employee",
+  "attendance",
+  "leave",
+  "payroll",
+  "ess",
+  "reports",
+  "ats",
+  "performance",
+  "training",
+  "vendor",
+  "compliance",
+  "finance",
+  "ai",
+]);
+
+/**
+ * PlanTier
+ *
+ * The five-tier plan ladder. Also the build order — each tier is roughly a phase.
+ */
+export const zPlanTier = z.enum([
+  "trial",
+  "starter",
+  "growth",
+  "business",
+  "enterprise",
+]);
+
+/**
+ * EntitlementsOut
+ *
+ * What the frontend may use to decide what to show. Never what the server uses to
+ * decide what to allow — that is `require_module`, on the router.
+ */
+export const zEntitlementsOut = z.object({
+  company_id: z.uuid(),
+  modules: z.array(zModuleCode),
+  plan_tier: zPlanTier,
 });
+
+/**
+ * RoleCode
+ */
+export const zRoleCode = z.enum([
+  "super_admin",
+  "hr_manager",
+  "hr_officer",
+  "manager",
+  "employee",
+]);
 
 /**
  * UserOut
@@ -58,6 +119,7 @@ export const zUserOut = z.object({
   email: z.string(),
   full_name: z.string(),
   id: z.uuid(),
+  roles: z.array(zRoleCode),
 });
 
 /**
@@ -85,17 +147,32 @@ export const zHttpValidationError = z.object({
  */
 export const zMetaHealthResponse = z.record(z.string(), z.string());
 
+/**
+ * Successful Response
+ */
+export const zAuthEntitlementsResponse = zEntitlementsOut;
+
 export const zAuthLoginBody = zLoginRequest;
 
 /**
  * Successful Response
  */
-export const zAuthLoginResponse = zTokenPair;
+export const zAuthLoginResponse = zAccessToken;
+
+/**
+ * Successful Response
+ */
+export const zAuthLogoutResponse = z.void();
 
 /**
  * Successful Response
  */
 export const zAuthMeResponse = zUserOut;
+
+/**
+ * Successful Response
+ */
+export const zAuthRefreshResponse = zAccessToken;
 
 export const zEmployeesListEmployeesQuery = z.object({
   limit: z.int().gte(1).lte(200).optional().default(50),

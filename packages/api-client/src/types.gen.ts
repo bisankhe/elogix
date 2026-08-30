@@ -5,6 +5,29 @@ export type ClientOptions = {
 };
 
 /**
+ * AccessToken
+ *
+ * Only the access token crosses in the body.
+ *
+ * The refresh token goes back as an httpOnly cookie so no script on the page can read
+ * it — including a script injected into the page.
+ */
+export type AccessToken = {
+  /**
+   * Access Token
+   */
+  access_token: string;
+  /**
+   * Expires In
+   */
+  expires_in: number;
+  /**
+   * Token Type
+   */
+  token_type?: string;
+};
+
+/**
  * EmployeeList
  */
 export type EmployeeList = {
@@ -51,6 +74,24 @@ export type EmployeeOut = {
 export type EmployeeStatus = "active" | "probation" | "suspended" | "exited";
 
 /**
+ * EntitlementsOut
+ *
+ * What the frontend may use to decide what to show. Never what the server uses to
+ * decide what to allow — that is `require_module`, on the router.
+ */
+export type EntitlementsOut = {
+  /**
+   * Company Id
+   */
+  company_id: string;
+  /**
+   * Modules
+   */
+  modules: Array<ModuleCode>;
+  plan_tier: PlanTier;
+};
+
+/**
  * HTTPValidationError
  */
 export type HttpValidationError = {
@@ -79,22 +120,37 @@ export type LoginRequest = {
 };
 
 /**
- * TokenPair
+ * ModuleCode
  */
-export type TokenPair = {
-  /**
-   * Access Token
-   */
-  access_token: string;
-  /**
-   * Refresh Token
-   */
-  refresh_token: string;
-  /**
-   * Token Type
-   */
-  token_type?: string;
-};
+export type ModuleCode =
+  | "org"
+  | "employee"
+  | "attendance"
+  | "leave"
+  | "payroll"
+  | "ess"
+  | "reports"
+  | "ats"
+  | "performance"
+  | "training"
+  | "vendor"
+  | "compliance"
+  | "finance"
+  | "ai";
+
+/**
+ * PlanTier
+ *
+ * The five-tier plan ladder. Also the build order — each tier is roughly a phase.
+ */
+export type PlanTier =
+  "trial" | "starter" | "growth" | "business" | "enterprise";
+
+/**
+ * RoleCode
+ */
+export type RoleCode =
+  "super_admin" | "hr_manager" | "hr_officer" | "manager" | "employee";
 
 /**
  * UserOut
@@ -116,6 +172,10 @@ export type UserOut = {
    * Id
    */
   id: string;
+  /**
+   * Roles
+   */
+  roles: Array<RoleCode>;
 };
 
 /**
@@ -166,6 +226,23 @@ export type MetaHealthResponses = {
 
 export type MetaHealthResponse = MetaHealthResponses[keyof MetaHealthResponses];
 
+export type AuthEntitlementsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/api/v1/auth/entitlements";
+};
+
+export type AuthEntitlementsResponses = {
+  /**
+   * Successful Response
+   */
+  200: EntitlementsOut;
+};
+
+export type AuthEntitlementsResponse =
+  AuthEntitlementsResponses[keyof AuthEntitlementsResponses];
+
 export type AuthLoginData = {
   body: LoginRequest;
   path?: never;
@@ -186,10 +263,35 @@ export type AuthLoginResponses = {
   /**
    * Successful Response
    */
-  200: TokenPair;
+  200: AccessToken;
 };
 
 export type AuthLoginResponse = AuthLoginResponses[keyof AuthLoginResponses];
+
+export type AuthLogoutData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/api/v1/auth/logout";
+};
+
+export type AuthLogoutErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type AuthLogoutError = AuthLogoutErrors[keyof AuthLogoutErrors];
+
+export type AuthLogoutResponses = {
+  /**
+   * Successful Response
+   */
+  204: void;
+};
+
+export type AuthLogoutResponse = AuthLogoutResponses[keyof AuthLogoutResponses];
 
 export type AuthMeData = {
   body?: never;
@@ -206,6 +308,32 @@ export type AuthMeResponses = {
 };
 
 export type AuthMeResponse = AuthMeResponses[keyof AuthMeResponses];
+
+export type AuthRefreshData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/api/v1/auth/refresh";
+};
+
+export type AuthRefreshErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type AuthRefreshError = AuthRefreshErrors[keyof AuthRefreshErrors];
+
+export type AuthRefreshResponses = {
+  /**
+   * Successful Response
+   */
+  200: AccessToken;
+};
+
+export type AuthRefreshResponse =
+  AuthRefreshResponses[keyof AuthRefreshResponses];
 
 export type EmployeesListEmployeesData = {
   body?: never;

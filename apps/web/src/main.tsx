@@ -6,12 +6,12 @@ import { createRoot } from 'react-dom/client'
 import { client } from '@elogix/api-client/client'
 
 import './index.css'
-import { installAuthInterceptor } from './lib/auth'
+import { installAuthInterceptor, restoreSession } from './lib/auth'
 import { routeTree } from './routeTree.gen'
 
 // Empty baseUrl: requests go to /api/... on the same origin and Vite proxies them to
 // the API in development. In production the built bundle is served by the same host.
-client.setConfig({ baseUrl: '' })
+client.setConfig({ baseUrl: '', credentials: 'include' })
 installAuthInterceptor()
 
 const queryClient = new QueryClient()
@@ -30,10 +30,19 @@ declare module '@tanstack/react-router' {
   }
 }
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
-  </StrictMode>,
-)
+// The access token lives in memory, so a reload starts signed out. Trading the refresh
+// cookie for a new access token *before* the first render keeps route guards from
+// bouncing an authenticated user to /login on every refresh.
+async function start() {
+  await restoreSession()
+
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    </StrictMode>,
+  )
+}
+
+void start()

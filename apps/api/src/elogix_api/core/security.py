@@ -59,7 +59,9 @@ def create_token(
     user_id: uuid.UUID,
     company_id: uuid.UUID,
     kind: Literal["access", "refresh"] = "access",
-) -> str:
+) -> tuple[str, uuid.UUID]:
+    """Return the encoded token and its JTI, so a refresh token can be recorded and
+    later revoked."""
     settings = get_settings()
     now = datetime.now(UTC)
     ttl = (
@@ -67,17 +69,18 @@ def create_token(
         if kind == "access"
         else timedelta(days=settings.refresh_token_ttl_days)
     )
+    jti = uuid.uuid4()
     payload: dict[str, Any] = {
         "sub": str(user_id),
         "company_id": str(company_id),
         "kind": kind,
-        "jti": str(uuid.uuid4()),
+        "jti": str(jti),
         "iat": now,
         "exp": now + ttl,
         "iss": ISSUER,
         "aud": AUDIENCE,
     }
-    return jwt.encode(payload, settings.secret_key, algorithm=ALGORITHM)
+    return jwt.encode(payload, settings.secret_key, algorithm=ALGORITHM), jti
 
 
 def decode_token(token: str, *, expect: Literal["access", "refresh"] = "access") -> TokenClaims:

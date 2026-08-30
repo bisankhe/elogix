@@ -10,19 +10,30 @@ import {
 
 import { client } from "../client.gen";
 import {
+  authEntitlements,
   authLogin,
+  authLogout,
   authMe,
+  authRefresh,
   employeesGetEmployee,
   employeesListEmployees,
   metaHealth,
   type Options,
 } from "../sdk.gen";
 import type {
+  AuthEntitlementsData,
+  AuthEntitlementsResponse,
   AuthLoginData,
   AuthLoginError,
   AuthLoginResponse,
+  AuthLogoutData,
+  AuthLogoutError,
+  AuthLogoutResponse,
   AuthMeData,
   AuthMeResponse,
+  AuthRefreshData,
+  AuthRefreshError,
+  AuthRefreshResponse,
   EmployeesGetEmployeeData,
   EmployeesGetEmployeeError,
   EmployeesGetEmployeeResponse,
@@ -98,6 +109,34 @@ export const metaHealthOptions = (options?: Options<MetaHealthData>) =>
     queryKey: metaHealthQueryKey(options),
   });
 
+export const authEntitlementsQueryKey = (
+  options?: Options<AuthEntitlementsData>,
+) => createQueryKey("authEntitlements", options);
+
+/**
+ * Entitlements
+ */
+export const authEntitlementsOptions = (
+  options?: Options<AuthEntitlementsData>,
+) =>
+  queryOptions<
+    AuthEntitlementsResponse,
+    DefaultError,
+    AuthEntitlementsResponse,
+    ReturnType<typeof authEntitlementsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await authEntitlements({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: authEntitlementsQueryKey(options),
+  });
+
 /**
  * Login
  */
@@ -115,6 +154,33 @@ export const authLoginMutation = (
   > = {
     mutationFn: async (fnOptions) => {
       const { data } = await authLogin({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Logout
+ */
+export const authLogoutMutation = (
+  options?: Partial<Options<AuthLogoutData>>,
+): UseMutationOptions<
+  AuthLogoutResponse,
+  AuthLogoutError,
+  Options<AuthLogoutData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    AuthLogoutResponse,
+    AuthLogoutError,
+    Options<AuthLogoutData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await authLogout({
         ...options,
         ...fnOptions,
         throwOnError: true,
@@ -149,6 +215,33 @@ export const authMeOptions = (options?: Options<AuthMeData>) =>
     },
     queryKey: authMeQueryKey(options),
   });
+
+/**
+ * Refresh
+ */
+export const authRefreshMutation = (
+  options?: Partial<Options<AuthRefreshData>>,
+): UseMutationOptions<
+  AuthRefreshResponse,
+  AuthRefreshError,
+  Options<AuthRefreshData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    AuthRefreshResponse,
+    AuthRefreshError,
+    Options<AuthRefreshData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await authRefresh({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
 
 export const employeesListEmployeesQueryKey = (
   options?: Options<EmployeesListEmployeesData>,

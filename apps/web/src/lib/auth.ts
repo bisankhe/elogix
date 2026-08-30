@@ -1,54 +1,61 @@
 import { client } from '@elogix/api-client/client'
 
 /**
- * Token storage and the request interceptor that attaches it.
+ * Access token handling.
  *
- * localStorage is a phase 00 placeholder. Phase 01 moves the refresh token to an
- * httpOnly cookie and keeps only the short-lived access token in memory — a token
- * readable by any script on the page is not where this ends up.
+ * The access token is held **in memory only**. The refresh token is an httpOnly cookie
+ * the browser sends to /api/v1/auth/* and no script can read — including a script
+ * injected into the page. Phase 00 kept both in localStorage, which meant any XSS handed
+ * an attacker a 30-day credential.
+ *
+ * The cost of in-memory is that a page reload loses the access token, so the app asks
+ * /auth/refresh for a new one on startup. That request succeeds only if the cookie is
+ * still valid, which is exactly the property we want.
  */
-const ACCESS_KEY = 'elogix.access_token'
-const REFRESH_KEY = 'elogix.refresh_token'
-
-function read(key: string): string | null {
-  try {
-    return localStorage.getItem(key)
-  } catch {
-    return null
-  }
-}
+let accessToken: string | null = null
 
 export function getAccessToken(): string | null {
-  return read(ACCESS_KEY)
+  return accessToken
 }
 
+export function setAccessToken(token: string | null): void {
+  accessToken = token
+}
+
+/** Synchronous, so route guards can read it in `beforeLoad` without flickering. */
 export function isAuthenticated(): boolean {
-  return getAccessToken() !== null
+  return accessToken !== null
 }
 
-export function storeTokens(tokens: { access_token: string; refresh_token: string }): void {
+/** Exchange the refresh cookie for a fresh access token. Returns false if not signed in. */
+export async function restoreSession(): Promise<boolean> {
   try {
-    localStorage.setItem(ACCESS_KEY, tokens.access_token)
-    localStorage.setItem(REFRESH_KEY, tokens.refresh_token)
+    const response = await fetch('/api/v1/auth/refresh', {
+      method: 'POST',
+      credentials: 'include',
+    })
+    if (!response.ok) return false
+    const body = (await response.json()) as { access_token: string }
+    accessToken = body.access_token
+    return true
   } catch {
-    /* private mode — the session simply will not persist across reloads */
+    return false
   }
 }
 
-export function clearTokens(): void {
+export async function signOut(): Promise<void> {
+  accessToken = null
   try {
-    localStorage.removeItem(ACCESS_KEY)
-    localStorage.removeItem(REFRESH_KEY)
+    await fetch('/api/v1/auth/logout', { method: 'POST', credentials: 'include' })
   } catch {
-    /* nothing to clear */
+    /* the token is already discarded locally; server-side revocation is best effort */
   }
 }
 
 /** Attach the bearer token to every generated-client request. */
 export function installAuthInterceptor(): void {
   client.interceptors.request.use((request) => {
-    const token = getAccessToken()
-    if (token) request.headers.set('Authorization', `Bearer ${token}`)
+    if (accessToken) request.headers.set('Authorization', `Bearer ${accessToken}`)
     return request
   })
 }

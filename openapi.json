@@ -1,6 +1,30 @@
 {
   "components": {
     "schemas": {
+      "AccessToken": {
+        "description": "Only the access token crosses in the body.\n\nThe refresh token goes back as an httpOnly cookie so no script on the page can read\nit \u2014 including a script injected into the page.",
+        "properties": {
+          "access_token": {
+            "title": "Access Token",
+            "type": "string"
+          },
+          "expires_in": {
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "token_type": {
+            "default": "bearer",
+            "title": "Token Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "access_token",
+          "expires_in"
+        ],
+        "title": "AccessToken",
+        "type": "object"
+      },
       "EmployeeList": {
         "properties": {
           "items": {
@@ -78,6 +102,33 @@
         "title": "EmployeeStatus",
         "type": "string"
       },
+      "EntitlementsOut": {
+        "description": "What the frontend may use to decide what to show. Never what the server uses to\ndecide what to allow \u2014 that is `require_module`, on the router.",
+        "properties": {
+          "company_id": {
+            "format": "uuid",
+            "title": "Company Id",
+            "type": "string"
+          },
+          "modules": {
+            "items": {
+              "$ref": "#/components/schemas/ModuleCode"
+            },
+            "title": "Modules",
+            "type": "array"
+          },
+          "plan_tier": {
+            "$ref": "#/components/schemas/PlanTier"
+          }
+        },
+        "required": [
+          "company_id",
+          "plan_tier",
+          "modules"
+        ],
+        "title": "EntitlementsOut",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -119,28 +170,48 @@
         "title": "LoginRequest",
         "type": "object"
       },
-      "TokenPair": {
-        "properties": {
-          "access_token": {
-            "title": "Access Token",
-            "type": "string"
-          },
-          "refresh_token": {
-            "title": "Refresh Token",
-            "type": "string"
-          },
-          "token_type": {
-            "default": "bearer",
-            "title": "Token Type",
-            "type": "string"
-          }
-        },
-        "required": [
-          "access_token",
-          "refresh_token"
+      "ModuleCode": {
+        "enum": [
+          "org",
+          "employee",
+          "attendance",
+          "leave",
+          "payroll",
+          "ess",
+          "reports",
+          "ats",
+          "performance",
+          "training",
+          "vendor",
+          "compliance",
+          "finance",
+          "ai"
         ],
-        "title": "TokenPair",
-        "type": "object"
+        "title": "ModuleCode",
+        "type": "string"
+      },
+      "PlanTier": {
+        "description": "The five-tier plan ladder. Also the build order \u2014 each tier is roughly a phase.",
+        "enum": [
+          "trial",
+          "starter",
+          "growth",
+          "business",
+          "enterprise"
+        ],
+        "title": "PlanTier",
+        "type": "string"
+      },
+      "RoleCode": {
+        "enum": [
+          "super_admin",
+          "hr_manager",
+          "hr_officer",
+          "manager",
+          "employee"
+        ],
+        "title": "RoleCode",
+        "type": "string"
       },
       "UserOut": {
         "properties": {
@@ -161,13 +232,21 @@
             "format": "uuid",
             "title": "Id",
             "type": "string"
+          },
+          "roles": {
+            "items": {
+              "$ref": "#/components/schemas/RoleCode"
+            },
+            "title": "Roles",
+            "type": "array"
           }
         },
         "required": [
           "id",
           "company_id",
           "email",
-          "full_name"
+          "full_name",
+          "roles"
         ],
         "title": "UserOut",
         "type": "object"
@@ -251,6 +330,32 @@
         ]
       }
     },
+    "/api/v1/auth/entitlements": {
+      "get": {
+        "operationId": "auth-entitlements",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntitlementsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Entitlements",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/api/v1/auth/login": {
       "post": {
         "operationId": "auth-login",
@@ -269,7 +374,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TokenPair"
+                  "$ref": "#/components/schemas/AccessToken"
                 }
               }
             },
@@ -287,6 +392,48 @@
           }
         },
         "summary": "Login",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "auth-logout",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "elogix_refresh",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Elogix Refresh"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Logout",
         "tags": [
           "auth"
         ]
@@ -313,6 +460,55 @@
           }
         ],
         "summary": "Me",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "operationId": "auth-refresh",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "elogix_refresh",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Elogix Refresh"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessToken"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Refresh",
         "tags": [
           "auth"
         ]

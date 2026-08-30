@@ -1,13 +1,20 @@
 import uuid
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 
-from elogix_api.core.deps import CurrentUserDep, DbDep
+from elogix_api.core.deps import CurrentUserDep, DbDep, require_module
+from elogix_api.core.entitlements import ModuleCode
 from elogix_api.modules.employee.models import Employee
 from elogix_api.modules.employee.schemas import EmployeeList, EmployeeOut
 
-router = APIRouter(prefix="/employees", tags=["employees"])
+# Gating on the router, not on each route: every endpoint added to this module is
+# covered by construction rather than by the author remembering to add a decorator.
+router = APIRouter(
+    prefix="/employees",
+    tags=["employees"],
+    dependencies=[Depends(require_module(ModuleCode.EMPLOYEE))],
+)
 
 
 @router.get("", response_model=EmployeeList)

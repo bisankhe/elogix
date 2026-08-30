@@ -4,7 +4,7 @@ import { useState } from 'react'
 
 import { authLogin } from '@elogix/api-client'
 
-import { isAuthenticated, storeTokens } from '@/lib/auth'
+import { isAuthenticated, setAccessToken } from '@/lib/auth'
 
 export const Route = createFileRoute('/login')({
   beforeLoad: () => {
@@ -27,8 +27,10 @@ function LoginPage() {
       if (error || !data) throw new Error('Invalid credentials')
       return data
     },
-    onSuccess: (tokens) => {
-      storeTokens(tokens)
+    onSuccess: ({ access_token }) => {
+      // Only the access token comes back in the body; the refresh token is an httpOnly
+      // cookie the browser stores and no script here can see.
+      setAccessToken(access_token)
       void navigate({ to: '/employees' })
     },
   })

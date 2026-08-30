@@ -9,11 +9,19 @@ import type {
 } from "./client";
 import { client } from "./client.gen";
 import type {
+  AuthEntitlementsData,
+  AuthEntitlementsResponses,
   AuthLoginData,
   AuthLoginErrors,
   AuthLoginResponses,
+  AuthLogoutData,
+  AuthLogoutErrors,
+  AuthLogoutResponses,
   AuthMeData,
   AuthMeResponses,
+  AuthRefreshData,
+  AuthRefreshErrors,
+  AuthRefreshResponses,
   EmployeesGetEmployeeData,
   EmployeesGetEmployeeErrors,
   EmployeesGetEmployeeResponses,
@@ -54,6 +62,22 @@ export const metaHealth = <ThrowOnError extends boolean = false>(
   });
 
 /**
+ * Entitlements
+ */
+export const authEntitlements = <ThrowOnError extends boolean = false>(
+  options?: Options<AuthEntitlementsData, ThrowOnError>,
+): RequestResult<AuthEntitlementsResponses, unknown, ThrowOnError> =>
+  (options?.client ?? client).get<
+    AuthEntitlementsResponses,
+    unknown,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/auth/entitlements",
+    ...options,
+  });
+
+/**
  * Login
  */
 export const authLogin = <ThrowOnError extends boolean = false>(
@@ -73,6 +97,18 @@ export const authLogin = <ThrowOnError extends boolean = false>(
   });
 
 /**
+ * Logout
+ */
+export const authLogout = <ThrowOnError extends boolean = false>(
+  options?: Options<AuthLogoutData, ThrowOnError>,
+): RequestResult<AuthLogoutResponses, AuthLogoutErrors, ThrowOnError> =>
+  (options?.client ?? client).post<
+    AuthLogoutResponses,
+    AuthLogoutErrors,
+    ThrowOnError
+  >({ url: "/api/v1/auth/logout", ...options });
+
+/**
  * Me
  */
 export const authMe = <ThrowOnError extends boolean = false>(
@@ -83,6 +119,18 @@ export const authMe = <ThrowOnError extends boolean = false>(
     url: "/api/v1/auth/me",
     ...options,
   });
+
+/**
+ * Refresh
+ */
+export const authRefresh = <ThrowOnError extends boolean = false>(
+  options?: Options<AuthRefreshData, ThrowOnError>,
+): RequestResult<AuthRefreshResponses, AuthRefreshErrors, ThrowOnError> =>
+  (options?.client ?? client).post<
+    AuthRefreshResponses,
+    AuthRefreshErrors,
+    ThrowOnError
+  >({ url: "/api/v1/auth/refresh", ...options });
 
 /**
  * List Employees
