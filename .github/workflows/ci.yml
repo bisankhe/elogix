@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        # Real PostgreSQL, never SQLite. Every defect the audit found was
+        # Postgres-specific — RLS, UUID types, set_config semantics — and a SQLite
+        # suite would have passed while the production database refused to build.
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: elogix
+          POSTGRES_PASSWORD: elogix
+          POSTGRES_DB: elogix_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U elogix -d elogix_test"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql+psycopg://elogix:elogix@localhost:5432/elogix_test
+      SECRET_KEY: ci-secret-key-at-least-32-characters-long
+      ENVIRONMENT: test
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Install
+        working-directory: apps/api
+        run: uv sync
+      - name: Lint
+        working-directory: apps/api
+        run: uv run ruff check .
+      - name: Types
+        working-directory: apps/api
+        run: uv run ty check
+      - name: Migrations apply from zero
+        working-directory: apps/api
+        run: uv run alembic upgrade head
+      - name: Tests
+        working-directory: apps/api
+        run: uv run pytest
+
+  contract:
+    # The keystone check. If openapi.json or the generated client is stale, the build
+    # fails here rather than shipping a frontend that calls routes which do not exist.
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql+psycopg://elogix:elogix@localhost:5432/elogix_test
+      SECRET_KEY: ci-secret-key-at-least-32-characters-long
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - working-directory: apps/api
+        run: uv sync
+      - name: Regenerate spec and client
+        run: npm run generate
+      - name: Fail if anything drifted
+        run: |
+          git diff --exit-code --stat -- openapi.json packages/api-client \
+            || { echo "::error::openapi.json or the generated client is stale. Run 'npm run generate' and commit."; exit 1; }
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint -w @elogix/web
+      - run: npm run build -w @elogix/web

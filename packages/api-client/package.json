@@ -1,0 +1,17 @@
+{
+  "name": "@elogix/api-client",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Generated from openapi.json by @hey-api/openapi-ts. Do not edit by hand.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client.gen.ts",
+    "./queries": "./src/@tanstack/react-query.gen.ts"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5.0.0"
+  }
+}

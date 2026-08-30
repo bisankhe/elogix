@@ -1,0 +1,143 @@
+# eLogix HRMS — rebuild (branch `dev`)
+
+This branch is the rebuild. `main` is the old prototype and stays frozen as the UX and
+feature spec. The full reasoning, stack table and phase plan live in the
+**eLogix Rebuild Order** artifact:
+https://claude.ai/code/artifact/c37cbcce-8956-455e-9596-72b07a116ef8
+
+The prototype's 1030 files are preserved under `legacy/` for reference. Read them; port
+deliberately; trust none of it untested. Nothing under `legacy/` is built, linted, tested
+or deployed — it is documentation that happens to be executable.
+
+---
+
+## The two rules everything else serves
+
+1. **SQLAlchemy models are the only source of schema truth.** All DDL through Alembic
+   autogenerate. No hand-written `.sql`, ever. One id type: UUID.
+   *Enforced by:* `apps/api/src/elogix_api/db/registry.py` plus `tests/test_registry.py`,
+   which fails if a `modules/*/models.py` is not registered.
+2. **The frontend API client is generated from the OpenAPI spec.** Nothing in
+   `packages/api-client/` is hand-written.
+   *Enforced by:* the `contract` job in CI — it regenerates and fails on any diff.
+
+The prototype died of exactly two things: type drift (202 foreign keys Postgres rejected)
+and contract drift (35 of 46 frontend calls hit routes that did not exist). Those two
+rules are the whole point. Everything else in the stack is negotiable.
+
+---
+
+## Run it
+
+```bash
+npm install                # workspace root — installs web + api-client
+cd apps/api && uv sync     # python deps
+cp .env.example .env       # then set SECRET_KEY to 32+ chars
+
+npm run db:up              # postgres 18 in docker, :5432
+npm run api                # FastAPI on :5000, --reload
+npm run web                # Vite on :5173, proxies /api → :5000
+```
+
+Checks: `npm run check` (ruff + ty + pytest + web build), or `check:api` / `check:web`.
+After changing any route or schema: **`npm run generate`** and commit the result —
+otherwise CI fails on drift.
+
+Test database is separate (`elogix_test`) and created once:
+
+```bash
+docker exec elogix_dev_db psql -U elogix -d elogix -c "CREATE DATABASE elogix_test;"
+```
+
+---
+
+## Gotchas
+
+- **Use `localhost`, not `127.0.0.1`, for the Vite dev server.** Vite 8 binds IPv6
+  localhost only; `curl 127.0.0.1:5173` returns nothing at all. The API on :5000 is fine
+  on either.
+- **Postgres 18 images mount at `/var/lib/postgresql`, not `.../data`.** The old
+  convention crash-loops on startup with a long message about `pg_ctlcluster`.
+- **`npm audit` needs the `js-yaml` override** in the root `package.json`. Every
+  `@hey-api/openapi-ts` release currently pulls a js-yaml with an open DoS advisory;
+  pinning js-yaml to `^5.4.1` clears it. Don't drop the override to "simplify".
+- **Every route needs a `tags=[...]`.** Operation ids are generated as `{tag}-{name}`
+  (`main.py:_operation_id`), which is what makes the client read `metaHealth` instead of
+  `healthApiHealthGet`. An untagged route lands under `default`.
+- **`.env` lives at the repo root**, and `settings.py` resolves it by absolute path, so
+  the API can be started from any directory.
+- **Never `pkill -f <name>`** — the pattern matches the issuing shell's own command line.
+  Use `pkill -x`.
+
+---
+
+## Layout
+
+```
+apps/api/                       FastAPI + SQLAlchemy 2.0 + Alembic, sync psycopg3
+  src/elogix_api/
+    main.py                     app factory; routers mounted explicitly, no try/except
+    settings.py                 pydantic-settings; bad config crashes at boot
+    openapi.py                  dumps the spec without starting a server
+    db/base.py                  DeclarativeBase + naming convention
+    db/registry.py              ← the only file Alembic reads for metadata
+    db/types.py                 uuid_pk(), company_fk(), TimestampMixin
+    db/session.py               engine + get_db dependency
+    core/                       auth, security, tenancy, entitlements
+    modules/<domain>/           models.py schemas.py router.py service.py
+    nepal/                      BS dates, Labour Act, tax slabs — pure functions
+  migrations/versions/          Alembic revisions
+  tests/
+
+apps/web/                       Vite + React 19 + TS + Tailwind v4
+  src/features/<domain>/        mirrors apps/api modules one-for-one
+
+packages/api-client/            GENERATED. Never edit. `npm run generate` owns it.
+openapi.json                    GENERATED and committed. CI fails if stale.
+legacy/                         the frozen prototype, for reference only
+```
+
+`modules/` and `features/` are named after the seven phases, so a phase boundary is a
+folder boundary: phase 03 is `modules/employee/` and nothing else.
+
+---
+
+## Build order
+
+00 walking skeleton · 01 identity, tenancy, entitlements · 02 org structure ·
+03 employee master · 04 attendance and roster · 05 leave · 06 payroll, tax, SSF ·
+07 self-service, documents, reports
+
+This is a dependency chain, not a priority ranking — each phase produces the tables the
+next one needs, so nothing gets built twice against mocked inputs. Payroll is last in the
+core *deliberately*: it consumes phases 03–05, and its tests get written before its code.
+
+**Current state: the scaffold exists and the pipe runs end to end** (browser → Vite →
+FastAPI → Postgres, through the generated client). Phase 00 proper — one tenant, one
+login, one employee, with a test — has not been built yet. `modules/` is empty.
+
+---
+
+## Decisions still open
+
+- **Routing library.** TanStack Router is installed but not wired; React Router v7 is the
+  more familiar alternative. Cheapest choice on the list to reverse — decide during
+  phase 00 by preference, not by argument.
+- **Do all 524 prototype screens need to exist?** Many are variations on a filtered table.
+  A product call, worth making before phase 07.
+- **Who signs off on the tax and labour rules?** Needs a named human before payroll ships.
+  The prototype's engine triple-deducts SSF; the slab table could not be verified from
+  code alone.
+
+---
+
+## Conventions
+
+- Module routers are mounted explicitly in `main.py`, one line each. No dynamic
+  discovery, no `try/except ImportError` — the prototype swallowed import errors and
+  turned broken routes into silent 404s.
+- `def` endpoints by default; `async def` only for genuinely IO-bound work (the AI
+  proxy). Sync SQLAlchemy is deliberate — async forbids lazy loading and fails with
+  `MissingGreenlet` at runtime.
+- Nepali dates: the backend is authoritative for every period boundary and cutoff. The
+  frontend converts for display only, never for anything touching money.

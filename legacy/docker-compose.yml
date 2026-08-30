@@ -1,0 +1,158 @@
+# FILE: docker-compose.yml  (project root — /opt/elogix/docker-compose.yml)
+# eLogix HRMS — Docker Compose Configuration
+# FIX: Backend context is project root (.) so alembic.ini is included in image
+# eLogix Technologies · www.elogix.com.np
+
+version: '3.9'
+
+# ── Shared environment ────────────────────────────────────────────────
+x-common-env: &common-env
+  DATABASE_URL:       postgresql://${POSTGRES_USER:-elogix}:${POSTGRES_PASSWORD}@elogix_db:5432/${POSTGRES_DB:-elogix_prod}
+  DB_HOST:            elogix_db
+  DB_PORT:            "5432"
+  DB_USER:            ${POSTGRES_USER:-elogix}
+  DB_PASSWORD:        ${POSTGRES_PASSWORD}
+  DB_NAME:            ${POSTGRES_DB:-elogix_prod}
+  POSTGRES_USER:      ${POSTGRES_USER:-elogix}
+  POSTGRES_PASSWORD:  ${POSTGRES_PASSWORD}
+  POSTGRES_DB:        ${POSTGRES_DB:-elogix_prod}
+  SECRET_KEY:         ${SECRET_KEY}
+  ENVIRONMENT:        ${ENVIRONMENT:-production}
+  ALLOWED_ORIGINS:    ${ALLOWED_ORIGINS:-https://elogix.com.np,http://localhost:5173}
+
+services:
+
+  # ── PostgreSQL Database ─────────────────────────────────────────────
+  elogix_db:
+    image: postgres:15-alpine
+    container_name: elogix_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER:     ${POSTGRES_USER:-elogix}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB:       ${POSTGRES_DB:-elogix_prod}
+      PGDATA:            /var/lib/postgresql/data/pgdata
+    volumes:
+      - elogix_pgdata:/var/lib/postgresql/data
+      # Run saas_schema.sql on first start (if DB is empty)
+      - ./backend/database/saas_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    ports:
+      - "127.0.0.1:5432:5432"    # Bind to localhost only — not exposed to internet
+    healthcheck:
+      test:     ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-elogix} -d ${POSTGRES_DB:-elogix_prod}"]
+      interval: 10s
+      timeout:  5s
+      retries:  10
+    networks:
+      - elogix_net
+
+  # ── Flask Backend ───────────────────────────────────────────────────
+  elogix_backend:
+    build:
+      # !! CRITICAL FIX: context must be PROJECT ROOT (.) not ./backend/
+      # This ensures alembic.ini, alembic/, and backend/ are ALL in the image
+      context:    .
+      dockerfile: backend/Dockerfile
+    container_name: elogix_backend
+    restart: unless-stopped
+    depends_on:
+      elogix_db:
+        condition: service_healthy
+    environment:
+      <<: *common-env
+      GUNICORN_WORKERS: ${GUNICORN_WORKERS:-4}
+      GUNICORN_THREADS: ${GUNICORN_THREADS:-2}
+      GUNICORN_TIMEOUT: ${GUNICORN_TIMEOUT:-120}
+    volumes:
+      # Persist uploaded files (CVs, photos, documents) across redeploys
+      - elogix_uploads:/opt/elogix/uploads
+      # Persist log files
+      - elogix_logs:/opt/elogix/logs
+    ports:
+      - "127.0.0.1:5000:5000"    # Expose to localhost only — nginx proxies externally
+    healthcheck:
+      test:     ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout:  10s
+      retries:  5
+      start_period: 60s
+    networks:
+      - elogix_net
+
+  # ── Nginx (serves React frontend + proxies API) ─────────────────────
+  elogix_nginx:
+    image: nginx:1.25-alpine
+    container_name: elogix_nginx
+    restart: unless-stopped
+    depends_on:
+      - elogix_backend
+    volumes:
+      # React build output (run npm run build before docker compose up)
+      - ./dist:/usr/share/nginx/html:ro
+      # Nginx configuration
+      - ./nginx.conf:/etc/nginx/conf.d/elogix.conf:ro
+      # Uploaded files accessible to nginx for X-Accel-Redirect
+      - elogix_uploads:/opt/elogix/uploads:ro
+      # SSL certificates (Let's Encrypt)
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/certbot:/var/www/certbot:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - elogix_net
+    healthcheck:
+      test:     ["CMD", "nginx", "-t"]
+      interval: 60s
+      timeout:  5s
+      retries:  3
+
+  # ── Celery Worker (AI, email, background tasks) ─────────────────────
+  elogix_celery:
+    build:
+      context:    .
+      dockerfile: backend/Dockerfile
+    container_name: elogix_celery
+    restart: unless-stopped
+    command: celery-worker
+    depends_on:
+      elogix_db:
+        condition: service_healthy
+    environment:
+      <<: *common-env
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://elogix_redis:6379/0}
+    volumes:
+      - elogix_uploads:/opt/elogix/uploads
+      - elogix_logs:/opt/elogix/logs
+    networks:
+      - elogix_net
+
+  # ── Redis (Celery broker, session cache) ─────────────────────────────
+  elogix_redis:
+    image: redis:7-alpine
+    container_name: elogix_redis
+    restart: unless-stopped
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - elogix_redis_data:/data
+    ports:
+      - "127.0.0.1:6379:6379"
+    networks:
+      - elogix_net
+
+# ── Named volumes ──────────────────────────────────────────────────────
+volumes:
+  elogix_pgdata:
+    name: elogix_pgdata
+  elogix_uploads:
+    name: elogix_uploads
+  elogix_logs:
+    name: elogix_logs
+  elogix_redis_data:
+    name: elogix_redis_data
+
+# ── Network ────────────────────────────────────────────────────────────
+networks:
+  elogix_net:
+    name: elogix_net
+    driver: bridge
