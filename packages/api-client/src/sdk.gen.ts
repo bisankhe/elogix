@@ -329,6 +329,9 @@ import type {
   RecruitmentMoveApplicationData,
   RecruitmentMoveApplicationErrors,
   RecruitmentMoveApplicationResponses,
+  RecruitmentOnboardOfferData,
+  RecruitmentOnboardOfferErrors,
+  RecruitmentOnboardOfferResponses,
   RecruitmentOpenRequisitionData,
   RecruitmentOpenRequisitionErrors,
   RecruitmentOpenRequisitionResponses,
@@ -2709,6 +2712,36 @@ export const recruitmentListOffers = <ThrowOnError extends boolean = false>(
     security: [{ scheme: "bearer", type: "http" }],
     url: "/api/v1/recruitment/offers",
     ...options,
+  });
+
+/**
+ * Onboard Offer
+ *
+ * Turn an accepted offer into an employee, with their placement and salary.
+ *
+ * The seam between hiring and the employee master. One call, one transaction: the
+ * person, their assignment copied from the requisition's position, the HIRED event,
+ * and the salary they were actually offered.
+ */
+export const recruitmentOnboardOffer = <ThrowOnError extends boolean = false>(
+  options: Options<RecruitmentOnboardOfferData, ThrowOnError>,
+): RequestResult<
+  RecruitmentOnboardOfferResponses,
+  RecruitmentOnboardOfferErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    RecruitmentOnboardOfferResponses,
+    RecruitmentOnboardOfferErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/recruitment/offers/{offer_id}/onboard",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
   });
 
 /**

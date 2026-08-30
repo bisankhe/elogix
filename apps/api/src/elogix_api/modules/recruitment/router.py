@@ -20,7 +20,7 @@ from elogix_api.core.entitlements import ModuleCode
 from elogix_api.db.session import get_db
 from elogix_api.modules.identity.models import Company
 from elogix_api.modules.org.models import Position
-from elogix_api.modules.recruitment import service
+from elogix_api.modules.recruitment import onboarding, service
 from elogix_api.modules.recruitment.models import (
     Application,
     ApplicationEvent,
@@ -44,6 +44,8 @@ from elogix_api.modules.recruitment.schemas import (
     OfferOut,
     OfferResponse,
     OfferSent,
+    OnboardRequest,
+    OnboardResult,
     PublicOffer,
     RequisitionCreate,
     RequisitionDetail,
@@ -475,6 +477,58 @@ def withdraw_offer(offer_id: uuid.UUID, user: CurrentUserDep, db: DbDep) -> Offe
     db.commit()
     db.refresh(offer)
     return offer
+
+
+# ── Onboarding ────────────────────────────────────────────────────────
+
+
+@router.post(
+    "/offers/{offer_id}/onboard",
+    response_model=OnboardResult,
+    status_code=status.HTTP_201_CREATED,
+)
+def onboard_offer(
+    offer_id: uuid.UUID, payload: OnboardRequest, user: CurrentUserDep, db: DbDep
+) -> OnboardResult:
+    """Turn an accepted offer into an employee, with their placement and salary.
+
+    The seam between hiring and the employee master. One call, one transaction: the
+    person, their assignment copied from the requisition's position, the HIRED event,
+    and the salary they were actually offered.
+    """
+    offer = db.execute(
+        select(Offer).where(Offer.id == offer_id, Offer.company_id == user.company_id)
+    ).scalar_one_or_none()
+    if offer is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Offer not found")
+
+    employee = onboarding.onboard(
+        db,
+        company_id=user.company_id,
+        offer=offer,
+        employee_code=payload.employee_code,
+        user_id=user.id,
+    )
+    application = db.execute(
+        select(Application).where(Application.id == offer.application_id)
+    ).scalar_one()
+    requisition = db.execute(
+        select(Requisition).where(Requisition.id == application.requisition_id)
+    ).scalar_one()
+    closed = requisition.status is RequisitionStatus.FILLED
+
+    db.commit()
+    db.refresh(employee)
+
+    return OnboardResult(
+        employee_id=employee.id,
+        employee_code=employee.employee_code,
+        full_name=employee.full_name,
+        joined_on=employee.joined_on,
+        status=employee.status.value,
+        basic=offer.basic,
+        requisition_closed=closed,
+    )
 
 
 # ── The candidate's own link ──────────────────────────────────────────

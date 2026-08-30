@@ -1118,6 +1118,36 @@ export const zOfferSent = z.object({
 });
 
 /**
+ * OnboardRequest
+ *
+ * The one thing onboarding cannot infer.
+ *
+ * Everything else comes from the offer, the requisition's position and the candidate.
+ * Employee codes follow a scheme each company keeps in its own head, so this is asked
+ * for rather than generated.
+ */
+export const zOnboardRequest = z.object({
+  employee_code: z
+    .string()
+    .min(1)
+    .max(32)
+    .regex(/^[A-Za-z0-9][A-Za-z0-9._-]*$/),
+});
+
+/**
+ * OnboardResult
+ */
+export const zOnboardResult = z.object({
+  basic: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  employee_code: z.string(),
+  employee_id: z.uuid(),
+  full_name: z.string(),
+  joined_on: z.iso.date(),
+  requisition_closed: z.boolean(),
+  status: z.string(),
+});
+
+/**
  * OrgUnitKind
  *
  * Depth labels for the single org tree. Ordered broadest to narrowest.
@@ -3250,6 +3280,17 @@ export const zRecruitmentCreateCandidateResponse = zCandidateOut;
  * Successful Response
  */
 export const zRecruitmentListOffersResponse = z.array(zOfferOut);
+
+export const zRecruitmentOnboardOfferBody = zOnboardRequest;
+
+export const zRecruitmentOnboardOfferPath = z.object({
+  offer_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zRecruitmentOnboardOfferResponse = zOnboardResult;
 
 export const zRecruitmentSendOfferPath = z.object({
   offer_id: z.uuid(),

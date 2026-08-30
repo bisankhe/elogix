@@ -2654,6 +2654,56 @@ export type OfferStatus =
   "draft" | "sent" | "accepted" | "declined" | "withdrawn" | "expired";
 
 /**
+ * OnboardRequest
+ *
+ * The one thing onboarding cannot infer.
+ *
+ * Everything else comes from the offer, the requisition's position and the candidate.
+ * Employee codes follow a scheme each company keeps in its own head, so this is asked
+ * for rather than generated.
+ */
+export type OnboardRequest = {
+  /**
+   * Employee Code
+   */
+  employee_code: string;
+};
+
+/**
+ * OnboardResult
+ */
+export type OnboardResult = {
+  /**
+   * Basic
+   */
+  basic: string;
+  /**
+   * Employee Code
+   */
+  employee_code: string;
+  /**
+   * Employee Id
+   */
+  employee_id: string;
+  /**
+   * Full Name
+   */
+  full_name: string;
+  /**
+   * Joined On
+   */
+  joined_on: string;
+  /**
+   * Requisition Closed
+   */
+  requisition_closed: boolean;
+  /**
+   * Status
+   */
+  status: string;
+};
+
+/**
  * OrgUnitCreate
  */
 export type OrgUnitCreate = {
@@ -8009,6 +8059,38 @@ export type RecruitmentListOffersResponses = {
 
 export type RecruitmentListOffersResponse =
   RecruitmentListOffersResponses[keyof RecruitmentListOffersResponses];
+
+export type RecruitmentOnboardOfferData = {
+  body: OnboardRequest;
+  path: {
+    /**
+     * Offer Id
+     */
+    offer_id: string;
+  };
+  query?: never;
+  url: "/api/v1/recruitment/offers/{offer_id}/onboard";
+};
+
+export type RecruitmentOnboardOfferErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type RecruitmentOnboardOfferError =
+  RecruitmentOnboardOfferErrors[keyof RecruitmentOnboardOfferErrors];
+
+export type RecruitmentOnboardOfferResponses = {
+  /**
+   * Successful Response
+   */
+  201: OnboardResult;
+};
+
+export type RecruitmentOnboardOfferResponse =
+  RecruitmentOnboardOfferResponses[keyof RecruitmentOnboardOfferResponses];
 
 export type RecruitmentSendOfferData = {
   body?: never;

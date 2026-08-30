@@ -5016,6 +5016,69 @@
         "title": "OfferStatus",
         "type": "string"
       },
+      "OnboardRequest": {
+        "description": "The one thing onboarding cannot infer.\n\nEverything else comes from the offer, the requisition's position and the candidate.\nEmployee codes follow a scheme each company keeps in its own head, so this is asked\nfor rather than generated.",
+        "properties": {
+          "employee_code": {
+            "maxLength": 32,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$",
+            "title": "Employee Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "employee_code"
+        ],
+        "title": "OnboardRequest",
+        "type": "object"
+      },
+      "OnboardResult": {
+        "properties": {
+          "basic": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Basic",
+            "type": "string"
+          },
+          "employee_code": {
+            "title": "Employee Code",
+            "type": "string"
+          },
+          "employee_id": {
+            "format": "uuid",
+            "title": "Employee Id",
+            "type": "string"
+          },
+          "full_name": {
+            "title": "Full Name",
+            "type": "string"
+          },
+          "joined_on": {
+            "format": "date",
+            "title": "Joined On",
+            "type": "string"
+          },
+          "requisition_closed": {
+            "title": "Requisition Closed",
+            "type": "boolean"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "employee_id",
+          "employee_code",
+          "full_name",
+          "joined_on",
+          "status",
+          "basic",
+          "requisition_closed"
+        ],
+        "title": "OnboardResult",
+        "type": "object"
+      },
       "OrgUnitCreate": {
         "properties": {
           "code": {
@@ -13918,6 +13981,65 @@
           }
         ],
         "summary": "List Offers",
+        "tags": [
+          "recruitment"
+        ]
+      }
+    },
+    "/api/v1/recruitment/offers/{offer_id}/onboard": {
+      "post": {
+        "description": "Turn an accepted offer into an employee, with their placement and salary.\n\nThe seam between hiring and the employee master. One call, one transaction: the\nperson, their assignment copied from the requisition's position, the HIRED event,\nand the salary they were actually offered.",
+        "operationId": "recruitment-onboard_offer",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "offer_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Offer Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OnboardRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnboardResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Onboard Offer",
         "tags": [
           "recruitment"
         ]

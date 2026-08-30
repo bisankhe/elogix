@@ -123,6 +123,7 @@ import {
   recruitmentListRequisitions,
   recruitmentListStages,
   recruitmentMoveApplication,
+  recruitmentOnboardOffer,
   recruitmentOpenRequisition,
   recruitmentSendOffer,
   recruitmentWithdrawOffer,
@@ -457,6 +458,9 @@ import type {
   RecruitmentMoveApplicationData,
   RecruitmentMoveApplicationError,
   RecruitmentMoveApplicationResponse,
+  RecruitmentOnboardOfferData,
+  RecruitmentOnboardOfferError,
+  RecruitmentOnboardOfferResponse,
   RecruitmentOpenRequisitionData,
   RecruitmentOpenRequisitionError,
   RecruitmentOpenRequisitionResponse,
@@ -3643,6 +3647,39 @@ export const recruitmentListOffersOptions = (
     },
     queryKey: recruitmentListOffersQueryKey(options),
   });
+
+/**
+ * Onboard Offer
+ *
+ * Turn an accepted offer into an employee, with their placement and salary.
+ *
+ * The seam between hiring and the employee master. One call, one transaction: the
+ * person, their assignment copied from the requisition's position, the HIRED event,
+ * and the salary they were actually offered.
+ */
+export const recruitmentOnboardOfferMutation = (
+  options?: Partial<Options<RecruitmentOnboardOfferData>>,
+): UseMutationOptions<
+  RecruitmentOnboardOfferResponse,
+  RecruitmentOnboardOfferError,
+  Options<RecruitmentOnboardOfferData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    RecruitmentOnboardOfferResponse,
+    RecruitmentOnboardOfferError,
+    Options<RecruitmentOnboardOfferData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await recruitmentOnboardOffer({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
 
 /**
  * Send Offer

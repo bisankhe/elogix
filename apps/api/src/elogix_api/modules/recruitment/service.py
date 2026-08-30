@@ -113,6 +113,27 @@ def filled_headcount(db: Session, *, company_id: uuid.UUID, position_id: uuid.UU
     ).scalar_one()
 
 
+LIVE_REQUISITIONS = (
+    RequisitionStatus.DRAFT,
+    RequisitionStatus.OPEN,
+    RequisitionStatus.ON_HOLD,
+)
+
+
+def hired_against(db: Session, *, requisition_id: uuid.UUID) -> int:
+    """How many of a requisition's openings have actually been filled."""
+    return int(
+        db.execute(
+            select(func.count())
+            .select_from(Application)
+            .where(
+                Application.requisition_id == requisition_id,
+                Application.outcome == StageOutcome.HIRED,
+            )
+        ).scalar_one()
+    )
+
+
 def committed_openings(
     db: Session,
     *,
@@ -120,16 +141,25 @@ def committed_openings(
     position_id: uuid.UUID,
     exclude: uuid.UUID | None = None,
 ) -> int:
-    """Openings already promised by live requisitions against this position."""
-    stmt = select(func.coalesce(func.sum(Requisition.openings), 0)).where(
+    """Openings promised by live requisitions and *not yet filled*.
+
+    The subtraction matters. Once someone is hired against a requisition they start
+    counting in `filled_headcount`, so an opening that still counted as committed as
+    well would be counted twice — and a position budgeted for two would refuse a second
+    requisition after the first hire, which is exactly when you need one.
+    """
+    stmt = select(Requisition.id, Requisition.openings).where(
         Requisition.company_id == company_id,
         Requisition.position_id == position_id,
-        Requisition.status.in_([RequisitionStatus.DRAFT, RequisitionStatus.OPEN,
-                                RequisitionStatus.ON_HOLD]),
+        Requisition.status.in_(LIVE_REQUISITIONS),
     )
     if exclude is not None:
         stmt = stmt.where(Requisition.id != exclude)
-    return int(db.execute(stmt).scalar_one())
+
+    return sum(
+        max(0, openings - hired_against(db, requisition_id=req_id))
+        for req_id, openings in db.execute(stmt).all()
+    )
 
 
 def assert_within_budget(

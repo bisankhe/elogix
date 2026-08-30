@@ -180,6 +180,29 @@ class OfferResponse(BaseModel):
     reason: str | None = Field(default=None, max_length=2000)
 
 
+class OnboardRequest(BaseModel):
+    """The one thing onboarding cannot infer.
+
+    Everything else comes from the offer, the requisition's position and the candidate.
+    Employee codes follow a scheme each company keeps in its own head, so this is asked
+    for rather than generated.
+    """
+
+    employee_code: str = Field(
+        min_length=1, max_length=32, pattern=r"^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    )
+
+
+class OnboardResult(BaseModel):
+    employee_id: uuid.UUID
+    employee_code: str
+    full_name: str
+    joined_on: date
+    status: str
+    basic: Decimal
+    requisition_closed: bool
+
+
 class PublicOffer(BaseModel):
     """What a candidate sees at their link.
 
