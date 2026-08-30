@@ -6,11 +6,13 @@ import { createRoot } from 'react-dom/client'
 import { client } from '@elogix/api-client/client'
 
 import './index.css'
+import { installAuthInterceptor } from './lib/auth'
 import { routeTree } from './routeTree.gen'
 
 // Empty baseUrl: requests go to /api/... on the same origin and Vite proxies them to
 // the API in development. In production the built bundle is served by the same host.
 client.setConfig({ baseUrl: '' })
+installAuthInterceptor()
 
 const queryClient = new QueryClient()
 

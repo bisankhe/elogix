@@ -1,54 +1,9 @@
-import { useQuery } from '@tanstack/react-query'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 
-import { metaHealthOptions } from '@elogix/api-client/queries'
+import { isAuthenticated } from '@/lib/auth'
 
 export const Route = createFileRoute('/')({
-  component: ScaffoldStatus,
+  beforeLoad: () => {
+    throw redirect({ to: isAuthenticated() ? '/employees' : '/login' })
+  },
 })
-
-/**
- * Scaffold placeholder. Its only job is to prove the contract pipeline works:
- * this component calls a function generated from the API's OpenAPI spec, and
- * TypeScript knows the response shape without anyone writing it down twice.
- *
- * Phase 00 replaces this with the real walking skeleton (login, one employee).
- */
-function ScaffoldStatus() {
-  const { data, isPending, isError } = useQuery(metaHealthOptions())
-
-  const value = (field: 'status' | 'database' | 'environment') =>
-    isPending ? 'checking…' : isError ? 'unreachable' : (data?.[field] ?? 'unknown')
-
-  return (
-    <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 p-8">
-      <div>
-        <p className="font-mono text-xs uppercase tracking-widest text-neutral-500">
-          eLogix HRMS
-        </p>
-        <h1 className="text-3xl font-semibold tracking-tight">Rebuild scaffold</h1>
-      </div>
-
-      <dl className="divide-y divide-neutral-200 border-y border-neutral-200 text-sm">
-        <Row label="API">{value('status')}</Row>
-        <Row label="Database">{value('database')}</Row>
-        <Row label="Environment">{value('environment')}</Row>
-      </dl>
-
-      <p className="text-sm text-neutral-500">
-        This page calls <code className="font-mono text-xs">metaHealth</code>, generated
-        from <code className="font-mono text-xs">openapi.json</code>. Delete the route on
-        the API and this file stops compiling.
-      </p>
-    </main>
-  )
-}
-
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex justify-between gap-4 py-2">
-      <dt className="text-neutral-500">{label}</dt>
-      <dd className="font-mono">{children}</dd>
-    </div>
-  )
-}

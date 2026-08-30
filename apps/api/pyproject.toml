@@ -13,12 +13,13 @@ dependencies = [
     "pyjwt>=2.10",
     "pwdlib[argon2,bcrypt]>=0.2",
     "nepali-datetime>=1.0.8",
+    "pydantic[email]>=2.13.5",
 ]
 
 [dependency-groups]
 dev = [
+    "httpx2>=2.12.0",
     "pytest>=8.3",
-    "httpx>=0.28",
     "ruff>=0.9",
     "ty>=0.0.1a1",
 ]
@@ -33,6 +34,9 @@ packages = ["src/elogix_api"]
 [tool.ruff]
 src = ["src", "tests"]
 line-length = 100
+# Alembic writes these; reformatting machine output by hand is pure churn, and the
+# template already keeps them consistent.
+extend-exclude = ["migrations/versions"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]

@@ -43,11 +43,21 @@ Checks: `npm run check` (ruff + ty + pytest + web build), or `check:api` / `chec
 After changing any route or schema: **`npm run generate`** and commit the result —
 otherwise CI fails on drift.
 
+Seed development data (idempotent) — creates tenant `acme` and logs in as
+`admin@acme.com.np` / `devpassword123`:
+
+```bash
+cd apps/api && uv run python -m elogix_api.seed
+```
+
 Test database is separate (`elogix_test`) and created once:
 
 ```bash
 docker exec elogix_dev_db psql -U elogix -d elogix -c "CREATE DATABASE elogix_test;"
 ```
+
+The suite drops and rebuilds `public` by running the migrations from zero, so it proves
+the migrations work rather than trusting `metadata.create_all`.
 
 ---
 
@@ -71,6 +81,17 @@ docker exec elogix_dev_db psql -U elogix -d elogix -c "CREATE DATABASE elogix_te
   `healthApiHealthGet`. An untagged route lands under `default`.
 - **`.env` lives at the repo root**, and `settings.py` resolves it by absolute path, so
   the API can be started from any directory.
+- **Don't use `.test` email addresses.** `email-validator` rejects reserved TLDs
+  (`.test`, `.invalid`, `.localhost`), so a fixture using one fails with a 422 that looks
+  like an auth bug. Fixtures and seed data use `*.com.np`.
+- **The `@/` alias is declared twice** — `resolve.alias` in `vite.config.ts` and `paths`
+  in `tsconfig.app.json`. Both must be edited together, or the build passes and the
+  typecheck fails (or worse, the reverse). No `baseUrl`: TS 6 deprecates it.
+- **Alembic autogenerate does not drop enum types in `downgrade`.** Add an explicit
+  `sa.Enum(name=...).drop(op.get_bind(), checkfirst=True)` whenever a revision creates
+  one, or a down-then-up cycle fails with "type already exists".
+- **`migrations/versions/` is excluded from ruff.** It is machine output; don't reformat
+  it by hand.
 - **Never `pkill -f <name>`** — the pattern matches the issuing shell's own command line.
   Use `pkill -x`.
 
@@ -120,9 +141,20 @@ This is a dependency chain, not a priority ranking — each phase produces the t
 next one needs, so nothing gets built twice against mocked inputs. Payroll is last in the
 core *deliberately*: it consumes phases 03–05, and its tests get written before its code.
 
-**Current state: the scaffold exists and the pipe runs end to end** (browser → Vite →
-FastAPI → Postgres, through the generated client). Phase 00 proper — one tenant, one
-login, one employee, with a test — has not been built yet. `modules/` is empty.
+**Current state: phase 00 is done.** A fresh clone builds the database from zero
+migrations, logs in, and reads employees — proven by 17 tests that run the migrations
+from zero against a real Postgres. `modules/identity` and `modules/employee` exist and
+are deliberately thin; phases 01 and 03 own their real field sets.
+
+**Phase 01 is next**, and it carries the two things phase 00 knowingly left as
+placeholders:
+- Tokens are stored in `localStorage` (`apps/web/src/lib/auth.ts`). Phase 01 moves the
+  refresh token to an httpOnly cookie and keeps the access token in memory.
+- Tenant isolation is enforced by application-level query filters only. Phase 01 adds
+  row-level security underneath, driven by `set_config` inside the request transaction.
+  The query filters stay — belt and braces.
+- There is no refresh endpoint yet, so sessions simply expire after
+  `ACCESS_TOKEN_TTL_MINUTES`.
 
 ---
 

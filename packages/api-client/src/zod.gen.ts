@@ -3,8 +3,115 @@
 import * as z from "zod";
 
 /**
+ * EmployeeStatus
+ */
+export const zEmployeeStatus = z.enum([
+  "active",
+  "probation",
+  "suspended",
+  "exited",
+]);
+
+/**
+ * EmployeeOut
+ */
+export const zEmployeeOut = z.object({
+  email: z.string().nullable(),
+  employee_code: z.string(),
+  full_name: z.string(),
+  id: z.uuid(),
+  joined_on: z.iso.date(),
+  status: zEmployeeStatus,
+});
+
+/**
+ * EmployeeList
+ */
+export const zEmployeeList = z.object({
+  items: z.array(zEmployeeOut),
+  total: z.int(),
+});
+
+/**
+ * LoginRequest
+ */
+export const zLoginRequest = z.object({
+  company_slug: z.string().min(1).max(63),
+  email: z.email(),
+  password: z.string().min(1).max(256),
+});
+
+/**
+ * TokenPair
+ */
+export const zTokenPair = z.object({
+  access_token: z.string(),
+  refresh_token: z.string(),
+  token_type: z.string().optional().default("bearer"),
+});
+
+/**
+ * UserOut
+ */
+export const zUserOut = z.object({
+  company_id: z.uuid(),
+  email: z.string(),
+  full_name: z.string(),
+  id: z.uuid(),
+});
+
+/**
+ * ValidationError
+ */
+export const zValidationError = z.object({
+  ctx: z.record(z.string(), z.unknown()).optional(),
+  input: z.unknown().optional(),
+  loc: z.array(z.union([z.string(), z.int()])),
+  msg: z.string(),
+  type: z.string(),
+});
+
+/**
+ * HTTPValidationError
+ */
+export const zHttpValidationError = z.object({
+  detail: z.array(zValidationError).optional(),
+});
+
+/**
  * Response Meta-Health
  *
  * Successful Response
  */
 export const zMetaHealthResponse = z.record(z.string(), z.string());
+
+export const zAuthLoginBody = zLoginRequest;
+
+/**
+ * Successful Response
+ */
+export const zAuthLoginResponse = zTokenPair;
+
+/**
+ * Successful Response
+ */
+export const zAuthMeResponse = zUserOut;
+
+export const zEmployeesListEmployeesQuery = z.object({
+  limit: z.int().gte(1).lte(200).optional().default(50),
+  offset: z.int().gte(0).optional().default(0),
+});
+
+/**
+ * Successful Response
+ */
+export const zEmployeesListEmployeesResponse = zEmployeeList;
+
+export const zEmployeesGetEmployeePath = z.object({
+  employee_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zEmployeesGetEmployeeResponse = zEmployeeOut;

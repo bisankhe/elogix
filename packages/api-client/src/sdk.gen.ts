@@ -8,7 +8,21 @@ import type {
   TDataShape,
 } from "./client";
 import { client } from "./client.gen";
-import type { MetaHealthData, MetaHealthResponses } from "./types.gen";
+import type {
+  AuthLoginData,
+  AuthLoginErrors,
+  AuthLoginResponses,
+  AuthMeData,
+  AuthMeResponses,
+  EmployeesGetEmployeeData,
+  EmployeesGetEmployeeErrors,
+  EmployeesGetEmployeeResponses,
+  EmployeesListEmployeesData,
+  EmployeesListEmployeesErrors,
+  EmployeesListEmployeesResponses,
+  MetaHealthData,
+  MetaHealthResponses,
+} from "./types.gen";
 
 export type Options<
   TData extends TDataShape = TDataShape,
@@ -36,5 +50,76 @@ export const metaHealth = <ThrowOnError extends boolean = false>(
 ): RequestResult<MetaHealthResponses, unknown, ThrowOnError> =>
   (options?.client ?? client).get<MetaHealthResponses, unknown, ThrowOnError>({
     url: "/api/health",
+    ...options,
+  });
+
+/**
+ * Login
+ */
+export const authLogin = <ThrowOnError extends boolean = false>(
+  options: Options<AuthLoginData, ThrowOnError>,
+): RequestResult<AuthLoginResponses, AuthLoginErrors, ThrowOnError> =>
+  (options.client ?? client).post<
+    AuthLoginResponses,
+    AuthLoginErrors,
+    ThrowOnError
+  >({
+    url: "/api/v1/auth/login",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Me
+ */
+export const authMe = <ThrowOnError extends boolean = false>(
+  options?: Options<AuthMeData, ThrowOnError>,
+): RequestResult<AuthMeResponses, unknown, ThrowOnError> =>
+  (options?.client ?? client).get<AuthMeResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/auth/me",
+    ...options,
+  });
+
+/**
+ * List Employees
+ */
+export const employeesListEmployees = <ThrowOnError extends boolean = false>(
+  options?: Options<EmployeesListEmployeesData, ThrowOnError>,
+): RequestResult<
+  EmployeesListEmployeesResponses,
+  EmployeesListEmployeesErrors,
+  ThrowOnError
+> =>
+  (options?.client ?? client).get<
+    EmployeesListEmployeesResponses,
+    EmployeesListEmployeesErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/employees",
+    ...options,
+  });
+
+/**
+ * Get Employee
+ */
+export const employeesGetEmployee = <ThrowOnError extends boolean = false>(
+  options: Options<EmployeesGetEmployeeData, ThrowOnError>,
+): RequestResult<
+  EmployeesGetEmployeeResponses,
+  EmployeesGetEmployeeErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    EmployeesGetEmployeeResponses,
+    EmployeesGetEmployeeErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/employees/{employee_id}",
     ...options,
   });

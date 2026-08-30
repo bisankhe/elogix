@@ -4,6 +4,148 @@ export type ClientOptions = {
   baseUrl: `${string}://${string}` | (string & {});
 };
 
+/**
+ * EmployeeList
+ */
+export type EmployeeList = {
+  /**
+   * Items
+   */
+  items: Array<EmployeeOut>;
+  /**
+   * Total
+   */
+  total: number;
+};
+
+/**
+ * EmployeeOut
+ */
+export type EmployeeOut = {
+  /**
+   * Email
+   */
+  email: string | null;
+  /**
+   * Employee Code
+   */
+  employee_code: string;
+  /**
+   * Full Name
+   */
+  full_name: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Joined On
+   */
+  joined_on: string;
+  status: EmployeeStatus;
+};
+
+/**
+ * EmployeeStatus
+ */
+export type EmployeeStatus = "active" | "probation" | "suspended" | "exited";
+
+/**
+ * HTTPValidationError
+ */
+export type HttpValidationError = {
+  /**
+   * Detail
+   */
+  detail?: Array<ValidationError>;
+};
+
+/**
+ * LoginRequest
+ */
+export type LoginRequest = {
+  /**
+   * Company Slug
+   */
+  company_slug: string;
+  /**
+   * Email
+   */
+  email: string;
+  /**
+   * Password
+   */
+  password: string;
+};
+
+/**
+ * TokenPair
+ */
+export type TokenPair = {
+  /**
+   * Access Token
+   */
+  access_token: string;
+  /**
+   * Refresh Token
+   */
+  refresh_token: string;
+  /**
+   * Token Type
+   */
+  token_type?: string;
+};
+
+/**
+ * UserOut
+ */
+export type UserOut = {
+  /**
+   * Company Id
+   */
+  company_id: string;
+  /**
+   * Email
+   */
+  email: string;
+  /**
+   * Full Name
+   */
+  full_name: string;
+  /**
+   * Id
+   */
+  id: string;
+};
+
+/**
+ * ValidationError
+ */
+export type ValidationError = {
+  /**
+   * Context
+   */
+  ctx?: {
+    [key: string]: unknown;
+  };
+  /**
+   * Input
+   */
+  input?: unknown;
+  /**
+   * Location
+   */
+  loc: Array<string | number>;
+  /**
+   * Message
+   */
+  msg: string;
+  /**
+   * Error Type
+   */
+  type: string;
+};
+
 export type MetaHealthData = {
   body?: never;
   path?: never;
@@ -23,3 +165,112 @@ export type MetaHealthResponses = {
 };
 
 export type MetaHealthResponse = MetaHealthResponses[keyof MetaHealthResponses];
+
+export type AuthLoginData = {
+  body: LoginRequest;
+  path?: never;
+  query?: never;
+  url: "/api/v1/auth/login";
+};
+
+export type AuthLoginErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type AuthLoginError = AuthLoginErrors[keyof AuthLoginErrors];
+
+export type AuthLoginResponses = {
+  /**
+   * Successful Response
+   */
+  200: TokenPair;
+};
+
+export type AuthLoginResponse = AuthLoginResponses[keyof AuthLoginResponses];
+
+export type AuthMeData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/api/v1/auth/me";
+};
+
+export type AuthMeResponses = {
+  /**
+   * Successful Response
+   */
+  200: UserOut;
+};
+
+export type AuthMeResponse = AuthMeResponses[keyof AuthMeResponses];
+
+export type EmployeesListEmployeesData = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * Limit
+     */
+    limit?: number;
+    /**
+     * Offset
+     */
+    offset?: number;
+  };
+  url: "/api/v1/employees";
+};
+
+export type EmployeesListEmployeesErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type EmployeesListEmployeesError =
+  EmployeesListEmployeesErrors[keyof EmployeesListEmployeesErrors];
+
+export type EmployeesListEmployeesResponses = {
+  /**
+   * Successful Response
+   */
+  200: EmployeeList;
+};
+
+export type EmployeesListEmployeesResponse =
+  EmployeesListEmployeesResponses[keyof EmployeesListEmployeesResponses];
+
+export type EmployeesGetEmployeeData = {
+  body?: never;
+  path: {
+    /**
+     * Employee Id
+     */
+    employee_id: string;
+  };
+  query?: never;
+  url: "/api/v1/employees/{employee_id}";
+};
+
+export type EmployeesGetEmployeeErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type EmployeesGetEmployeeError =
+  EmployeesGetEmployeeErrors[keyof EmployeesGetEmployeeErrors];
+
+export type EmployeesGetEmployeeResponses = {
+  /**
+   * Successful Response
+   */
+  200: EmployeeOut;
+};
+
+export type EmployeesGetEmployeeResponse =
+  EmployeesGetEmployeeResponses[keyof EmployeesGetEmployeeResponses];
