@@ -89,7 +89,7 @@ function LeavePage() {
                 key={b.leave_type_id}
                 label={b.name}
                 value={Number(b.available_days)}
-                tone={Number(b.available_days) > 0 ? 'green' : 'slate'}
+                hint="days available"
               />
             ))}
         </div>

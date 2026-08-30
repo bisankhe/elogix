@@ -111,29 +111,54 @@ export function Field({ label, children }: { label: string; children: ReactNode 
 export function StatCard({
   label,
   value,
-  tone = 'blue',
+  hint,
 }: {
   label: string
   value: ReactNode
-  tone?: PillTone
+  hint?: string
 }) {
-  const accent: Record<string, string> = {
-    blue: 'text-blue-600',
-    green: 'text-emerald-600',
-    violet: 'text-violet-600',
-    amber: 'text-amber-600',
-    cyan: 'text-cyan-600',
-    slate: 'text-slate-600',
-    red: 'text-red-600',
-    orange: 'text-orange-600',
-  }
+  // The prototype's stat card: a small grey caption above a large near-black number,
+  // with an optional grey line beneath. Not a coloured number — colour there competes
+  // with the status pills, which are the thing that should actually catch the eye.
   return (
     <Card className="p-4">
-      <div className={`text-2xl font-bold tabular-nums ${accent[tone] ?? accent.blue}`}>
+      <div className="text-[11px] text-slate-500">{label}</div>
+      <div className="mt-1 text-2xl font-bold tabular-nums tracking-tight text-slate-900">
         {value}
       </div>
-      <div className="mt-0.5 text-xs text-slate-500">{label}</div>
+      {hint && <div className="mt-0.5 text-[11px] text-slate-400">{hint}</div>}
     </Card>
+  )
+}
+
+/** The prototype's section divider: uppercase, letter-spaced, quiet. */
+export function SectionLabel({ children }: { children: ReactNode }) {
+  return (
+    <h2 className="mb-2 mt-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+      {children}
+    </h2>
+  )
+}
+
+/** The prototype leans on tinted full-width banners for setup state and warnings. */
+export function Banner({
+  tone = 'info',
+  title,
+  children,
+}: {
+  tone?: 'info' | 'warning'
+  title: string
+  children?: ReactNode
+}) {
+  const style =
+    tone === 'warning'
+      ? 'border-amber-300 bg-amber-50 text-amber-900'
+      : 'border-blue-200 bg-blue-50 text-blue-900'
+  return (
+    <div className={`mb-4 rounded-xl border px-4 py-3 ${style}`}>
+      <div className="text-sm font-bold">{title}</div>
+      {children && <div className="mt-0.5 text-xs opacity-90">{children}</div>}
+    </div>
   )
 }
 

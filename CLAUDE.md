@@ -59,6 +59,21 @@ docker exec elogix_dev_db psql -U elogix -d elogix -c "CREATE DATABASE elogix_te
 The suite drops and rebuilds `public` by running the migrations from zero, so it proves
 the migrations work rather than trusting `metadata.create_all`.
 
+### Comparing against the prototype
+
+The prototype runs. It is a Vite app on mock data, so it needs no backend, and having it
+open beside the rebuild is the only reliable way to match it:
+
+```bash
+cd legacy && npm install && npx vite --port 5174
+# sign in with admin@demo.com / Admin@2083
+```
+
+`components/AppShell.tsx` was built against it directly — the emoji-headed collapsible
+module tree, the marker dot that turns blue when active, the role pill, the Ctrl-K search
+box, the EN|NPR chip, the breadcrumb strip with Nepal Standard Time, the AES-256 chip in
+the foot. Match new screens the same way rather than guessing.
+
 ### Seeing the UI
 
 There is no Claude browser extension here, but a real headed Chromium runs against a
