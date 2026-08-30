@@ -19,7 +19,9 @@ or deployed — it is documentation that happens to be executable.
    which fails if a `modules/*/models.py` is not registered.
 2. **The frontend API client is generated from the OpenAPI spec.** Nothing in
    `packages/api-client/` is hand-written.
-   *Enforced by:* the `contract` job in CI — it regenerates and fails on any diff.
+   *Enforced by:* `npm run generate` followed by a clean `git diff`. The `contract`
+   job that did this automatically lives in `.github/workflows/ci.yml.bak` and is
+   parked, so until it is switched back on **this rule is enforced by you, locally**.
 
 The prototype died of exactly two things: type drift (202 foreign keys Postgres rejected)
 and contract drift (35 of 46 frontend calls hit routes that did not exist). Those two
@@ -40,8 +42,13 @@ npm run web                # Vite on :5173, proxies /api → :5000
 ```
 
 Checks: `npm run check` (ruff + ty + pytest + web build), or `check:api` / `check:web`.
-After changing any route or schema: **`npm run generate`** and commit the result —
-otherwise CI fails on drift.
+
+**GitHub Actions is parked**, by decision on 2026-08-30 — the workflow is kept as
+`.github/workflows/ci.yml.bak` so it can be restored by renaming it back. Nothing runs
+on push, so `npm run check` before committing is the only gate there is.
+
+After changing any route or schema: **`npm run generate`** and commit the result. With
+CI parked, nothing catches the drift for you.
 
 Seed development data (idempotent) — creates tenant `acme` and logs in as
 `admin@acme.com.np` / `devpassword123`:
@@ -229,7 +236,8 @@ apps/web/                       Vite + React 19 + TS + Tailwind v4
                                 runs before `vite build`, so a fresh clone needs it
 
 packages/api-client/            GENERATED. Never edit. `npm run generate` owns it.
-openapi.json                    GENERATED and committed. CI fails if stale.
+openapi.json                    GENERATED and committed. Regenerate after any route
+                                or schema change; nothing checks it while CI is parked.
 legacy/                         the frozen prototype, for reference only
 ```
 
