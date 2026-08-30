@@ -13,6 +13,7 @@ import {
 
 import { Button, Card, Cell, PageHeader, Pill, Row, Select, StatCard, Table } from '@/components/ui'
 import type { PillTone } from '@/components/ui'
+import { apiErrorMessage } from '@/lib/errors'
 
 const STATUS_TONE: Record<string, PillTone> = {
   pending: 'amber',
@@ -56,7 +57,8 @@ function LeavePage() {
         path: { request_id: id },
         body: { approve },
       })
-      if (error) throw new Error('Could not decide')
+      // The server knows exactly why it refused — say that, rather than guessing.
+      if (error) throw new Error(apiErrorMessage(error, 'Could not decide the request'))
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: leaveListRequestsQueryKey() })
@@ -180,8 +182,7 @@ function LeavePage() {
 
       {decide.isError && (
         <p role="alert" className="mt-3 text-sm text-red-700">
-          Could not decide — the balance may be insufficient, or documentation may be
-          required.
+          {decide.error.message}
         </p>
       )}
 

@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { authLogin } from '@elogix/api-client'
 
 import { isAuthenticated, setAccessToken } from '@/lib/auth'
+import { apiErrorMessage } from '@/lib/errors'
 
 export const Route = createFileRoute('/login')({
   beforeLoad: () => {
@@ -24,7 +25,7 @@ function LoginPage() {
       const { data, error } = await authLogin({
         body: { company_slug: companySlug, email, password },
       })
-      if (error || !data) throw new Error('Invalid credentials')
+      if (error || !data) throw new Error(apiErrorMessage(error, 'Invalid credentials'))
       return data
     },
     onSuccess: ({ access_token }) => {
@@ -57,7 +58,7 @@ function LoginPage() {
 
         {login.isError && (
           <p role="alert" className="text-sm text-red-700">
-            Invalid credentials
+            {login.error.message}
           </p>
         )}
 

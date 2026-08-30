@@ -19,7 +19,7 @@ import {
   Users,
   Wallet,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { authEntitlementsOptions, authMeOptions } from '@elogix/api-client/queries'
 
@@ -37,9 +37,25 @@ const NAV = [
   { to: '/leave', label: 'Leave', icon: CalendarDays, module: 'leave' },
 ] as const
 
+/** Below this the 248px sidebar takes more room than it earns. */
+const WIDE_ENOUGH = '(min-width: 1024px)'
+
 export function AppShell() {
   const navigate = useNavigate()
-  const [open, setOpen] = useState(true)
+  // Start collapsed on a narrow screen. At 420px an expanded sidebar left about 170px
+  // for the actual page, which is not a layout, it is a wall.
+  const [open, setOpen] = useState(
+    () => typeof window === 'undefined' || window.matchMedia(WIDE_ENOUGH).matches,
+  )
+
+  useEffect(() => {
+    const query = window.matchMedia(WIDE_ENOUGH)
+    // Only follow the viewport across the breakpoint; a deliberate toggle stands until
+    // the window actually changes class.
+    const onChange = (e: MediaQueryListEvent) => setOpen(e.matches)
+    query.addEventListener('change', onChange)
+    return () => query.removeEventListener('change', onChange)
+  }, [])
   const me = useQuery(authMeOptions())
   const entitlements = useQuery(authEntitlementsOptions())
   const pathname = useRouterState({ select: (s) => s.location.pathname })

@@ -70,9 +70,20 @@ Xvfb :99 -screen 0 1600x1000x24 &             # a display to render into
 cd apps/web && DISPLAY=:99 node scripts/screenshot.mjs
 ```
 
-The script logs in, captures every screen to `/tmp/elogix-shots/`, and exits non-zero on
-any console error, page error or 4xx/5xx response — so it doubles as a smoke test.
-`headless: false` is deliberate: it renders through the same path a user's browser does.
+Two scripts. `screenshot.mjs` captures every screen with good data; `scenarios.mjs`
+captures the states the happy path never reaches — empty tenants, refusals, a smaller
+plan, a collapsed sidebar, a phone-width viewport — into `/tmp/elogix-scenarios/`. Both
+exit non-zero on a console error, page error or unexpected 4xx/5xx, so they double as
+smoke tests. `headless: false` is deliberate: it renders through the same path a user's
+browser does.
+
+`uv run python -m elogix_api.seed_scenarios` creates a second tenant, `startup`, empty
+and on the trial plan — which is what makes every empty state and the entitlement-filtered
+nav reachable at all.
+
+**Every UI change should be looked at.** Three real bugs so far were invisible to 154
+passing tests and obvious in a screenshot: an hour of phantom overtime on every day, an
+empty Positions screen, and a sidebar that ate a phone viewport.
 
 To *watch* it live rather than screenshot it, add a VNC bridge and open port 6080:
 
@@ -169,6 +180,10 @@ asks for a new access token on startup and there is no refresh cookie until you 
   worked in the register, and approved leave marks days as `leave` rather than `absent`.
   `attendance/service.py` imports from `leave/service.py` inside the function to avoid an
   import cycle — that local import is deliberate, not an oversight.
+- **Show the API's error, never a guess.** `lib/errors.ts` has `apiErrorMessage`; the
+  server already computes a precise refusal ("Only 7.00 day(s) of Sick Leave available;
+  50.00 requested") and rendering "something may be wrong" instead teaches people the app
+  does not know why it refused them.
 - **`migrations/versions/` is excluded from ruff.** It is machine output; don't reformat
   it by hand.
 - **Never `pkill -f <name>`** — the pattern matches the issuing shell's own command line.

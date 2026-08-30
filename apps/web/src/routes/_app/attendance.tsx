@@ -184,8 +184,8 @@ function AttendanceRegister() {
 
       {days.data?.length === 0 && (
         <p className="mt-3 text-xs text-slate-500">
-          Nothing here yet — assign a roster, record punches, then use “Recompute range”.
-          The register is derived from punches, so it is always safe to rebuild.
+          Assign a roster, record punches, then use “Recompute range”. The register is
+          derived from punches, so it is always safe to rebuild.
         </p>
       )}
     </>
