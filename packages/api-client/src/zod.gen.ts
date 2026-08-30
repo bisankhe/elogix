@@ -43,6 +43,13 @@ export const zAccrualResult = z.object({
 });
 
 /**
+ * ApprovalResult
+ */
+export const zApprovalResult = z.object({
+  attendance_days_locked: z.int(),
+});
+
+/**
  * AssignmentReason
  */
 export const zAssignmentReason = z.enum([
@@ -91,6 +98,38 @@ export const zBalanceOut = z.object({
  */
 export const zCarryForwardRequest = z.object({
   from_year: z.int().gte(2000).lte(2100),
+});
+
+/**
+ * ComponentKind
+ */
+export const zComponentKind = z.enum(["earning", "deduction"]);
+
+/**
+ * ComponentCreate
+ */
+export const zComponentCreate = z.object({
+  code: z
+    .string()
+    .min(1)
+    .max(32)
+    .regex(/^[A-Za-z0-9][A-Za-z0-9._-]*$/),
+  is_taxable: z.boolean().optional().default(true),
+  kind: zComponentKind,
+  name: z.string().min(1).max(200),
+  prorates: z.boolean().optional().default(true),
+});
+
+/**
+ * ComponentOut
+ */
+export const zComponentOut = z.object({
+  code: z.string(),
+  id: z.uuid(),
+  is_taxable: z.boolean(),
+  kind: zComponentKind,
+  name: z.string(),
+  prorates: z.boolean(),
 });
 
 /**
@@ -733,6 +772,42 @@ export const zPayrollExport = z.object({
 });
 
 /**
+ * PayslipLineOut
+ */
+export const zPayslipLineOut = z.object({
+  amount: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  code: z.string(),
+  kind: zComponentKind,
+  label: z.string(),
+});
+
+/**
+ * PayslipOut
+ */
+export const zPayslipOut = z.object({
+  absent_days: z.int(),
+  annual_assessable: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  annual_tax: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  annual_taxable: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  basic_earned: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  employee_id: z.uuid(),
+  female_rebate: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  gross: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  id: z.uuid(),
+  monthly_tax: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  net_pay: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  notes: z.string().nullable(),
+  overtime_minutes: z.int(),
+  overtime_pay: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  payable_days: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  present_days: z.int(),
+  ssf_employee: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  ssf_employer: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  taxable_gross: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  total_deductions: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+});
+
+/**
  * Placement
  *
  * Where an employee sits. The same shape whether hiring or moving someone.
@@ -1026,6 +1101,109 @@ export const zRosterEntryOut = z.object({
 });
 
 /**
+ * RunCreate
+ */
+export const zRunCreate = z.object({
+  fiscal_year: z.string().max(16).optional().default("2082-83"),
+  month_days: z
+    .union([
+      z.number().gt(0).lte(31),
+      z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+    ])
+    .optional()
+    .default("30"),
+  period_end: z.iso.date(),
+  period_start: z.iso.date(),
+});
+
+/**
+ * RunResult
+ */
+export const zRunResult = z.object({
+  payslips_written: z.int(),
+});
+
+/**
+ * RunStatus
+ */
+export const zRunStatus = z.enum([
+  "draft",
+  "computed",
+  "approved",
+  "paid",
+  "cancelled",
+]);
+
+/**
+ * RunOut
+ */
+export const zRunOut = z.object({
+  approved_at: z.iso.datetime().nullable(),
+  computed_at: z.iso.datetime().nullable(),
+  fiscal_year: z.string(),
+  id: z.uuid(),
+  month_days: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  note: z.string().nullable(),
+  period_end: z.iso.date(),
+  period_start: z.iso.date(),
+  status: zRunStatus,
+});
+
+/**
+ * SalaryLineIn
+ */
+export const zSalaryLineIn = z.object({
+  amount: z.union([
+    z.number().gte(0).lte(99999999),
+    z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  ]),
+  salary_component_id: z.uuid(),
+});
+
+/**
+ * SalaryOut
+ */
+export const zSalaryOut = z.object({
+  basic: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  contributes_to_ssf: z.boolean(),
+  effective_from: z.iso.date(),
+  effective_to: z.iso.date().nullable(),
+  employee_id: z.uuid(),
+  health_insurance_premium: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  id: z.uuid(),
+  life_insurance_premium: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  note: z.string().nullable(),
+});
+
+/**
+ * SalarySet
+ */
+export const zSalarySet = z.object({
+  basic: z.union([
+    z.number().gt(0).lte(99999999),
+    z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  ]),
+  contributes_to_ssf: z.boolean().optional().default(true),
+  effective_from: z.iso.date(),
+  health_insurance_premium: z
+    .union([
+      z.number().gte(0),
+      z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+    ])
+    .optional()
+    .default("0"),
+  life_insurance_premium: z
+    .union([
+      z.number().gte(0),
+      z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+    ])
+    .optional()
+    .default("0"),
+  lines: z.array(zSalaryLineIn).optional().default([]),
+  note: z.string().nullish(),
+});
+
+/**
  * ShiftCreate
  */
 export const zShiftCreate = z.object({
@@ -1053,6 +1231,97 @@ export const zShiftOut = z.object({
   name: z.string(),
   scheduled_minutes: z.int(),
   starts_at: z.iso.time(),
+});
+
+/**
+ * SlabIn
+ */
+export const zSlabIn = z.object({
+  label: z.string().min(1).max(120),
+  rate: z.union([
+    z.number().gte(0).lte(1),
+    z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  ]),
+  width: z
+    .union([
+      z.number().gte(0),
+      z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+    ])
+    .nullish(),
+});
+
+/**
+ * SlabOut
+ */
+export const zSlabOut = z.object({
+  label: z.string(),
+  rate: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  sequence: z.int(),
+  width: z
+    .string()
+    .regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/)
+    .nullable(),
+});
+
+/**
+ * TaxBandOut
+ */
+export const zTaxBandOut = z.object({
+  amount: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  label: z.string(),
+  rate: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  tax: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+});
+
+/**
+ * PayslipDetail
+ */
+export const zPayslipDetail = z.object({
+  absent_days: z.int(),
+  annual_assessable: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  annual_tax: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  annual_taxable: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  basic_earned: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  employee_id: z.uuid(),
+  female_rebate: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  gross: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  id: z.uuid(),
+  lines: z.array(zPayslipLineOut).optional().default([]),
+  monthly_tax: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  net_pay: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  notes: z.string().nullable(),
+  overtime_minutes: z.int(),
+  overtime_pay: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  payable_days: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  present_days: z.int(),
+  ssf_employee: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  ssf_employer: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  tax_bands: z.array(zTaxBandOut).optional().default([]),
+  taxable_gross: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  total_deductions: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+});
+
+/**
+ * TaxScaleOut
+ */
+export const zTaxScaleOut = z.object({
+  fiscal_year: z.string(),
+  id: z.uuid(),
+  is_married: z.boolean(),
+  is_verified: z.boolean(),
+  slabs: z.array(zSlabOut),
+  verified_by: z.string().nullable(),
+  verified_on: z.iso.date().nullable(),
+});
+
+/**
+ * TaxScaleUpdate
+ *
+ * Replace a scale's bands wholesale, and record who checked them.
+ */
+export const zTaxScaleUpdate = z.object({
+  slabs: z.array(zSlabIn).min(1).max(20),
+  verified_by: z.string().max(200).nullish(),
 });
 
 /**
@@ -1792,3 +2061,113 @@ export const zOrgDeactivateWorkLocationPath = z.object({
  * Successful Response
  */
 export const zOrgDeactivateWorkLocationResponse = z.void();
+
+/**
+ * Response Payroll-List Components
+ *
+ * Successful Response
+ */
+export const zPayrollListComponentsResponse = z.array(zComponentOut);
+
+export const zPayrollCreateComponentBody = zComponentCreate;
+
+/**
+ * Successful Response
+ */
+export const zPayrollCreateComponentResponse = zComponentOut;
+
+export const zPayrollGetPayslipPath = z.object({
+  payslip_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zPayrollGetPayslipResponse = zPayslipDetail;
+
+/**
+ * Response Payroll-List Runs
+ *
+ * Successful Response
+ */
+export const zPayrollListRunsResponse = z.array(zRunOut);
+
+export const zPayrollCreateRunBody = zRunCreate;
+
+/**
+ * Successful Response
+ */
+export const zPayrollCreateRunResponse = zRunOut;
+
+export const zPayrollApproveRunPath = z.object({
+  run_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zPayrollApproveRunResponse = zApprovalResult;
+
+export const zPayrollComputeRunPath = z.object({
+  run_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zPayrollComputeRunResponse = zRunResult;
+
+export const zPayrollListPayslipsPath = z.object({
+  run_id: z.uuid(),
+});
+
+export const zPayrollListPayslipsQuery = z.object({
+  employee_id: z.uuid().nullish(),
+});
+
+/**
+ * Response Payroll-List Payslips
+ *
+ * Successful Response
+ */
+export const zPayrollListPayslipsResponse = z.array(zPayslipOut);
+
+export const zPayrollSalaryHistoryPath = z.object({
+  employee_id: z.uuid(),
+});
+
+/**
+ * Response Payroll-Salary History
+ *
+ * Successful Response
+ */
+export const zPayrollSalaryHistoryResponse = z.array(zSalaryOut);
+
+export const zPayrollSetSalaryBody = zSalarySet;
+
+export const zPayrollSetSalaryPath = z.object({
+  employee_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zPayrollSetSalaryResponse = zSalaryOut;
+
+/**
+ * Response Payroll-List Tax Scales
+ *
+ * Successful Response
+ */
+export const zPayrollListTaxScalesResponse = z.array(zTaxScaleOut);
+
+export const zPayrollUpdateTaxScaleBody = zTaxScaleUpdate;
+
+export const zPayrollUpdateTaxScalePath = z.object({
+  scale_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zPayrollUpdateTaxScaleResponse = zTaxScaleOut;

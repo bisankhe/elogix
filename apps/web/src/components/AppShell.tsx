@@ -86,6 +86,12 @@ const NAV: NavGroup[] = [
       { to: '/leave', label: 'Leave Management', module: 'leave' },
     ],
   },
+  {
+    id: 'finance',
+    icon: '💰',
+    label: 'Payroll & Finance',
+    children: [{ to: '/payroll', label: 'Payroll Runs', module: 'payroll' }],
+  },
 ]
 
 const QUICK_ACTIONS = ['👥', '⏰', '📅', '💰', '📊', '🤖', '📋', '🎯']

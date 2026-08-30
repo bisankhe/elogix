@@ -203,6 +203,39 @@ import type {
   OrgUpdateUnitData,
   OrgUpdateUnitErrors,
   OrgUpdateUnitResponses,
+  PayrollApproveRunData,
+  PayrollApproveRunErrors,
+  PayrollApproveRunResponses,
+  PayrollComputeRunData,
+  PayrollComputeRunErrors,
+  PayrollComputeRunResponses,
+  PayrollCreateComponentData,
+  PayrollCreateComponentErrors,
+  PayrollCreateComponentResponses,
+  PayrollCreateRunData,
+  PayrollCreateRunErrors,
+  PayrollCreateRunResponses,
+  PayrollGetPayslipData,
+  PayrollGetPayslipErrors,
+  PayrollGetPayslipResponses,
+  PayrollListComponentsData,
+  PayrollListComponentsResponses,
+  PayrollListPayslipsData,
+  PayrollListPayslipsErrors,
+  PayrollListPayslipsResponses,
+  PayrollListRunsData,
+  PayrollListRunsResponses,
+  PayrollListTaxScalesData,
+  PayrollListTaxScalesResponses,
+  PayrollSalaryHistoryData,
+  PayrollSalaryHistoryErrors,
+  PayrollSalaryHistoryResponses,
+  PayrollSetSalaryData,
+  PayrollSetSalaryErrors,
+  PayrollSetSalaryResponses,
+  PayrollUpdateTaxScaleData,
+  PayrollUpdateTaxScaleErrors,
+  PayrollUpdateTaxScaleResponses,
 } from "./types.gen";
 
 export type Options<
@@ -1644,4 +1677,261 @@ export const orgDeactivateWorkLocation = <ThrowOnError extends boolean = false>(
     security: [{ scheme: "bearer", type: "http" }],
     url: "/api/v1/org/work-locations/{record_id}",
     ...options,
+  });
+
+/**
+ * List Components
+ */
+export const payrollListComponents = <ThrowOnError extends boolean = false>(
+  options?: Options<PayrollListComponentsData, ThrowOnError>,
+): RequestResult<PayrollListComponentsResponses, unknown, ThrowOnError> =>
+  (options?.client ?? client).get<
+    PayrollListComponentsResponses,
+    unknown,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/payroll/components",
+    ...options,
+  });
+
+/**
+ * Create Component
+ */
+export const payrollCreateComponent = <ThrowOnError extends boolean = false>(
+  options: Options<PayrollCreateComponentData, ThrowOnError>,
+): RequestResult<
+  PayrollCreateComponentResponses,
+  PayrollCreateComponentErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    PayrollCreateComponentResponses,
+    PayrollCreateComponentErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/payroll/components",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Get Payslip
+ *
+ * One payslip with every line and every tax band it was built from.
+ */
+export const payrollGetPayslip = <ThrowOnError extends boolean = false>(
+  options: Options<PayrollGetPayslipData, ThrowOnError>,
+): RequestResult<
+  PayrollGetPayslipResponses,
+  PayrollGetPayslipErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    PayrollGetPayslipResponses,
+    PayrollGetPayslipErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/payroll/payslips/{payslip_id}",
+    ...options,
+  });
+
+/**
+ * List Runs
+ */
+export const payrollListRuns = <ThrowOnError extends boolean = false>(
+  options?: Options<PayrollListRunsData, ThrowOnError>,
+): RequestResult<PayrollListRunsResponses, unknown, ThrowOnError> =>
+  (options?.client ?? client).get<
+    PayrollListRunsResponses,
+    unknown,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/payroll/runs",
+    ...options,
+  });
+
+/**
+ * Create Run
+ */
+export const payrollCreateRun = <ThrowOnError extends boolean = false>(
+  options: Options<PayrollCreateRunData, ThrowOnError>,
+): RequestResult<
+  PayrollCreateRunResponses,
+  PayrollCreateRunErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    PayrollCreateRunResponses,
+    PayrollCreateRunErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/payroll/runs",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Approve Run
+ *
+ * Approve, and lock the attendance the run was computed from.
+ */
+export const payrollApproveRun = <ThrowOnError extends boolean = false>(
+  options: Options<PayrollApproveRunData, ThrowOnError>,
+): RequestResult<
+  PayrollApproveRunResponses,
+  PayrollApproveRunErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    PayrollApproveRunResponses,
+    PayrollApproveRunErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/payroll/runs/{run_id}/approve",
+    ...options,
+  });
+
+/**
+ * Compute Run
+ */
+export const payrollComputeRun = <ThrowOnError extends boolean = false>(
+  options: Options<PayrollComputeRunData, ThrowOnError>,
+): RequestResult<
+  PayrollComputeRunResponses,
+  PayrollComputeRunErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    PayrollComputeRunResponses,
+    PayrollComputeRunErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/payroll/runs/{run_id}/compute",
+    ...options,
+  });
+
+/**
+ * List Payslips
+ */
+export const payrollListPayslips = <ThrowOnError extends boolean = false>(
+  options: Options<PayrollListPayslipsData, ThrowOnError>,
+): RequestResult<
+  PayrollListPayslipsResponses,
+  PayrollListPayslipsErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    PayrollListPayslipsResponses,
+    PayrollListPayslipsErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/payroll/runs/{run_id}/payslips",
+    ...options,
+  });
+
+/**
+ * Salary History
+ *
+ * Every salary period, newest first — a raise opens a row, never edits one.
+ */
+export const payrollSalaryHistory = <ThrowOnError extends boolean = false>(
+  options: Options<PayrollSalaryHistoryData, ThrowOnError>,
+): RequestResult<
+  PayrollSalaryHistoryResponses,
+  PayrollSalaryHistoryErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    PayrollSalaryHistoryResponses,
+    PayrollSalaryHistoryErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/payroll/salaries/{employee_id}",
+    ...options,
+  });
+
+/**
+ * Set Salary
+ */
+export const payrollSetSalary = <ThrowOnError extends boolean = false>(
+  options: Options<PayrollSetSalaryData, ThrowOnError>,
+): RequestResult<
+  PayrollSetSalaryResponses,
+  PayrollSetSalaryErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    PayrollSetSalaryResponses,
+    PayrollSetSalaryErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/payroll/salaries/{employee_id}",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * List Tax Scales
+ *
+ * The company's own bands. Seeded from unverified statutory defaults.
+ */
+export const payrollListTaxScales = <ThrowOnError extends boolean = false>(
+  options?: Options<PayrollListTaxScalesData, ThrowOnError>,
+): RequestResult<PayrollListTaxScalesResponses, unknown, ThrowOnError> =>
+  (options?.client ?? client).get<
+    PayrollListTaxScalesResponses,
+    unknown,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/payroll/tax-scales",
+    ...options,
+  });
+
+/**
+ * Update Tax Scale
+ *
+ * Replace a scale's bands, and record who checked them.
+ *
+ * Naming a verifier is what flips `is_verified`. That is deliberate: "verified" should
+ * mean a person put their name to it, not that someone clicked a box.
+ */
+export const payrollUpdateTaxScale = <ThrowOnError extends boolean = false>(
+  options: Options<PayrollUpdateTaxScaleData, ThrowOnError>,
+): RequestResult<
+  PayrollUpdateTaxScaleResponses,
+  PayrollUpdateTaxScaleErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).put<
+    PayrollUpdateTaxScaleResponses,
+    PayrollUpdateTaxScaleErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/payroll/tax-scales/{scale_id}",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
   });

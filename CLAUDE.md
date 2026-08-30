@@ -248,13 +248,14 @@ This is a dependency chain, not a priority ranking — each phase produces the t
 next one needs, so nothing gets built twice against mocked inputs. Payroll is last in the
 core *deliberately*: it consumes phases 03–05, and its tests get written before its code.
 
-**Current state: phases 00–05 are done**, proven by 154 tests against a real Postgres
+**Current state: phases 00–06 are done**, proven by 208 tests against a real Postgres
 with the schema built by running the migrations from zero. Module access is denied
 server-side, no endpoint returns another tenant's rows, a tenant can be provisioned into
 a complete org chart, an employee can be hired through to offboarded with history
 preserved, a month of attendance can be captured, corrected and exported as payroll
-input, and leave balances accrue across a full year with approvals adjusting them
-atomically.
+input, leave balances accrue across a full year with approvals adjusting them
+atomically, and that attendance export and those balances turn into payslips whose
+every figure is reproducible by hand.
 
 Phase 01 originally shipped row-level security as a second isolation layer; it was
 removed by decision on 2026-08-30, so tenant isolation is the query filters alone. If it
@@ -264,13 +265,27 @@ even on a `FORCE ROW LEVEL SECURITY` table — the app would need a `NOSUPERUSER
 
 `modules/employee` is deliberately thin — phase 03 owns its real field set.
 
-**Phase 06 (payroll, tax and SSF) is next, and it is the highest-risk phase.** It
-consumes the attendance export and the leave ledger, and it is the reason a Nepal-specific
-HRMS exists at all. Two rules from the plan apply with full force: **write the tests
-before the implementation**, and the FY 2083-84 slab table needs verifying against the
-Finance Act by a named person before anyone is paid from it. The prototype's engine
-triple-deducted SSF and reported NPR 37,500 net on a 130,000 gross — port the intent,
-rewrite the maths.
+**Phase 06 shipped with its tax tables unverified, and that is a release blocker, not
+a footnote.** The engine is done and every number in it is proven against a hand
+calculation, but the slab values themselves came from the prototype and no named person
+has checked them against the Finance Act. `tax_scales.is_verified` is false for all four
+seeded scales, the payroll screen leads with a warning saying so, and naming a verifier
+through `PUT /payroll/tax-scales/{id}` is what flips it. **Nobody may be paid from these
+figures until someone signs them off.**
+
+The prototype's engine had five demonstrable defects, each now a named regression test in
+`tests/test_payroll_compute.py`: SSF charged to the employee at the employer's 20% rate;
+SSF relieved twice, once as a contribution and again as retirement-fund allowance;
+incentives annualised on top of an already-annual figure; the 1% social security band
+missing entirely; and an FY 2083-84 single table whose bands did not sum to its own
+brackets. Port the intent, never the arithmetic.
+
+Two structural rules the engine depends on: the **order of operations** in
+`payroll/compute.py` is the fix for the double-relief bug and its comments explain why
+each step sits where it does; and **overtime is rated on the full basic, not the prorated
+one**, so an absent day is not deducted twice.
+
+**Phase 07 (self-service, documents, reports) is next.**
 
 ---
 

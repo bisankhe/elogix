@@ -20,6 +20,7 @@ from elogix_api.modules.identity import router as identity_router
 from elogix_api.modules.identity.models import Company
 from elogix_api.modules.leave import router as leave_router
 from elogix_api.modules.org import router as org_router
+from elogix_api.modules.payroll import router as payroll_router
 from elogix_api.settings import get_settings
 
 logger = logging.getLogger("elogix")
@@ -60,6 +61,7 @@ def create_app() -> FastAPI:
     app.include_router(employee_router.router, prefix="/api/v1")
     app.include_router(attendance_router.router, prefix="/api/v1")
     app.include_router(leave_router.router, prefix="/api/v1")
+    app.include_router(payroll_router.router, prefix="/api/v1")
 
     @app.get("/api/health", tags=["meta"])
     def health(response: Response) -> dict[str, str]:

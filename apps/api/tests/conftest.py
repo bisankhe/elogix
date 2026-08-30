@@ -65,6 +65,15 @@ TENANT_TABLES = (
     "leave_types",
     "leave_requests",
     "leave_ledger_entries",
+    "salary_components",
+    "employee_salaries",
+    "employee_salary_lines",
+    "tax_scales",
+    "tax_slabs",
+    "payroll_runs",
+    "payslips",
+    "payslip_lines",
+    "payslip_tax_bands",
 )
 
 

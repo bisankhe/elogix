@@ -51,6 +51,14 @@ from elogix_api.modules.org.models import (
     Position,
     WorkLocation,
 )
+from elogix_api.modules.payroll.models import (
+    ComponentKind,
+    EmployeeSalary,
+    EmployeeSalaryLine,
+    PayrollRun,
+    SalaryComponent,
+)
+from elogix_api.modules.payroll.service import compute_run, set_salary
 
 COMPANY_SLUG = "acme"
 LOGIN_EMAIL = "admin@acme.com.np"
@@ -146,6 +154,8 @@ def main() -> None:
         _seed_attendance(db, company.id)
         db.commit()
         _seed_leave(db, company.id)
+        db.commit()
+        _seed_payroll(db, company.id)
         db.commit()
 
     print(f"\nlog in with  {LOGIN_EMAIL} / {LOGIN_PASSWORD}  at company '{COMPANY_SLUG}'")
@@ -453,6 +463,56 @@ def _seed_leave(db: Session, company_id: uuid.UUID) -> None:
     # The approved leave changes those days in the register, so rebuild March.
     process_range(db, company_id=company_id, start=date(2026, 3, 1), end=date(2026, 3, 31))
     print("created leave: 6 statutory types, 2026 accrued, 1 approved and 1 pending request")
+
+
+def _seed_payroll(db: Session, company_id: uuid.UUID) -> None:
+    """Salaries and a computed March run, so the payroll screen has something true."""
+    if db.execute(
+        select(EmployeeSalary.id).where(EmployeeSalary.company_id == company_id)
+    ).first():
+        return
+
+    allowance = SalaryComponent(
+        company_id=company_id,
+        code="ALW",
+        name="Transport allowance",
+        kind=ComponentKind.EARNING,
+    )
+    db.add(allowance)
+    db.flush()
+
+    for index, employee in enumerate(
+        db.execute(select(Employee).where(Employee.company_id == company_id)).scalars()
+    ):
+        basic = Decimal("45000") + Decimal(index) * Decimal("15000")
+        salary = set_salary(
+            db,
+            company_id=company_id,
+            employee_id=employee.id,
+            basic=basic,
+            effective_from=date(2025, 1, 1),
+        )
+        db.flush()
+        db.add(
+            EmployeeSalaryLine(
+                company_id=company_id,
+                employee_salary_id=salary.id,
+                salary_component_id=allowance.id,
+                amount=Decimal("5000"),
+            )
+        )
+    db.commit()
+
+    run = PayrollRun(
+        company_id=company_id,
+        period_start=date(2026, 3, 1),
+        period_end=date(2026, 3, 31),
+        fiscal_year="2082-83",
+    )
+    db.add(run)
+    db.commit()
+    written = compute_run(db, run=run)
+    print(f"created payroll: salaries for all staff, March 2026 run with {written} payslips")
 
 
 if __name__ == "__main__":

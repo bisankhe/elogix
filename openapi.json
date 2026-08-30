@@ -88,6 +88,19 @@
         "title": "AccrualResult",
         "type": "object"
       },
+      "ApprovalResult": {
+        "properties": {
+          "attendance_days_locked": {
+            "title": "Attendance Days Locked",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "attendance_days_locked"
+        ],
+        "title": "ApprovalResult",
+        "type": "object"
+      },
       "AssignmentOut": {
         "properties": {
           "cost_centre_id": {
@@ -333,6 +346,89 @@
           "from_year"
         ],
         "title": "CarryForwardRequest",
+        "type": "object"
+      },
+      "ComponentCreate": {
+        "properties": {
+          "code": {
+            "maxLength": 32,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$",
+            "title": "Code",
+            "type": "string"
+          },
+          "is_taxable": {
+            "default": true,
+            "title": "Is Taxable",
+            "type": "boolean"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ComponentKind"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "prorates": {
+            "default": true,
+            "title": "Prorates",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "kind"
+        ],
+        "title": "ComponentCreate",
+        "type": "object"
+      },
+      "ComponentKind": {
+        "enum": [
+          "earning",
+          "deduction"
+        ],
+        "title": "ComponentKind",
+        "type": "string"
+      },
+      "ComponentOut": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_taxable": {
+            "title": "Is Taxable",
+            "type": "boolean"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ComponentKind"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "prorates": {
+            "title": "Prorates",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name",
+          "kind",
+          "is_taxable",
+          "prorates"
+        ],
+        "title": "ComponentOut",
         "type": "object"
       },
       "ConfirmRequest": {
@@ -2994,6 +3090,312 @@
         "title": "PayrollExportRow",
         "type": "object"
       },
+      "PayslipDetail": {
+        "properties": {
+          "absent_days": {
+            "title": "Absent Days",
+            "type": "integer"
+          },
+          "annual_assessable": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Annual Assessable",
+            "type": "string"
+          },
+          "annual_tax": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Annual Tax",
+            "type": "string"
+          },
+          "annual_taxable": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Annual Taxable",
+            "type": "string"
+          },
+          "basic_earned": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Basic Earned",
+            "type": "string"
+          },
+          "employee_id": {
+            "format": "uuid",
+            "title": "Employee Id",
+            "type": "string"
+          },
+          "female_rebate": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Female Rebate",
+            "type": "string"
+          },
+          "gross": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Gross",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lines": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/PayslipLineOut"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "monthly_tax": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Monthly Tax",
+            "type": "string"
+          },
+          "net_pay": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Net Pay",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "overtime_minutes": {
+            "title": "Overtime Minutes",
+            "type": "integer"
+          },
+          "overtime_pay": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Overtime Pay",
+            "type": "string"
+          },
+          "payable_days": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Payable Days",
+            "type": "string"
+          },
+          "present_days": {
+            "title": "Present Days",
+            "type": "integer"
+          },
+          "ssf_employee": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ssf Employee",
+            "type": "string"
+          },
+          "ssf_employer": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ssf Employer",
+            "type": "string"
+          },
+          "tax_bands": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/TaxBandOut"
+            },
+            "title": "Tax Bands",
+            "type": "array"
+          },
+          "taxable_gross": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Taxable Gross",
+            "type": "string"
+          },
+          "total_deductions": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Deductions",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "employee_id",
+          "payable_days",
+          "present_days",
+          "absent_days",
+          "overtime_minutes",
+          "basic_earned",
+          "overtime_pay",
+          "gross",
+          "taxable_gross",
+          "ssf_employee",
+          "ssf_employer",
+          "annual_assessable",
+          "annual_taxable",
+          "annual_tax",
+          "female_rebate",
+          "monthly_tax",
+          "total_deductions",
+          "net_pay",
+          "notes"
+        ],
+        "title": "PayslipDetail",
+        "type": "object"
+      },
+      "PayslipLineOut": {
+        "properties": {
+          "amount": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Amount",
+            "type": "string"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ComponentKind"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "code",
+          "label",
+          "amount"
+        ],
+        "title": "PayslipLineOut",
+        "type": "object"
+      },
+      "PayslipOut": {
+        "properties": {
+          "absent_days": {
+            "title": "Absent Days",
+            "type": "integer"
+          },
+          "annual_assessable": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Annual Assessable",
+            "type": "string"
+          },
+          "annual_tax": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Annual Tax",
+            "type": "string"
+          },
+          "annual_taxable": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Annual Taxable",
+            "type": "string"
+          },
+          "basic_earned": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Basic Earned",
+            "type": "string"
+          },
+          "employee_id": {
+            "format": "uuid",
+            "title": "Employee Id",
+            "type": "string"
+          },
+          "female_rebate": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Female Rebate",
+            "type": "string"
+          },
+          "gross": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Gross",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "monthly_tax": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Monthly Tax",
+            "type": "string"
+          },
+          "net_pay": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Net Pay",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "overtime_minutes": {
+            "title": "Overtime Minutes",
+            "type": "integer"
+          },
+          "overtime_pay": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Overtime Pay",
+            "type": "string"
+          },
+          "payable_days": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Payable Days",
+            "type": "string"
+          },
+          "present_days": {
+            "title": "Present Days",
+            "type": "integer"
+          },
+          "ssf_employee": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ssf Employee",
+            "type": "string"
+          },
+          "ssf_employer": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ssf Employer",
+            "type": "string"
+          },
+          "taxable_gross": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Taxable Gross",
+            "type": "string"
+          },
+          "total_deductions": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Deductions",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "employee_id",
+          "payable_days",
+          "present_days",
+          "absent_days",
+          "overtime_minutes",
+          "basic_earned",
+          "overtime_pay",
+          "gross",
+          "taxable_gross",
+          "ssf_employee",
+          "ssf_employer",
+          "annual_assessable",
+          "annual_taxable",
+          "annual_tax",
+          "female_rebate",
+          "monthly_tax",
+          "total_deductions",
+          "net_pay",
+          "notes"
+        ],
+        "title": "PayslipOut",
+        "type": "object"
+      },
       "Placement": {
         "description": "Where an employee sits. The same shape whether hiring or moving someone.",
         "properties": {
@@ -3915,6 +4317,334 @@
         "title": "RosterEntryOut",
         "type": "object"
       },
+      "RunCreate": {
+        "properties": {
+          "fiscal_year": {
+            "default": "2082-83",
+            "maxLength": 16,
+            "title": "Fiscal Year",
+            "type": "string"
+          },
+          "month_days": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "maximum": 31.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "default": "30",
+            "title": "Month Days"
+          },
+          "period_end": {
+            "format": "date",
+            "title": "Period End",
+            "type": "string"
+          },
+          "period_start": {
+            "format": "date",
+            "title": "Period Start",
+            "type": "string"
+          }
+        },
+        "required": [
+          "period_start",
+          "period_end"
+        ],
+        "title": "RunCreate",
+        "type": "object"
+      },
+      "RunOut": {
+        "properties": {
+          "approved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved At"
+          },
+          "computed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Computed At"
+          },
+          "fiscal_year": {
+            "title": "Fiscal Year",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "month_days": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Month Days",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "period_end": {
+            "format": "date",
+            "title": "Period End",
+            "type": "string"
+          },
+          "period_start": {
+            "format": "date",
+            "title": "Period Start",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/RunStatus"
+          }
+        },
+        "required": [
+          "id",
+          "period_start",
+          "period_end",
+          "fiscal_year",
+          "month_days",
+          "status",
+          "computed_at",
+          "approved_at",
+          "note"
+        ],
+        "title": "RunOut",
+        "type": "object"
+      },
+      "RunResult": {
+        "properties": {
+          "payslips_written": {
+            "title": "Payslips Written",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "payslips_written"
+        ],
+        "title": "RunResult",
+        "type": "object"
+      },
+      "RunStatus": {
+        "enum": [
+          "draft",
+          "computed",
+          "approved",
+          "paid",
+          "cancelled"
+        ],
+        "title": "RunStatus",
+        "type": "string"
+      },
+      "SalaryLineIn": {
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "maximum": 99999999.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Amount"
+          },
+          "salary_component_id": {
+            "format": "uuid",
+            "title": "Salary Component Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "salary_component_id",
+          "amount"
+        ],
+        "title": "SalaryLineIn",
+        "type": "object"
+      },
+      "SalaryOut": {
+        "properties": {
+          "basic": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Basic",
+            "type": "string"
+          },
+          "contributes_to_ssf": {
+            "title": "Contributes To Ssf",
+            "type": "boolean"
+          },
+          "effective_from": {
+            "format": "date",
+            "title": "Effective From",
+            "type": "string"
+          },
+          "effective_to": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effective To"
+          },
+          "employee_id": {
+            "format": "uuid",
+            "title": "Employee Id",
+            "type": "string"
+          },
+          "health_insurance_premium": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Health Insurance Premium",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "life_insurance_premium": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Life Insurance Premium",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "required": [
+          "id",
+          "employee_id",
+          "basic",
+          "contributes_to_ssf",
+          "life_insurance_premium",
+          "health_insurance_premium",
+          "effective_from",
+          "effective_to",
+          "note"
+        ],
+        "title": "SalaryOut",
+        "type": "object"
+      },
+      "SalarySet": {
+        "properties": {
+          "basic": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "maximum": 99999999.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Basic"
+          },
+          "contributes_to_ssf": {
+            "default": true,
+            "title": "Contributes To Ssf",
+            "type": "boolean"
+          },
+          "effective_from": {
+            "format": "date",
+            "title": "Effective From",
+            "type": "string"
+          },
+          "health_insurance_premium": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "default": "0",
+            "title": "Health Insurance Premium"
+          },
+          "life_insurance_premium": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "default": "0",
+            "title": "Life Insurance Premium"
+          },
+          "lines": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/SalaryLineIn"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "required": [
+          "basic",
+          "effective_from"
+        ],
+        "title": "SalarySet",
+        "type": "object"
+      },
       "ShiftCreate": {
         "properties": {
           "break_minutes": {
@@ -4011,6 +4741,213 @@
           "is_active"
         ],
         "title": "ShiftOut",
+        "type": "object"
+      },
+      "SlabIn": {
+        "properties": {
+          "label": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "rate": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Rate"
+          },
+          "width": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Width"
+          }
+        },
+        "required": [
+          "rate",
+          "label"
+        ],
+        "title": "SlabIn",
+        "type": "object"
+      },
+      "SlabOut": {
+        "properties": {
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "rate": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Rate",
+            "type": "string"
+          },
+          "sequence": {
+            "title": "Sequence",
+            "type": "integer"
+          },
+          "width": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Width"
+          }
+        },
+        "required": [
+          "sequence",
+          "width",
+          "rate",
+          "label"
+        ],
+        "title": "SlabOut",
+        "type": "object"
+      },
+      "TaxBandOut": {
+        "properties": {
+          "amount": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Amount",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "rate": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Rate",
+            "type": "string"
+          },
+          "tax": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Tax",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "rate",
+          "amount",
+          "tax"
+        ],
+        "title": "TaxBandOut",
+        "type": "object"
+      },
+      "TaxScaleOut": {
+        "properties": {
+          "fiscal_year": {
+            "title": "Fiscal Year",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_married": {
+            "title": "Is Married",
+            "type": "boolean"
+          },
+          "is_verified": {
+            "title": "Is Verified",
+            "type": "boolean"
+          },
+          "slabs": {
+            "items": {
+              "$ref": "#/components/schemas/SlabOut"
+            },
+            "title": "Slabs",
+            "type": "array"
+          },
+          "verified_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verified By"
+          },
+          "verified_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verified On"
+          }
+        },
+        "required": [
+          "id",
+          "fiscal_year",
+          "is_married",
+          "is_verified",
+          "verified_by",
+          "verified_on",
+          "slabs"
+        ],
+        "title": "TaxScaleOut",
+        "type": "object"
+      },
+      "TaxScaleUpdate": {
+        "description": "Replace a scale's bands wholesale, and record who checked them.",
+        "properties": {
+          "slabs": {
+            "items": {
+              "$ref": "#/components/schemas/SlabIn"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Slabs",
+            "type": "array"
+          },
+          "verified_by": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verified By"
+          }
+        },
+        "required": [
+          "slabs"
+        ],
+        "title": "TaxScaleUpdate",
         "type": "object"
       },
       "UserOut": {
@@ -7582,6 +8519,568 @@
         "summary": "Deactivate Work Location",
         "tags": [
           "org"
+        ]
+      }
+    },
+    "/api/v1/payroll/components": {
+      "get": {
+        "operationId": "payroll-list_components",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ComponentOut"
+                  },
+                  "title": "Response Payroll-List Components",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Components",
+        "tags": [
+          "payroll"
+        ]
+      },
+      "post": {
+        "operationId": "payroll-create_component",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ComponentCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComponentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Component",
+        "tags": [
+          "payroll"
+        ]
+      }
+    },
+    "/api/v1/payroll/payslips/{payslip_id}": {
+      "get": {
+        "description": "One payslip with every line and every tax band it was built from.",
+        "operationId": "payroll-get_payslip",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "payslip_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Payslip Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayslipDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Payslip",
+        "tags": [
+          "payroll"
+        ]
+      }
+    },
+    "/api/v1/payroll/runs": {
+      "get": {
+        "operationId": "payroll-list_runs",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RunOut"
+                  },
+                  "title": "Response Payroll-List Runs",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Runs",
+        "tags": [
+          "payroll"
+        ]
+      },
+      "post": {
+        "operationId": "payroll-create_run",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Run",
+        "tags": [
+          "payroll"
+        ]
+      }
+    },
+    "/api/v1/payroll/runs/{run_id}/approve": {
+      "post": {
+        "description": "Approve, and lock the attendance the run was computed from.",
+        "operationId": "payroll-approve_run",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Approve Run",
+        "tags": [
+          "payroll"
+        ]
+      }
+    },
+    "/api/v1/payroll/runs/{run_id}/compute": {
+      "post": {
+        "operationId": "payroll-compute_run",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Compute Run",
+        "tags": [
+          "payroll"
+        ]
+      }
+    },
+    "/api/v1/payroll/runs/{run_id}/payslips": {
+      "get": {
+        "operationId": "payroll-list_payslips",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Run Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "employee_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Employee Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PayslipOut"
+                  },
+                  "title": "Response Payroll-List Payslips",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Payslips",
+        "tags": [
+          "payroll"
+        ]
+      }
+    },
+    "/api/v1/payroll/salaries/{employee_id}": {
+      "get": {
+        "description": "Every salary period, newest first \u2014 a raise opens a row, never edits one.",
+        "operationId": "payroll-salary_history",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "employee_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Employee Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SalaryOut"
+                  },
+                  "title": "Response Payroll-Salary History",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Salary History",
+        "tags": [
+          "payroll"
+        ]
+      },
+      "post": {
+        "operationId": "payroll-set_salary",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "employee_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Employee Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SalarySet"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalaryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Set Salary",
+        "tags": [
+          "payroll"
+        ]
+      }
+    },
+    "/api/v1/payroll/tax-scales": {
+      "get": {
+        "description": "The company's own bands. Seeded from unverified statutory defaults.",
+        "operationId": "payroll-list_tax_scales",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TaxScaleOut"
+                  },
+                  "title": "Response Payroll-List Tax Scales",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Tax Scales",
+        "tags": [
+          "payroll"
+        ]
+      }
+    },
+    "/api/v1/payroll/tax-scales/{scale_id}": {
+      "put": {
+        "description": "Replace a scale's bands, and record who checked them.\n\nNaming a verifier is what flips `is_verified`. That is deliberate: \"verified\" should\nmean a person put their name to it, not that someone clicked a box.",
+        "operationId": "payroll-update_tax_scale",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scale_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Scale Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaxScaleUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxScaleOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Tax Scale",
+        "tags": [
+          "payroll"
         ]
       }
     }

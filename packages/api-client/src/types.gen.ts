@@ -62,6 +62,16 @@ export type AccrualResult = {
 };
 
 /**
+ * ApprovalResult
+ */
+export type ApprovalResult = {
+  /**
+   * Attendance Days Locked
+   */
+  attendance_days_locked: number;
+};
+
+/**
  * AssignmentOut
  */
 export type AssignmentOut = {
@@ -182,6 +192,61 @@ export type CarryForwardRequest = {
    * From Year
    */
   from_year: number;
+};
+
+/**
+ * ComponentCreate
+ */
+export type ComponentCreate = {
+  /**
+   * Code
+   */
+  code: string;
+  /**
+   * Is Taxable
+   */
+  is_taxable?: boolean;
+  kind: ComponentKind;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Prorates
+   */
+  prorates?: boolean;
+};
+
+/**
+ * ComponentKind
+ */
+export type ComponentKind = "earning" | "deduction";
+
+/**
+ * ComponentOut
+ */
+export type ComponentOut = {
+  /**
+   * Code
+   */
+  code: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Is Taxable
+   */
+  is_taxable: boolean;
+  kind: ComponentKind;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Prorates
+   */
+  prorates: boolean;
 };
 
 /**
@@ -1543,6 +1608,205 @@ export type PayrollExportRow = {
 };
 
 /**
+ * PayslipDetail
+ */
+export type PayslipDetail = {
+  /**
+   * Absent Days
+   */
+  absent_days: number;
+  /**
+   * Annual Assessable
+   */
+  annual_assessable: string;
+  /**
+   * Annual Tax
+   */
+  annual_tax: string;
+  /**
+   * Annual Taxable
+   */
+  annual_taxable: string;
+  /**
+   * Basic Earned
+   */
+  basic_earned: string;
+  /**
+   * Employee Id
+   */
+  employee_id: string;
+  /**
+   * Female Rebate
+   */
+  female_rebate: string;
+  /**
+   * Gross
+   */
+  gross: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Lines
+   */
+  lines?: Array<PayslipLineOut>;
+  /**
+   * Monthly Tax
+   */
+  monthly_tax: string;
+  /**
+   * Net Pay
+   */
+  net_pay: string;
+  /**
+   * Notes
+   */
+  notes: string | null;
+  /**
+   * Overtime Minutes
+   */
+  overtime_minutes: number;
+  /**
+   * Overtime Pay
+   */
+  overtime_pay: string;
+  /**
+   * Payable Days
+   */
+  payable_days: string;
+  /**
+   * Present Days
+   */
+  present_days: number;
+  /**
+   * Ssf Employee
+   */
+  ssf_employee: string;
+  /**
+   * Ssf Employer
+   */
+  ssf_employer: string;
+  /**
+   * Tax Bands
+   */
+  tax_bands?: Array<TaxBandOut>;
+  /**
+   * Taxable Gross
+   */
+  taxable_gross: string;
+  /**
+   * Total Deductions
+   */
+  total_deductions: string;
+};
+
+/**
+ * PayslipLineOut
+ */
+export type PayslipLineOut = {
+  /**
+   * Amount
+   */
+  amount: string;
+  /**
+   * Code
+   */
+  code: string;
+  kind: ComponentKind;
+  /**
+   * Label
+   */
+  label: string;
+};
+
+/**
+ * PayslipOut
+ */
+export type PayslipOut = {
+  /**
+   * Absent Days
+   */
+  absent_days: number;
+  /**
+   * Annual Assessable
+   */
+  annual_assessable: string;
+  /**
+   * Annual Tax
+   */
+  annual_tax: string;
+  /**
+   * Annual Taxable
+   */
+  annual_taxable: string;
+  /**
+   * Basic Earned
+   */
+  basic_earned: string;
+  /**
+   * Employee Id
+   */
+  employee_id: string;
+  /**
+   * Female Rebate
+   */
+  female_rebate: string;
+  /**
+   * Gross
+   */
+  gross: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Monthly Tax
+   */
+  monthly_tax: string;
+  /**
+   * Net Pay
+   */
+  net_pay: string;
+  /**
+   * Notes
+   */
+  notes: string | null;
+  /**
+   * Overtime Minutes
+   */
+  overtime_minutes: number;
+  /**
+   * Overtime Pay
+   */
+  overtime_pay: string;
+  /**
+   * Payable Days
+   */
+  payable_days: string;
+  /**
+   * Present Days
+   */
+  present_days: number;
+  /**
+   * Ssf Employee
+   */
+  ssf_employee: string;
+  /**
+   * Ssf Employer
+   */
+  ssf_employer: string;
+  /**
+   * Taxable Gross
+   */
+  taxable_gross: string;
+  /**
+   * Total Deductions
+   */
+  total_deductions: string;
+};
+
+/**
  * Placement
  *
  * Where an employee sits. The same shape whether hiring or moving someone.
@@ -1997,6 +2261,173 @@ export type RosterEntryOut = {
 };
 
 /**
+ * RunCreate
+ */
+export type RunCreate = {
+  /**
+   * Fiscal Year
+   */
+  fiscal_year?: string;
+  /**
+   * Month Days
+   */
+  month_days?: number | string;
+  /**
+   * Period End
+   */
+  period_end: string;
+  /**
+   * Period Start
+   */
+  period_start: string;
+};
+
+/**
+ * RunOut
+ */
+export type RunOut = {
+  /**
+   * Approved At
+   */
+  approved_at: string | null;
+  /**
+   * Computed At
+   */
+  computed_at: string | null;
+  /**
+   * Fiscal Year
+   */
+  fiscal_year: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Month Days
+   */
+  month_days: string;
+  /**
+   * Note
+   */
+  note: string | null;
+  /**
+   * Period End
+   */
+  period_end: string;
+  /**
+   * Period Start
+   */
+  period_start: string;
+  status: RunStatus;
+};
+
+/**
+ * RunResult
+ */
+export type RunResult = {
+  /**
+   * Payslips Written
+   */
+  payslips_written: number;
+};
+
+/**
+ * RunStatus
+ */
+export type RunStatus =
+  "draft" | "computed" | "approved" | "paid" | "cancelled";
+
+/**
+ * SalaryLineIn
+ */
+export type SalaryLineIn = {
+  /**
+   * Amount
+   */
+  amount: number | string;
+  /**
+   * Salary Component Id
+   */
+  salary_component_id: string;
+};
+
+/**
+ * SalaryOut
+ */
+export type SalaryOut = {
+  /**
+   * Basic
+   */
+  basic: string;
+  /**
+   * Contributes To Ssf
+   */
+  contributes_to_ssf: boolean;
+  /**
+   * Effective From
+   */
+  effective_from: string;
+  /**
+   * Effective To
+   */
+  effective_to: string | null;
+  /**
+   * Employee Id
+   */
+  employee_id: string;
+  /**
+   * Health Insurance Premium
+   */
+  health_insurance_premium: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Life Insurance Premium
+   */
+  life_insurance_premium: string;
+  /**
+   * Note
+   */
+  note: string | null;
+};
+
+/**
+ * SalarySet
+ */
+export type SalarySet = {
+  /**
+   * Basic
+   */
+  basic: number | string;
+  /**
+   * Contributes To Ssf
+   */
+  contributes_to_ssf?: boolean;
+  /**
+   * Effective From
+   */
+  effective_from: string;
+  /**
+   * Health Insurance Premium
+   */
+  health_insurance_premium?: number | string;
+  /**
+   * Life Insurance Premium
+   */
+  life_insurance_premium?: number | string;
+  /**
+   * Lines
+   */
+  lines?: Array<SalaryLineIn>;
+  /**
+   * Note
+   */
+  note?: string | null;
+};
+
+/**
  * ShiftCreate
  */
 export type ShiftCreate = {
@@ -2062,6 +2493,118 @@ export type ShiftOut = {
    * Starts At
    */
   starts_at: string;
+};
+
+/**
+ * SlabIn
+ */
+export type SlabIn = {
+  /**
+   * Label
+   */
+  label: string;
+  /**
+   * Rate
+   */
+  rate: number | string;
+  /**
+   * Width
+   */
+  width?: number | string | null;
+};
+
+/**
+ * SlabOut
+ */
+export type SlabOut = {
+  /**
+   * Label
+   */
+  label: string;
+  /**
+   * Rate
+   */
+  rate: string;
+  /**
+   * Sequence
+   */
+  sequence: number;
+  /**
+   * Width
+   */
+  width: string | null;
+};
+
+/**
+ * TaxBandOut
+ */
+export type TaxBandOut = {
+  /**
+   * Amount
+   */
+  amount: string;
+  /**
+   * Label
+   */
+  label: string;
+  /**
+   * Rate
+   */
+  rate: string;
+  /**
+   * Tax
+   */
+  tax: string;
+};
+
+/**
+ * TaxScaleOut
+ */
+export type TaxScaleOut = {
+  /**
+   * Fiscal Year
+   */
+  fiscal_year: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Is Married
+   */
+  is_married: boolean;
+  /**
+   * Is Verified
+   */
+  is_verified: boolean;
+  /**
+   * Slabs
+   */
+  slabs: Array<SlabOut>;
+  /**
+   * Verified By
+   */
+  verified_by: string | null;
+  /**
+   * Verified On
+   */
+  verified_on: string | null;
+};
+
+/**
+ * TaxScaleUpdate
+ *
+ * Replace a scale's bands wholesale, and record who checked them.
+ */
+export type TaxScaleUpdate = {
+  /**
+   * Slabs
+   */
+  slabs: Array<SlabIn>;
+  /**
+   * Verified By
+   */
+  verified_by?: string | null;
 };
 
 /**
@@ -4376,3 +4919,347 @@ export type OrgDeactivateWorkLocationResponses = {
 
 export type OrgDeactivateWorkLocationResponse =
   OrgDeactivateWorkLocationResponses[keyof OrgDeactivateWorkLocationResponses];
+
+export type PayrollListComponentsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/api/v1/payroll/components";
+};
+
+export type PayrollListComponentsResponses = {
+  /**
+   * Response Payroll-List Components
+   *
+   * Successful Response
+   */
+  200: Array<ComponentOut>;
+};
+
+export type PayrollListComponentsResponse =
+  PayrollListComponentsResponses[keyof PayrollListComponentsResponses];
+
+export type PayrollCreateComponentData = {
+  body: ComponentCreate;
+  path?: never;
+  query?: never;
+  url: "/api/v1/payroll/components";
+};
+
+export type PayrollCreateComponentErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type PayrollCreateComponentError =
+  PayrollCreateComponentErrors[keyof PayrollCreateComponentErrors];
+
+export type PayrollCreateComponentResponses = {
+  /**
+   * Successful Response
+   */
+  201: ComponentOut;
+};
+
+export type PayrollCreateComponentResponse =
+  PayrollCreateComponentResponses[keyof PayrollCreateComponentResponses];
+
+export type PayrollGetPayslipData = {
+  body?: never;
+  path: {
+    /**
+     * Payslip Id
+     */
+    payslip_id: string;
+  };
+  query?: never;
+  url: "/api/v1/payroll/payslips/{payslip_id}";
+};
+
+export type PayrollGetPayslipErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type PayrollGetPayslipError =
+  PayrollGetPayslipErrors[keyof PayrollGetPayslipErrors];
+
+export type PayrollGetPayslipResponses = {
+  /**
+   * Successful Response
+   */
+  200: PayslipDetail;
+};
+
+export type PayrollGetPayslipResponse =
+  PayrollGetPayslipResponses[keyof PayrollGetPayslipResponses];
+
+export type PayrollListRunsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/api/v1/payroll/runs";
+};
+
+export type PayrollListRunsResponses = {
+  /**
+   * Response Payroll-List Runs
+   *
+   * Successful Response
+   */
+  200: Array<RunOut>;
+};
+
+export type PayrollListRunsResponse =
+  PayrollListRunsResponses[keyof PayrollListRunsResponses];
+
+export type PayrollCreateRunData = {
+  body: RunCreate;
+  path?: never;
+  query?: never;
+  url: "/api/v1/payroll/runs";
+};
+
+export type PayrollCreateRunErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type PayrollCreateRunError =
+  PayrollCreateRunErrors[keyof PayrollCreateRunErrors];
+
+export type PayrollCreateRunResponses = {
+  /**
+   * Successful Response
+   */
+  201: RunOut;
+};
+
+export type PayrollCreateRunResponse =
+  PayrollCreateRunResponses[keyof PayrollCreateRunResponses];
+
+export type PayrollApproveRunData = {
+  body?: never;
+  path: {
+    /**
+     * Run Id
+     */
+    run_id: string;
+  };
+  query?: never;
+  url: "/api/v1/payroll/runs/{run_id}/approve";
+};
+
+export type PayrollApproveRunErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type PayrollApproveRunError =
+  PayrollApproveRunErrors[keyof PayrollApproveRunErrors];
+
+export type PayrollApproveRunResponses = {
+  /**
+   * Successful Response
+   */
+  200: ApprovalResult;
+};
+
+export type PayrollApproveRunResponse =
+  PayrollApproveRunResponses[keyof PayrollApproveRunResponses];
+
+export type PayrollComputeRunData = {
+  body?: never;
+  path: {
+    /**
+     * Run Id
+     */
+    run_id: string;
+  };
+  query?: never;
+  url: "/api/v1/payroll/runs/{run_id}/compute";
+};
+
+export type PayrollComputeRunErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type PayrollComputeRunError =
+  PayrollComputeRunErrors[keyof PayrollComputeRunErrors];
+
+export type PayrollComputeRunResponses = {
+  /**
+   * Successful Response
+   */
+  200: RunResult;
+};
+
+export type PayrollComputeRunResponse =
+  PayrollComputeRunResponses[keyof PayrollComputeRunResponses];
+
+export type PayrollListPayslipsData = {
+  body?: never;
+  path: {
+    /**
+     * Run Id
+     */
+    run_id: string;
+  };
+  query?: {
+    /**
+     * Employee Id
+     */
+    employee_id?: string | null;
+  };
+  url: "/api/v1/payroll/runs/{run_id}/payslips";
+};
+
+export type PayrollListPayslipsErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type PayrollListPayslipsError =
+  PayrollListPayslipsErrors[keyof PayrollListPayslipsErrors];
+
+export type PayrollListPayslipsResponses = {
+  /**
+   * Response Payroll-List Payslips
+   *
+   * Successful Response
+   */
+  200: Array<PayslipOut>;
+};
+
+export type PayrollListPayslipsResponse =
+  PayrollListPayslipsResponses[keyof PayrollListPayslipsResponses];
+
+export type PayrollSalaryHistoryData = {
+  body?: never;
+  path: {
+    /**
+     * Employee Id
+     */
+    employee_id: string;
+  };
+  query?: never;
+  url: "/api/v1/payroll/salaries/{employee_id}";
+};
+
+export type PayrollSalaryHistoryErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type PayrollSalaryHistoryError =
+  PayrollSalaryHistoryErrors[keyof PayrollSalaryHistoryErrors];
+
+export type PayrollSalaryHistoryResponses = {
+  /**
+   * Response Payroll-Salary History
+   *
+   * Successful Response
+   */
+  200: Array<SalaryOut>;
+};
+
+export type PayrollSalaryHistoryResponse =
+  PayrollSalaryHistoryResponses[keyof PayrollSalaryHistoryResponses];
+
+export type PayrollSetSalaryData = {
+  body: SalarySet;
+  path: {
+    /**
+     * Employee Id
+     */
+    employee_id: string;
+  };
+  query?: never;
+  url: "/api/v1/payroll/salaries/{employee_id}";
+};
+
+export type PayrollSetSalaryErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type PayrollSetSalaryError =
+  PayrollSetSalaryErrors[keyof PayrollSetSalaryErrors];
+
+export type PayrollSetSalaryResponses = {
+  /**
+   * Successful Response
+   */
+  201: SalaryOut;
+};
+
+export type PayrollSetSalaryResponse =
+  PayrollSetSalaryResponses[keyof PayrollSetSalaryResponses];
+
+export type PayrollListTaxScalesData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/api/v1/payroll/tax-scales";
+};
+
+export type PayrollListTaxScalesResponses = {
+  /**
+   * Response Payroll-List Tax Scales
+   *
+   * Successful Response
+   */
+  200: Array<TaxScaleOut>;
+};
+
+export type PayrollListTaxScalesResponse =
+  PayrollListTaxScalesResponses[keyof PayrollListTaxScalesResponses];
+
+export type PayrollUpdateTaxScaleData = {
+  body: TaxScaleUpdate;
+  path: {
+    /**
+     * Scale Id
+     */
+    scale_id: string;
+  };
+  query?: never;
+  url: "/api/v1/payroll/tax-scales/{scale_id}";
+};
+
+export type PayrollUpdateTaxScaleErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type PayrollUpdateTaxScaleError =
+  PayrollUpdateTaxScaleErrors[keyof PayrollUpdateTaxScaleErrors];
+
+export type PayrollUpdateTaxScaleResponses = {
+  /**
+   * Successful Response
+   */
+  200: TaxScaleOut;
+};
+
+export type PayrollUpdateTaxScaleResponse =
+  PayrollUpdateTaxScaleResponses[keyof PayrollUpdateTaxScaleResponses];

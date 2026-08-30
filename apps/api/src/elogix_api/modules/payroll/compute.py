@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 
 from elogix_api.nepal import tax
-from elogix_api.nepal.tax import ZERO, money
+from elogix_api.nepal.tax import ZERO, Slab, money
 
 
 @dataclass(frozen=True, slots=True)
@@ -100,7 +100,14 @@ class Payslip:
     notes: list[str] = field(default_factory=list)
 
 
-def compute_payslip(data: PayslipInput) -> Payslip:
+def compute_payslip(
+    data: PayslipInput, *, slabs: tuple[Slab, ...] | None = None
+) -> Payslip:
+    """`slabs` overrides the built-in scale with the company's own editable rows.
+
+    Omitted, the statutory defaults in `nepal/tax.py` apply — which is what the
+    reconciliation tests exercise.
+    """
     slip = Payslip()
 
     # ── Proration ─────────────────────────────────────────────────────
@@ -185,8 +192,9 @@ def compute_payslip(data: PayslipInput) -> Payslip:
     )
 
     # ── Tax ───────────────────────────────────────────────────────────
-    scale = tax.SCALES.get(data.tax_year, tax.FY_2082_83)
-    slabs = scale.married if data.is_married else scale.single
+    if slabs is None:
+        scale = tax.SCALES.get(data.tax_year, tax.FY_2082_83)
+        slabs = scale.married if data.is_married else scale.single
     gross_tax, slip.tax_breakdown = tax.apply_slabs(slip.annual_taxable, slabs)
 
     if data.is_female:

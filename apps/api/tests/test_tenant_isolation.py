@@ -6,18 +6,67 @@ query is the entire boundary. That makes this file the security boundary's only 
 — a forgotten filter is otherwise a silent cross-tenant leak with nothing to catch it.
 """
 
+from datetime import date
+from decimal import Decimal
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from elogix_api.core.security import create_token
+from elogix_api.modules.employee.models import Employee
+from elogix_api.modules.identity.models import Company
+from elogix_api.modules.payroll.models import PayrollRun, Payslip, RunStatus
 from tests.conftest import auth, login, make_tenant
 
-# (method, path template). `{employee_id}` is filled with the *other* tenant's row.
+# (method, path template). `{employee_id}`, `{run_id}` and `{payslip_id}` are filled
+# with the *other* tenant's rows.
 TENANT_SCOPED_READS = [
     ("GET", "/api/v1/employees"),
     ("GET", "/api/v1/employees/{employee_id}"),
+    ("GET", "/api/v1/payroll/runs"),
+    ("GET", "/api/v1/payroll/salaries/{employee_id}"),
+    ("GET", "/api/v1/payroll/runs/{run_id}/payslips"),
+    ("GET", "/api/v1/payroll/payslips/{payslip_id}"),
 ]
+
+
+def seed_payroll(
+    db: Session, company: Company, employee: Employee
+) -> tuple[PayrollRun, Payslip]:
+    """A run and a payslip inserted directly.
+
+    The point here is the read filters, not the engine — `test_payroll.py` proves the
+    compute path. Going through the API would only make this sweep slower.
+    """
+    run = PayrollRun(
+        company_id=company.id,
+        period_start=date(2026, 3, 1),
+        period_end=date(2026, 3, 31),
+        fiscal_year="2082-83",
+        status=RunStatus.COMPUTED,
+    )
+    db.add(run)
+    db.flush()
+
+    zero = Decimal("0")
+    payslip = Payslip(
+        company_id=company.id,
+        payroll_run_id=run.id,
+        employee_id=employee.id,
+        payable_days=Decimal("31"),
+        basic_earned=Decimal("50000"),
+        gross=Decimal("50000"),
+        taxable_gross=Decimal("50000"),
+        annual_assessable=Decimal("600000"),
+        annual_taxable=Decimal("600000"),
+        annual_tax=zero,
+        total_deductions=zero,
+        net_pay=Decimal("50000"),
+    )
+    db.add(payslip)
+    db.commit()
+    return run, payslip
 
 
 def test_a_listing_shows_only_the_callers_own_employees(
@@ -38,15 +87,23 @@ def test_no_endpoint_returns_another_tenants_row(
 ) -> None:
     """Sweeps every tenant-scoped read: nothing may surface the other tenant's data."""
     make_tenant(db, "acme")
-    _, _, globex_employee = make_tenant(db, "globex")
+    globex, _, globex_employee = make_tenant(db, "globex")
+    run, payslip = seed_payroll(db, globex, globex_employee)
 
     response = client.request(
         method,
-        path.format(employee_id=globex_employee.id),
+        path.format(employee_id=globex_employee.id, run_id=run.id, payslip_id=payslip.id),
         headers=auth(login(client, slug="acme")),
     )
 
+    # The name catches a leaked employee record; the ids catch what carries no name at
+    # all — a payslip is numbers and foreign keys, so "Globex" alone would let one
+    # straight through.
     assert "Globex" not in response.text, f"{method} {path} leaked another tenant's data"
+    for leaked in (globex_employee.id, run.id, payslip.id):
+        assert str(leaked) not in response.text, (
+            f"{method} {path} returned another tenant's row"
+        )
 
 
 def test_another_tenants_employee_is_not_readable_by_id(

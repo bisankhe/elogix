@@ -19,8 +19,7 @@ MODEL_MODULES: tuple[str, ...] = (
     "elogix_api.modules.employee.models",
     "elogix_api.modules.attendance.models",
     "elogix_api.modules.leave.models",
-    # "elogix_api.modules.leave.models",      # phase 05
-    # "elogix_api.modules.payroll.models",    # phase 06
+    "elogix_api.modules.payroll.models",
     # "elogix_api.modules.ess.models",        # phase 07
 )
 

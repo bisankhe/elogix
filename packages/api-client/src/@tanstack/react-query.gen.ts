@@ -78,6 +78,18 @@ import {
   orgListWorkLocations,
   orgOrgTree,
   orgUpdateUnit,
+  payrollApproveRun,
+  payrollComputeRun,
+  payrollCreateComponent,
+  payrollCreateRun,
+  payrollGetPayslip,
+  payrollListComponents,
+  payrollListPayslips,
+  payrollListRuns,
+  payrollListTaxScales,
+  payrollSalaryHistory,
+  payrollSetSalary,
+  payrollUpdateTaxScale,
 } from "../sdk.gen";
 import type {
   AttendanceAssignRosterData,
@@ -274,6 +286,39 @@ import type {
   OrgUpdateUnitData,
   OrgUpdateUnitError,
   OrgUpdateUnitResponse,
+  PayrollApproveRunData,
+  PayrollApproveRunError,
+  PayrollApproveRunResponse,
+  PayrollComputeRunData,
+  PayrollComputeRunError,
+  PayrollComputeRunResponse,
+  PayrollCreateComponentData,
+  PayrollCreateComponentError,
+  PayrollCreateComponentResponse,
+  PayrollCreateRunData,
+  PayrollCreateRunError,
+  PayrollCreateRunResponse,
+  PayrollGetPayslipData,
+  PayrollGetPayslipError,
+  PayrollGetPayslipResponse,
+  PayrollListComponentsData,
+  PayrollListComponentsResponse,
+  PayrollListPayslipsData,
+  PayrollListPayslipsError,
+  PayrollListPayslipsResponse,
+  PayrollListRunsData,
+  PayrollListRunsResponse,
+  PayrollListTaxScalesData,
+  PayrollListTaxScalesResponse,
+  PayrollSalaryHistoryData,
+  PayrollSalaryHistoryError,
+  PayrollSalaryHistoryResponse,
+  PayrollSetSalaryData,
+  PayrollSetSalaryError,
+  PayrollSetSalaryResponse,
+  PayrollUpdateTaxScaleData,
+  PayrollUpdateTaxScaleError,
+  PayrollUpdateTaxScaleResponse,
 } from "../types.gen";
 
 export type QueryKey<TOptions extends Options> = [
@@ -2253,6 +2298,349 @@ export const orgDeactivateWorkLocationMutation = (
   > = {
     mutationFn: async (fnOptions) => {
       const { data } = await orgDeactivateWorkLocation({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const payrollListComponentsQueryKey = (
+  options?: Options<PayrollListComponentsData>,
+) => createQueryKey("payrollListComponents", options);
+
+/**
+ * List Components
+ */
+export const payrollListComponentsOptions = (
+  options?: Options<PayrollListComponentsData>,
+) =>
+  queryOptions<
+    PayrollListComponentsResponse,
+    DefaultError,
+    PayrollListComponentsResponse,
+    ReturnType<typeof payrollListComponentsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await payrollListComponents({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: payrollListComponentsQueryKey(options),
+  });
+
+/**
+ * Create Component
+ */
+export const payrollCreateComponentMutation = (
+  options?: Partial<Options<PayrollCreateComponentData>>,
+): UseMutationOptions<
+  PayrollCreateComponentResponse,
+  PayrollCreateComponentError,
+  Options<PayrollCreateComponentData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PayrollCreateComponentResponse,
+    PayrollCreateComponentError,
+    Options<PayrollCreateComponentData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await payrollCreateComponent({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const payrollGetPayslipQueryKey = (
+  options: Options<PayrollGetPayslipData>,
+) => createQueryKey("payrollGetPayslip", options);
+
+/**
+ * Get Payslip
+ *
+ * One payslip with every line and every tax band it was built from.
+ */
+export const payrollGetPayslipOptions = (
+  options: Options<PayrollGetPayslipData>,
+) =>
+  queryOptions<
+    PayrollGetPayslipResponse,
+    PayrollGetPayslipError,
+    PayrollGetPayslipResponse,
+    ReturnType<typeof payrollGetPayslipQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await payrollGetPayslip({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: payrollGetPayslipQueryKey(options),
+  });
+
+export const payrollListRunsQueryKey = (
+  options?: Options<PayrollListRunsData>,
+) => createQueryKey("payrollListRuns", options);
+
+/**
+ * List Runs
+ */
+export const payrollListRunsOptions = (
+  options?: Options<PayrollListRunsData>,
+) =>
+  queryOptions<
+    PayrollListRunsResponse,
+    DefaultError,
+    PayrollListRunsResponse,
+    ReturnType<typeof payrollListRunsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await payrollListRuns({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: payrollListRunsQueryKey(options),
+  });
+
+/**
+ * Create Run
+ */
+export const payrollCreateRunMutation = (
+  options?: Partial<Options<PayrollCreateRunData>>,
+): UseMutationOptions<
+  PayrollCreateRunResponse,
+  PayrollCreateRunError,
+  Options<PayrollCreateRunData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PayrollCreateRunResponse,
+    PayrollCreateRunError,
+    Options<PayrollCreateRunData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await payrollCreateRun({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Approve Run
+ *
+ * Approve, and lock the attendance the run was computed from.
+ */
+export const payrollApproveRunMutation = (
+  options?: Partial<Options<PayrollApproveRunData>>,
+): UseMutationOptions<
+  PayrollApproveRunResponse,
+  PayrollApproveRunError,
+  Options<PayrollApproveRunData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PayrollApproveRunResponse,
+    PayrollApproveRunError,
+    Options<PayrollApproveRunData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await payrollApproveRun({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Compute Run
+ */
+export const payrollComputeRunMutation = (
+  options?: Partial<Options<PayrollComputeRunData>>,
+): UseMutationOptions<
+  PayrollComputeRunResponse,
+  PayrollComputeRunError,
+  Options<PayrollComputeRunData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PayrollComputeRunResponse,
+    PayrollComputeRunError,
+    Options<PayrollComputeRunData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await payrollComputeRun({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const payrollListPayslipsQueryKey = (
+  options: Options<PayrollListPayslipsData>,
+) => createQueryKey("payrollListPayslips", options);
+
+/**
+ * List Payslips
+ */
+export const payrollListPayslipsOptions = (
+  options: Options<PayrollListPayslipsData>,
+) =>
+  queryOptions<
+    PayrollListPayslipsResponse,
+    PayrollListPayslipsError,
+    PayrollListPayslipsResponse,
+    ReturnType<typeof payrollListPayslipsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await payrollListPayslips({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: payrollListPayslipsQueryKey(options),
+  });
+
+export const payrollSalaryHistoryQueryKey = (
+  options: Options<PayrollSalaryHistoryData>,
+) => createQueryKey("payrollSalaryHistory", options);
+
+/**
+ * Salary History
+ *
+ * Every salary period, newest first — a raise opens a row, never edits one.
+ */
+export const payrollSalaryHistoryOptions = (
+  options: Options<PayrollSalaryHistoryData>,
+) =>
+  queryOptions<
+    PayrollSalaryHistoryResponse,
+    PayrollSalaryHistoryError,
+    PayrollSalaryHistoryResponse,
+    ReturnType<typeof payrollSalaryHistoryQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await payrollSalaryHistory({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: payrollSalaryHistoryQueryKey(options),
+  });
+
+/**
+ * Set Salary
+ */
+export const payrollSetSalaryMutation = (
+  options?: Partial<Options<PayrollSetSalaryData>>,
+): UseMutationOptions<
+  PayrollSetSalaryResponse,
+  PayrollSetSalaryError,
+  Options<PayrollSetSalaryData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PayrollSetSalaryResponse,
+    PayrollSetSalaryError,
+    Options<PayrollSetSalaryData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await payrollSetSalary({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const payrollListTaxScalesQueryKey = (
+  options?: Options<PayrollListTaxScalesData>,
+) => createQueryKey("payrollListTaxScales", options);
+
+/**
+ * List Tax Scales
+ *
+ * The company's own bands. Seeded from unverified statutory defaults.
+ */
+export const payrollListTaxScalesOptions = (
+  options?: Options<PayrollListTaxScalesData>,
+) =>
+  queryOptions<
+    PayrollListTaxScalesResponse,
+    DefaultError,
+    PayrollListTaxScalesResponse,
+    ReturnType<typeof payrollListTaxScalesQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await payrollListTaxScales({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: payrollListTaxScalesQueryKey(options),
+  });
+
+/**
+ * Update Tax Scale
+ *
+ * Replace a scale's bands, and record who checked them.
+ *
+ * Naming a verifier is what flips `is_verified`. That is deliberate: "verified" should
+ * mean a person put their name to it, not that someone clicked a box.
+ */
+export const payrollUpdateTaxScaleMutation = (
+  options?: Partial<Options<PayrollUpdateTaxScaleData>>,
+): UseMutationOptions<
+  PayrollUpdateTaxScaleResponse,
+  PayrollUpdateTaxScaleError,
+  Options<PayrollUpdateTaxScaleData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PayrollUpdateTaxScaleResponse,
+    PayrollUpdateTaxScaleError,
+    Options<PayrollUpdateTaxScaleData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await payrollUpdateTaxScale({
         ...options,
         ...fnOptions,
         throwOnError: true,
