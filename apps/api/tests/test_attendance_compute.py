@@ -275,6 +275,67 @@ def test_the_daily_overtime_cap_applies_on_a_rest_day_too() -> None:
     assert any("beyond the statutory daily overtime cap" in r for r in result.remarks)
 
 
+def test_the_unpunched_break_is_deducted_on_a_holiday_too() -> None:
+    """Regression: the lunch hour does not stop existing because it is a holiday.
+
+    The break deduction was originally written inside the ordinary-day branch, so a
+    rostered 09:00–18:00 pair read as eight hours on a Tuesday and nine on a public
+    holiday — the register contradicting itself on identical punches. Found in a
+    self-service screenshot, not by a test.
+
+    Payable overtime was *not* affected, and it is worth being exact about why: the
+    deduction only bites above the shift's 480 scheduled minutes, and the statutory
+    daily cap tops overtime out at 240, so both the inflated and the correct figure
+    clear the cap and pay the same. What was wrong is `worked_minutes` itself, which is
+    what compliance reporting on working hours reads.
+    """
+    holiday = compute.compute_day(
+        work_date=WORKDAY,
+        punches=punches((at(9), True), (at(18), False)),
+        shift=DAY_SHIFT,
+        policy=POLICY,
+        is_holiday=True,
+    )
+    ordinary = compute.compute_day(
+        work_date=WORKDAY,
+        punches=punches((at(9), True), (at(18), False)),
+        shift=DAY_SHIFT,
+        policy=POLICY,
+    )
+
+    assert holiday.worked_minutes == ordinary.worked_minutes == 8 * 60
+    # All eight hours are overtime on a holiday, but the cap keeps four of them payable.
+    assert holiday.overtime_minutes == 4 * 60
+    assert ordinary.overtime_minutes == 0
+
+
+def test_the_unpunched_break_is_deducted_on_a_leave_day_too() -> None:
+    """Same rule for someone who came in anyway while on approved leave."""
+    result = compute.compute_day(
+        work_date=WORKDAY,
+        punches=punches((at(9), True), (at(18), False)),
+        shift=DAY_SHIFT,
+        policy=POLICY,
+        is_on_leave=True,
+    )
+    assert result.status == "leave"
+    assert result.worked_minutes == 8 * 60
+
+
+def test_a_short_stint_on_a_holiday_is_not_docked_for_a_lunch_nobody_took() -> None:
+    """The floor holds on a non-working day exactly as it does on a working one: two
+    hours in on a holiday is two hours, not one."""
+    result = compute.compute_day(
+        work_date=WORKDAY,
+        punches=punches((at(9), True), (at(11), False)),
+        shift=DAY_SHIFT,
+        policy=POLICY,
+        is_holiday=True,
+    )
+    assert result.worked_minutes == 2 * 60
+    assert result.overtime_minutes == 2 * 60
+
+
 def test_a_holiday_beats_an_ordinary_working_day() -> None:
     result = compute.compute_day(
         work_date=WORKDAY, punches=[], shift=DAY_SHIFT, policy=POLICY, is_holiday=True

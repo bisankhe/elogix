@@ -1,16 +1,22 @@
 import contextlib
+import uuid
 
 import jwt
-from fastapi import APIRouter, Cookie, HTTPException, Response, status
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
-from elogix_api.core.deps import CurrentUserDep, DbDep
-from elogix_api.core.security import decode_token
-from elogix_api.modules.identity.models import Company
+from elogix_api.core.deps import CurrentUserDep, DbDep, require_role
+from elogix_api.core.security import decode_token, hash_password
+from elogix_api.modules.employee.service import get_employee
+from elogix_api.modules.identity.models import Company, RoleCode, User, UserRole
 from elogix_api.modules.identity.schemas import (
     AccessToken,
     EntitlementsOut,
     LoginRequest,
+    UserCreate,
+    UserEmployeeLink,
     UserOut,
 )
 from elogix_api.modules.identity.service import (
@@ -126,3 +132,108 @@ def entitlements(current_user: CurrentUserDep, db: DbDep) -> EntitlementsOut:
         plan_tier=plan_tier,
         modules=sorted(current_user.modules),
     )
+
+
+# ── User administration ───────────────────────────────────────────────
+#
+# Managing logins is HR's job, not an employee's, so these carry an explicit role
+# gate. The rest of `/auth` is deliberately open to any authenticated caller — you
+# have to be able to ask who you are.
+
+_HR_ONLY = Depends(require_role(RoleCode.SUPER_ADMIN, RoleCode.HR_MANAGER))
+
+
+def _to_out(db: Session, user: User) -> UserOut:
+    roles = db.execute(
+        select(UserRole.role).where(
+            UserRole.user_id == user.id, UserRole.company_id == user.company_id
+        )
+    ).scalars()
+    return UserOut(
+        id=user.id,
+        company_id=user.company_id,
+        email=user.email,
+        full_name=user.full_name,
+        roles=list(roles),
+        employee_id=user.employee_id,
+    )
+
+
+def _get_user(db: Session, user_id: uuid.UUID, company_id: uuid.UUID) -> User:
+    user = db.execute(
+        select(User).where(User.id == user_id, User.company_id == company_id)
+    ).scalar_one_or_none()
+    if user is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
+    return user
+
+
+@router.get("/users", response_model=list[UserOut], dependencies=[_HR_ONLY])
+def list_users(current_user: CurrentUserDep, db: DbDep) -> list[UserOut]:
+    users = db.execute(
+        select(User).where(User.company_id == current_user.company_id).order_by(User.email)
+    ).scalars()
+    return [_to_out(db, user) for user in users]
+
+
+@router.post(
+    "/users",
+    response_model=UserOut,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[_HR_ONLY],
+)
+def create_user(payload: UserCreate, current_user: CurrentUserDep, db: DbDep) -> UserOut:
+    """Create a login, optionally linked to an employee straight away."""
+    if payload.employee_id is not None:
+        get_employee(db, company_id=current_user.company_id, employee_id=payload.employee_id)
+
+    user = User(
+        company_id=current_user.company_id,
+        email=payload.email,
+        password_hash=hash_password(payload.password),
+        full_name=payload.full_name,
+        employee_id=payload.employee_id,
+    )
+    db.add(user)
+    try:
+        db.flush()
+    except IntegrityError as exc:
+        db.rollback()
+        # Either the email or the employee is already taken. Both uniques are per
+        # company, so the message is safe to be specific about.
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "That email already has a login, or that employee already has one",
+        ) from exc
+
+    for role in dict.fromkeys(payload.roles):
+        db.add(UserRole(company_id=user.company_id, user_id=user.id, role=role))
+
+    db.commit()
+    db.refresh(user)
+    return _to_out(db, user)
+
+
+@router.put("/users/{user_id}/employee", response_model=UserOut, dependencies=[_HR_ONLY])
+def link_user_to_employee(
+    user_id: uuid.UUID, payload: UserEmployeeLink, current_user: CurrentUserDep, db: DbDep
+) -> UserOut:
+    """Point a login at a person, or unlink it.
+
+    Unlinking closes self-service for that login rather than deleting anything — the
+    leave requests and payslips belong to the employee record, not to the account.
+    """
+    user = _get_user(db, user_id, current_user.company_id)
+
+    if payload.employee_id is not None:
+        get_employee(db, company_id=current_user.company_id, employee_id=payload.employee_id)
+
+    user.employee_id = payload.employee_id
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(status.HTTP_409_CONFLICT, "That employee already has a login") from exc
+
+    db.refresh(user)
+    return _to_out(db, user)

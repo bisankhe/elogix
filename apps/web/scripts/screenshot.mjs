@@ -24,6 +24,12 @@ const PAGES = [
   ['org-grades', '/org/grades'],
   ['org-locations', '/org/locations'],
   ['employees', '/employees'],
+  ['payroll', '/payroll'],
+  ['me-profile', '/me?tab=profile'],
+  ['me-attendance', '/me?tab=attendance&year=2026&month=3'],
+  ['me-leave', '/me?tab=leave'],
+  ['me-pay', '/me?tab=pay'],
+  ['me-documents', '/me?tab=documents'],
 ]
 
 await mkdir(OUT, { recursive: true })
@@ -35,12 +41,26 @@ const browser = await chromium.launch({
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } })
 
 const problems = []
+
+// A cold start asks /auth/refresh whether there is a session, and with no cookie yet
+// the honest answer is 401. That is the documented design in `lib/auth.ts`, not a
+// fault — so it is exempt, but only until sign-in succeeds. A 401 *after* that is a
+// real failure and still fails the run. Scoped this way rather than by ignoring every
+// 401, which would hide exactly the regressions this script exists to catch.
+let signedIn = false
+const expected = (status, url) =>
+  !signedIn && status === 401 && url.includes('/api/v1/auth/refresh')
+
 page.on('console', (m) => {
-  if (m.type() === 'error') problems.push(`console: ${m.text()}`)
+  if (m.type() !== 'error') return
+  if (!signedIn && m.text().includes('status of 401')) return
+  problems.push(`console: ${m.text()}`)
 })
 page.on('pageerror', (e) => problems.push(`pageerror: ${e.message}`))
 page.on('response', (r) => {
-  if (r.status() >= 400) problems.push(`http ${r.status()} ${r.url()}`)
+  if (r.status() >= 400 && !expected(r.status(), r.url())) {
+    problems.push(`http ${r.status()} ${r.url()}`)
+  }
 })
 
 // Sign in once; the session carries through the rest.
@@ -51,6 +71,7 @@ await page.getByLabel('Email').fill('admin@acme.com.np')
 await page.getByLabel('Password').fill('devpassword123')
 await page.getByRole('button', { name: /sign in/i }).click()
 await page.waitForURL('**/dashboard', { timeout: 15000 })
+signedIn = true
 
 for (const [name, path] of PAGES) {
   if (name === 'login') continue

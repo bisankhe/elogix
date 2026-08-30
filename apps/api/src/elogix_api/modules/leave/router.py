@@ -156,37 +156,19 @@ def list_requests(
 def create_request(
     payload: LeaveRequestCreate, user: CurrentUserDep, db: DbDep
 ) -> LeaveRequest:
-    get_employee(db, company_id=user.company_id, employee_id=payload.employee_id)
-
-    leave_type = db.execute(
-        select(LeaveType).where(
-            LeaveType.id == payload.leave_type_id, LeaveType.company_id == user.company_id
-        )
-    ).scalar_one_or_none()
-    if leave_type is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Leave type not found")
-    if payload.portion.value != "full" and not leave_type.allows_half_day:
-        raise HTTPException(
-            status.HTTP_409_CONFLICT, f"{leave_type.name} cannot be taken as a half day"
-        )
-
-    service.assert_no_overlap(
+    """HR raising a request on someone's behalf. `/ess/leave/requests` is the same call
+    with the employee taken from the token instead of the body."""
+    request = service.create_request(
         db,
         company_id=user.company_id,
         employee_id=payload.employee_id,
-        start=payload.start_date,
-        end=payload.end_date,
-    )
-    days = service.compute_request_days(
-        db,
-        company_id=user.company_id,
-        start=payload.start_date,
-        end=payload.end_date,
+        leave_type_id=payload.leave_type_id,
+        start_date=payload.start_date,
+        end_date=payload.end_date,
         portion=payload.portion,
+        reason=payload.reason,
+        document_key=payload.document_key,
     )
-
-    request = LeaveRequest(company_id=user.company_id, days=days, **payload.model_dump())
-    db.add(request)
     db.commit()
     db.refresh(request)
     return request

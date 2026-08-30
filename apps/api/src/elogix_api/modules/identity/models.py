@@ -67,7 +67,12 @@ class User(Base, TimestampMixin):
     employee has a login."""
 
     __tablename__ = "users"
-    __table_args__ = (UniqueConstraint("company_id", "email"),)
+    __table_args__ = (
+        UniqueConstraint("company_id", "email"),
+        # One login per employee. Two logins claiming the same person would make
+        # "whose leave request is this?" unanswerable.
+        UniqueConstraint("company_id", "employee_id", name="uq_users_company_id_employee_id"),
+    )
 
     id: Mapped[uuid.UUID] = uuid_pk()
     company_id: Mapped[uuid.UUID] = company_fk()
@@ -75,6 +80,18 @@ class User(Base, TimestampMixin):
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     full_name: Mapped[str] = mapped_column(String(200), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+    # Nullable on purpose, and it is the whole of self-service. An HR officer who is
+    # not on the payroll has no employee record; an employee who never logs in has no
+    # user. Only when both exist can someone ask the ESS endpoints for "my" anything,
+    # and `RESTRICT` means deleting an employee with a live login is refused rather
+    # than quietly orphaning the account.
+    employee_id: Mapped[uuid.UUID | None] = mapped_column(
+        PgUUID(as_uuid=True),
+        ForeignKey("employees.id", ondelete="RESTRICT"),
+        nullable=True,
+        index=True,
+    )
 
 
 class UserRole(Base, TimestampMixin):

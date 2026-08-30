@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 
 from elogix_api.core.security import create_token
 from elogix_api.modules.employee.models import Employee
-from elogix_api.modules.identity.models import Company
+from elogix_api.modules.identity.models import Company, RoleCode, UserRole
 from elogix_api.modules.payroll.models import PayrollRun, Payslip, RunStatus
 from tests.conftest import auth, login, make_tenant
 
@@ -28,6 +28,7 @@ TENANT_SCOPED_READS = [
     ("GET", "/api/v1/payroll/salaries/{employee_id}"),
     ("GET", "/api/v1/payroll/runs/{run_id}/payslips"),
     ("GET", "/api/v1/payroll/payslips/{payslip_id}"),
+    ("GET", "/api/v1/auth/users"),
 ]
 
 
@@ -86,9 +87,15 @@ def test_no_endpoint_returns_another_tenants_row(
     client: TestClient, db: Session, method: str, path: str
 ) -> None:
     """Sweeps every tenant-scoped read: nothing may surface the other tenant's data."""
-    make_tenant(db, "acme")
+    acme, acme_admin, _ = make_tenant(db, "acme")
     globex, _, globex_employee = make_tenant(db, "globex")
     run, payslip = seed_payroll(db, globex, globex_employee)
+
+    # The caller gets the top role on purpose. A route this sweep cannot reach is a
+    # route it cannot test: without it the role-gated reads would 403 and the
+    # assertion would pass on an empty body, proving nothing about the filter.
+    db.add(UserRole(company_id=acme.id, user_id=acme_admin.id, role=RoleCode.SUPER_ADMIN))
+    db.commit()
 
     response = client.request(
         method,

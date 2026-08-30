@@ -6,7 +6,7 @@ import { createRoot } from 'react-dom/client'
 import { client } from '@elogix/api-client/client'
 
 import './index.css'
-import { installAuthInterceptor, restoreSession } from './lib/auth'
+import { errorStatus, installAuthInterceptor, restoreSession } from './lib/auth'
 import { routeTree } from './routeTree.gen'
 
 // Empty baseUrl: requests go to /api/... on the same origin and Vite proxies them to
@@ -14,7 +14,25 @@ import { routeTree } from './routeTree.gen'
 client.setConfig({ baseUrl: '', credentials: 'include' })
 installAuthInterceptor()
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Never retry a refusal. React Query's default is three retries with backoff,
+      // which for a 401/403/404 buys nothing — the server will say no again — and
+      // costs about seven seconds before the UI can explain itself. Self-service made
+      // this visible: an unlinked login sat on a blank screen while the 403 that
+      // explains it was retried in the background.
+      //
+      // 5xx and network failures keep the default, because those genuinely can pass on
+      // a second attempt.
+      retry: (failureCount, error) => {
+        const status = errorStatus(error)
+        if (status !== undefined && status >= 400 && status < 500) return false
+        return failureCount < 3
+      },
+    },
+  },
+})
 
 const router = createRouter({
   routeTree,

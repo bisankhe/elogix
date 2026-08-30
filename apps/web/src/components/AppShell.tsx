@@ -92,6 +92,12 @@ const NAV: NavGroup[] = [
     label: 'Payroll & Finance',
     children: [{ to: '/payroll', label: 'Payroll Runs', module: 'payroll' }],
   },
+  {
+    id: 'self-service',
+    icon: '🙋',
+    label: 'Self Service',
+    children: [{ to: '/me', label: 'My Workspace', module: 'ess' }],
+  },
 ]
 
 const QUICK_ACTIONS = ['👥', '⏰', '📅', '💰', '📊', '🤖', '📋', '🎯']

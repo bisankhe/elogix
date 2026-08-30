@@ -158,12 +158,26 @@ const browser = await chromium.launch({
 })
 
 const problems = []
+
+// Statuses this gallery provokes deliberately — each one is the subject of a shot, not
+// a fault, and the browser logs every one of them as a console error.
+//
+//   401  the cold-start /auth/refresh probe: no cookie yet, so the login form shows.
+//        Also scenario 01, which signs in with a wrong password on purpose.
+//   403  scenario 06b opens self-service as a login with no employee record. Being
+//        refused is the boundary working.
+//   409  scenario 14 approves a leave request that exceeds its balance. The refusal is
+//        the screenshot.
+//
+// Matched on the full phrase rather than the bare number so a message that merely
+// contains "409" is not waved through. Any other status is a real failure.
+const PROVOKED = [401, 403, 409].map((s) => `status of ${s}`)
+
 function watch(page, label) {
   page.on('console', (m) => {
-    // A 401 on /auth/refresh before sign-in is how a cold start is meant to look:
-    // the app asks for a token, there is no cookie yet, and it shows the login form.
-    const benign = m.text().includes('401')
-    if (m.type() === 'error' && !benign) problems.push(`[${label}] console: ${m.text()}`)
+    if (m.type() !== 'error') return
+    if (PROVOKED.some((phrase) => m.text().includes(phrase))) return
+    problems.push(`[${label}] console: ${m.text()}`)
   })
   page.on('pageerror', (e) => problems.push(`[${label}] pageerror: ${e.message}`))
 }
@@ -217,6 +231,11 @@ await api(acmeToken, '/attendance/process', {
   await shot(page, '04-trial-employees-empty', '/employees')
   await shot(page, '05-trial-attendance-empty', '/attendance')
   await shot(page, '06-trial-leave-empty', '/leave')
+
+  // The startup tenant's admin has no employee record, so self-service refuses them.
+  // A 403 here is the boundary working; the shot is of the explanation, which is the
+  // part that decides whether people think the app is broken or think it is correct.
+  await shot(page, '06b-trial-self-service-unlinked', '/me')
   await page.close()
 }
 
@@ -255,6 +274,14 @@ await api(acmeToken, '/attendance/process', {
     await page.getByRole('alert').waitFor({ timeout: 5000 })
     await shot(page, '14-leave-approval-refused', null)
   }
+
+  // Self-service, as the person themselves. Sita is linked to the acme admin login by
+  // the seed, so these are her own rows and nobody else's — the boundary that
+  // `tests/test_ess.py` proves, seen from the browser.
+  await shot(page, '14b-my-profile', '/me?tab=profile')
+  await shot(page, '14c-my-attendance', '/me?tab=attendance&year=2026&month=3')
+  await shot(page, '14d-my-leave', '/me?tab=leave')
+  await shot(page, '14e-my-pay', '/me?tab=pay')
 
   // Chrome collapsed, and a phone-width viewport.
   await page.goto(`${BASE}/dashboard`, { waitUntil: 'networkidle' })

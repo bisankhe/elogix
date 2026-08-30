@@ -666,6 +666,195 @@ export const zModuleCode = z.enum([
 ]);
 
 /**
+ * MyBalance
+ */
+export const zMyBalance = z.object({
+  available_days: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  code: z.string(),
+  is_paid: z.boolean(),
+  leave_type_id: z.uuid(),
+  leave_year: z.int(),
+  name: z.string(),
+});
+
+/**
+ * MyDay
+ *
+ * One day of my own register.
+ */
+export const zMyDay = z.object({
+  first_in: z.iso.datetime().nullable(),
+  is_locked: z.boolean(),
+  last_out: z.iso.datetime().nullable(),
+  late_minutes: z.int(),
+  overtime_minutes: z.int(),
+  remarks: z.string().nullable(),
+  status: z.string(),
+  work_date: z.iso.date(),
+  worked_minutes: z.int(),
+});
+
+/**
+ * MyAttendanceMonth
+ */
+export const zMyAttendanceMonth = z.object({
+  absent_days: z.int(),
+  days: z.array(zMyDay),
+  holiday_days: z.int(),
+  late_minutes: z.int(),
+  leave_days: z.int(),
+  overtime_minutes: z.int(),
+  period_end: z.iso.date(),
+  period_start: z.iso.date(),
+  present_days: z.int(),
+  worked_minutes: z.int(),
+});
+
+/**
+ * MyDocument
+ */
+export const zMyDocument = z.object({
+  document_type: zDocumentType,
+  expires_on: z.iso.date().nullable(),
+  has_file: z.boolean(),
+  id: z.uuid(),
+  is_verified: z.boolean(),
+  issued_on: z.iso.date().nullable(),
+  title: z.string(),
+});
+
+/**
+ * MyLeaveApply
+ *
+ * No `employee_id`. That is the point of the module.
+ */
+export const zMyLeaveApply = z.object({
+  document_key: z.string().max(500).nullish(),
+  end_date: z.iso.date(),
+  leave_type_id: z.uuid(),
+  portion: zDayPortion.optional().default("full"),
+  reason: z.string().min(1).max(2000),
+  start_date: z.iso.date(),
+});
+
+/**
+ * MyLeaveRequest
+ */
+export const zMyLeaveRequest = z.object({
+  days: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  decided_at: z.iso.datetime().nullable(),
+  decision_note: z.string().nullable(),
+  end_date: z.iso.date(),
+  id: z.uuid(),
+  leave_type_id: z.uuid(),
+  portion: zDayPortion,
+  reason: z.string(),
+  start_date: z.iso.date(),
+  status: z.string(),
+});
+
+/**
+ * MyPayslipBand
+ *
+ * `amount` is how much of my income fell in this band; `tax` is what it cost.
+ */
+export const zMyPayslipBand = z.object({
+  amount: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  label: z.string(),
+  rate: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  tax: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+});
+
+/**
+ * MyPayslipLine
+ */
+export const zMyPayslipLine = z.object({
+  amount: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  code: z.string(),
+  kind: z.string(),
+  label: z.string(),
+});
+
+/**
+ * MyPayslip
+ */
+export const zMyPayslip = z.object({
+  absent_days: z.int(),
+  annual_assessable: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  annual_tax: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  annual_taxable: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  basic_earned: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  female_rebate: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  fiscal_year: z.string(),
+  gross: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  id: z.uuid(),
+  lines: z.array(zMyPayslipLine).optional().default([]),
+  monthly_tax: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  net_pay: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  notes: z.string().nullable(),
+  overtime_minutes: z.int(),
+  overtime_pay: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  payable_days: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  period_end: z.iso.date(),
+  period_start: z.iso.date(),
+  present_days: z.int(),
+  ssf_employee: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  ssf_employer: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  tax_bands: z.array(zMyPayslipBand).optional().default([]),
+  taxable_gross: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  total_deductions: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+});
+
+/**
+ * MyPayslipSummary
+ */
+export const zMyPayslipSummary = z.object({
+  fiscal_year: z.string(),
+  gross: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  id: z.uuid(),
+  net_pay: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  payable_days: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  period_end: z.iso.date(),
+  period_start: z.iso.date(),
+  total_deductions: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+});
+
+/**
+ * MyProfile
+ *
+ * Who I am, where I sit, and what my employer holds on me.
+ *
+ * Deliberately the full record rather than a trimmed one: every field here is the
+ * employee's own personal data, and a person is entitled to see what is stored about
+ * them. The bank account and PAN are theirs. What is *not* here is anyone else's.
+ */
+export const zMyProfile = z.object({
+  bank_account_number: z.string().nullable(),
+  bank_name: z.string().nullable(),
+  citizenship_number: z.string().nullable(),
+  confirmed_on: z.iso.date().nullable(),
+  date_of_birth: z.iso.date().nullable(),
+  designation: z.string().nullish(),
+  employee_code: z.string(),
+  full_name: z.string(),
+  full_name_nepali: z.string().nullable(),
+  grade_level: z.string().nullish(),
+  id: z.uuid(),
+  joined_on: z.iso.date(),
+  manager_name: z.string().nullish(),
+  org_unit: z.string().nullish(),
+  pan_number: z.string().nullable(),
+  personal_email: z.string().nullable(),
+  phone: z.string().nullable(),
+  probation_ends_on: z.iso.date().nullable(),
+  provident_fund_number: z.string().nullable(),
+  ssf_number: z.string().nullable(),
+  status: z.string(),
+  work_email: z.string().nullable(),
+  work_location: z.string().nullish(),
+});
+
+/**
  * OrgUnitKind
  *
  * Depth labels for the single org tree. Ordered broadest to narrowest.
@@ -1325,11 +1514,39 @@ export const zTaxScaleUpdate = z.object({
 });
 
 /**
+ * UserCreate
+ *
+ * Create a login.
+ *
+ * The initial password is set by whoever creates the account, which means they know
+ * it. That is the normal shape for HR onboarding and it is not the end state — an
+ * invite-and-set-your-own-password flow is the right answer and is not built yet.
+ * Until it is, this is a deliberate, documented compromise rather than an oversight.
+ */
+export const zUserCreate = z.object({
+  email: z.email(),
+  employee_id: z.uuid().nullish(),
+  full_name: z.string().min(1).max(200),
+  password: z.string().min(12).max(128),
+  roles: z.array(zRoleCode).optional(),
+});
+
+/**
+ * UserEmployeeLink
+ *
+ * Null unlinks. Linking is what opens self-service for this login.
+ */
+export const zUserEmployeeLink = z.object({
+  employee_id: z.uuid().nullable(),
+});
+
+/**
  * UserOut
  */
 export const zUserOut = z.object({
   company_id: z.uuid(),
   email: z.string(),
+  employee_id: z.uuid().nullish(),
   full_name: z.string(),
   id: z.uuid(),
   roles: z.array(zRoleCode),
@@ -1632,6 +1849,31 @@ export const zAuthMeResponse = zUserOut;
  */
 export const zAuthRefreshResponse = zAccessToken;
 
+/**
+ * Response Auth-List Users
+ *
+ * Successful Response
+ */
+export const zAuthListUsersResponse = z.array(zUserOut);
+
+export const zAuthCreateUserBody = zUserCreate;
+
+/**
+ * Successful Response
+ */
+export const zAuthCreateUserResponse = zUserOut;
+
+export const zAuthLinkUserToEmployeeBody = zUserEmployeeLink;
+
+export const zAuthLinkUserToEmployeePath = z.object({
+  user_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zAuthLinkUserToEmployeeResponse = zUserOut;
+
 export const zEmployeesListEmployeesQuery = z.object({
   status: zEmployeeStatus.nullish(),
   org_unit_id: z.uuid().nullish(),
@@ -1748,6 +1990,78 @@ export const zEmployeesExitEmployeePath = z.object({
  * Successful Response
  */
 export const zEmployeesExitEmployeeResponse = zEmployeeDetail;
+
+export const zEssMyAttendanceQuery = z.object({
+  year: z.int().gte(2000).lte(2100),
+  month: z.int().gte(1).lte(12),
+});
+
+/**
+ * Successful Response
+ */
+export const zEssMyAttendanceResponse = zMyAttendanceMonth;
+
+/**
+ * Response Ess-My Documents
+ *
+ * Successful Response
+ */
+export const zEssMyDocumentsResponse = z.array(zMyDocument);
+
+export const zEssMyBalancesQuery = z.object({
+  leave_year: z.int().gte(2000).lte(2100).nullish(),
+});
+
+/**
+ * Response Ess-My Balances
+ *
+ * Successful Response
+ */
+export const zEssMyBalancesResponse = z.array(zMyBalance);
+
+/**
+ * Response Ess-My Leave Requests
+ *
+ * Successful Response
+ */
+export const zEssMyLeaveRequestsResponse = z.array(zMyLeaveRequest);
+
+export const zEssApplyForLeaveBody = zMyLeaveApply;
+
+/**
+ * Successful Response
+ */
+export const zEssApplyForLeaveResponse = zMyLeaveRequest;
+
+export const zEssWithdrawLeaveRequestPath = z.object({
+  request_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zEssWithdrawLeaveRequestResponse = zMyLeaveRequest;
+
+/**
+ * Successful Response
+ */
+export const zEssMyProfileResponse = zMyProfile;
+
+/**
+ * Response Ess-My Payslips
+ *
+ * Successful Response
+ */
+export const zEssMyPayslipsResponse = z.array(zMyPayslipSummary);
+
+export const zEssMyPayslipPath = z.object({
+  payslip_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zEssMyPayslipResponse = zMyPayslip;
 
 export const zLeaveAccrueBody = zAccrualRequest;
 

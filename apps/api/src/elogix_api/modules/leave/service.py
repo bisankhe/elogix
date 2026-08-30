@@ -24,6 +24,7 @@ from sqlalchemy.orm import Session
 from elogix_api.modules.attendance.models import AttendanceDay, DayStatus, Holiday
 from elogix_api.modules.attendance.service import get_or_create_policy
 from elogix_api.modules.employee.models import Employee, EmployeeStatus
+from elogix_api.modules.employee.service import get_employee
 from elogix_api.modules.leave.models import (
     DayPortion,
     LeaveLedgerEntry,
@@ -470,6 +471,67 @@ def assert_no_overlap(
         raise HTTPException(
             status.HTTP_409_CONFLICT, "That overlaps an existing leave request"
         )
+
+
+def create_request(
+    db: Session,
+    *,
+    company_id: uuid.UUID,
+    employee_id: uuid.UUID,
+    leave_type_id: uuid.UUID,
+    start_date: date,
+    end_date: date,
+    portion: DayPortion,
+    reason: str,
+    document_key: str | None = None,
+) -> LeaveRequest:
+    """Raise a leave request, validated the same way whoever raises it.
+
+    HR raising a request on someone's behalf and an employee raising their own must be
+    checked identically — same overlap rule, same half-day rule, same working-day count.
+    Two copies of this in two routers would drift, and the copy that drifted would be
+    the self-service one, because it gets less scrutiny.
+
+    Does not commit: the caller owns the transaction.
+    """
+    get_employee(db, company_id=company_id, employee_id=employee_id)
+
+    leave_type = db.execute(
+        select(LeaveType).where(
+            LeaveType.id == leave_type_id, LeaveType.company_id == company_id
+        )
+    ).scalar_one_or_none()
+    if leave_type is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Leave type not found")
+    if portion is not DayPortion.FULL and not leave_type.allows_half_day:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT, f"{leave_type.name} cannot be taken as a half day"
+        )
+
+    assert_no_overlap(
+        db,
+        company_id=company_id,
+        employee_id=employee_id,
+        start=start_date,
+        end=end_date,
+    )
+    days = compute_request_days(
+        db, company_id=company_id, start=start_date, end=end_date, portion=portion
+    )
+
+    request = LeaveRequest(
+        company_id=company_id,
+        employee_id=employee_id,
+        leave_type_id=leave_type_id,
+        start_date=start_date,
+        end_date=end_date,
+        portion=portion,
+        days=days,
+        reason=reason,
+        document_key=document_key,
+    )
+    db.add(request)
+    return request
 
 
 def approve(

@@ -27,7 +27,10 @@ import {
   attendanceRecordPunch,
   attendanceRequestRegularisation,
   attendanceUpdatePolicy,
+  authCreateUser,
   authEntitlements,
+  authLinkUserToEmployee,
+  authListUsers,
   authLogin,
   authLogout,
   authMe,
@@ -43,6 +46,15 @@ import {
   employeesListEmployees,
   employeesListEvents,
   employeesUpdateEmployee,
+  essApplyForLeave,
+  essMyAttendance,
+  essMyBalances,
+  essMyDocuments,
+  essMyLeaveRequests,
+  essMyPayslip,
+  essMyPayslips,
+  essMyProfile,
+  essWithdrawLeaveRequest,
   leaveAccrue,
   leaveBalances,
   leaveCancelRequest,
@@ -141,8 +153,16 @@ import type {
   AttendanceUpdatePolicyData,
   AttendanceUpdatePolicyError,
   AttendanceUpdatePolicyResponse,
+  AuthCreateUserData,
+  AuthCreateUserError,
+  AuthCreateUserResponse,
   AuthEntitlementsData,
   AuthEntitlementsResponse,
+  AuthLinkUserToEmployeeData,
+  AuthLinkUserToEmployeeError,
+  AuthLinkUserToEmployeeResponse,
+  AuthListUsersData,
+  AuthListUsersResponse,
   AuthLoginData,
   AuthLoginError,
   AuthLoginResponse,
@@ -187,6 +207,29 @@ import type {
   EmployeesUpdateEmployeeData,
   EmployeesUpdateEmployeeError,
   EmployeesUpdateEmployeeResponse,
+  EssApplyForLeaveData,
+  EssApplyForLeaveError,
+  EssApplyForLeaveResponse,
+  EssMyAttendanceData,
+  EssMyAttendanceError,
+  EssMyAttendanceResponse,
+  EssMyBalancesData,
+  EssMyBalancesError,
+  EssMyBalancesResponse,
+  EssMyDocumentsData,
+  EssMyDocumentsResponse,
+  EssMyLeaveRequestsData,
+  EssMyLeaveRequestsResponse,
+  EssMyPayslipData,
+  EssMyPayslipError,
+  EssMyPayslipResponse,
+  EssMyPayslipsData,
+  EssMyPayslipsResponse,
+  EssMyProfileData,
+  EssMyProfileResponse,
+  EssWithdrawLeaveRequestData,
+  EssWithdrawLeaveRequestError,
+  EssWithdrawLeaveRequestResponse,
   LeaveAccrueData,
   LeaveAccrueError,
   LeaveAccrueResponse,
@@ -1013,6 +1056,92 @@ export const authRefreshMutation = (
   return mutationOptions;
 };
 
+export const authListUsersQueryKey = (options?: Options<AuthListUsersData>) =>
+  createQueryKey("authListUsers", options);
+
+/**
+ * List Users
+ */
+export const authListUsersOptions = (options?: Options<AuthListUsersData>) =>
+  queryOptions<
+    AuthListUsersResponse,
+    DefaultError,
+    AuthListUsersResponse,
+    ReturnType<typeof authListUsersQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await authListUsers({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: authListUsersQueryKey(options),
+  });
+
+/**
+ * Create User
+ *
+ * Create a login, optionally linked to an employee straight away.
+ */
+export const authCreateUserMutation = (
+  options?: Partial<Options<AuthCreateUserData>>,
+): UseMutationOptions<
+  AuthCreateUserResponse,
+  AuthCreateUserError,
+  Options<AuthCreateUserData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    AuthCreateUserResponse,
+    AuthCreateUserError,
+    Options<AuthCreateUserData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await authCreateUser({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Link User To Employee
+ *
+ * Point a login at a person, or unlink it.
+ *
+ * Unlinking closes self-service for that login rather than deleting anything — the
+ * leave requests and payslips belong to the employee record, not to the account.
+ */
+export const authLinkUserToEmployeeMutation = (
+  options?: Partial<Options<AuthLinkUserToEmployeeData>>,
+): UseMutationOptions<
+  AuthLinkUserToEmployeeResponse,
+  AuthLinkUserToEmployeeError,
+  Options<AuthLinkUserToEmployeeData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    AuthLinkUserToEmployeeResponse,
+    AuthLinkUserToEmployeeError,
+    Options<AuthLinkUserToEmployeeData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await authLinkUserToEmployee({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
 export const employeesListEmployeesQueryKey = (
   options?: Options<EmployeesListEmployeesData>,
 ) => createQueryKey("employeesListEmployees", options);
@@ -1405,6 +1534,266 @@ export const employeesExitEmployeeMutation = (
   return mutationOptions;
 };
 
+export const essMyAttendanceQueryKey = (
+  options: Options<EssMyAttendanceData>,
+) => createQueryKey("essMyAttendance", options);
+
+/**
+ * My Attendance
+ *
+ * My register for one month, totals included.
+ *
+ * A month rather than an arbitrary range: this is the unit an employee checks their
+ * pay against, and an unbounded range on a self-service endpoint is an easy way to
+ * ask the database for ten years of rows.
+ */
+export const essMyAttendanceOptions = (options: Options<EssMyAttendanceData>) =>
+  queryOptions<
+    EssMyAttendanceResponse,
+    EssMyAttendanceError,
+    EssMyAttendanceResponse,
+    ReturnType<typeof essMyAttendanceQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await essMyAttendance({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: essMyAttendanceQueryKey(options),
+  });
+
+export const essMyDocumentsQueryKey = (options?: Options<EssMyDocumentsData>) =>
+  createQueryKey("essMyDocuments", options);
+
+/**
+ * My Documents
+ */
+export const essMyDocumentsOptions = (options?: Options<EssMyDocumentsData>) =>
+  queryOptions<
+    EssMyDocumentsResponse,
+    DefaultError,
+    EssMyDocumentsResponse,
+    ReturnType<typeof essMyDocumentsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await essMyDocuments({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: essMyDocumentsQueryKey(options),
+  });
+
+export const essMyBalancesQueryKey = (options?: Options<EssMyBalancesData>) =>
+  createQueryKey("essMyBalances", options);
+
+/**
+ * My Balances
+ */
+export const essMyBalancesOptions = (options?: Options<EssMyBalancesData>) =>
+  queryOptions<
+    EssMyBalancesResponse,
+    EssMyBalancesError,
+    EssMyBalancesResponse,
+    ReturnType<typeof essMyBalancesQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await essMyBalances({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: essMyBalancesQueryKey(options),
+  });
+
+export const essMyLeaveRequestsQueryKey = (
+  options?: Options<EssMyLeaveRequestsData>,
+) => createQueryKey("essMyLeaveRequests", options);
+
+/**
+ * My Leave Requests
+ */
+export const essMyLeaveRequestsOptions = (
+  options?: Options<EssMyLeaveRequestsData>,
+) =>
+  queryOptions<
+    EssMyLeaveRequestsResponse,
+    DefaultError,
+    EssMyLeaveRequestsResponse,
+    ReturnType<typeof essMyLeaveRequestsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await essMyLeaveRequests({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: essMyLeaveRequestsQueryKey(options),
+  });
+
+/**
+ * Apply For Leave
+ *
+ * Apply for my own leave.
+ *
+ * Same service call as `POST /leave/requests`, so the overlap check, the half-day
+ * rule and the working-day count are identical — the only difference is where the
+ * employee id comes from, and here it cannot come from the caller.
+ */
+export const essApplyForLeaveMutation = (
+  options?: Partial<Options<EssApplyForLeaveData>>,
+): UseMutationOptions<
+  EssApplyForLeaveResponse,
+  EssApplyForLeaveError,
+  Options<EssApplyForLeaveData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    EssApplyForLeaveResponse,
+    EssApplyForLeaveError,
+    Options<EssApplyForLeaveData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await essApplyForLeave({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Withdraw Leave Request
+ *
+ * Withdraw a request of mine that nobody has decided yet.
+ *
+ * Only `pending`. Undoing an *approved* leave moves a balance and belongs with the
+ * approver — `POST /leave/requests/{id}/cancel` does that, with the ledger entries it
+ * requires. The id is filtered on the employee as well as the tenant, so a request
+ * that is not mine is a 404 and not a permission error: whether someone else's
+ * request exists is not mine to learn.
+ */
+export const essWithdrawLeaveRequestMutation = (
+  options?: Partial<Options<EssWithdrawLeaveRequestData>>,
+): UseMutationOptions<
+  EssWithdrawLeaveRequestResponse,
+  EssWithdrawLeaveRequestError,
+  Options<EssWithdrawLeaveRequestData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    EssWithdrawLeaveRequestResponse,
+    EssWithdrawLeaveRequestError,
+    Options<EssWithdrawLeaveRequestData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await essWithdrawLeaveRequest({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const essMyProfileQueryKey = (options?: Options<EssMyProfileData>) =>
+  createQueryKey("essMyProfile", options);
+
+/**
+ * My Profile
+ */
+export const essMyProfileOptions = (options?: Options<EssMyProfileData>) =>
+  queryOptions<
+    EssMyProfileResponse,
+    DefaultError,
+    EssMyProfileResponse,
+    ReturnType<typeof essMyProfileQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await essMyProfile({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: essMyProfileQueryKey(options),
+  });
+
+export const essMyPayslipsQueryKey = (options?: Options<EssMyPayslipsData>) =>
+  createQueryKey("essMyPayslips", options);
+
+/**
+ * My Payslips
+ *
+ * My approved payslips, newest first.
+ */
+export const essMyPayslipsOptions = (options?: Options<EssMyPayslipsData>) =>
+  queryOptions<
+    EssMyPayslipsResponse,
+    DefaultError,
+    EssMyPayslipsResponse,
+    ReturnType<typeof essMyPayslipsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await essMyPayslips({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: essMyPayslipsQueryKey(options),
+  });
+
+export const essMyPayslipQueryKey = (options: Options<EssMyPayslipData>) =>
+  createQueryKey("essMyPayslip", options);
+
+/**
+ * My Payslip
+ *
+ * One payslip of mine, itemised down to the tax bands.
+ *
+ * The id is filtered on my employee id, not merely checked afterwards, so another
+ * employee's payslip is indistinguishable from one that does not exist.
+ */
+export const essMyPayslipOptions = (options: Options<EssMyPayslipData>) =>
+  queryOptions<
+    EssMyPayslipResponse,
+    EssMyPayslipError,
+    EssMyPayslipResponse,
+    ReturnType<typeof essMyPayslipQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await essMyPayslip({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: essMyPayslipQueryKey(options),
+  });
+
 /**
  * Accrue
  *
@@ -1546,6 +1935,9 @@ export const leaveListRequestsOptions = (
 
 /**
  * Create Request
+ *
+ * HR raising a request on someone's behalf. `/ess/leave/requests` is the same call
+ * with the employee taken from the token instead of the body.
  */
 export const leaveCreateRequestMutation = (
   options?: Partial<Options<LeaveCreateRequestData>>,

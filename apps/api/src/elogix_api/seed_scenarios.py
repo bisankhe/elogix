@@ -10,9 +10,16 @@ a nav filtered down by entitlements rather than showing everything.
 
 from sqlalchemy import select
 
+import elogix_api.db.registry  # noqa: F401  — see below
 from elogix_api.core.security import hash_password
 from elogix_api.db.session import SessionLocal
 from elogix_api.modules.identity.models import Company, PlanTier, RoleCode, User, UserRole
+
+# The registry import is load-bearing, not tidiness. `users.employee_id` is a foreign key
+# into `employees`, and SQLAlchemy resolves that by name against whatever is in the
+# metadata — so importing the identity models alone raises NoReferencedTableError before
+# a single query runs. Importing the registry is what guarantees every table is mapped,
+# which is the same reason Alembic reads it and nothing else.
 
 COMPANY_SLUG = "startup"
 LOGIN_EMAIL = "admin@startup.com.np"

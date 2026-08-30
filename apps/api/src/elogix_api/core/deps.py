@@ -44,6 +44,9 @@ class CurrentUser:
     full_name: str
     roles: frozenset[RoleCode] = field(default_factory=frozenset)
     modules: frozenset[ModuleCode] = field(default_factory=frozenset)
+    # None for a login with no employee record — an implementation account, or an HR
+    # officer who is not on the payroll. Self-service is closed to them by definition.
+    employee_id: uuid.UUID | None = None
 
 
 def get_current_user(
@@ -88,6 +91,7 @@ def get_current_user(
         full_name=user.full_name,
         roles=frozenset(roles),
         modules=effective_modules(db, company_id=company.id, plan_tier=company.plan_tier),
+        employee_id=user.employee_id,
     )
 
 
@@ -111,6 +115,32 @@ def require_module(module: ModuleCode) -> Callable[..., None]:
             )
 
     return _dependency
+
+
+def get_current_employee(current_user: CurrentUserDep) -> uuid.UUID:
+    """The caller's own employee id, or 403.
+
+    This is the second isolation axis and it is not the same as tenancy. Tenant
+    isolation keeps Acme out of Globex; this keeps one Acme employee out of another
+    Acme employee's payslip. Every `/ess` route derives the employee id from the token
+    through this dependency and never from a path or query parameter — a self-service
+    endpoint that takes an employee id is a self-service endpoint that leaks.
+
+    The prototype is the worked example. `GET /ssf/my-deposits/<employee_id>` in
+    `legacy/backend/routes/payroll_information_routes.py` reads the id out of the URL,
+    queries on it with no company filter and no check that the caller is that person,
+    and its own docstring calls it "Public/ESS". Anyone who could reach it could read
+    anyone's SSF deposits, in any tenant, by walking uuids.
+    """
+    if current_user.employee_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This login is not linked to an employee record",
+        )
+    return current_user.employee_id
+
+
+CurrentEmployeeDep = Annotated[uuid.UUID, Depends(get_current_employee)]
 
 
 def require_role(*roles: RoleCode) -> Callable[..., None]:

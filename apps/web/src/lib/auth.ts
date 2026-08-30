@@ -52,10 +52,40 @@ export async function signOut(): Promise<void> {
   }
 }
 
+/**
+ * The HTTP status of a failed request, when the client managed to record one.
+ *
+ * The generated client throws the parsed error *body* — for FastAPI, `{detail: "..."}`
+ * — which carries no status at all. `installAuthInterceptor` stamps it on, because
+ * "was this refused or did it fall over?" is a question both the retry policy and the
+ * error copy need to answer, and a detail string cannot answer it.
+ */
+export function errorStatus(error: unknown): number | undefined {
+  if (typeof error === 'object' && error !== null && STATUS in error) {
+    return (error as Record<typeof STATUS, number>)[STATUS]
+  }
+  return undefined
+}
+
+const STATUS = Symbol.for('elogix.httpStatus')
+
 /** Attach the bearer token to every generated-client request. */
 export function installAuthInterceptor(): void {
   client.interceptors.request.use((request) => {
     if (accessToken) request.headers.set('Authorization', `Bearer ${accessToken}`)
     return request
+  })
+
+  // A symbol rather than a plain `status` key: the body is the server's, and an API
+  // that happens to return its own `status` field must not be silently overwritten.
+  client.interceptors.error.use((error, response) => {
+    if (response && typeof error === 'object' && error !== null) {
+      Object.defineProperty(error, STATUS, {
+        value: response.status,
+        enumerable: false,
+        configurable: true,
+      })
+    }
+    return error
   })
 }

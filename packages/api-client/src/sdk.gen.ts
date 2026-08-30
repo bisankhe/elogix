@@ -58,8 +58,16 @@ import type {
   AttendanceUpdatePolicyData,
   AttendanceUpdatePolicyErrors,
   AttendanceUpdatePolicyResponses,
+  AuthCreateUserData,
+  AuthCreateUserErrors,
+  AuthCreateUserResponses,
   AuthEntitlementsData,
   AuthEntitlementsResponses,
+  AuthLinkUserToEmployeeData,
+  AuthLinkUserToEmployeeErrors,
+  AuthLinkUserToEmployeeResponses,
+  AuthListUsersData,
+  AuthListUsersResponses,
   AuthLoginData,
   AuthLoginErrors,
   AuthLoginResponses,
@@ -104,6 +112,29 @@ import type {
   EmployeesUpdateEmployeeData,
   EmployeesUpdateEmployeeErrors,
   EmployeesUpdateEmployeeResponses,
+  EssApplyForLeaveData,
+  EssApplyForLeaveErrors,
+  EssApplyForLeaveResponses,
+  EssMyAttendanceData,
+  EssMyAttendanceErrors,
+  EssMyAttendanceResponses,
+  EssMyBalancesData,
+  EssMyBalancesErrors,
+  EssMyBalancesResponses,
+  EssMyDocumentsData,
+  EssMyDocumentsResponses,
+  EssMyLeaveRequestsData,
+  EssMyLeaveRequestsResponses,
+  EssMyPayslipData,
+  EssMyPayslipErrors,
+  EssMyPayslipResponses,
+  EssMyPayslipsData,
+  EssMyPayslipsResponses,
+  EssMyProfileData,
+  EssMyProfileResponses,
+  EssWithdrawLeaveRequestData,
+  EssWithdrawLeaveRequestErrors,
+  EssWithdrawLeaveRequestResponses,
   LeaveAccrueData,
   LeaveAccrueErrors,
   LeaveAccrueResponses,
@@ -735,6 +766,73 @@ export const authRefresh = <ThrowOnError extends boolean = false>(
   >({ url: "/api/v1/auth/refresh", ...options });
 
 /**
+ * List Users
+ */
+export const authListUsers = <ThrowOnError extends boolean = false>(
+  options?: Options<AuthListUsersData, ThrowOnError>,
+): RequestResult<AuthListUsersResponses, unknown, ThrowOnError> =>
+  (options?.client ?? client).get<
+    AuthListUsersResponses,
+    unknown,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/auth/users",
+    ...options,
+  });
+
+/**
+ * Create User
+ *
+ * Create a login, optionally linked to an employee straight away.
+ */
+export const authCreateUser = <ThrowOnError extends boolean = false>(
+  options: Options<AuthCreateUserData, ThrowOnError>,
+): RequestResult<AuthCreateUserResponses, AuthCreateUserErrors, ThrowOnError> =>
+  (options.client ?? client).post<
+    AuthCreateUserResponses,
+    AuthCreateUserErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/auth/users",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Link User To Employee
+ *
+ * Point a login at a person, or unlink it.
+ *
+ * Unlinking closes self-service for that login rather than deleting anything — the
+ * leave requests and payslips belong to the employee record, not to the account.
+ */
+export const authLinkUserToEmployee = <ThrowOnError extends boolean = false>(
+  options: Options<AuthLinkUserToEmployeeData, ThrowOnError>,
+): RequestResult<
+  AuthLinkUserToEmployeeResponses,
+  AuthLinkUserToEmployeeErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).put<
+    AuthLinkUserToEmployeeResponses,
+    AuthLinkUserToEmployeeErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/auth/users/{user_id}/employee",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
  * List Employees
  */
 export const employeesListEmployees = <ThrowOnError extends boolean = false>(
@@ -979,6 +1077,191 @@ export const employeesExitEmployee = <ThrowOnError extends boolean = false>(
   });
 
 /**
+ * My Attendance
+ *
+ * My register for one month, totals included.
+ *
+ * A month rather than an arbitrary range: this is the unit an employee checks their
+ * pay against, and an unbounded range on a self-service endpoint is an easy way to
+ * ask the database for ten years of rows.
+ */
+export const essMyAttendance = <ThrowOnError extends boolean = false>(
+  options: Options<EssMyAttendanceData, ThrowOnError>,
+): RequestResult<
+  EssMyAttendanceResponses,
+  EssMyAttendanceErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    EssMyAttendanceResponses,
+    EssMyAttendanceErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/ess/attendance",
+    ...options,
+  });
+
+/**
+ * My Documents
+ */
+export const essMyDocuments = <ThrowOnError extends boolean = false>(
+  options?: Options<EssMyDocumentsData, ThrowOnError>,
+): RequestResult<EssMyDocumentsResponses, unknown, ThrowOnError> =>
+  (options?.client ?? client).get<
+    EssMyDocumentsResponses,
+    unknown,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/ess/documents",
+    ...options,
+  });
+
+/**
+ * My Balances
+ */
+export const essMyBalances = <ThrowOnError extends boolean = false>(
+  options?: Options<EssMyBalancesData, ThrowOnError>,
+): RequestResult<EssMyBalancesResponses, EssMyBalancesErrors, ThrowOnError> =>
+  (options?.client ?? client).get<
+    EssMyBalancesResponses,
+    EssMyBalancesErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/ess/leave/balances",
+    ...options,
+  });
+
+/**
+ * My Leave Requests
+ */
+export const essMyLeaveRequests = <ThrowOnError extends boolean = false>(
+  options?: Options<EssMyLeaveRequestsData, ThrowOnError>,
+): RequestResult<EssMyLeaveRequestsResponses, unknown, ThrowOnError> =>
+  (options?.client ?? client).get<
+    EssMyLeaveRequestsResponses,
+    unknown,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/ess/leave/requests",
+    ...options,
+  });
+
+/**
+ * Apply For Leave
+ *
+ * Apply for my own leave.
+ *
+ * Same service call as `POST /leave/requests`, so the overlap check, the half-day
+ * rule and the working-day count are identical — the only difference is where the
+ * employee id comes from, and here it cannot come from the caller.
+ */
+export const essApplyForLeave = <ThrowOnError extends boolean = false>(
+  options: Options<EssApplyForLeaveData, ThrowOnError>,
+): RequestResult<
+  EssApplyForLeaveResponses,
+  EssApplyForLeaveErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    EssApplyForLeaveResponses,
+    EssApplyForLeaveErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/ess/leave/requests",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Withdraw Leave Request
+ *
+ * Withdraw a request of mine that nobody has decided yet.
+ *
+ * Only `pending`. Undoing an *approved* leave moves a balance and belongs with the
+ * approver — `POST /leave/requests/{id}/cancel` does that, with the ledger entries it
+ * requires. The id is filtered on the employee as well as the tenant, so a request
+ * that is not mine is a 404 and not a permission error: whether someone else's
+ * request exists is not mine to learn.
+ */
+export const essWithdrawLeaveRequest = <ThrowOnError extends boolean = false>(
+  options: Options<EssWithdrawLeaveRequestData, ThrowOnError>,
+): RequestResult<
+  EssWithdrawLeaveRequestResponses,
+  EssWithdrawLeaveRequestErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    EssWithdrawLeaveRequestResponses,
+    EssWithdrawLeaveRequestErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/ess/leave/requests/{request_id}/withdraw",
+    ...options,
+  });
+
+/**
+ * My Profile
+ */
+export const essMyProfile = <ThrowOnError extends boolean = false>(
+  options?: Options<EssMyProfileData, ThrowOnError>,
+): RequestResult<EssMyProfileResponses, unknown, ThrowOnError> =>
+  (options?.client ?? client).get<EssMyProfileResponses, unknown, ThrowOnError>(
+    {
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/api/v1/ess/me",
+      ...options,
+    },
+  );
+
+/**
+ * My Payslips
+ *
+ * My approved payslips, newest first.
+ */
+export const essMyPayslips = <ThrowOnError extends boolean = false>(
+  options?: Options<EssMyPayslipsData, ThrowOnError>,
+): RequestResult<EssMyPayslipsResponses, unknown, ThrowOnError> =>
+  (options?.client ?? client).get<
+    EssMyPayslipsResponses,
+    unknown,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/ess/payslips",
+    ...options,
+  });
+
+/**
+ * My Payslip
+ *
+ * One payslip of mine, itemised down to the tax bands.
+ *
+ * The id is filtered on my employee id, not merely checked afterwards, so another
+ * employee's payslip is indistinguishable from one that does not exist.
+ */
+export const essMyPayslip = <ThrowOnError extends boolean = false>(
+  options: Options<EssMyPayslipData, ThrowOnError>,
+): RequestResult<EssMyPayslipResponses, EssMyPayslipErrors, ThrowOnError> =>
+  (options.client ?? client).get<
+    EssMyPayslipResponses,
+    EssMyPayslipErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/ess/payslips/{payslip_id}",
+    ...options,
+  });
+
+/**
  * Accrue
  *
  * Post accruals. With a month, that month; without one, the whole year.
@@ -1083,6 +1366,9 @@ export const leaveListRequests = <ThrowOnError extends boolean = false>(
 
 /**
  * Create Request
+ *
+ * HR raising a request on someone's behalf. `/ess/leave/requests` is the same call
+ * with the employee taken from the token instead of the body.
  */
 export const leaveCreateRequest = <ThrowOnError extends boolean = false>(
   options: Options<LeaveCreateRequestData, ThrowOnError>,

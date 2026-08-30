@@ -1402,6 +1402,519 @@ export type ModuleCode =
   | "ai";
 
 /**
+ * MyAttendanceMonth
+ */
+export type MyAttendanceMonth = {
+  /**
+   * Absent Days
+   */
+  absent_days: number;
+  /**
+   * Days
+   */
+  days: Array<MyDay>;
+  /**
+   * Holiday Days
+   */
+  holiday_days: number;
+  /**
+   * Late Minutes
+   */
+  late_minutes: number;
+  /**
+   * Leave Days
+   */
+  leave_days: number;
+  /**
+   * Overtime Minutes
+   */
+  overtime_minutes: number;
+  /**
+   * Period End
+   */
+  period_end: string;
+  /**
+   * Period Start
+   */
+  period_start: string;
+  /**
+   * Present Days
+   */
+  present_days: number;
+  /**
+   * Worked Minutes
+   */
+  worked_minutes: number;
+};
+
+/**
+ * MyBalance
+ */
+export type MyBalance = {
+  /**
+   * Available Days
+   */
+  available_days: string;
+  /**
+   * Code
+   */
+  code: string;
+  /**
+   * Is Paid
+   */
+  is_paid: boolean;
+  /**
+   * Leave Type Id
+   */
+  leave_type_id: string;
+  /**
+   * Leave Year
+   */
+  leave_year: number;
+  /**
+   * Name
+   */
+  name: string;
+};
+
+/**
+ * MyDay
+ *
+ * One day of my own register.
+ */
+export type MyDay = {
+  /**
+   * First In
+   */
+  first_in: string | null;
+  /**
+   * Is Locked
+   */
+  is_locked: boolean;
+  /**
+   * Last Out
+   */
+  last_out: string | null;
+  /**
+   * Late Minutes
+   */
+  late_minutes: number;
+  /**
+   * Overtime Minutes
+   */
+  overtime_minutes: number;
+  /**
+   * Remarks
+   */
+  remarks: string | null;
+  /**
+   * Status
+   */
+  status: string;
+  /**
+   * Work Date
+   */
+  work_date: string;
+  /**
+   * Worked Minutes
+   */
+  worked_minutes: number;
+};
+
+/**
+ * MyDocument
+ */
+export type MyDocument = {
+  document_type: DocumentType;
+  /**
+   * Expires On
+   */
+  expires_on: string | null;
+  /**
+   * Has File
+   */
+  has_file: boolean;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Is Verified
+   */
+  is_verified: boolean;
+  /**
+   * Issued On
+   */
+  issued_on: string | null;
+  /**
+   * Title
+   */
+  title: string;
+};
+
+/**
+ * MyLeaveApply
+ *
+ * No `employee_id`. That is the point of the module.
+ */
+export type MyLeaveApply = {
+  /**
+   * Document Key
+   */
+  document_key?: string | null;
+  /**
+   * End Date
+   */
+  end_date: string;
+  /**
+   * Leave Type Id
+   */
+  leave_type_id: string;
+  portion?: DayPortion;
+  /**
+   * Reason
+   */
+  reason: string;
+  /**
+   * Start Date
+   */
+  start_date: string;
+};
+
+/**
+ * MyLeaveRequest
+ */
+export type MyLeaveRequest = {
+  /**
+   * Days
+   */
+  days: string;
+  /**
+   * Decided At
+   */
+  decided_at: string | null;
+  /**
+   * Decision Note
+   */
+  decision_note: string | null;
+  /**
+   * End Date
+   */
+  end_date: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Leave Type Id
+   */
+  leave_type_id: string;
+  portion: DayPortion;
+  /**
+   * Reason
+   */
+  reason: string;
+  /**
+   * Start Date
+   */
+  start_date: string;
+  /**
+   * Status
+   */
+  status: string;
+};
+
+/**
+ * MyPayslip
+ */
+export type MyPayslip = {
+  /**
+   * Absent Days
+   */
+  absent_days: number;
+  /**
+   * Annual Assessable
+   */
+  annual_assessable: string;
+  /**
+   * Annual Tax
+   */
+  annual_tax: string;
+  /**
+   * Annual Taxable
+   */
+  annual_taxable: string;
+  /**
+   * Basic Earned
+   */
+  basic_earned: string;
+  /**
+   * Female Rebate
+   */
+  female_rebate: string;
+  /**
+   * Fiscal Year
+   */
+  fiscal_year: string;
+  /**
+   * Gross
+   */
+  gross: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Lines
+   */
+  lines?: Array<MyPayslipLine>;
+  /**
+   * Monthly Tax
+   */
+  monthly_tax: string;
+  /**
+   * Net Pay
+   */
+  net_pay: string;
+  /**
+   * Notes
+   */
+  notes: string | null;
+  /**
+   * Overtime Minutes
+   */
+  overtime_minutes: number;
+  /**
+   * Overtime Pay
+   */
+  overtime_pay: string;
+  /**
+   * Payable Days
+   */
+  payable_days: string;
+  /**
+   * Period End
+   */
+  period_end: string;
+  /**
+   * Period Start
+   */
+  period_start: string;
+  /**
+   * Present Days
+   */
+  present_days: number;
+  /**
+   * Ssf Employee
+   */
+  ssf_employee: string;
+  /**
+   * Ssf Employer
+   */
+  ssf_employer: string;
+  /**
+   * Tax Bands
+   */
+  tax_bands?: Array<MyPayslipBand>;
+  /**
+   * Taxable Gross
+   */
+  taxable_gross: string;
+  /**
+   * Total Deductions
+   */
+  total_deductions: string;
+};
+
+/**
+ * MyPayslipBand
+ *
+ * `amount` is how much of my income fell in this band; `tax` is what it cost.
+ */
+export type MyPayslipBand = {
+  /**
+   * Amount
+   */
+  amount: string;
+  /**
+   * Label
+   */
+  label: string;
+  /**
+   * Rate
+   */
+  rate: string;
+  /**
+   * Tax
+   */
+  tax: string;
+};
+
+/**
+ * MyPayslipLine
+ */
+export type MyPayslipLine = {
+  /**
+   * Amount
+   */
+  amount: string;
+  /**
+   * Code
+   */
+  code: string;
+  /**
+   * Kind
+   */
+  kind: string;
+  /**
+   * Label
+   */
+  label: string;
+};
+
+/**
+ * MyPayslipSummary
+ */
+export type MyPayslipSummary = {
+  /**
+   * Fiscal Year
+   */
+  fiscal_year: string;
+  /**
+   * Gross
+   */
+  gross: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Net Pay
+   */
+  net_pay: string;
+  /**
+   * Payable Days
+   */
+  payable_days: string;
+  /**
+   * Period End
+   */
+  period_end: string;
+  /**
+   * Period Start
+   */
+  period_start: string;
+  /**
+   * Total Deductions
+   */
+  total_deductions: string;
+};
+
+/**
+ * MyProfile
+ *
+ * Who I am, where I sit, and what my employer holds on me.
+ *
+ * Deliberately the full record rather than a trimmed one: every field here is the
+ * employee's own personal data, and a person is entitled to see what is stored about
+ * them. The bank account and PAN are theirs. What is *not* here is anyone else's.
+ */
+export type MyProfile = {
+  /**
+   * Bank Account Number
+   */
+  bank_account_number: string | null;
+  /**
+   * Bank Name
+   */
+  bank_name: string | null;
+  /**
+   * Citizenship Number
+   */
+  citizenship_number: string | null;
+  /**
+   * Confirmed On
+   */
+  confirmed_on: string | null;
+  /**
+   * Date Of Birth
+   */
+  date_of_birth: string | null;
+  /**
+   * Designation
+   */
+  designation?: string | null;
+  /**
+   * Employee Code
+   */
+  employee_code: string;
+  /**
+   * Full Name
+   */
+  full_name: string;
+  /**
+   * Full Name Nepali
+   */
+  full_name_nepali: string | null;
+  /**
+   * Grade Level
+   */
+  grade_level?: string | null;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Joined On
+   */
+  joined_on: string;
+  /**
+   * Manager Name
+   */
+  manager_name?: string | null;
+  /**
+   * Org Unit
+   */
+  org_unit?: string | null;
+  /**
+   * Pan Number
+   */
+  pan_number: string | null;
+  /**
+   * Personal Email
+   */
+  personal_email: string | null;
+  /**
+   * Phone
+   */
+  phone: string | null;
+  /**
+   * Probation Ends On
+   */
+  probation_ends_on: string | null;
+  /**
+   * Provident Fund Number
+   */
+  provident_fund_number: string | null;
+  /**
+   * Ssf Number
+   */
+  ssf_number: string | null;
+  /**
+   * Status
+   */
+  status: string;
+  /**
+   * Work Email
+   */
+  work_email: string | null;
+  /**
+   * Work Location
+   */
+  work_location?: string | null;
+};
+
+/**
  * OrgUnitCreate
  */
 export type OrgUnitCreate = {
@@ -2608,6 +3121,51 @@ export type TaxScaleUpdate = {
 };
 
 /**
+ * UserCreate
+ *
+ * Create a login.
+ *
+ * The initial password is set by whoever creates the account, which means they know
+ * it. That is the normal shape for HR onboarding and it is not the end state — an
+ * invite-and-set-your-own-password flow is the right answer and is not built yet.
+ * Until it is, this is a deliberate, documented compromise rather than an oversight.
+ */
+export type UserCreate = {
+  /**
+   * Email
+   */
+  email: string;
+  /**
+   * Employee Id
+   */
+  employee_id?: string | null;
+  /**
+   * Full Name
+   */
+  full_name: string;
+  /**
+   * Password
+   */
+  password: string;
+  /**
+   * Roles
+   */
+  roles?: Array<RoleCode>;
+};
+
+/**
+ * UserEmployeeLink
+ *
+ * Null unlinks. Linking is what opens self-service for this login.
+ */
+export type UserEmployeeLink = {
+  /**
+   * Employee Id
+   */
+  employee_id: string | null;
+};
+
+/**
  * UserOut
  */
 export type UserOut = {
@@ -2619,6 +3177,10 @@ export type UserOut = {
    * Email
    */
   email: string;
+  /**
+   * Employee Id
+   */
+  employee_id?: string | null;
   /**
    * Full Name
    */
@@ -3541,6 +4103,84 @@ export type AuthRefreshResponses = {
 export type AuthRefreshResponse =
   AuthRefreshResponses[keyof AuthRefreshResponses];
 
+export type AuthListUsersData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/api/v1/auth/users";
+};
+
+export type AuthListUsersResponses = {
+  /**
+   * Response Auth-List Users
+   *
+   * Successful Response
+   */
+  200: Array<UserOut>;
+};
+
+export type AuthListUsersResponse =
+  AuthListUsersResponses[keyof AuthListUsersResponses];
+
+export type AuthCreateUserData = {
+  body: UserCreate;
+  path?: never;
+  query?: never;
+  url: "/api/v1/auth/users";
+};
+
+export type AuthCreateUserErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type AuthCreateUserError =
+  AuthCreateUserErrors[keyof AuthCreateUserErrors];
+
+export type AuthCreateUserResponses = {
+  /**
+   * Successful Response
+   */
+  201: UserOut;
+};
+
+export type AuthCreateUserResponse =
+  AuthCreateUserResponses[keyof AuthCreateUserResponses];
+
+export type AuthLinkUserToEmployeeData = {
+  body: UserEmployeeLink;
+  path: {
+    /**
+     * User Id
+     */
+    user_id: string;
+  };
+  query?: never;
+  url: "/api/v1/auth/users/{user_id}/employee";
+};
+
+export type AuthLinkUserToEmployeeErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type AuthLinkUserToEmployeeError =
+  AuthLinkUserToEmployeeErrors[keyof AuthLinkUserToEmployeeErrors];
+
+export type AuthLinkUserToEmployeeResponses = {
+  /**
+   * Successful Response
+   */
+  200: UserOut;
+};
+
+export type AuthLinkUserToEmployeeResponse =
+  AuthLinkUserToEmployeeResponses[keyof AuthLinkUserToEmployeeResponses];
+
 export type EmployeesListEmployeesData = {
   body?: never;
   path?: never;
@@ -3908,6 +4548,239 @@ export type EmployeesExitEmployeeResponses = {
 
 export type EmployeesExitEmployeeResponse =
   EmployeesExitEmployeeResponses[keyof EmployeesExitEmployeeResponses];
+
+export type EssMyAttendanceData = {
+  body?: never;
+  path?: never;
+  query: {
+    /**
+     * Year
+     */
+    year: number;
+    /**
+     * Month
+     */
+    month: number;
+  };
+  url: "/api/v1/ess/attendance";
+};
+
+export type EssMyAttendanceErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type EssMyAttendanceError =
+  EssMyAttendanceErrors[keyof EssMyAttendanceErrors];
+
+export type EssMyAttendanceResponses = {
+  /**
+   * Successful Response
+   */
+  200: MyAttendanceMonth;
+};
+
+export type EssMyAttendanceResponse =
+  EssMyAttendanceResponses[keyof EssMyAttendanceResponses];
+
+export type EssMyDocumentsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/api/v1/ess/documents";
+};
+
+export type EssMyDocumentsResponses = {
+  /**
+   * Response Ess-My Documents
+   *
+   * Successful Response
+   */
+  200: Array<MyDocument>;
+};
+
+export type EssMyDocumentsResponse =
+  EssMyDocumentsResponses[keyof EssMyDocumentsResponses];
+
+export type EssMyBalancesData = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * Leave Year
+     */
+    leave_year?: number | null;
+  };
+  url: "/api/v1/ess/leave/balances";
+};
+
+export type EssMyBalancesErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type EssMyBalancesError = EssMyBalancesErrors[keyof EssMyBalancesErrors];
+
+export type EssMyBalancesResponses = {
+  /**
+   * Response Ess-My Balances
+   *
+   * Successful Response
+   */
+  200: Array<MyBalance>;
+};
+
+export type EssMyBalancesResponse =
+  EssMyBalancesResponses[keyof EssMyBalancesResponses];
+
+export type EssMyLeaveRequestsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/api/v1/ess/leave/requests";
+};
+
+export type EssMyLeaveRequestsResponses = {
+  /**
+   * Response Ess-My Leave Requests
+   *
+   * Successful Response
+   */
+  200: Array<MyLeaveRequest>;
+};
+
+export type EssMyLeaveRequestsResponse =
+  EssMyLeaveRequestsResponses[keyof EssMyLeaveRequestsResponses];
+
+export type EssApplyForLeaveData = {
+  body: MyLeaveApply;
+  path?: never;
+  query?: never;
+  url: "/api/v1/ess/leave/requests";
+};
+
+export type EssApplyForLeaveErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type EssApplyForLeaveError =
+  EssApplyForLeaveErrors[keyof EssApplyForLeaveErrors];
+
+export type EssApplyForLeaveResponses = {
+  /**
+   * Successful Response
+   */
+  201: MyLeaveRequest;
+};
+
+export type EssApplyForLeaveResponse =
+  EssApplyForLeaveResponses[keyof EssApplyForLeaveResponses];
+
+export type EssWithdrawLeaveRequestData = {
+  body?: never;
+  path: {
+    /**
+     * Request Id
+     */
+    request_id: string;
+  };
+  query?: never;
+  url: "/api/v1/ess/leave/requests/{request_id}/withdraw";
+};
+
+export type EssWithdrawLeaveRequestErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type EssWithdrawLeaveRequestError =
+  EssWithdrawLeaveRequestErrors[keyof EssWithdrawLeaveRequestErrors];
+
+export type EssWithdrawLeaveRequestResponses = {
+  /**
+   * Successful Response
+   */
+  200: MyLeaveRequest;
+};
+
+export type EssWithdrawLeaveRequestResponse =
+  EssWithdrawLeaveRequestResponses[keyof EssWithdrawLeaveRequestResponses];
+
+export type EssMyProfileData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/api/v1/ess/me";
+};
+
+export type EssMyProfileResponses = {
+  /**
+   * Successful Response
+   */
+  200: MyProfile;
+};
+
+export type EssMyProfileResponse =
+  EssMyProfileResponses[keyof EssMyProfileResponses];
+
+export type EssMyPayslipsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/api/v1/ess/payslips";
+};
+
+export type EssMyPayslipsResponses = {
+  /**
+   * Response Ess-My Payslips
+   *
+   * Successful Response
+   */
+  200: Array<MyPayslipSummary>;
+};
+
+export type EssMyPayslipsResponse =
+  EssMyPayslipsResponses[keyof EssMyPayslipsResponses];
+
+export type EssMyPayslipData = {
+  body?: never;
+  path: {
+    /**
+     * Payslip Id
+     */
+    payslip_id: string;
+  };
+  query?: never;
+  url: "/api/v1/ess/payslips/{payslip_id}";
+};
+
+export type EssMyPayslipErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type EssMyPayslipError = EssMyPayslipErrors[keyof EssMyPayslipErrors];
+
+export type EssMyPayslipResponses = {
+  /**
+   * Successful Response
+   */
+  200: MyPayslip;
+};
+
+export type EssMyPayslipResponse =
+  EssMyPayslipResponses[keyof EssMyPayslipResponses];
 
 export type LeaveAccrueData = {
   body: AccrualRequest;

@@ -117,6 +117,7 @@ def compute_day(
     """
     worked, anomalies = _worked_minutes(punches)
     has_attendance = worked > 0
+    worked = _less_unpunched_break(worked, punches=punches, shift=shift)
 
     # Non-working days first. Work on one is still recorded — it is overtime, and on a
     # weekly off or holiday every worked minute qualifies.
@@ -132,27 +133,6 @@ def compute_day(
 
     first_in = min(p.punched_at for p in punches)
     last_out = max(p.punched_at for p in punches)
-
-    # Deduct any break the employee did not punch out for.
-    #
-    # Most people never punch for lunch: they punch in at 09:00, out at 18:00, and the
-    # hour they spent eating is invisible in the stream. Counting that hour as worked
-    # made every single ordinary day show an hour of overtime — nine hours "worked"
-    # against an eight-hour shift — which payroll would then pay at 1.5x, for everyone,
-    # every day.
-    #
-    # Gaps that *were* punched already reduce `worked`, so only the shortfall against
-    # the shift's scheduled break is taken off. Someone who punched a full lunch loses
-    # nothing twice; someone who punched none has the whole break deducted.
-    # The deduction never takes worked time below the shift's scheduled hours: someone
-    # who left at noon did not sit through a lunch break, and docking them for one would
-    # turn a short day into an even shorter one.
-    if shift is not None and shift.break_minutes:
-        span = int((last_out - first_in).total_seconds() // 60)
-        break_taken = max(0, span - worked)
-        unpunched_break = max(0, shift.break_minutes - break_taken)
-        deductible = max(0, worked - shift.scheduled_minutes)
-        worked -= min(unpunched_break, deductible)
 
     late = 0
     early = 0
@@ -191,6 +171,46 @@ def compute_day(
         overtime_minutes=overtime,
         remarks=anomalies,
     )
+
+
+def _less_unpunched_break(
+    worked: int, *, punches: list[PunchInput], shift: ShiftInput | None
+) -> int:
+    """Deduct any break the employee did not punch out for.
+
+    Most people never punch for lunch: they punch in at 09:00, out at 18:00, and the
+    hour they spent eating is invisible in the stream. Counting that hour as worked made
+    every single ordinary day show an hour of overtime — nine hours "worked" against an
+    eight-hour shift — which payroll would then pay at 1.5x, for everyone, every day.
+
+    Gaps that *were* punched already reduce `worked`, so only the shortfall against the
+    shift's scheduled break is taken off. Someone who punched a full lunch loses nothing
+    twice; someone who punched none has the whole break deducted. The deduction never
+    takes worked time below the shift's scheduled hours: someone who left at noon did
+    not sit through a lunch break, and docking them for one would turn a short day into
+    an even shorter one.
+
+    This applies to holidays, weekly offs and leave days too, and that is the whole
+    reason it lives in its own function rather than inside the ordinary-day branch where
+    it started. The same punches read as eight hours on a Tuesday and nine on a public
+    holiday, which is the register contradicting itself.
+
+    Payable overtime was not affected by that, and the reason is worth stating so nobody
+    "simplifies" this back: the deduction only bites above the shift's scheduled minutes
+    and the statutory daily cap is lower still, so both figures clear the cap. The
+    damage was to `worked_minutes`, which is what working-hours compliance reads.
+    """
+    if shift is None or not shift.break_minutes or not punches:
+        return worked
+
+    first_in = min(p.punched_at for p in punches)
+    last_out = max(p.punched_at for p in punches)
+    span = int((last_out - first_in).total_seconds() // 60)
+
+    break_taken = max(0, span - worked)
+    unpunched_break = max(0, shift.break_minutes - break_taken)
+    deductible = max(0, worked - shift.scheduled_minutes)
+    return worked - min(unpunched_break, deductible)
 
 
 def _worked_minutes(punches: list[PunchInput]) -> tuple[int, list[str]]:
