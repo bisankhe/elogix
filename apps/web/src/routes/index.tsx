@@ -1,16 +1,24 @@
 import { useQuery } from '@tanstack/react-query'
+import { createFileRoute } from '@tanstack/react-router'
 
 import { metaHealthOptions } from '@elogix/api-client/queries'
 
+export const Route = createFileRoute('/')({
+  component: ScaffoldStatus,
+})
+
 /**
  * Scaffold placeholder. Its only job is to prove the contract pipeline works:
- * this component calls a function that was generated from the API's OpenAPI spec,
- * and TypeScript knows the response shape without anyone writing it down twice.
+ * this component calls a function generated from the API's OpenAPI spec, and
+ * TypeScript knows the response shape without anyone writing it down twice.
  *
  * Phase 00 replaces this with the real walking skeleton (login, one employee).
  */
-export default function App() {
+function ScaffoldStatus() {
   const { data, isPending, isError } = useQuery(metaHealthOptions())
+
+  const value = (field: 'status' | 'database' | 'environment') =>
+    isPending ? 'checking…' : isError ? 'unreachable' : (data?.[field] ?? 'unknown')
 
   return (
     <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 p-8">
@@ -22,15 +30,9 @@ export default function App() {
       </div>
 
       <dl className="divide-y divide-neutral-200 border-y border-neutral-200 text-sm">
-        <Row label="API">
-          {isPending ? 'checking…' : isError ? 'unreachable' : (data?.status ?? 'unknown')}
-        </Row>
-        <Row label="Database">
-          {isPending ? 'checking…' : isError ? 'unknown' : (data?.database ?? 'unknown')}
-        </Row>
-        <Row label="Environment">
-          {isPending ? '…' : isError ? 'unknown' : (data?.environment ?? 'unknown')}
-        </Row>
+        <Row label="API">{value('status')}</Row>
+        <Row label="Database">{value('database')}</Row>
+        <Row label="Environment">{value('environment')}</Row>
       </dl>
 
       <p className="text-sm text-neutral-500">
