@@ -43,6 +43,16 @@ import {
   employeesListEmployees,
   employeesListEvents,
   employeesUpdateEmployee,
+  leaveAccrue,
+  leaveBalances,
+  leaveCancelRequest,
+  leaveCarryForward,
+  leaveCreateRequest,
+  leaveDecideRequest,
+  leaveLedger,
+  leaveListRequests,
+  leaveListTypes,
+  leaveUpdateType,
   metaHealth,
   type Options,
   orgCreateCostCentre,
@@ -165,6 +175,35 @@ import type {
   EmployeesUpdateEmployeeData,
   EmployeesUpdateEmployeeError,
   EmployeesUpdateEmployeeResponse,
+  LeaveAccrueData,
+  LeaveAccrueError,
+  LeaveAccrueResponse,
+  LeaveBalancesData,
+  LeaveBalancesError,
+  LeaveBalancesResponse,
+  LeaveCancelRequestData,
+  LeaveCancelRequestError,
+  LeaveCancelRequestResponse,
+  LeaveCarryForwardData,
+  LeaveCarryForwardError,
+  LeaveCarryForwardResponse,
+  LeaveCreateRequestData,
+  LeaveCreateRequestError,
+  LeaveCreateRequestResponse,
+  LeaveDecideRequestData,
+  LeaveDecideRequestError,
+  LeaveDecideRequestResponse,
+  LeaveLedgerData,
+  LeaveLedgerError,
+  LeaveLedgerResponse,
+  LeaveListRequestsData,
+  LeaveListRequestsError,
+  LeaveListRequestsResponse,
+  LeaveListTypesData,
+  LeaveListTypesResponse,
+  LeaveUpdateTypeData,
+  LeaveUpdateTypeError,
+  LeaveUpdateTypeResponse,
   MetaHealthData,
   MetaHealthResponse,
   OrgCreateCostCentreData,
@@ -1311,6 +1350,284 @@ export const employeesExitEmployeeMutation = (
   > = {
     mutationFn: async (fnOptions) => {
       const { data } = await employeesExitEmployee({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Accrue
+ *
+ * Post accruals. With a month, that month; without one, the whole year.
+ *
+ * Idempotent: a second run over the same period posts nothing, because a cron job
+ * eventually runs twice and nobody should get a double entitlement out of it.
+ */
+export const leaveAccrueMutation = (
+  options?: Partial<Options<LeaveAccrueData>>,
+): UseMutationOptions<
+  LeaveAccrueResponse,
+  LeaveAccrueError,
+  Options<LeaveAccrueData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    LeaveAccrueResponse,
+    LeaveAccrueError,
+    Options<LeaveAccrueData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await leaveAccrue({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const leaveBalancesQueryKey = (options: Options<LeaveBalancesData>) =>
+  createQueryKey("leaveBalances", options);
+
+/**
+ * Balances
+ */
+export const leaveBalancesOptions = (options: Options<LeaveBalancesData>) =>
+  queryOptions<
+    LeaveBalancesResponse,
+    LeaveBalancesError,
+    LeaveBalancesResponse,
+    ReturnType<typeof leaveBalancesQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await leaveBalances({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: leaveBalancesQueryKey(options),
+  });
+
+/**
+ * Carry Forward
+ */
+export const leaveCarryForwardMutation = (
+  options?: Partial<Options<LeaveCarryForwardData>>,
+): UseMutationOptions<
+  LeaveCarryForwardResponse,
+  LeaveCarryForwardError,
+  Options<LeaveCarryForwardData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    LeaveCarryForwardResponse,
+    LeaveCarryForwardError,
+    Options<LeaveCarryForwardData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await leaveCarryForward({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const leaveLedgerQueryKey = (options: Options<LeaveLedgerData>) =>
+  createQueryKey("leaveLedger", options);
+
+/**
+ * Ledger
+ *
+ * Every movement behind a balance — the answer to "why do I have 11.5 days?".
+ */
+export const leaveLedgerOptions = (options: Options<LeaveLedgerData>) =>
+  queryOptions<
+    LeaveLedgerResponse,
+    LeaveLedgerError,
+    LeaveLedgerResponse,
+    ReturnType<typeof leaveLedgerQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await leaveLedger({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: leaveLedgerQueryKey(options),
+  });
+
+export const leaveListRequestsQueryKey = (
+  options?: Options<LeaveListRequestsData>,
+) => createQueryKey("leaveListRequests", options);
+
+/**
+ * List Requests
+ */
+export const leaveListRequestsOptions = (
+  options?: Options<LeaveListRequestsData>,
+) =>
+  queryOptions<
+    LeaveListRequestsResponse,
+    LeaveListRequestsError,
+    LeaveListRequestsResponse,
+    ReturnType<typeof leaveListRequestsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await leaveListRequests({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: leaveListRequestsQueryKey(options),
+  });
+
+/**
+ * Create Request
+ */
+export const leaveCreateRequestMutation = (
+  options?: Partial<Options<LeaveCreateRequestData>>,
+): UseMutationOptions<
+  LeaveCreateRequestResponse,
+  LeaveCreateRequestError,
+  Options<LeaveCreateRequestData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    LeaveCreateRequestResponse,
+    LeaveCreateRequestError,
+    Options<LeaveCreateRequestData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await leaveCreateRequest({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Cancel Request
+ *
+ * Cancel approved leave, returning the entitlement as a reversal entry.
+ */
+export const leaveCancelRequestMutation = (
+  options?: Partial<Options<LeaveCancelRequestData>>,
+): UseMutationOptions<
+  LeaveCancelRequestResponse,
+  LeaveCancelRequestError,
+  Options<LeaveCancelRequestData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    LeaveCancelRequestResponse,
+    LeaveCancelRequestError,
+    Options<LeaveCancelRequestData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await leaveCancelRequest({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * Decide Request
+ *
+ * Approve or reject. Approval consumes the balance in the same transaction.
+ */
+export const leaveDecideRequestMutation = (
+  options?: Partial<Options<LeaveDecideRequestData>>,
+): UseMutationOptions<
+  LeaveDecideRequestResponse,
+  LeaveDecideRequestError,
+  Options<LeaveDecideRequestData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    LeaveDecideRequestResponse,
+    LeaveDecideRequestError,
+    Options<LeaveDecideRequestData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await leaveDecideRequest({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const leaveListTypesQueryKey = (options?: Options<LeaveListTypesData>) =>
+  createQueryKey("leaveListTypes", options);
+
+/**
+ * List Types
+ *
+ * Seeds the statutory catalogue on first read, so a new tenant is never empty.
+ */
+export const leaveListTypesOptions = (options?: Options<LeaveListTypesData>) =>
+  queryOptions<
+    LeaveListTypesResponse,
+    DefaultError,
+    LeaveListTypesResponse,
+    ReturnType<typeof leaveListTypesQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await leaveListTypes({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: leaveListTypesQueryKey(options),
+  });
+
+/**
+ * Update Type
+ */
+export const leaveUpdateTypeMutation = (
+  options?: Partial<Options<LeaveUpdateTypeData>>,
+): UseMutationOptions<
+  LeaveUpdateTypeResponse,
+  LeaveUpdateTypeError,
+  Options<LeaveUpdateTypeData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    LeaveUpdateTypeResponse,
+    LeaveUpdateTypeError,
+    Options<LeaveUpdateTypeData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await leaveUpdateType({
         ...options,
         ...fnOptions,
         throwOnError: true,

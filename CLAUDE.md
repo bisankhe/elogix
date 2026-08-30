@@ -158,6 +158,17 @@ asks for a new access token on startup and there is no refresh cookie until you 
   hours of phantom overtime in one seeded month, which payroll would pay at 1.5x. The
   deduction never takes worked time below the shift's scheduled hours, so a short day is
   not docked for a lunch nobody took.
+- **A leave balance is a ledger, never a counter.** `leave_ledger_entries` holds signed
+  rows and the balance is their `SUM`. Nothing increments a stored number, which is what
+  makes approval atomic — a read-modify-write has a window two approvers can race
+  through, an insert does not. It also means every balance can be explained row by row.
+- **Money and entitlement are `Decimal`, never `float`.** Leave days and, from phase 06,
+  pay are legal amounts that people argue about; `0.1 + 0.2` must equal `0.3`.
+- **Leave and attendance are genuinely coupled**, in both directions: leave counts in
+  working days using the attendance calendar, home leave accrues from days actually
+  worked in the register, and approved leave marks days as `leave` rather than `absent`.
+  `attendance/service.py` imports from `leave/service.py` inside the function to avoid an
+  import cycle — that local import is deliberate, not an oversight.
 - **`migrations/versions/` is excluded from ruff.** It is machine output; don't reformat
   it by hand.
 - **Never `pkill -f <name>`** — the pattern matches the issuing shell's own command line.
@@ -213,12 +224,13 @@ This is a dependency chain, not a priority ranking — each phase produces the t
 next one needs, so nothing gets built twice against mocked inputs. Payroll is last in the
 core *deliberately*: it consumes phases 03–05, and its tests get written before its code.
 
-**Current state: phases 00–04 are done**, proven by 128 tests against a real Postgres
+**Current state: phases 00–05 are done**, proven by 154 tests against a real Postgres
 with the schema built by running the migrations from zero. Module access is denied
 server-side, no endpoint returns another tenant's rows, a tenant can be provisioned into
 a complete org chart, an employee can be hired through to offboarded with history
-preserved, and a month of attendance can be captured, corrected and exported as payroll
-input.
+preserved, a month of attendance can be captured, corrected and exported as payroll
+input, and leave balances accrue across a full year with approvals adjusting them
+atomically.
 
 Phase 01 originally shipped row-level security as a second isolation layer; it was
 removed by decision on 2026-08-30, so tenant isolation is the query filters alone. If it
@@ -228,10 +240,13 @@ even on a `FORCE ROW LEVEL SECURITY` table — the app would need a `NOSUPERUSER
 
 `modules/employee` is deliberately thin — phase 03 owns its real field set.
 
-**Phase 05 (leave) is next.** Leave types, policies, accrual, balances, requests and
-approvals. It depends on the working calendar established in phase 04 and feeds
-unpaid-leave deductions into payroll. `AttendanceDay` already has a `leave` status and
-`compute_day` takes an `is_on_leave` flag — phase 05 is what supplies it.
+**Phase 06 (payroll, tax and SSF) is next, and it is the highest-risk phase.** It
+consumes the attendance export and the leave ledger, and it is the reason a Nepal-specific
+HRMS exists at all. Two rules from the plan apply with full force: **write the tests
+before the implementation**, and the FY 2083-84 slab table needs verifying against the
+Finance Act by a named person before anyone is paid from it. The prototype's engine
+triple-deducted SSF and reported NPR 37,500 net on a 130,000 gross — port the intent,
+rewrite the maths.
 
 ---
 

@@ -9,6 +9,7 @@ import { Link, Outlet, useNavigate, useRouterState } from '@tanstack/react-route
 import {
   Building2,
   CalendarClock,
+  CalendarDays,
   ChevronLeft,
   ChevronRight,
   LayoutDashboard,
@@ -33,6 +34,7 @@ const NAV = [
   { to: '/org/locations', label: 'Locations & Categories', icon: MapPin, module: 'org' },
   { to: '/employees', label: 'Employees', icon: Users, module: 'employee' },
   { to: '/attendance', label: 'Attendance', icon: CalendarClock, module: 'attendance' },
+  { to: '/leave', label: 'Leave', icon: CalendarDays, module: 'leave' },
 ] as const
 
 export function AppShell() {

@@ -28,6 +28,40 @@ export type AccessToken = {
 };
 
 /**
+ * AccrualMethod
+ */
+export type AccrualMethod =
+  "annual_grant" | "monthly_accrual" | "per_days_worked" | "on_event";
+
+/**
+ * AccrualRequest
+ */
+export type AccrualRequest = {
+  /**
+   * Employee Id
+   */
+  employee_id?: string | null;
+  /**
+   * Month
+   */
+  month?: number | null;
+  /**
+   * Year
+   */
+  year: number;
+};
+
+/**
+ * AccrualResult
+ */
+export type AccrualResult = {
+  /**
+   * Entries Posted
+   */
+  entries_posted: number;
+};
+
+/**
  * AssignmentOut
  */
 export type AssignmentOut = {
@@ -108,6 +142,46 @@ export type AssignmentRequest = {
   note?: string | null;
   placement: Placement;
   reason?: AssignmentReason;
+};
+
+/**
+ * BalanceOut
+ */
+export type BalanceOut = {
+  /**
+   * Available Days
+   */
+  available_days: string;
+  /**
+   * Code
+   */
+  code: string;
+  /**
+   * Is Paid
+   */
+  is_paid: boolean;
+  /**
+   * Leave Type Id
+   */
+  leave_type_id: string;
+  /**
+   * Leave Year
+   */
+  leave_year: number;
+  /**
+   * Name
+   */
+  name: string;
+};
+
+/**
+ * CarryForwardRequest
+ */
+export type CarryForwardRequest = {
+  /**
+   * From Year
+   */
+  from_year: number;
 };
 
 /**
@@ -214,6 +288,11 @@ export type DayOut = {
    */
   worked_minutes: number;
 };
+
+/**
+ * DayPortion
+ */
+export type DayPortion = "full" | "first_half" | "second_half";
 
 /**
  * DayStatus
@@ -963,6 +1042,253 @@ export type HolidayOut = {
    * Name
    */
   name: string;
+};
+
+/**
+ * LeaveDecision
+ */
+export type LeaveDecision = {
+  /**
+   * Approve
+   */
+  approve: boolean;
+  /**
+   * Note
+   */
+  note?: string | null;
+};
+
+/**
+ * LeaveRequestCreate
+ */
+export type LeaveRequestCreate = {
+  /**
+   * Document Key
+   */
+  document_key?: string | null;
+  /**
+   * Employee Id
+   */
+  employee_id: string;
+  /**
+   * End Date
+   */
+  end_date: string;
+  /**
+   * Leave Type Id
+   */
+  leave_type_id: string;
+  portion?: DayPortion;
+  /**
+   * Reason
+   */
+  reason: string;
+  /**
+   * Start Date
+   */
+  start_date: string;
+};
+
+/**
+ * LeaveRequestOut
+ */
+export type LeaveRequestOut = {
+  /**
+   * Days
+   */
+  days: string;
+  /**
+   * Decided At
+   */
+  decided_at: string | null;
+  /**
+   * Decision Note
+   */
+  decision_note: string | null;
+  /**
+   * Document Key
+   */
+  document_key: string | null;
+  /**
+   * Employee Id
+   */
+  employee_id: string;
+  /**
+   * End Date
+   */
+  end_date: string;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Leave Type Id
+   */
+  leave_type_id: string;
+  portion: DayPortion;
+  /**
+   * Reason
+   */
+  reason: string;
+  /**
+   * Start Date
+   */
+  start_date: string;
+  status: LeaveRequestStatus;
+};
+
+/**
+ * LeaveRequestStatus
+ */
+export type LeaveRequestStatus =
+  "pending" | "approved" | "rejected" | "cancelled";
+
+/**
+ * LeaveTypeOut
+ */
+export type LeaveTypeOut = {
+  accrual_method: AccrualMethod;
+  /**
+   * Allows Half Day
+   */
+  allows_half_day: boolean;
+  /**
+   * Code
+   */
+  code: string;
+  /**
+   * Days Per Year
+   */
+  days_per_year: string;
+  /**
+   * Days Worked Per Day Earned
+   */
+  days_worked_per_day_earned: number | null;
+  /**
+   * Encashable Above Days
+   */
+  encashable_above_days: string | null;
+  /**
+   * Id
+   */
+  id: string;
+  /**
+   * Is Paid
+   */
+  is_paid: boolean;
+  /**
+   * Is Statutory
+   */
+  is_statutory: boolean;
+  /**
+   * Max Accumulation Days
+   */
+  max_accumulation_days: string;
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * Nepali Name
+   */
+  nepali_name: string | null;
+  /**
+   * Probation Eligible
+   */
+  probation_eligible: boolean;
+  /**
+   * Requires Document After Days
+   */
+  requires_document_after_days: number | null;
+};
+
+/**
+ * LeaveTypeUpdate
+ *
+ * The statutory defaults are unverified, so every one of them is editable.
+ */
+export type LeaveTypeUpdate = {
+  /**
+   * Allows Half Day
+   */
+  allows_half_day?: boolean | null;
+  /**
+   * Days Per Year
+   */
+  days_per_year?: number | string | null;
+  /**
+   * Days Worked Per Day Earned
+   */
+  days_worked_per_day_earned?: number | null;
+  /**
+   * Encashable Above Days
+   */
+  encashable_above_days?: number | string | null;
+  /**
+   * Is Active
+   */
+  is_active?: boolean | null;
+  /**
+   * Max Accumulation Days
+   */
+  max_accumulation_days?: number | string | null;
+  /**
+   * Name
+   */
+  name?: string | null;
+  /**
+   * Probation Eligible
+   */
+  probation_eligible?: boolean | null;
+  /**
+   * Requires Document After Days
+   */
+  requires_document_after_days?: number | null;
+};
+
+/**
+ * LedgerEntryKind
+ */
+export type LedgerEntryKind =
+  | "opening"
+  | "accrual"
+  | "grant"
+  | "consumption"
+  | "carry_forward"
+  | "encashment"
+  | "lapse"
+  | "reversal"
+  | "adjustment";
+
+/**
+ * LedgerEntryOut
+ */
+export type LedgerEntryOut = {
+  /**
+   * Days
+   */
+  days: string;
+  /**
+   * Entry Date
+   */
+  entry_date: string;
+  /**
+   * Id
+   */
+  id: string;
+  kind: LedgerEntryKind;
+  /**
+   * Leave Type Id
+   */
+  leave_type_id: string;
+  /**
+   * Leave Year
+   */
+  leave_year: number;
+  /**
+   * Note
+   */
+  note: string | null;
 };
 
 /**
@@ -3039,6 +3365,315 @@ export type EmployeesExitEmployeeResponses = {
 
 export type EmployeesExitEmployeeResponse =
   EmployeesExitEmployeeResponses[keyof EmployeesExitEmployeeResponses];
+
+export type LeaveAccrueData = {
+  body: AccrualRequest;
+  path?: never;
+  query?: never;
+  url: "/api/v1/leave/accrue";
+};
+
+export type LeaveAccrueErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type LeaveAccrueError = LeaveAccrueErrors[keyof LeaveAccrueErrors];
+
+export type LeaveAccrueResponses = {
+  /**
+   * Successful Response
+   */
+  200: AccrualResult;
+};
+
+export type LeaveAccrueResponse =
+  LeaveAccrueResponses[keyof LeaveAccrueResponses];
+
+export type LeaveBalancesData = {
+  body?: never;
+  path: {
+    /**
+     * Employee Id
+     */
+    employee_id: string;
+  };
+  query?: {
+    /**
+     * Leave Year
+     */
+    leave_year?: number | null;
+  };
+  url: "/api/v1/leave/balances/{employee_id}";
+};
+
+export type LeaveBalancesErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type LeaveBalancesError = LeaveBalancesErrors[keyof LeaveBalancesErrors];
+
+export type LeaveBalancesResponses = {
+  /**
+   * Response Leave-Balances
+   *
+   * Successful Response
+   */
+  200: Array<BalanceOut>;
+};
+
+export type LeaveBalancesResponse =
+  LeaveBalancesResponses[keyof LeaveBalancesResponses];
+
+export type LeaveCarryForwardData = {
+  body: CarryForwardRequest;
+  path?: never;
+  query?: never;
+  url: "/api/v1/leave/carry-forward";
+};
+
+export type LeaveCarryForwardErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type LeaveCarryForwardError =
+  LeaveCarryForwardErrors[keyof LeaveCarryForwardErrors];
+
+export type LeaveCarryForwardResponses = {
+  /**
+   * Successful Response
+   */
+  200: AccrualResult;
+};
+
+export type LeaveCarryForwardResponse =
+  LeaveCarryForwardResponses[keyof LeaveCarryForwardResponses];
+
+export type LeaveLedgerData = {
+  body?: never;
+  path: {
+    /**
+     * Employee Id
+     */
+    employee_id: string;
+  };
+  query?: {
+    /**
+     * Leave Year
+     */
+    leave_year?: number | null;
+  };
+  url: "/api/v1/leave/ledger/{employee_id}";
+};
+
+export type LeaveLedgerErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type LeaveLedgerError = LeaveLedgerErrors[keyof LeaveLedgerErrors];
+
+export type LeaveLedgerResponses = {
+  /**
+   * Response Leave-Ledger
+   *
+   * Successful Response
+   */
+  200: Array<LedgerEntryOut>;
+};
+
+export type LeaveLedgerResponse =
+  LeaveLedgerResponses[keyof LeaveLedgerResponses];
+
+export type LeaveListRequestsData = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * Employee Id
+     */
+    employee_id?: string | null;
+    /**
+     * Status
+     */
+    status?: LeaveRequestStatus | null;
+  };
+  url: "/api/v1/leave/requests";
+};
+
+export type LeaveListRequestsErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type LeaveListRequestsError =
+  LeaveListRequestsErrors[keyof LeaveListRequestsErrors];
+
+export type LeaveListRequestsResponses = {
+  /**
+   * Response Leave-List Requests
+   *
+   * Successful Response
+   */
+  200: Array<LeaveRequestOut>;
+};
+
+export type LeaveListRequestsResponse =
+  LeaveListRequestsResponses[keyof LeaveListRequestsResponses];
+
+export type LeaveCreateRequestData = {
+  body: LeaveRequestCreate;
+  path?: never;
+  query?: never;
+  url: "/api/v1/leave/requests";
+};
+
+export type LeaveCreateRequestErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type LeaveCreateRequestError =
+  LeaveCreateRequestErrors[keyof LeaveCreateRequestErrors];
+
+export type LeaveCreateRequestResponses = {
+  /**
+   * Successful Response
+   */
+  201: LeaveRequestOut;
+};
+
+export type LeaveCreateRequestResponse =
+  LeaveCreateRequestResponses[keyof LeaveCreateRequestResponses];
+
+export type LeaveCancelRequestData = {
+  body: LeaveDecision;
+  path: {
+    /**
+     * Request Id
+     */
+    request_id: string;
+  };
+  query?: never;
+  url: "/api/v1/leave/requests/{request_id}/cancel";
+};
+
+export type LeaveCancelRequestErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type LeaveCancelRequestError =
+  LeaveCancelRequestErrors[keyof LeaveCancelRequestErrors];
+
+export type LeaveCancelRequestResponses = {
+  /**
+   * Successful Response
+   */
+  200: LeaveRequestOut;
+};
+
+export type LeaveCancelRequestResponse =
+  LeaveCancelRequestResponses[keyof LeaveCancelRequestResponses];
+
+export type LeaveDecideRequestData = {
+  body: LeaveDecision;
+  path: {
+    /**
+     * Request Id
+     */
+    request_id: string;
+  };
+  query?: never;
+  url: "/api/v1/leave/requests/{request_id}/decide";
+};
+
+export type LeaveDecideRequestErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type LeaveDecideRequestError =
+  LeaveDecideRequestErrors[keyof LeaveDecideRequestErrors];
+
+export type LeaveDecideRequestResponses = {
+  /**
+   * Successful Response
+   */
+  200: LeaveRequestOut;
+};
+
+export type LeaveDecideRequestResponse =
+  LeaveDecideRequestResponses[keyof LeaveDecideRequestResponses];
+
+export type LeaveListTypesData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/api/v1/leave/types";
+};
+
+export type LeaveListTypesResponses = {
+  /**
+   * Response Leave-List Types
+   *
+   * Successful Response
+   */
+  200: Array<LeaveTypeOut>;
+};
+
+export type LeaveListTypesResponse =
+  LeaveListTypesResponses[keyof LeaveListTypesResponses];
+
+export type LeaveUpdateTypeData = {
+  body: LeaveTypeUpdate;
+  path: {
+    /**
+     * Type Id
+     */
+    type_id: string;
+  };
+  query?: never;
+  url: "/api/v1/leave/types/{type_id}";
+};
+
+export type LeaveUpdateTypeErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError;
+};
+
+export type LeaveUpdateTypeError =
+  LeaveUpdateTypeErrors[keyof LeaveUpdateTypeErrors];
+
+export type LeaveUpdateTypeResponses = {
+  /**
+   * Successful Response
+   */
+  200: LeaveTypeOut;
+};
+
+export type LeaveUpdateTypeResponse =
+  LeaveUpdateTypeResponses[keyof LeaveUpdateTypeResponses];
 
 export type OrgListCostCentresData = {
   body?: never;

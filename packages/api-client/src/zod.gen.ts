@@ -17,6 +17,32 @@ export const zAccessToken = z.object({
 });
 
 /**
+ * AccrualMethod
+ */
+export const zAccrualMethod = z.enum([
+  "annual_grant",
+  "monthly_accrual",
+  "per_days_worked",
+  "on_event",
+]);
+
+/**
+ * AccrualRequest
+ */
+export const zAccrualRequest = z.object({
+  employee_id: z.uuid().nullish(),
+  month: z.int().gte(1).lte(12).nullish(),
+  year: z.int().gte(2000).lte(2100),
+});
+
+/**
+ * AccrualResult
+ */
+export const zAccrualResult = z.object({
+  entries_posted: z.int(),
+});
+
+/**
  * AssignmentReason
  */
 export const zAssignmentReason = z.enum([
@@ -49,6 +75,25 @@ export const zAssignmentOut = z.object({
 });
 
 /**
+ * BalanceOut
+ */
+export const zBalanceOut = z.object({
+  available_days: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  code: z.string(),
+  is_paid: z.boolean(),
+  leave_type_id: z.uuid(),
+  leave_year: z.int(),
+  name: z.string(),
+});
+
+/**
+ * CarryForwardRequest
+ */
+export const zCarryForwardRequest = z.object({
+  from_year: z.int().gte(2000).lte(2100),
+});
+
+/**
  * ConfirmRequest
  */
 export const zConfirmRequest = z.object({
@@ -76,6 +121,11 @@ export const zCostCentreOut = z.object({
   is_active: z.boolean(),
   name: z.string(),
 });
+
+/**
+ * DayPortion
+ */
+export const zDayPortion = z.enum(["full", "first_half", "second_half"]);
 
 /**
  * DayStatus
@@ -334,6 +384,138 @@ export const zHolidayOut = z.object({
   id: z.uuid(),
   is_optional: z.boolean(),
   name: z.string(),
+});
+
+/**
+ * LeaveDecision
+ */
+export const zLeaveDecision = z.object({
+  approve: z.boolean(),
+  note: z.string().max(2000).nullish(),
+});
+
+/**
+ * LeaveRequestCreate
+ */
+export const zLeaveRequestCreate = z.object({
+  document_key: z.string().max(500).nullish(),
+  employee_id: z.uuid(),
+  end_date: z.iso.date(),
+  leave_type_id: z.uuid(),
+  portion: zDayPortion.optional().default("full"),
+  reason: z.string().min(1).max(2000),
+  start_date: z.iso.date(),
+});
+
+/**
+ * LeaveRequestStatus
+ */
+export const zLeaveRequestStatus = z.enum([
+  "pending",
+  "approved",
+  "rejected",
+  "cancelled",
+]);
+
+/**
+ * LeaveRequestOut
+ */
+export const zLeaveRequestOut = z.object({
+  days: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  decided_at: z.iso.datetime().nullable(),
+  decision_note: z.string().nullable(),
+  document_key: z.string().nullable(),
+  employee_id: z.uuid(),
+  end_date: z.iso.date(),
+  id: z.uuid(),
+  leave_type_id: z.uuid(),
+  portion: zDayPortion,
+  reason: z.string(),
+  start_date: z.iso.date(),
+  status: zLeaveRequestStatus,
+});
+
+/**
+ * LeaveTypeOut
+ */
+export const zLeaveTypeOut = z.object({
+  accrual_method: zAccrualMethod,
+  allows_half_day: z.boolean(),
+  code: z.string(),
+  days_per_year: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  days_worked_per_day_earned: z.int().nullable(),
+  encashable_above_days: z
+    .string()
+    .regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/)
+    .nullable(),
+  id: z.uuid(),
+  is_paid: z.boolean(),
+  is_statutory: z.boolean(),
+  max_accumulation_days: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  name: z.string(),
+  nepali_name: z.string().nullable(),
+  probation_eligible: z.boolean(),
+  requires_document_after_days: z.int().nullable(),
+});
+
+/**
+ * LeaveTypeUpdate
+ *
+ * The statutory defaults are unverified, so every one of them is editable.
+ */
+export const zLeaveTypeUpdate = z.object({
+  allows_half_day: z.boolean().nullish(),
+  days_per_year: z
+    .union([
+      z.number().gte(0).lte(365),
+      z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+    ])
+    .nullish(),
+  days_worked_per_day_earned: z.int().gte(1).lte(365).nullish(),
+  encashable_above_days: z
+    .union([
+      z.number().gte(0).lte(999),
+      z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+    ])
+    .nullish(),
+  is_active: z.boolean().nullish(),
+  max_accumulation_days: z
+    .union([
+      z.number().gte(0).lte(999),
+      z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+    ])
+    .nullish(),
+  name: z.string().min(1).max(200).nullish(),
+  probation_eligible: z.boolean().nullish(),
+  requires_document_after_days: z.int().gte(0).lte(365).nullish(),
+});
+
+/**
+ * LedgerEntryKind
+ */
+export const zLedgerEntryKind = z.enum([
+  "opening",
+  "accrual",
+  "grant",
+  "consumption",
+  "carry_forward",
+  "encashment",
+  "lapse",
+  "reversal",
+  "adjustment",
+]);
+
+/**
+ * LedgerEntryOut
+ */
+export const zLedgerEntryOut = z.object({
+  days: z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/),
+  entry_date: z.iso.date(),
+  id: z.uuid(),
+  kind: zLedgerEntryKind,
+  leave_type_id: z.uuid(),
+  leave_year: z.int(),
+  note: z.string().nullable(),
 });
 
 /**
@@ -1297,6 +1479,109 @@ export const zEmployeesExitEmployeePath = z.object({
  * Successful Response
  */
 export const zEmployeesExitEmployeeResponse = zEmployeeDetail;
+
+export const zLeaveAccrueBody = zAccrualRequest;
+
+/**
+ * Successful Response
+ */
+export const zLeaveAccrueResponse = zAccrualResult;
+
+export const zLeaveBalancesPath = z.object({
+  employee_id: z.uuid(),
+});
+
+export const zLeaveBalancesQuery = z.object({
+  leave_year: z.int().gte(2000).lte(2100).nullish(),
+});
+
+/**
+ * Response Leave-Balances
+ *
+ * Successful Response
+ */
+export const zLeaveBalancesResponse = z.array(zBalanceOut);
+
+export const zLeaveCarryForwardBody = zCarryForwardRequest;
+
+/**
+ * Successful Response
+ */
+export const zLeaveCarryForwardResponse = zAccrualResult;
+
+export const zLeaveLedgerPath = z.object({
+  employee_id: z.uuid(),
+});
+
+export const zLeaveLedgerQuery = z.object({
+  leave_year: z.int().gte(2000).lte(2100).nullish(),
+});
+
+/**
+ * Response Leave-Ledger
+ *
+ * Successful Response
+ */
+export const zLeaveLedgerResponse = z.array(zLedgerEntryOut);
+
+export const zLeaveListRequestsQuery = z.object({
+  employee_id: z.uuid().nullish(),
+  status: zLeaveRequestStatus.nullish(),
+});
+
+/**
+ * Response Leave-List Requests
+ *
+ * Successful Response
+ */
+export const zLeaveListRequestsResponse = z.array(zLeaveRequestOut);
+
+export const zLeaveCreateRequestBody = zLeaveRequestCreate;
+
+/**
+ * Successful Response
+ */
+export const zLeaveCreateRequestResponse = zLeaveRequestOut;
+
+export const zLeaveCancelRequestBody = zLeaveDecision;
+
+export const zLeaveCancelRequestPath = z.object({
+  request_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zLeaveCancelRequestResponse = zLeaveRequestOut;
+
+export const zLeaveDecideRequestBody = zLeaveDecision;
+
+export const zLeaveDecideRequestPath = z.object({
+  request_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zLeaveDecideRequestResponse = zLeaveRequestOut;
+
+/**
+ * Response Leave-List Types
+ *
+ * Successful Response
+ */
+export const zLeaveListTypesResponse = z.array(zLeaveTypeOut);
+
+export const zLeaveUpdateTypeBody = zLeaveTypeUpdate;
+
+export const zLeaveUpdateTypePath = z.object({
+  type_id: z.uuid(),
+});
+
+/**
+ * Successful Response
+ */
+export const zLeaveUpdateTypeResponse = zLeaveTypeOut;
 
 export const zOrgListCostCentresQuery = z.object({
   include_inactive: z.boolean().optional().default(false),

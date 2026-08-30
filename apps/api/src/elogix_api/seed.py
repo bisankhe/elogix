@@ -8,6 +8,7 @@ nothing here is used by tests, which build their own fixtures.
 
 import uuid
 from datetime import UTC, date, datetime, time, timedelta
+from decimal import Decimal
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -32,6 +33,13 @@ from elogix_api.modules.employee.models import (
     EmployeeStatus,
 )
 from elogix_api.modules.identity.models import Company, PlanTier, RoleCode, User, UserRole
+from elogix_api.modules.leave.models import DayPortion, LeaveRequest, LeaveRequestStatus, LeaveType
+from elogix_api.modules.leave.service import (
+    accrue_month,
+    approve,
+    grant_annual,
+    seed_statutory_types,
+)
 from elogix_api.modules.org.models import (
     CostCentre,
     Designation,
@@ -136,6 +144,8 @@ def main() -> None:
 
         db.commit()
         _seed_attendance(db, company.id)
+        db.commit()
+        _seed_leave(db, company.id)
         db.commit()
 
     print(f"\nlog in with  {LOGIN_EMAIL} / {LOGIN_PASSWORD}  at company '{COMPANY_SLUG}'")
@@ -385,6 +395,65 @@ def _seed_attendance(db: Session, company_id: uuid.UUID) -> None:
     db.commit()
     written = process_range(db, company_id=company_id, start=start, end=end)
     print(f"created attendance: 1 shift, 2 holidays, March 2026 rostered, {written} days processed")
+
+
+def _seed_leave(db: Session, company_id: uuid.UUID) -> None:
+    """Statutory leave types, a year of accrual, and a couple of requests to decide."""
+    created = seed_statutory_types(db, company_id=company_id)
+    if not created:
+        return
+
+    grant_annual(db, company_id=company_id, year=2026)
+    for month in range(1, 13):
+        accrue_month(db, company_id=company_id, year=2026, month=month)
+
+    sick = db.execute(
+        select(LeaveType).where(LeaveType.company_id == company_id, LeaveType.code == "SL")
+    ).scalar_one()
+    # The ledger records who approved, so use the seeded administrator rather than a
+    # null actor — an approval with no approver is not a thing that happens.
+    approver = db.execute(
+        select(User).where(User.company_id == company_id, User.email == LOGIN_EMAIL)
+    ).scalar_one()
+    employees = list(
+        db.execute(select(Employee).where(Employee.company_id == company_id)).scalars()
+    )
+
+    # One approved, one still waiting — so the queue is not empty on first look.
+    approved = LeaveRequest(
+        company_id=company_id,
+        employee_id=employees[0].id,
+        leave_type_id=sick.id,
+        start_date=date(2026, 3, 17),
+        end_date=date(2026, 3, 18),
+        portion=DayPortion.FULL,
+        days=Decimal("2"),
+        reason="Fever, seen at Patan Hospital",
+        status=LeaveRequestStatus.PENDING,
+    )
+    db.add(approved)
+    db.flush()
+    approve(db, request=approved, user_id=approver.id, note="Approved")
+
+    db.add(
+        LeaveRequest(
+            company_id=company_id,
+            employee_id=employees[-1].id,
+            leave_type_id=sick.id,
+            start_date=date(2026, 4, 6),
+            end_date=date(2026, 4, 7),
+            portion=DayPortion.FULL,
+            days=Decimal("2"),
+            reason="Dental surgery",
+            status=LeaveRequestStatus.PENDING,
+        )
+    )
+    db.commit()
+
+    # The approved leave changes those days in the register, so rebuild March.
+    process_range(db, company_id=company_id, start=date(2026, 3, 1), end=date(2026, 3, 31))
+    print("created leave: 6 statutory types, 2026 accrued, 1 approved and 1 pending request")
+
 
 if __name__ == "__main__":
     main()

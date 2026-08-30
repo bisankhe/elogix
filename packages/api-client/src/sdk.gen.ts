@@ -104,6 +104,35 @@ import type {
   EmployeesUpdateEmployeeData,
   EmployeesUpdateEmployeeErrors,
   EmployeesUpdateEmployeeResponses,
+  LeaveAccrueData,
+  LeaveAccrueErrors,
+  LeaveAccrueResponses,
+  LeaveBalancesData,
+  LeaveBalancesErrors,
+  LeaveBalancesResponses,
+  LeaveCancelRequestData,
+  LeaveCancelRequestErrors,
+  LeaveCancelRequestResponses,
+  LeaveCarryForwardData,
+  LeaveCarryForwardErrors,
+  LeaveCarryForwardResponses,
+  LeaveCreateRequestData,
+  LeaveCreateRequestErrors,
+  LeaveCreateRequestResponses,
+  LeaveDecideRequestData,
+  LeaveDecideRequestErrors,
+  LeaveDecideRequestResponses,
+  LeaveLedgerData,
+  LeaveLedgerErrors,
+  LeaveLedgerResponses,
+  LeaveListRequestsData,
+  LeaveListRequestsErrors,
+  LeaveListRequestsResponses,
+  LeaveListTypesData,
+  LeaveListTypesResponses,
+  LeaveUpdateTypeData,
+  LeaveUpdateTypeErrors,
+  LeaveUpdateTypeResponses,
   MetaHealthData,
   MetaHealthResponses,
   OrgCreateCostCentreData,
@@ -909,6 +938,227 @@ export const employeesExitEmployee = <ThrowOnError extends boolean = false>(
   >({
     security: [{ scheme: "bearer", type: "http" }],
     url: "/api/v1/employees/{employee_id}/exit",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Accrue
+ *
+ * Post accruals. With a month, that month; without one, the whole year.
+ *
+ * Idempotent: a second run over the same period posts nothing, because a cron job
+ * eventually runs twice and nobody should get a double entitlement out of it.
+ */
+export const leaveAccrue = <ThrowOnError extends boolean = false>(
+  options: Options<LeaveAccrueData, ThrowOnError>,
+): RequestResult<LeaveAccrueResponses, LeaveAccrueErrors, ThrowOnError> =>
+  (options.client ?? client).post<
+    LeaveAccrueResponses,
+    LeaveAccrueErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/leave/accrue",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Balances
+ */
+export const leaveBalances = <ThrowOnError extends boolean = false>(
+  options: Options<LeaveBalancesData, ThrowOnError>,
+): RequestResult<LeaveBalancesResponses, LeaveBalancesErrors, ThrowOnError> =>
+  (options.client ?? client).get<
+    LeaveBalancesResponses,
+    LeaveBalancesErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/leave/balances/{employee_id}",
+    ...options,
+  });
+
+/**
+ * Carry Forward
+ */
+export const leaveCarryForward = <ThrowOnError extends boolean = false>(
+  options: Options<LeaveCarryForwardData, ThrowOnError>,
+): RequestResult<
+  LeaveCarryForwardResponses,
+  LeaveCarryForwardErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    LeaveCarryForwardResponses,
+    LeaveCarryForwardErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/leave/carry-forward",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Ledger
+ *
+ * Every movement behind a balance — the answer to "why do I have 11.5 days?".
+ */
+export const leaveLedger = <ThrowOnError extends boolean = false>(
+  options: Options<LeaveLedgerData, ThrowOnError>,
+): RequestResult<LeaveLedgerResponses, LeaveLedgerErrors, ThrowOnError> =>
+  (options.client ?? client).get<
+    LeaveLedgerResponses,
+    LeaveLedgerErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/leave/ledger/{employee_id}",
+    ...options,
+  });
+
+/**
+ * List Requests
+ */
+export const leaveListRequests = <ThrowOnError extends boolean = false>(
+  options?: Options<LeaveListRequestsData, ThrowOnError>,
+): RequestResult<
+  LeaveListRequestsResponses,
+  LeaveListRequestsErrors,
+  ThrowOnError
+> =>
+  (options?.client ?? client).get<
+    LeaveListRequestsResponses,
+    LeaveListRequestsErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/leave/requests",
+    ...options,
+  });
+
+/**
+ * Create Request
+ */
+export const leaveCreateRequest = <ThrowOnError extends boolean = false>(
+  options: Options<LeaveCreateRequestData, ThrowOnError>,
+): RequestResult<
+  LeaveCreateRequestResponses,
+  LeaveCreateRequestErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    LeaveCreateRequestResponses,
+    LeaveCreateRequestErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/leave/requests",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Cancel Request
+ *
+ * Cancel approved leave, returning the entitlement as a reversal entry.
+ */
+export const leaveCancelRequest = <ThrowOnError extends boolean = false>(
+  options: Options<LeaveCancelRequestData, ThrowOnError>,
+): RequestResult<
+  LeaveCancelRequestResponses,
+  LeaveCancelRequestErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    LeaveCancelRequestResponses,
+    LeaveCancelRequestErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/leave/requests/{request_id}/cancel",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Decide Request
+ *
+ * Approve or reject. Approval consumes the balance in the same transaction.
+ */
+export const leaveDecideRequest = <ThrowOnError extends boolean = false>(
+  options: Options<LeaveDecideRequestData, ThrowOnError>,
+): RequestResult<
+  LeaveDecideRequestResponses,
+  LeaveDecideRequestErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    LeaveDecideRequestResponses,
+    LeaveDecideRequestErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/leave/requests/{request_id}/decide",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * List Types
+ *
+ * Seeds the statutory catalogue on first read, so a new tenant is never empty.
+ */
+export const leaveListTypes = <ThrowOnError extends boolean = false>(
+  options?: Options<LeaveListTypesData, ThrowOnError>,
+): RequestResult<LeaveListTypesResponses, unknown, ThrowOnError> =>
+  (options?.client ?? client).get<
+    LeaveListTypesResponses,
+    unknown,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/leave/types",
+    ...options,
+  });
+
+/**
+ * Update Type
+ */
+export const leaveUpdateType = <ThrowOnError extends boolean = false>(
+  options: Options<LeaveUpdateTypeData, ThrowOnError>,
+): RequestResult<
+  LeaveUpdateTypeResponses,
+  LeaveUpdateTypeErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).patch<
+    LeaveUpdateTypeResponses,
+    LeaveUpdateTypeErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/v1/leave/types/{type_id}",
     ...options,
     headers: {
       "Content-Type": "application/json",

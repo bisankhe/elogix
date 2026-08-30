@@ -83,6 +83,12 @@ def process_range(
     }
 
     punches_by_key = _punches_by_key(db, company_id=company_id, start=start, end=end)
+    # Approved leave, so a day off on approved leave reads as `leave` rather than
+    # `absent`. Imported here rather than at module scope: leave depends on attendance
+    # for its calendar and its worked-days accrual, so a top-level import is a cycle.
+    from elogix_api.modules.leave.service import approved_leave_dates
+
+    on_leave = approved_leave_dates(db, company_id=company_id, start=start, end=end)
     rosters = _rosters_by_key(db, company_id=company_id, start=start, end=end)
     shifts = {
         s.id: s
@@ -122,6 +128,7 @@ def process_range(
                 shift=shift_input,
                 policy=policy_input,
                 is_holiday=day in holidays,
+                is_on_leave=key in on_leave,
             )
 
             if record is None:

@@ -62,6 +62,9 @@ TENANT_TABLES = (
     "attendance_punches",
     "attendance_days",
     "regularisation_requests",
+    "leave_types",
+    "leave_requests",
+    "leave_ledger_entries",
 )
 
 
