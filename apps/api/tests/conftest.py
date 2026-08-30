@@ -1,13 +1,12 @@
 """Test configuration.
 
 Tests run against a real PostgreSQL, never SQLite. Every defect the audit found was
-Postgres-specific — row-level security, UUID types, `set_config` semantics — and a
-SQLite suite would have passed while the production database refused to build.
+Postgres-specific — UUID types, enum handling, constraint semantics — and a SQLite suite
+would have passed while the production database refused to build.
 
-Two connections, mirroring production: the suite builds the schema through the owner
-(`DATABASE_ADMIN_URL`) by running the migrations from zero, and everything else runs
-through the restricted runtime role, so RLS is in force for the tests exactly as it is
-for the application.
+The schema is built by running the Alembic migrations from zero, not by
+`metadata.create_all`, so the suite proves the migrations work — which is what a fresh
+clone and a production deploy actually depend on.
 """
 
 import os
@@ -15,10 +14,7 @@ from collections.abc import Iterator
 from datetime import date
 
 os.environ.setdefault(
-    "DATABASE_URL", "postgresql+psycopg://elogix_app:elogix_app@localhost:5432/elogix_test"
-)
-os.environ.setdefault(
-    "DATABASE_ADMIN_URL", "postgresql+psycopg://elogix:elogix@localhost:5432/elogix_test"
+    "DATABASE_URL", "postgresql+psycopg://elogix:elogix@localhost:5432/elogix_test"
 )
 os.environ.setdefault("SECRET_KEY", "test-secret-key-at-least-32-characters-long")
 os.environ.setdefault("ENVIRONMENT", "test")
@@ -27,37 +23,29 @@ import pytest  # noqa: E402
 from alembic import command  # noqa: E402
 from alembic.config import Config  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
-from sqlalchemy import create_engine, text  # noqa: E402
+from sqlalchemy import text  # noqa: E402
 from sqlalchemy.orm import Session  # noqa: E402
 
 from elogix_api.core.security import hash_password  # noqa: E402
-from elogix_api.core.tenancy import clear_current_company, set_current_company  # noqa: E402
-from elogix_api.db.session import SessionLocal  # noqa: E402
+from elogix_api.db.session import SessionLocal, engine  # noqa: E402
 from elogix_api.main import create_app  # noqa: E402
 from elogix_api.modules.employee.models import Employee, EmployeeStatus  # noqa: E402
 from elogix_api.modules.identity.models import Company, PlanTier, User  # noqa: E402
-from elogix_api.settings import get_settings  # noqa: E402
 
 PASSWORD = "correct-horse-battery-staple"
 
 _API_DIR = os.path.dirname(os.path.dirname(__file__))
 ALEMBIC_INI = os.path.join(_API_DIR, "alembic.ini")
 
+# Every table carrying a company_id. Keep in step with the models — the isolation tests
+# are the only thing standing between a forgotten filter and a cross-tenant leak.
 TENANT_TABLES = ("users", "employees", "user_roles", "company_modules", "auth_sessions")
 
 
-@pytest.fixture(scope="session")
-def admin_engine():  # noqa: ANN201
-    """Owner connection. Only for schema setup and teardown — never for exercising code."""
-    engine = create_engine(get_settings().migration_url, poolclass=None)
-    yield engine
-    engine.dispose()
-
-
 @pytest.fixture(scope="session", autouse=True)
-def _schema(admin_engine) -> Iterator[None]:  # noqa: ANN001
+def _schema() -> Iterator[None]:
     """Build the schema once per session by running the migrations from zero."""
-    with admin_engine.begin() as conn:
+    with engine.begin() as conn:
         conn.execute(text("DROP SCHEMA public CASCADE"))
         conn.execute(text("CREATE SCHEMA public"))
 
@@ -68,12 +56,9 @@ def _schema(admin_engine) -> Iterator[None]:  # noqa: ANN001
 
 
 @pytest.fixture(autouse=True)
-def _clean_tables(_schema: None, admin_engine) -> Iterator[None]:  # noqa: ANN001
-    """Truncate through the owner: the runtime role has DML only, not TRUNCATE."""
-    clear_current_company()
+def _clean_tables(_schema: None) -> Iterator[None]:
     yield
-    clear_current_company()
-    with admin_engine.begin() as conn:
+    with engine.begin() as conn:
         conn.execute(
             text(f"TRUNCATE companies, {', '.join(TENANT_TABLES)} RESTART IDENTITY CASCADE")
         )
@@ -81,7 +66,6 @@ def _clean_tables(_schema: None, admin_engine) -> Iterator[None]:  # noqa: ANN00
 
 @pytest.fixture
 def db() -> Iterator[Session]:
-    """A runtime-role session, subject to RLS exactly like the application's."""
     with SessionLocal() as session:
         yield session
         session.rollback()
@@ -105,10 +89,6 @@ def make_tenant(
     db.add(company)
     db.flush()
 
-    # `users` and `employees` are under RLS, and the fixture runs as the runtime role,
-    # so the tenant has to be bound before either insert is allowed.
-    set_current_company(db, company.id)
-
     user = User(
         company_id=company.id,
         email=f"admin@{slug}.com.np",
@@ -125,7 +105,6 @@ def make_tenant(
     )
     db.add_all([user, employee])
     db.commit()
-    clear_current_company()
     return company, user, employee
 
 

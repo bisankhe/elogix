@@ -11,7 +11,6 @@ from datetime import date
 from sqlalchemy import select
 
 from elogix_api.core.security import hash_password
-from elogix_api.core.tenancy import set_current_company
 from elogix_api.db.session import SessionLocal
 from elogix_api.modules.employee.models import Employee, EmployeeStatus
 from elogix_api.modules.identity.models import Company, PlanTier, RoleCode, User, UserRole
@@ -35,10 +34,6 @@ def main() -> None:
             db.flush()
             print(f"created company {COMPANY_SLUG}")
 
-        # Everything below writes to tables under row-level security, so the tenant has
-        # to be bound first — the seed runs as the restricted runtime role, same as the
-        # application, rather than as the schema owner.
-        set_current_company(db, company.id)
 
         user = db.execute(
             select(User).where(User.company_id == company.id, User.email == LOGIN_EMAIL)

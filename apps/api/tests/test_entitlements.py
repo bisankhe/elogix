@@ -10,7 +10,6 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from elogix_api.core.entitlements import PLAN_MODULES, ModuleCode, effective_modules
-from elogix_api.core.tenancy import set_current_company
 from elogix_api.modules.identity.models import CompanyModule, PlanTier
 from tests.conftest import auth, login, make_tenant
 
@@ -34,7 +33,6 @@ def test_an_override_can_revoke_a_module_the_plan_includes(
     client: TestClient, db: Session
 ) -> None:
     company, _, _ = make_tenant(db, "acme", plan_tier=PlanTier.ENTERPRISE)
-    set_current_company(db, company.id)
     db.add(
         CompanyModule(company_id=company.id, module=ModuleCode.EMPLOYEE.value, is_enabled=False)
     )
@@ -58,7 +56,6 @@ def test_a_module_the_plan_excludes_is_denied(client: TestClient, db: Session) -
 
 def test_an_override_can_grant_a_module_above_the_plan(db: Session) -> None:
     company, _, _ = make_tenant(db, "acme", plan_tier=PlanTier.TRIAL)
-    set_current_company(db, company.id)
     db.add(
         CompanyModule(company_id=company.id, module=ModuleCode.PAYROLL.value, is_enabled=True)
     )
@@ -71,7 +68,6 @@ def test_an_override_can_grant_a_module_above_the_plan(db: Session) -> None:
 def test_an_override_naming_an_unknown_module_is_ignored(db: Session) -> None:
     """A stale row from a removed feature must not take the tenant down."""
     company, _, _ = make_tenant(db, "acme", plan_tier=PlanTier.TRIAL)
-    set_current_company(db, company.id)
     db.add(CompanyModule(company_id=company.id, module="module_from_the_future", is_enabled=True))
     db.commit()
 
@@ -82,7 +78,6 @@ def test_an_override_naming_an_unknown_module_is_ignored(db: Session) -> None:
 def test_one_tenants_override_does_not_affect_another(client: TestClient, db: Session) -> None:
     acme, _, _ = make_tenant(db, "acme", plan_tier=PlanTier.ENTERPRISE)
     make_tenant(db, "globex", plan_tier=PlanTier.ENTERPRISE)
-    set_current_company(db, acme.id)
     db.add(
         CompanyModule(company_id=acme.id, module=ModuleCode.EMPLOYEE.value, is_enabled=False)
     )

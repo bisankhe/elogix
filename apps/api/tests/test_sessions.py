@@ -9,7 +9,6 @@ from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from elogix_api.core.tenancy import set_current_company
 from elogix_api.modules.identity.models import AuthSession
 from elogix_api.modules.identity.router import REFRESH_COOKIE
 from tests.conftest import PASSWORD, auth, make_tenant
@@ -75,7 +74,6 @@ def test_logout_revokes_the_session(client: TestClient, db: Session) -> None:
     assert client.post("/api/v1/auth/logout").status_code == 204
     assert client.post("/api/v1/auth/refresh").status_code == 401
 
-    set_current_company(db, company.id)
     row = db.execute(select(AuthSession).where(AuthSession.company_id == company.id)).scalar_one()
     assert row.revoked_at is not None
 
@@ -104,7 +102,6 @@ def test_login_records_one_session_row(client: TestClient, db: Session) -> None:
     company, user, _ = make_tenant(db, "acme")
     _login(client)
 
-    set_current_company(db, company.id)
     rows = db.execute(select(AuthSession).where(AuthSession.user_id == user.id)).scalars().all()
 
     assert len(rows) == 1

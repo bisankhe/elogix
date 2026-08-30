@@ -13,7 +13,6 @@ from elogix_api.core.security import (
     verify_and_upgrade,
     verify_password,
 )
-from elogix_api.core.tenancy import set_current_company
 from elogix_api.modules.identity.models import AuthSession, Company, User
 from elogix_api.settings import get_settings
 
@@ -33,8 +32,6 @@ def authenticate(db: Session, *, company_slug: str, email: str, password: str) -
         verify_password(password, hash_password("dummy"))
         return None
 
-    # `users` is under RLS, so the tenant has to be bound before it can be read.
-    set_current_company(db, company.id)
 
     user = db.execute(
         select(User).where(
@@ -86,7 +83,6 @@ def rotate_session(db: Session, claims: TokenClaims) -> tuple[str, str] | None:
     Rotation means a stolen refresh token is usable at most once, and its use burns the
     legitimate holder's token too — which surfaces the theft instead of hiding it.
     """
-    set_current_company(db, claims.company_id)
 
     session_row = db.execute(
         select(AuthSession).where(
@@ -117,7 +113,6 @@ def rotate_session(db: Session, claims: TokenClaims) -> tuple[str, str] | None:
 
 def revoke_session(db: Session, claims: TokenClaims) -> None:
     """Log out. Idempotent: revoking an unknown or already-revoked session is a no-op."""
-    set_current_company(db, claims.company_id)
 
     session_row = db.execute(
         select(AuthSession).where(
@@ -134,7 +129,6 @@ def revoke_session(db: Session, claims: TokenClaims) -> None:
 
 def revoke_all_sessions(db: Session, *, user_id: uuid.UUID, company_id: uuid.UUID) -> None:
     """Used when a password changes or an account is disabled."""
-    set_current_company(db, company_id)
     rows = db.execute(
         select(AuthSession).where(
             AuthSession.user_id == user_id,

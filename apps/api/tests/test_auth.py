@@ -13,7 +13,6 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from elogix_api.core.security import ALGORITHM, create_token, decode_token
-from elogix_api.core.tenancy import set_current_company
 from tests.conftest import PASSWORD, auth, login, make_tenant
 
 
@@ -99,7 +98,6 @@ def test_a_deactivated_user_cannot_use_an_existing_token(
     assert client.get("/api/v1/auth/me", headers=auth(token)).status_code == 200
 
     # `users` is under RLS, so even the test has to bind the tenant to write to it.
-    set_current_company(db, user.company_id)
     user.is_active = False
     db.commit()
 

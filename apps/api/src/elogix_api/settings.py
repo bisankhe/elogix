@@ -24,15 +24,7 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    # The runtime connection. Must be a NOSUPERUSER, NOBYPASSRLS role, or row-level
-    # security is silently skipped — Postgres exempts superusers from policies even
-    # when the table is FORCE ROW LEVEL SECURITY.
     database_url: str
-    # The owner/DDL connection, used only by Alembic. Falls back to database_url so a
-    # plain local setup still works; production should keep the two separate.
-    database_admin_url: str | None = None
-    app_db_role: str = "elogix_app"
-    app_db_password: str = "elogix_app"
     secret_key: str
     access_token_ttl_minutes: int = 30
     refresh_token_ttl_days: int = 30
@@ -49,11 +41,6 @@ class Settings(BaseSettings):
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
-
-    @property
-    def migration_url(self) -> str:
-        """Alembic runs DDL, so it needs the owner, not the restricted runtime role."""
-        return self.database_admin_url or self.database_url
 
 
 @lru_cache

@@ -24,11 +24,7 @@ jobs:
           --health-interval 5s --health-timeout 3s --health-retries 10
 
     env:
-      # Runtime role: NOSUPERUSER and NOBYPASSRLS, created by the migration. Pointing
-      # this at the owner would silently disable every row-level security policy —
-      # tests/test_rls.py asserts it is not a superuser, so CI catches that.
-      DATABASE_URL: postgresql+psycopg://elogix_app:elogix_app@localhost:5432/elogix_test
-      DATABASE_ADMIN_URL: postgresql+psycopg://elogix:elogix@localhost:5432/elogix_test
+      DATABASE_URL: postgresql+psycopg://elogix:elogix@localhost:5432/elogix_test
       SECRET_KEY: ci-secret-key-at-least-32-characters-long
       ENVIRONMENT: test
 
@@ -60,7 +56,7 @@ jobs:
     env:
       # This job only emits the spec; it never opens a connection, but settings
       # validation still requires the variables to be present.
-      DATABASE_URL: postgresql+psycopg://elogix_app:elogix_app@localhost:5432/elogix_test
+      DATABASE_URL: postgresql+psycopg://elogix:elogix@localhost:5432/elogix_test
       SECRET_KEY: ci-secret-key-at-least-32-characters-long
     steps:
       - uses: actions/checkout@v4

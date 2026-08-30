@@ -4,9 +4,11 @@
 on, what roles they hold and which modules their company has. Nothing reads the tenant
 from a header — it comes from the signed token.
 
-Resolving the caller also binds the tenant for row-level security, so from that point on
-every query on the request's session is filtered by Postgres as well as by the
-application's own `WHERE company_id = ...` clauses.
+Tenant isolation is enforced in the queries themselves: every read or write in a
+tenant-scoped module must carry `.where(Model.company_id == current_user.company_id)`.
+There is no database-level backstop, so that clause is the whole boundary — omitting one
+leaks another tenant's rows silently. `tests/test_tenant_isolation.py` is what holds the
+line; extend it whenever a tenant-scoped endpoint is added.
 """
 
 import uuid
@@ -22,7 +24,6 @@ from sqlalchemy.orm import Session
 
 from elogix_api.core.entitlements import ModuleCode, effective_modules
 from elogix_api.core.security import decode_token
-from elogix_api.core.tenancy import set_current_company
 from elogix_api.db.session import get_db
 from elogix_api.modules.identity.models import Company, RoleCode, User, UserRole
 
@@ -56,10 +57,8 @@ def get_current_user(
     except jwt.InvalidTokenError as exc:
         raise _UNAUTHENTICATED from exc
 
-    # Bind the tenant before touching any tenant-scoped table, so RLS is in force for
-    # the user lookup itself and everything the request does afterwards.
-    set_current_company(db, claims.company_id)
-
+    # Both the user id and the company id come from the signed token, and both must
+    # match — a token naming a company its user does not belong to resolves to nothing.
     row = db.execute(
         select(User, Company)
         .join(Company, Company.id == User.company_id)
