@@ -10,7 +10,21 @@ const TICKETS=[
   {id:'TKT-1042',subject:'Payslip not generated for June',status:'open',sla:'2h remaining'},
   {id:'TKT-1039',subject:'Access request -- new hire onboarding',status:'in_progress',sla:'On track'},
 ]
+
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}}
+}
+function _getTenantCtx() {
+  const s=_getSession()
+  const token=localStorage.getItem('access_token')||s?.token||''
+  const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+  return {token,slug,valid:!!(token&&slug)}
+}
+
 export default function CustomerServiceDashboard(){
+  const [apiData,setApiData]=useState(null)
+  const [apiLoading,setApiLoading]=useState(true)
+  const [apiError,setApiError]=useState(null)
   const { navTo } = useApp()
   return(
     <div>

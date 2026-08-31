@@ -5,7 +5,7 @@
 // year-end) -- distinct from the general Audit Management workroom.
 // One-click evidence pack assembly for the certified auditor.
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { PageHeader, AIImpact, ContextMenu } from './DeptSetupShared.jsx'
 
 const G = 'linear-gradient(135deg,#7c2d12 0%,#c2410c 60%,#fdba74 100%)'
@@ -27,9 +27,34 @@ const PAST_AUDITS = [
   {fiscal_year:'2080/81',submitted_date:'2024-07-08',status:'accepted',penalties:'None'},
 ]
 
+
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}}
+}
+function _getTenantCtx() {
+  const s=_getSession()
+  const token=localStorage.getItem('access_token')||s?.token||''
+  const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+  return {token,slug,valid:!!(token&&slug)}
+}
+
 export default function AnnualLabourAuditPage() {
+  const [apiData,setApiData]=useState(null)
+  const [apiLoading,setApiLoading]=useState(true)
+  const [apiError,setApiError]=useState(null)
   const [ctx, setCtx] = useState(null)
   const readyCount = CURRENT_AUDIT.evidence_categories.filter(e=>e.status==='ready').length
+
+  useEffect(()=>{
+    const {token,slug,valid} = _getTenantCtx()
+    if(!valid){setApiLoading(false);return}
+    setApiLoading(true);setApiError(null)
+    fetch('/api/v1/compliance/labour-audit',{headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}})
+      .then(r=>{if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));throw new Error('Session expired')}if(!r.ok)throw new Error(`Error ${r.status}`);return r.json()})
+      .then(d=>{const p=d.audit||d.data||d;if(p)setApiData(p)})
+      .catch(err=>setApiError(err.message))
+      .finally(()=>setApiLoading(false))
+  },[])
 
   return (
     <div onClick={()=>setCtx(null)}>
@@ -45,6 +70,17 @@ export default function AnnualLabourAuditPage() {
         onAdd={()=>{}} addLabel="Generate Evidence Pack"/>
 
       <div style={{background:'#fff7ed',border:'1px solid #fed7aa',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#7c2d12',display:'flex',gap:10,flexWrap:'wrap'}}>
+      {apiLoading && (
+        <div style={{textAlign:'center',padding:40,color:'#7c3aed',fontSize:13,fontWeight:600}}>
+          <div style={{fontSize:32,marginBottom:8}}>⟳</div>Loading...
+        </div>
+      )}
+      {apiError && !apiLoading && (
+        <div style={{padding:'8px 14px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,fontSize:12,color:'#dc2626',marginBottom:8,fontWeight:600}}>
+          ⚠️ {apiError}
+        </div>
+      )}
         <span style={{fontSize:18}}>⚖</span>
         <div style={{flex:1,minWidth:200}}><strong>Mandatory at Your Headcount:</strong> Section 80 requires this audit using a certified labour expert, submitted to the local Labour Office by fiscal year-end -- failure to file carries administrative penalties.</div>
       </div>

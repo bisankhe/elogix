@@ -6,7 +6,7 @@
 //          tenant/billing control) -- this persona is operational
 //          IT, scoped to System Administration's own pages.
 // ============================================================
-import { useState } from 'react'
+import { useState , useEffect } from 'react'
 import { useApp } from '../../context/AppContext.jsx'
 import { StatCard } from '../shared/StatCard.jsx'
 import { Card } from '../shared/Card.jsx'
@@ -21,7 +21,24 @@ const API_HEALTH=[
   {name:'LinkedIn Talent Hub',status:'degraded',uptime:'94.2%',flag:'Field mapping drift detected on employment_status'},
 ]
 
+
+// ── Tenant session helper ──────────────────────────────────────────────
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} }
+  catch(_e) { return {} }
+}
+function _getTenantHeaders() {
+  const sess  = _getSession()
+  const token = localStorage.getItem('access_token') || sess?.token || ''
+  const slug  = sess?.company?.slug || localStorage.getItem('elogix_tenant_slug') || ''
+  return { token, slug, valid: !!(token && slug) }
+}
+
 export default function ITAdministratorDashboard(){
+  const [apiData, setApiData] = useState(null)
+  const [apiLoading, setApiLoading] = useState(true)
+  const [apiError, setApiError] = useState(null)
+
   const { navTo, t } = useApp()
   return(
     <div>

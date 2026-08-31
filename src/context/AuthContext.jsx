@@ -30,7 +30,7 @@ const SESSION_KEY       = 'elogix_session'        // tenant session
 const ADMIN_SESSION_KEY = 'elogix_admin_session'  // eLogix staff session
 
 function _loadJSON(key) {
-  try { return JSON.parse(localStorage.getItem(key) || 'null') } catch { return null }
+  try { return JSON.parse(localStorage.getItem(key) || 'null') } catch(_e) { return null }
 }
 
 // ══════════════════════════════════════════════════════════════════════

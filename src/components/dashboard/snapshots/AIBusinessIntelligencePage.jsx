@@ -498,6 +498,17 @@ function Bubble({ msg, onSpeak, speakingId }) {
     <div style={{ display:'flex', gap:10, marginBottom:14, justifyContent:isUser?'flex-end':'flex-start', alignItems:'flex-start' }}>
       {!isUser && <div style={{ width:34,height:34,borderRadius:10,background:G,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0 }}>🧠</div>}
       <div style={{ maxWidth:'86%' }}>
+      {apiLoading && (
+        <div style={{textAlign:'center',padding:40,color:'#7c3aed',fontSize:13,fontWeight:600}}>
+          <div style={{fontSize:32,marginBottom:8}}>⟳</div>Loading...
+        </div>
+      )}
+      {apiError && !apiLoading && (
+        <div style={{padding:'8px 14px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,fontSize:12,color:'#dc2626',marginBottom:8,fontWeight:600}}>
+          ⚠️ {apiError}
+        </div>
+      )}
         <div style={{ background:isUser?A:'#fff', color:isUser?'#fff':'#0f172a', border:isUser?'none':'1px solid #e2e8f0', borderRadius:isUser?'16px 16px 4px 16px':'16px 16px 16px 4px', padding:'10px 14px', fontSize:11, lineHeight:1.75, wordBreak:'break-word', boxShadow:isUser?'none':'0 1px 4px rgba(0,0,0,.06)' }}>
           {msg.content.split('\n').map((line, i) => {
             const h = line.replace(/\*\*(.+?)\*\*/g, (_,t) => `<b>${t}</b>`).replace(/\*(.+?)\*/g, (_,t) => `<i>${t}</i>`)
@@ -524,7 +535,21 @@ function Bubble({ msg, onSpeak, speakingId }) {
 }
 
 // ── MAIN COMPONENT ─────────────────────────────────────────────
+
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}}
+}
+function _getTenantCtx() {
+  const s=_getSession()
+  const token=localStorage.getItem('access_token')||s?.token||''
+  const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+  return {token,slug,valid:!!(token&&slug)}
+}
+
 export default function AIBusinessIntelligencePage() {
+  const [apiData,setApiData]=useState(null)
+  const [apiLoading,setApiLoading]=useState(true)
+  const [apiError,setApiError]=useState(null)
   const { currentPersona, persona } = useApp()
   const roleLevel = classifyRole(currentPersona?.id, currentPersona?.label||persona)
   const hasKey = !!(VITE_KEY?.startsWith('sk-ant'))
@@ -585,6 +610,17 @@ export default function AIBusinessIntelligencePage() {
     const l = detectLang(msg.content); setSpeaking(true); setSpeakingId(msg.id)
     speak(stripMd(msg.content), l, ()=>{ setSpeaking(false); setSpeakingId(null) })
   }
+
+  useEffect(()=>{
+    const {token,slug,valid} = _getTenantCtx()
+    if(!valid){setApiLoading(false);return}
+    setApiLoading(true);setApiError(null)
+    fetch('/api/v1/ai/bi',{headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}})
+      .then(r=>{if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));throw new Error('Session expired')}if(!r.ok)throw new Error(`Error ${r.status}`);return r.json()})
+      .then(d=>{const p=d.data||d.data||d;if(p)setApiData(p)})
+      .catch(err=>setApiError(err.message))
+      .finally(()=>setApiLoading(false))
+  },[])
 
   return (
     <div style={{ fontFamily:'system-ui,sans-serif', minHeight:'100vh', background:'#f0f7ff', paddingBottom:24 }}>

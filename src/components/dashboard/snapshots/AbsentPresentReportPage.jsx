@@ -4,7 +4,7 @@
 // Login/logout indicator: green dot=logged in, red=absent/no log
 // Digital signature: Prepared / Verified / Approved
 // eLogix Technologies · www.elogix.com.np
-import { useState, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 const G  = 'linear-gradient(135deg,#14532d 0%,#15803d 55%,#86efac 100%)'
 const A  = '#15803d'
@@ -84,6 +84,19 @@ const DayCell = ({ day, showTime }) => {
   return (
     <td style={{padding:'2px',textAlign:'center',minWidth:showTime?80:28,
       background:s.bg,border:`1px solid ${s.border}`,verticalAlign:'middle'}}>
+      {apiLoading && (
+        <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:48,color:'#7c3aed'}}>
+          <div style={{textAlign:'center',fontSize:13,fontWeight:600}}>
+            <div style={{fontSize:32,marginBottom:8}}>⟳</div>Loading...
+          </div>
+        </div>
+      )}
+      {apiError && !apiLoading && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,margin:'0 0 12px',fontSize:12,color:'#dc2626',fontWeight:600}}>
+          ⚠️ {apiError}
+        </div>
+      )}
       <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:1}}>
         {/* Status indicator dot */}
         <div style={{display:'flex',alignItems:'center',gap:2}}>
@@ -102,7 +115,20 @@ const DayCell = ({ day, showTime }) => {
   )
 }
 
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}}
+}
+function _getTenantCtx() {
+  const s=_getSession()
+  const token=localStorage.getItem('access_token')||s?.token||''
+  const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+  return {token,slug,valid:!!(token&&slug)}
+}
+
 export default function AbsentPresentReportPage() {
+  const [apiData,setApiData]=useState(null)
+  const [apiLoading,setApiLoading]=useState(true)
+  const [apiError,setApiError]=useState(null)
   const today = new Date()
   const [month,    setMonth]   = useState(today.getMonth()+1)
   const [year,     setYear]    = useState(today.getFullYear())
@@ -165,6 +191,20 @@ export default function AbsentPresentReportPage() {
       </div>
     )
   }
+
+  // ── Tenant-isolated API load ───────────────────────────────────────
+  useEffect(() => {
+    const {token,slug,valid} = _getTenantCtx()
+    if (!valid) { setApiLoading(false); return }
+    setApiLoading(true); setApiError(null)
+    fetch('/api/v1/attendance-reports/absent-present', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));throw new Error('Session expired')} if(!r.ok)throw new Error(`Error ${r.status}`); return r.json() })
+      .then(d=>{ const p=d.records||d.data||d; if(p) setApiData(p) })
+      .catch(err=>setApiError(err.message))
+      .finally(()=>setApiLoading(false))
+  },[])
 
   return (
     <div style={{fontFamily:'system-ui,sans-serif',minHeight:'100vh',background:'#f0fdf4'}}>

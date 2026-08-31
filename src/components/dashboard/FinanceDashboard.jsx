@@ -8,7 +8,7 @@
 //          data, never a duplicate calculation engine -- this is
 //          the finance-eyes view OVER that same data.
 // ============================================================
-import { useState } from 'react'
+import { useState , useEffect } from 'react'
 import { useApp } from '../../context/AppContext.jsx'
 import { StatCard } from '../shared/StatCard.jsx'
 import { Card } from '../shared/Card.jsx'
@@ -28,8 +28,24 @@ const ANOMALIES=[
   {detail:'Outsourced vendor billing rate variance exceeds 15% from last cycle',severity:'medium'},
 ]
 
+
+// ── Tenant session helper ──────────────────────────────────────────────
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} }
+  catch(_e) { return {} }
+}
+function _getTenantHeaders() {
+  const sess  = _getSession()
+  const token = localStorage.getItem('access_token') || sess?.token || ''
+  const slug  = sess?.company?.slug || localStorage.getItem('elogix_tenant_slug') || ''
+  return { token, slug, valid: !!(token && slug) }
+}
+
 export default function FinanceDashboard(){
   const { navTo, t } = useApp()
+  const [apiData,    setApiData]    = useState(null)
+  const [apiLoading, setApiLoading] = useState(true)
+  const [apiError,   setApiError]   = useState(null)
   const [tab,setTab]=useState('overview')
 
   return(

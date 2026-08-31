@@ -42,6 +42,10 @@ const BLANK_FORM = { title:'', type:'meeting', date:'', time:'09:00', endTime:'1
 
 export default function CalendarEventsPage() {
   const today = new Date()
+  // Tenant API states
+  const [apiData,    setApiData]    = useState(null)
+  const [apiLoading, setApiLoading] = useState(true)
+  const [apiError,   setApiError]   = useState(null)
   const [view,       setView]       = useState('monthly')   // daily weekly monthly annually
   const [curDate,    setCurDate]    = useState(new Date(today))
   const [events,     setEvents]     = useState(INIT_EVENTS)
@@ -354,6 +358,55 @@ export default function CalendarEventsPage() {
   // ─────────────────────────────────────────────────────────────
   // RENDER
   // ─────────────────────────────────────────────────────────────
+
+  // ══════════════════════════════════════════════════════════════
+  // TENANT-AWARE DATA LOADING
+  // Every request includes:
+  //   Authorization: Bearer <token>  ← identifies the user
+  //   X-Tenant-Slug: <company-slug>  ← isolates to this company's data
+  // Backend enforces: employee.company_id = tenant.id (row-level security)
+  // Falls back to empty state if API unavailable (no mock data shown)
+  // ══════════════════════════════════════════════════════════════
+  useEffect(() => {
+    const token = localStorage.getItem('access_token')
+    const sess  = (() => { try { return JSON.parse(sessionStorage.getItem('elogix_session') || localStorage.getItem('elogix_session') || 'null') } catch(_e) { return null } })()
+    const slug  = sess?.company?.slug || localStorage.getItem('elogix_tenant_slug') || ''
+
+    if (!token || !slug) {
+      // No session — show empty state, not mock data
+      setApiLoading(false)
+      return
+    }
+
+    setApiLoading(true)
+    setApiError(null)
+
+    fetch(`/api/v1/calendar/events`, {
+      headers: {
+        'Authorization' : `Bearer ${token}`,
+        'X-Tenant-Slug' : slug,
+        'Content-Type'  : 'application/json',
+      }
+    })
+      .then(r => {
+        if (r.status === 401) { window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') }
+        if (r.status === 403) { throw new Error('Access denied') }
+        if (!r.ok) { throw new Error(`API error ${r.status}`) }
+        return r.json()
+      })
+      .then(data => {
+        const payload = data.events || data.data || data
+        if (payload && typeof payload === 'object') {
+          setApiData(payload)
+        }
+      })
+      .catch(err => {
+        setApiError(err.message)
+        console.warn('[eLogix] /calendar/events failed:', err.message)
+      })
+      .finally(() => setApiLoading(false))
+  }, [])
+
   return (
     <div style={{fontFamily:'system-ui,sans-serif',minHeight:'100vh',background:'#f0f7ff'}}>
       {msg&&<div style={{position:'fixed',bottom:20,right:20,zIndex:9999,

@@ -115,6 +115,23 @@ function ShiftCell({ shift, dayIdx, empId, canEdit, onChange, isToday, isChanged
 
 // ── MAIN COMPONENT ─────────────────────────────────────────────
 export default function RosterManagementPage() {
+
+  const [apiData,setApiData]=useState(null)
+  const [apiLoading,setApiLoading]=useState(true)
+  const [apiError,setApiError]=useState(null)
+
+  useEffect(()=>{
+    const token=localStorage.getItem('access_token')
+    const sess=(()=>{try{return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{}}catch{return{}}})()
+    const slug=sess?.company?.slug||''
+    if(!token||!slug){setApiLoading(false);return}
+    setApiLoading(true)
+    fetch('/api/v1/roster',{headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}})
+      .then(r=>r.ok?r.json():Promise.reject(r.status))
+      .then(d=>{if(d.roster||d.data)setApiData(d.roster||d.data)})
+      .catch(()=>{})
+      .finally(()=>setApiLoading(false))
+  },[])
   const slug    = getSessionSlug()
   const access  = resolveTenantAccess(slug)
   const sess    = getSession()
@@ -682,6 +699,9 @@ tr:nth-child(even) td{background:#f8fafc}
   return (
     <div style={{ position:'relative', width:'100%', minHeight:'100vh', display:'flex', flexDirection:'column',
       fontFamily:"'Segoe UI',system-ui,sans-serif", background:'#f5f3ff', overflow:'hidden' }}>
+      {apiLoading && <div style={{padding:40,textAlign:"center",color:"#7c3aed",fontSize:13,fontWeight:600}}><div style={{fontSize:32}}>⟳</div>Loading...</div>}
+      {apiError && !apiLoading && <div style={{padding:"8px 14px",background:"#fef2f2",border:"1px solid #fecaca",borderRadius:8,fontSize:12,color:"#dc2626",marginBottom:8}}>⚠️ {apiError}</div>}
+
       <style>{`
         ::-webkit-scrollbar{width:8px;height:8px}
         ::-webkit-scrollbar-track{background:#f1f5f9;border-radius:4px}

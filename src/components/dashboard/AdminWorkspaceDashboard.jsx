@@ -9,7 +9,21 @@ const TODAY=[
   {item:'Conference Room B booked 2 PM - 4 PM, Quarterly Review',type:'room'},
   {item:'2 gate pass requests awaiting approval',type:'gatepass'},
 ]
+
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}}
+}
+function _getTenantCtx() {
+  const s=_getSession()
+  const token=localStorage.getItem('access_token')||s?.token||''
+  const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+  return {token,slug,valid:!!(token&&slug)}
+}
+
 export default function AdminWorkspaceDashboard(){
+  const [apiData,setApiData]=useState(null)
+  const [apiLoading,setApiLoading]=useState(true)
+  const [apiError,setApiError]=useState(null)
   const { navTo } = useApp()
   return(
     <div>

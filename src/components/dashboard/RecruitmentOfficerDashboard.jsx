@@ -8,7 +8,7 @@
 //          internal employee data). This persona is a company
 //          employee with full internal recruitment-module access.
 // ============================================================
-import { useState } from 'react'
+import { useState , useEffect } from 'react'
 import { useApp } from '../../context/AppContext.jsx'
 import { StatCard } from '../shared/StatCard.jsx'
 import { Card } from '../shared/Card.jsx'
@@ -21,7 +21,24 @@ const PENDING_OFFERS=[
   {candidate:'Aastha Shrestha',role:'Marketing Lead',awaiting:'Department Head Approval'},
 ]
 
+
+// ── Tenant session helper ──────────────────────────────────────────────
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} }
+  catch(_e) { return {} }
+}
+function _getTenantHeaders() {
+  const sess  = _getSession()
+  const token = localStorage.getItem('access_token') || sess?.token || ''
+  const slug  = sess?.company?.slug || localStorage.getItem('elogix_tenant_slug') || ''
+  return { token, slug, valid: !!(token && slug) }
+}
+
 export default function RecruitmentOfficerDashboard(){
+  const [apiData, setApiData] = useState(null)
+  const [apiLoading, setApiLoading] = useState(true)
+  const [apiError, setApiError] = useState(null)
+
   const { navTo, t } = useApp()
   const maxCount = Math.max(...PIPELINE.map(p=>p.count))
   return(

@@ -4,7 +4,7 @@
 //          sentiment analysis, engagement trends
 // ============================================================
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   AreaChart, Area, BarChart, Bar, RadarChart, Radar,
   PolarGrid, PolarAngleAxis, LineChart, Line,
@@ -119,6 +119,7 @@ function ENPSGauge({ score }) {
         <text x="172" y="115" fontSize="9" fill="#94a3b8">+100</text>
       </svg>
       <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+
         Promoters 61% · Passives 20% · Detractors 19%
       </div>
       <div style={{ marginTop: 6 }}>
@@ -129,9 +130,34 @@ function ENPSGauge({ score }) {
 }
 
 // ── Main Component ───────────────────────────────────────────
+
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}}
+}
+function _getTenantCtx() {
+  const s=_getSession()
+  const token=localStorage.getItem('access_token')||s?.token||''
+  const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+  return {token,slug,valid:!!(token&&slug)}
+}
+
 export default function EngagementSnapshot() {
+  const [apiData,setApiData]=useState(null)
+  const [apiLoading,setApiLoading]=useState(true)
+  const [apiError,setApiError]=useState(null)
   const { t } = useApp()
   const [activeTab, setActiveTab] = useState('overview')
+
+  useEffect(()=>{
+    const {token,slug,valid} = _getTenantCtx()
+    if(!valid){setApiLoading(false);return}
+    setApiLoading(true);setApiError(null)
+    fetch('/api/v1/engagement/snapshot',{headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}})
+      .then(r=>{if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));throw new Error('Session expired')}if(!r.ok)throw new Error(`Error ${r.status}`);return r.json()})
+      .then(d=>{const p=d.snapshot||d.data||d;if(p)setApiData(p)})
+      .catch(err=>setApiError(err.message))
+      .finally(()=>setApiLoading(false))
+  },[])
 
   return (
     <div>

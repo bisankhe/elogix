@@ -1,5 +1,5 @@
 // FILE: AIAttendanceInsightsPage.jsx — AI Attendance Insights
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { BarChart, Bar, LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import { useApp } from '../../../context/AppContext.jsx'
 
@@ -24,7 +24,21 @@ const aiAlerts=[
   {icon:'🔵',msg:'Predicted: 14-18% attendance dip next week due to upcoming public holiday cluster.',severity:'info'},
 ]
 
+
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}}
+}
+function _getTenantCtx() {
+  const s=_getSession()
+  const token=localStorage.getItem('access_token')||s?.token||''
+  const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+  return {token,slug,valid:!!(token&&slug)}
+}
+
 export default function AIAttendanceInsightsPage(){
+  const [apiData,setApiData]=useState(null)
+  const [apiLoading,setApiLoading]=useState(true)
+  const [apiError,setApiError]=useState(null)
   const [msg, setMsg] = useState('')
   const notify = (m) => { setMsg(m); setTimeout(()=>setMsg(''),3000) }
   const today=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})

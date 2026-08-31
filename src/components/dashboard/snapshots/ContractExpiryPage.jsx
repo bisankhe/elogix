@@ -1,6 +1,6 @@
 // FILE: ContractExpiryPage.jsx — Contract Expiry Tracker
 // Full list: name, position, dept, expiry date | Renew Now / Schedule Later
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 const G = 'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)'
 const A = '#7c3aed'
 const CONTRACTS = [
@@ -16,7 +16,21 @@ const CONTRACTS = [
 const RISK_C = { critical:'#ef4444', warning:'#f59e0b', normal:'#10b981' }
 const RISK_BG = { critical:'#fef2f2', warning:'#fffbeb', normal:'#f0fdf4' }
 
+
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}}
+}
+function _getTenantCtx() {
+  const s=_getSession()
+  const token=localStorage.getItem('access_token')||s?.token||''
+  const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+  return {token,slug,valid:!!(token&&slug)}
+}
+
 export default function ContractExpiryPage() {
+  const [apiData,setApiData]=useState(null)
+  const [apiLoading,setApiLoading]=useState(true)
+  const [apiError,setApiError]=useState(null)
   const [contracts, setContracts] = useState(CONTRACTS)
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
@@ -34,9 +48,31 @@ export default function ContractExpiryPage() {
     notify('✅ Contract renewal initiated! HR will send paperwork.'); setModal(null)
   }
 
+  useEffect(()=>{
+    const {token,slug,valid} = _getTenantCtx()
+    if(!valid){setApiLoading(false);return}
+    setApiLoading(true);setApiError(null)
+    fetch('/api/v1/employees/contracts/expiring',{headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}})
+      .then(r=>{if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));throw new Error('Session expired')}if(!r.ok)throw new Error(`Error ${r.status}`);return r.json()})
+      .then(d=>{const p=d.contracts||d.data||d;if(p)setApiData(p)})
+      .catch(err=>setApiError(err.message))
+      .finally(()=>setApiLoading(false))
+  },[])
+
   return (
     <div style={{fontFamily:'system-ui,sans-serif'}}>
       <div style={{background:G,borderRadius:14,padding:'16px 22px',marginBottom:14,color:'#fff'}}>
+      {apiLoading && (
+        <div style={{textAlign:'center',padding:40,color:'#7c3aed',fontSize:13,fontWeight:600}}>
+          <div style={{fontSize:32,marginBottom:8}}>⟳</div>Loading...
+        </div>
+      )}
+      {apiError && !apiLoading && (
+        <div style={{padding:'8px 14px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,fontSize:12,color:'#dc2626',marginBottom:8,fontWeight:600}}>
+          ⚠️ {apiError}
+        </div>
+      )}
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:10}}>
           <div><h2 style={{margin:0,fontSize:20,fontWeight:900}}>📄 Contract Expiry Tracker</h2>
             <p style={{margin:'3px 0 0',fontSize:10,opacity:.8}}>Upcoming renewals · Name · Position · Department · Expiry Date · Action</p>

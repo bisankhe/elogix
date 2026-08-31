@@ -8,7 +8,24 @@ const CAMPAIGNS=[
   {name:'Campus Hiring 2025 -- Engineering',reach:'12.4K',applications:84},
   {name:'LinkedIn EVP Series',reach:'8.1K',applications:21},
 ]
+
+// ── Tenant session helper ──────────────────────────────────────────────
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} }
+  catch(_e) { return {} }
+}
+function _getTenantHeaders() {
+  const sess  = _getSession()
+  const token = localStorage.getItem('access_token') || sess?.token || ''
+  const slug  = sess?.company?.slug || localStorage.getItem('elogix_tenant_slug') || ''
+  return { token, slug, valid: !!(token && slug) }
+}
+
 export default function MarketingDashboard(){
+  const [apiData, setApiData] = useState(null)
+  const [apiLoading, setApiLoading] = useState(true)
+  const [apiError, setApiError] = useState(null)
+
   const { navTo } = useApp()
   return(
     <div>

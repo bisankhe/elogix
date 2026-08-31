@@ -45,7 +45,7 @@ export default function AppRouter() {
       // runs async and getDashboardPage() may still return stale state.
       // data.goto (or data.landing) is always the freshly computed value.
       const landing = data?.goto || data?.landing || 'company-dashboard'
-      try { sessionStorage.removeItem('elogix_pending_login') } catch {}
+      try { sessionStorage.removeItem('elogix_pending_login') } catch(_e) {}
       setInitialPage(landing)
       setPage('app')
     }

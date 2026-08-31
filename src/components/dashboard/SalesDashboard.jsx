@@ -8,7 +8,24 @@ const TEAM=[
   {name:'Sunil Magar',visits_mtd:14,status:'On Track'},
   {name:'Maya Pradhan',visits_mtd:9,status:'Behind Target'},
 ]
+
+// ── Tenant session helper ──────────────────────────────────────────────
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} }
+  catch(_e) { return {} }
+}
+function _getTenantHeaders() {
+  const sess  = _getSession()
+  const token = localStorage.getItem('access_token') || sess?.token || ''
+  const slug  = sess?.company?.slug || localStorage.getItem('elogix_tenant_slug') || ''
+  return { token, slug, valid: !!(token && slug) }
+}
+
 export default function SalesDashboard(){
+  const [apiData, setApiData] = useState(null)
+  const [apiLoading, setApiLoading] = useState(true)
+  const [apiError, setApiError] = useState(null)
+
   const { navTo } = useApp()
   return(
     <div>

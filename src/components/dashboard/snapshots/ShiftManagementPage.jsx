@@ -1,7 +1,7 @@
 // FILE: ShiftManagementPage.jsx — Shift Management (Attendance Setup)
 // Shift templates, night-differential pay rates, 8hr/48hr LA2074 caps
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Field, ExcelModal, PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
 
 const G = 'linear-gradient(135deg,#1e1b4b 0%,#4338ca 60%,#818cf8 100%)'
@@ -22,7 +22,21 @@ const SHIFTS = [
     impact_links:['Roster Management','Payroll Setup'] },
 ]
 
+
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}}
+}
+function _getTenantCtx() {
+  const s=_getSession()
+  const token=localStorage.getItem('access_token')||s?.token||''
+  const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+  return {token,slug,valid:!!(token&&slug)}
+}
+
 export default function ShiftManagementPage() {
+  const [apiData,setApiData]=useState(null)
+  const [apiLoading,setApiLoading]=useState(true)
+  const [apiError,setApiError]=useState(null)
   const [shifts, setShifts] = useState(SHIFTS)
   const [search, setSearch] = useState('')
   const [form, setForm] = useState({})
@@ -34,6 +48,17 @@ export default function ShiftManagementPage() {
 
   const filtered = shifts.filter(s=>!search||s.name.toLowerCase().includes(search.toLowerCase()))
   const totalAssigned = shifts.reduce((s,x)=>s+x.assigned_employees,0)
+
+  useEffect(()=>{
+    const {token,slug,valid} = _getTenantCtx()
+    if(!valid){setApiLoading(false);return}
+    setApiLoading(true);setApiError(null)
+    fetch('/api/v1/attendance-setup/shifts',{headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}})
+      .then(r=>{if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));throw new Error('Session expired')}if(!r.ok)throw new Error(`Error ${r.status}`);return r.json()})
+      .then(d=>{const p=d.shifts||d.data||d;if(p)setApiData(p)})
+      .catch(err=>setApiError(err.message))
+      .finally(()=>setApiLoading(false))
+  },[])
 
   return (
     <div onClick={()=>setCtx(null)}>
@@ -51,6 +76,17 @@ export default function ShiftManagementPage() {
         onExcel={()=>setShowExcel(true)}/>
 
       <div style={{background:'linear-gradient(135deg,#eef2ff,#f5f3ff)',border:'1px solid #c7d2fe',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#3730a3',display:'flex',gap:10}}>
+      {apiLoading && (
+        <div style={{textAlign:'center',padding:40,color:'#7c3aed',fontSize:13,fontWeight:600}}>
+          <div style={{fontSize:32,marginBottom:8}}>⟳</div>Loading...
+        </div>
+      )}
+      {apiError && !apiLoading && (
+        <div style={{padding:'8px 14px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,fontSize:12,color:'#dc2626',marginBottom:8,fontWeight:600}}>
+          ⚠️ {apiError}
+        </div>
+      )}
         <span style={{fontSize:18}}>⚖</span>
         <div><strong>Nepal LA2074:</strong> All shift templates capped at 8hrs/day. Night shift differential pay is a standard practice add-on (not legally mandated but common). One-month auto-shift-selector and slider available below for rapid rostering.</div>
       </div>

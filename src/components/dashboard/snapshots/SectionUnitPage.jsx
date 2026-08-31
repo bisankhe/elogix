@@ -1,5 +1,5 @@
 // FILE: SectionUnitPage.jsx - Page 3: Section & Unit Setup
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   THEMES, Field, ContextMenu, ExcelModal, PageHeader,
   AIImpact, Drawer, SearchBar, Badge, LuxCard
@@ -69,16 +69,7 @@ const ULRICH_COLORS = {
   'HRBP': {bg:'#fffbeb',color:'#b45309',label:'HR Business Partner'},
 }
 
-
-function _getSlug() {
-  try {
-    const s = JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{}
-    return s?.company?.slug || s?.tenant || localStorage.getItem('elogix_tenant_slug') || ''
-  } catch(_e) { return '' }
-}
-
 export default function SectionUnitPage() {
-  const [_apiLoading, _setApiLoading] = useState(false)
   const [sections,  setSections]  = useState(MOCK_SECTIONS)
   const [search,    setSearch]    = useState('')
   const [ctx,       setCtx]       = useState(null)
@@ -92,29 +83,6 @@ export default function SectionUnitPage() {
     (deptFilter==='all' || s.department===deptFilter) &&
     (!search || s.name.toLowerCase().includes(search.toLowerCase()) || s.code.toLowerCase().includes(search.toLowerCase()))
   )
-
-
-  // SaaS DB — load real tenant data (fallback to mock if no token/API down)
-  useEffect(() => {
-    const _token = localStorage.getItem('access_token')
-    const _slug  = _getSlug()
-    if (!_token) return
-    _setApiLoading(true)
-    fetch('/api/v1/org/sections', {
-      headers: {
-        'Authorization': `Bearer ${_token}`,
-        'X-Tenant-Slug': _slug,
-        'Content-Type': 'application/json',
-      }
-    })
-      .then(r => r.ok ? r.json() : Promise.reject(r.status))
-      .then(d => {
-        const items = d.sections || d.data || d.items || []
-        if (items.length > 0) setSections(items)
-      })
-      .catch(() => {/* keep mock */})
-      .finally(() => _setApiLoading(false))
-  }, [])
 
   return (
     <div onClick={()=>setCtx(null)}>

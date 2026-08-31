@@ -4,7 +4,7 @@
 //          system, action buttons, smart filters, history
 // ============================================================
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useApp }    from '../../../context/AppContext.jsx'
 import { StatCard }  from '../../shared/StatCard.jsx'
 import { Card }      from '../../shared/Card.jsx'
@@ -140,6 +140,7 @@ function NotifItem({ notif, onAction, onRead, expanded, onExpand }) {
       }}
     >
       <div className="flex items-start gap-3">
+
         {/* Icon */}
         <div
           style={{
@@ -216,7 +217,21 @@ function NotifItem({ notif, onAction, onRead, expanded, onExpand }) {
 }
 
 // ── Main Component ───────────────────────────────────────────
+
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}}
+}
+function _getTenantCtx() {
+  const s=_getSession()
+  const token=localStorage.getItem('access_token')||s?.token||''
+  const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+  return {token,slug,valid:!!(token&&slug)}
+}
+
 export default function NotificationsPage() {
+  const [apiData,setApiData]=useState(null)
+  const [apiLoading,setApiLoading]=useState(true)
+  const [apiError,setApiError]=useState(null)
   const { t } = useApp()
   const [notifications, setNotifications] = useState(allNotifications)
   const [filterType,    setFilterType]    = useState('all')      // 'all' | 'critical' | 'warning' | 'info' | 'unread'
@@ -241,6 +256,17 @@ export default function NotificationsPage() {
   const markAllRead  = () => setNotifications(prev => prev.map(n => ({ ...n, read: true })))
   const handleAction = (notif) => { markRead(notif.id); alert(`Action: ${notif.action} — ${notif.title}`) }
   const handleExpand = (id) => setExpandedId(prev => prev === id ? null : id)
+
+  useEffect(()=>{
+    const {token,slug,valid} = _getTenantCtx()
+    if(!valid){setApiLoading(false);return}
+    setApiLoading(true);setApiError(null)
+    fetch('/api/v1/notifications',{headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}})
+      .then(r=>{if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));throw new Error('Session expired')}if(!r.ok)throw new Error(`Error ${r.status}`);return r.json()})
+      .then(d=>{const p=d.notifications||d.data||d;if(p)setApiData(p)})
+      .catch(err=>setApiError(err.message))
+      .finally(()=>setApiLoading(false))
+  },[])
 
   return (
     <div>

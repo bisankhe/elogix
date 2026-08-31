@@ -222,6 +222,17 @@ function AIMinutesWidget() {
     <div style={{display:'flex',flexDirection:'column',gap:10}}>
       {/* Mode selector */}
       <div style={{display:'flex',gap:6}}>
+      {apiLoading && (
+        <div style={{textAlign:'center',padding:40,color:'#7c3aed',fontSize:13,fontWeight:600}}>
+          <div style={{fontSize:32,marginBottom:8}}>⟳</div>Loading...
+        </div>
+      )}
+      {apiError && !apiLoading && (
+        <div style={{padding:'8px 14px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,fontSize:12,color:'#dc2626',marginBottom:8,fontWeight:600}}>
+          ⚠️ {apiError}
+        </div>
+      )}
         {['Voice','Text'].map(m=>(
           <button key={m} onClick={()=>setMode(m.toLowerCase())}
             style={{flex:1,padding:'7px',borderRadius:8,border:`1px solid ${mode===m.toLowerCase()?P:'#e2e8f0'}`,background:mode===m.toLowerCase()?`${P}10`:'#f8fafc',color:mode===m.toLowerCase()?P:'#64748b',fontSize:9,fontWeight:700,cursor:'pointer'}}>
@@ -290,7 +301,21 @@ function AIMinutesWidget() {
 const G = 'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)'
 
 // ── MAIN DASHBOARD ────────────────────────────────────────────
+
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}}
+}
+function _getTenantCtx() {
+  const s=_getSession()
+  const token=localStorage.getItem('access_token')||s?.token||''
+  const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+  return {token,slug,valid:!!(token&&slug)}
+}
+
 export default function HRManagerDashboard() {
+  const [apiData,setApiData]=useState(null)
+  const [apiLoading,setApiLoading]=useState(true)
+  const [apiError,setApiError]=useState(null)
   const { navTo, currentPersona } = useApp()
   const [activeTab, setActiveTab] = useState('overview')
   const [now, setNow] = useState(new Date())
@@ -304,6 +329,17 @@ export default function HRManagerDashboard() {
   const timeStr = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' })
 
   // ── HEADER ─────────────────────────────────────────────────
+  useEffect(()=>{
+    const {token,slug,valid} = _getTenantCtx()
+    if(!valid){setApiLoading(false);return}
+    setApiLoading(true);setApiError(null)
+    fetch('/api/v1/dashboard/hr',{headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}})
+      .then(r=>{if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));throw new Error('Session expired')}if(!r.ok)throw new Error(`Error ${r.status}`);return r.json()})
+      .then(d=>{const p=d.dashboard||d.data||d;if(p)setApiData(p)})
+      .catch(err=>setApiError(err.message))
+      .finally(()=>setApiLoading(false))
+  },[])
+
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:0 }}>
 

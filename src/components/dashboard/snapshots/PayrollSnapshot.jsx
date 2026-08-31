@@ -5,7 +5,7 @@
 //          PF/Gratuity, OT calculation, salary structure
 // ============================================================
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -92,6 +92,23 @@ function PayrollAccessGuard({ persona, children }) {
 
 // ── Main Component ───────────────────────────────────────────
 export default function PayrollSnapshot() {
+
+  const [apiData,setApiData]=useState(null)
+  const [apiLoading,setApiLoading]=useState(true)
+  const [apiError,setApiError]=useState(null)
+
+  useEffect(()=>{
+    const token=localStorage.getItem('access_token')
+    const sess=(()=>{try{return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{}}catch{return{}}})()
+    const slug=sess?.company?.slug||''
+    if(!token||!slug){setApiLoading(false);return}
+    setApiLoading(true)
+    fetch('/api/v1/payroll/snapshot',{headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}})
+      .then(r=>r.ok?r.json():Promise.reject(r.status))
+      .then(d=>{if(d.snapshot||d.data)setApiData(d.snapshot||d.data)})
+      .catch(()=>{})
+      .finally(()=>setApiLoading(false))
+  },[])
   const { t, cc, persona } = useApp()
   const [activeTab, setActiveTab] = useState('overview')
 
@@ -105,6 +122,9 @@ export default function PayrollSnapshot() {
 
   return (
     <div>
+      {apiLoading && <div style={{padding:40,textAlign:"center",color:"#7c3aed",fontSize:13,fontWeight:600}}><div style={{fontSize:32}}>⟳</div>Loading...</div>}
+      {apiError && !apiLoading && <div style={{padding:"8px 14px",background:"#fef2f2",border:"1px solid #fecaca",borderRadius:8,fontSize:12,color:"#dc2626",marginBottom:8}}>⚠️ {apiError}</div>}
+
       <PageTitle
         title="Payroll Snapshot"
         sub="🔒 Restricted — HR Directors & Finance only. Total cost, OT, benefits, Nepal Rule 21 & PF compliance."

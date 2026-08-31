@@ -1,17 +1,42 @@
 // FILE: AnnualManpowerPage.jsx - Annual Manpower Plan
 // Workforce Planning Module 4/13
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { DEPARTMENTS, BRANCHES, HEADCOUNT_TREND, MONTHS_BS, ATTRITION_TREND, HIRING_TREND, WFP_THEME, TOTAL_QUOTA, TOTAL_FILLED, TOTAL_VACANT, FISCAL_YEAR } from '../../../data/wfpData.js'
 import { Field, ExcelModal, PageHeader, AIImpact, Drawer, SearchBar, LuxCard, ContextMenu } from './DeptSetupShared.jsx'
 
 const { G, A } = WFP_THEME.annual
 const IMPACT = ['Annual Manpower Plan','Headcount Planning','Vacancy Planning','Payroll Budget','HR Dashboard']
 
+
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}}
+}
+function _getTenantCtx() {
+  const s=_getSession()
+  const token=localStorage.getItem('access_token')||s?.token||''
+  const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+  return {token,slug,valid:!!(token&&slug)}
+}
+
 export default function AnnualManpowerPage() {
+  const [apiData,setApiData]=useState(null)
+  const [apiLoading,setApiLoading]=useState(true)
+  const [apiError,setApiError]=useState(null)
   const [showExcel, setShowExcel] = useState(false)
   const [ctx, setCtx] = useState(null)
   const [showAdd, setShowAdd] = useState(false)
   const [selected, setSelected] = useState(null)
+
+  useEffect(()=>{
+    const {token,slug,valid} = _getTenantCtx()
+    if(!valid){setApiLoading(false);return}
+    setApiLoading(true);setApiError(null)
+    fetch('/api/v1/hr-analytics/manpower',{headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}})
+      .then(r=>{if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));throw new Error('Session expired')}if(!r.ok)throw new Error(`Error ${r.status}`);return r.json()})
+      .then(d=>{const p=d.data||d.data||d;if(p)setApiData(p)})
+      .catch(err=>setApiError(err.message))
+      .finally(()=>setApiLoading(false))
+  },[])
 
   return (
     <div onClick={()=>setCtx(null)}>
@@ -28,6 +53,17 @@ export default function AnnualManpowerPage() {
         onExcel={()=>setShowExcel(true)}/>
 
       <div style={{background:`linear-gradient(135deg,${A}08,${A}02)`,border:`1px solid ${A}22`,borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:A,display:'flex',gap:10}}>
+      {apiLoading && (
+        <div style={{textAlign:'center',padding:40,color:'#7c3aed',fontSize:13,fontWeight:600}}>
+          <div style={{fontSize:32,marginBottom:8}}>⟳</div>Loading...
+        </div>
+      )}
+      {apiError && !apiLoading && (
+        <div style={{padding:'8px 14px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,fontSize:12,color:'#dc2626',marginBottom:8,fontWeight:600}}>
+          ⚠️ {apiError}
+        </div>
+      )}
         <span style={{fontSize:18}}>🤖</span>
         <div><strong>AI Insight - Annual Manpower Plan:</strong> Based on current fill rates and historical attrition, AI projects {Math.round(TOTAL_VACANT*1.2)} positions will need action in Q3. Recommend prioritizing Operations and IT vacancies.</div>
       </div>

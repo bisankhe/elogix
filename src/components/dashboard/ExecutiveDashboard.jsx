@@ -5,7 +5,7 @@
 //          daily tasks, things to do
 // ============================================================
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -96,7 +96,21 @@ const aiInsights = [
   { color: '#3b82f6', label: 'Q3 Hiring Forecast',   text: 'Based on growth trajectory, 28–35 new hires needed in Q3 2026: IT (12), Sales (8), Operations (15).' },
 ]
 
+
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}}
+}
+function _getTenantCtx() {
+  const s=_getSession()
+  const token=localStorage.getItem('access_token')||s?.token||''
+  const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+  return {token,slug,valid:!!(token&&slug)}
+}
+
 export default function ExecutiveDashboard() {
+  const [apiData,setApiData]=useState(null)
+  const [apiLoading,setApiLoading]=useState(true)
+  const [apiError,setApiError]=useState(null)
   const { t, cc } = useApp()
   const [tasks, setTasks] = useState(tasksByDept)
   const [activeTab, setActiveTab] = useState('overview')
@@ -112,6 +126,17 @@ export default function ExecutiveDashboard() {
 
   const completedTasks = tasks.filter(t => t.done).length
 
+  useEffect(()=>{
+    const {token,slug,valid} = _getTenantCtx()
+    if(!valid){setApiLoading(false);return}
+    setApiLoading(true);setApiError(null)
+    fetch('/api/v1/dashboard/executive',{headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}})
+      .then(r=>{if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));throw new Error('Session expired')}if(!r.ok)throw new Error(`Error ${r.status}`);return r.json()})
+      .then(d=>{const p=d.dashboard||d.data||d;if(p)setApiData(p)})
+      .catch(err=>setApiError(err.message))
+      .finally(()=>setApiLoading(false))
+  },[])
+
   return (
     <div>
       <PageTitle
@@ -122,6 +147,17 @@ export default function ExecutiveDashboard() {
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+      {apiLoading && (
+        <div style={{textAlign:'center',padding:40,color:'#7c3aed',fontSize:13,fontWeight:600}}>
+          <div style={{fontSize:32,marginBottom:8}}>⟳</div>Loading...
+        </div>
+      )}
+      {apiError && !apiLoading && (
+        <div style={{padding:'8px 14px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,fontSize:12,color:'#dc2626',marginBottom:8,fontWeight:600}}>
+          ⚠️ {apiError}
+        </div>
+      )}
         <StatCard icon="👥" label="Total Headcount"         value="1,250"      change="+12 vs last month"   up  accent="#3b82f6" />
         <StatCard icon="💰" label={`Labor Cost (${cc.code})`} value={fmt(4200000)} change="+2.1% this month" up  accent="#10b981" />
         <StatCard icon="📉" label="Turnover Rate"           value="8.2%"       change="Industry avg 12%"    up  accent="#ef4444" />

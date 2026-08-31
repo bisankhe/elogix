@@ -131,6 +131,7 @@ export default function ELogixAdminPage({ onLogout }) {
     try { return JSON.parse(localStorage.getItem('elogix_pending_tenants') || '[]') } catch(_e) { return [] }
   })
   const [apiLoading, setApiLoading] = useState(false)
+  const [apiError,   setApiError]   = useState(null)
 
   const loadFromAPI = async () => {
     setApiLoading(true)
@@ -283,7 +284,6 @@ export default function ELogixAdminPage({ onLogout }) {
     return () => clearInterval(interval)
   }, [])
 
-
   const scf = (k,v) => setCreateForm(p=>({...p,[k]:v}))
 
   // Stats
@@ -429,9 +429,9 @@ export default function ELogixAdminPage({ onLogout }) {
     notify(`❌ ${tenant.name} rejected and removed.`)
   }
 
-
   const Tab = ({id,label,icon}) => (
-    <button onClick={()=>setTab(id)}
+    <button onClick={()=>
+      setTab(id)}
       style={{padding:'9px 18px',borderRadius:20,border:`1.5px solid ${tab===id?A:'#e2e8f0'}`,
         background:tab===id?A+'15':'#fff',color:tab===id?A:'#64748b',
         fontSize:11,fontWeight:tab===id?800:400,cursor:'pointer',transition:'all .12s',whiteSpace:'nowrap'}}>
@@ -451,6 +451,19 @@ export default function ELogixAdminPage({ onLogout }) {
       scrollbarColor:'#818cf8 #e0e7ff',
       zIndex:10,
     }}>
+      {apiLoading && (
+        <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:48,color:'#7c3aed'}}>
+          <div style={{textAlign:'center',fontSize:13,fontWeight:600}}>
+            <div style={{fontSize:32,marginBottom:8}}>⟳</div>Loading...
+          </div>
+        </div>
+      )}
+      {apiError && !apiLoading && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,margin:'0 0 12px',fontSize:12,color:'#dc2626',fontWeight:600}}>
+          ⚠️ {apiError}
+        </div>
+      )}
       {msg&&<div style={{position:'fixed',bottom:20,right:20,zIndex:9999,background:'#f0fdf4',
         border:'1px solid #bbf7d0',borderRadius:10,padding:'10px 18px',fontSize:11,
         color:'#065f46',boxShadow:'0 4px 16px rgba(0,0,0,.12)',maxWidth:440}}>{msg}</div>}
@@ -518,13 +531,6 @@ export default function ELogixAdminPage({ onLogout }) {
       </div>
 
       {/* API status banner */}
-      {apiLoading && (
-        <div style={{background:'#eff6ff',borderBottom:'1px solid #bae6fd',
-          padding:'6px 20px',fontSize:10,color:'#0369a1',display:'flex',alignItems:'center',gap:8}}>
-          <span style={{fontSize:14}}>⟳</span>
-          <span>Loading companies from server database — this will show ALL registered tenants including new signups...</span>
-        </div>
-      )}
 
       {/* Tabs */}
       <div style={{background:'#fff',padding:'10px 20px',borderBottom:'1px solid #f1f5f9',

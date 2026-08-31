@@ -5,7 +5,7 @@
 //          team ops, daily tasks by role
 // ============================================================
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer,
@@ -61,7 +61,21 @@ const aiInsights = [
   { color: '#3b82f6', label: 'Report Reminder',      text: 'Weekly report to Department Head is due today by 5 PM. Include attendance & KPI summary.' },
 ]
 
+
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}}
+}
+function _getTenantCtx() {
+  const s=_getSession()
+  const token=localStorage.getItem('access_token')||s?.token||''
+  const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+  return {token,slug,valid:!!(token&&slug)}
+}
+
 export default function BranchDashboard() {
+  const [apiData,setApiData]=useState(null)
+  const [apiLoading,setApiLoading]=useState(true)
+  const [apiError,setApiError]=useState(null)
   const { t } = useApp()
   const [tasks, setTasks] = useState(branchTasks)
   const [activeTab, setActiveTab] = useState('overview')
@@ -73,11 +87,33 @@ export default function BranchDashboard() {
     setReportStatus(prev => ({ ...prev, [to]: 'Sent' }))
   }
 
+  useEffect(()=>{
+    const {token,slug,valid} = _getTenantCtx()
+    if(!valid){setApiLoading(false);return}
+    setApiLoading(true);setApiError(null)
+    fetch('/api/v1/dashboard/branch',{headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}})
+      .then(r=>{if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));throw new Error('Session expired')}if(!r.ok)throw new Error(`Error ${r.status}`);return r.json()})
+      .then(d=>{const p=d.dashboard||d.data||d;if(p)setApiData(p)})
+      .catch(err=>setApiError(err.message))
+      .finally(()=>setApiLoading(false))
+  },[])
+
   return (
     <div>
       <PageTitle title="Branch / Section / Unit Dashboard" sub="Kathmandu Branch · Operations Section · Branch Manager: Sunita Rai · Can forward reports to seniors." badge="Branch" />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+      {apiLoading && (
+        <div style={{textAlign:'center',padding:40,color:'#7c3aed',fontSize:13,fontWeight:600}}>
+          <div style={{fontSize:32,marginBottom:8}}>⟳</div>Loading...
+        </div>
+      )}
+      {apiError && !apiLoading && (
+        <div style={{padding:'8px 14px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,fontSize:12,color:'#dc2626',marginBottom:8,fontWeight:600}}>
+          ⚠️ {apiError}
+        </div>
+      )}
         <StatCard icon="👥" label="Branch Headcount"   value="145"   change="+2 this month"   up  accent="#06b6d4" />
         <StatCard icon="✅" label="Branch Attendance"  value="88.3%" change="vs 87% last wk"  up  accent="#10b981" />
         <StatCard icon="📊" label="Branch Performance" value="79%"   change="+4% vs target"   up  accent="#f59e0b" />

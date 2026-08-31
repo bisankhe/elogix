@@ -1,6 +1,6 @@
 // FILE: OnboardingMonthPage.jsx — Onboarding This Month
 // eLogix HRMS | Staff onboarding tracker: name, designation, supervisor, dept, DOJ, employment type
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { PageHeader, SearchBar, ExcelModal } from './DeptSetupShared.jsx'
 
 const G = 'linear-gradient(135deg,#064e3b 0%,#059669 60%,#6ee7b7 100%)'
@@ -20,7 +20,21 @@ const ONBOARDING = [
 const STATUS_C  = { 'Pre-joining':'#94a3b8', 'Day 1':'#3b82f6', 'Week 2':'#f59e0b', 'Week 3':'#8b5cf6', 'Complete':'#10b981' }
 const EMP_C     = { Permanent:'#059669', Contract:'#0891b2', Outsource:'#f59e0b', Probation:'#8b5cf6' }
 
+
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}}
+}
+function _getTenantCtx() {
+  const s=_getSession()
+  const token=localStorage.getItem('access_token')||s?.token||''
+  const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+  return {token,slug,valid:!!(token&&slug)}
+}
+
 export default function OnboardingMonthPage() {
+  const [apiData,setApiData]=useState(null)
+  const [apiLoading,setApiLoading]=useState(true)
+  const [apiError,setApiError]=useState(null)
   const [data]        = useState(ONBOARDING)
   const [search, setSearch] = useState('')
   const [filterType, setFilterType] = useState('All')
@@ -35,6 +49,17 @@ export default function OnboardingMonthPage() {
   )
 
   const byStatus = (s) => data.filter(e => e.status === s).length
+
+  useEffect(()=>{
+    const {token,slug,valid} = _getTenantCtx()
+    if(!valid){setApiLoading(false);return}
+    setApiLoading(true);setApiError(null)
+    fetch('/api/v1/employees/onboarding',{headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}})
+      .then(r=>{if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));throw new Error('Session expired')}if(!r.ok)throw new Error(`Error ${r.status}`);return r.json()})
+      .then(d=>{const p=d.employees||d.data||d;if(p)setApiData(p)})
+      .catch(err=>setApiError(err.message))
+      .finally(()=>setApiLoading(false))
+  },[])
 
   return (
     <div style={{fontFamily:'system-ui,sans-serif'}}>
@@ -51,6 +76,17 @@ export default function OnboardingMonthPage() {
 
       {/* Filters */}
       <div style={{display:'flex',gap:8,marginBottom:14,flexWrap:'wrap'}}>
+      {apiLoading && (
+        <div style={{textAlign:'center',padding:40,color:'#7c3aed',fontSize:13,fontWeight:600}}>
+          <div style={{fontSize:32,marginBottom:8}}>⟳</div>Loading...
+        </div>
+      )}
+      {apiError && !apiLoading && (
+        <div style={{padding:'8px 14px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,fontSize:12,color:'#dc2626',marginBottom:8,fontWeight:600}}>
+          ⚠️ {apiError}
+        </div>
+      )}
         <SearchBar value={search} onChange={setSearch} placeholder="Search name or department..."/>
         <select value={filterType} onChange={e=>setFilterType(e.target.value)}
           style={{padding:'8px 12px',borderRadius:9,border:'1px solid #e2e8f0',fontSize:10,background:'#fff',outline:'none'}}>

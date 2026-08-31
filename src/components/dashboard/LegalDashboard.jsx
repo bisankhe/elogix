@@ -9,7 +9,24 @@ const CASES=[
   {case_no:'LC-2025-003',matter:'Unfair treatment in territory reassignment',stage:'Labour Office'},
   {case_no:'LC-2025-001',matter:'Workplace harassment investigation outcome disputed',stage:'Labour Court'},
 ]
+
+// ── Tenant session helper ──────────────────────────────────────────────
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} }
+  catch(_e) { return {} }
+}
+function _getTenantHeaders() {
+  const sess  = _getSession()
+  const token = localStorage.getItem('access_token') || sess?.token || ''
+  const slug  = sess?.company?.slug || localStorage.getItem('elogix_tenant_slug') || ''
+  return { token, slug, valid: !!(token && slug) }
+}
+
 export default function LegalDashboard(){
+  const [apiData, setApiData] = useState(null)
+  const [apiLoading, setApiLoading] = useState(true)
+  const [apiError, setApiError] = useState(null)
+
   const { navTo } = useApp()
   return(
     <div>

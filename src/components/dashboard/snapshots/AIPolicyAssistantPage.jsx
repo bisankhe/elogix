@@ -1,5 +1,5 @@
 // FILE: AIPolicyAssistantPage.jsx — AI Policy Assistant
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useApp } from '../../../context/AppContext.jsx'
 
 const P='#7c3aed'
@@ -40,7 +40,21 @@ async function askPolicyAI(question){
   }catch{return null}
 }
 
+
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}}
+}
+function _getTenantCtx() {
+  const s=_getSession()
+  const token=localStorage.getItem('access_token')||s?.token||''
+  const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+  return {token,slug,valid:!!(token&&slug)}
+}
+
 export default function AIPolicyAssistantPage(){
+  const [apiData,setApiData]=useState(null)
+  const [apiLoading,setApiLoading]=useState(true)
+  const [apiError,setApiError]=useState(null)
   const [query,setQuery]=useState('')
   const [answer,setAnswer]=useState('')
   const [loading,setLoading]=useState(false)

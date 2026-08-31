@@ -409,7 +409,7 @@ export default function Topbar({ sidebarOpen, setSidebarOpen, onLangClick, onNot
                   localStorage.getItem('elogix_user') || '{}'
                 )
                 return u.full_name || u.name || t(currentPersona?.labelKey) || currentPersona?.label || 'User'
-              } catch { return currentPersona?.label || 'User' }
+              } catch(_e) { return currentPersona?.label || 'User' }
             })()}
           </div>
           <div style={{ fontSize: 10, color: '#94a3b8' }}>
@@ -426,7 +426,7 @@ export default function Topbar({ sidebarOpen, setSidebarOpen, onLangClick, onNot
                   return role.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())
                 }
                 return 'eLogix HRMS'
-              } catch { return 'eLogix HRMS' }
+              } catch(_e) { return 'eLogix HRMS' }
             })()}
           </div>
         </div>

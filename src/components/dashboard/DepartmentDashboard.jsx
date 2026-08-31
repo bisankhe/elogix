@@ -5,7 +5,7 @@
 //          daily tasks, things to do by role
 // ============================================================
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer,
@@ -56,18 +56,54 @@ const aiInsights = [
   { color: '#f59e0b', label: 'Skill Gap Detected',text: 'Cloud infrastructure skills gap identified. 4 developers need AWS certification — budget allocation recommended.' },
 ]
 
+
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}}
+}
+function _getTenantCtx() {
+  const s=_getSession()
+  const token=localStorage.getItem('access_token')||s?.token||''
+  const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+  return {token,slug,valid:!!(token&&slug)}
+}
+
 export default function DepartmentDashboard() {
+  const [apiData,setApiData]=useState(null)
+  const [apiLoading,setApiLoading]=useState(true)
+  const [apiError,setApiError]=useState(null)
   const { t } = useApp()
   const [tasks, setTasks] = useState(deptTasks)
   const [activeTab, setActiveTab] = useState('overview')
   const toggle = (id) => setTasks(p => p.map(tk => tk.id === id ? { ...tk, done: !tk.done } : tk))
   const done = tasks.filter(t => t.done).length
 
+  useEffect(()=>{
+    const {token,slug,valid} = _getTenantCtx()
+    if(!valid){setApiLoading(false);return}
+    setApiLoading(true);setApiError(null)
+    fetch('/api/v1/dashboard/department',{headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}})
+      .then(r=>{if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));throw new Error('Session expired')}if(!r.ok)throw new Error(`Error ${r.status}`);return r.json()})
+      .then(d=>{const p=d.dashboard||d.data||d;if(p)setApiData(p)})
+      .catch(err=>setApiError(err.message))
+      .finally(()=>setApiLoading(false))
+  },[])
+
   return (
     <div>
       <PageTitle title="Department Head Dashboard" sub="IT Department · 320 members · Head: Bikram Shrestha — Sprint velocity, performance & team operations." badge="IT Dept" />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+      {apiLoading && (
+        <div style={{textAlign:'center',padding:40,color:'#7c3aed',fontSize:13,fontWeight:600}}>
+          <div style={{fontSize:32,marginBottom:8}}>⟳</div>Loading...
+        </div>
+      )}
+      {apiError && !apiLoading && (
+        <div style={{padding:'8px 14px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,fontSize:12,color:'#dc2626',marginBottom:8,fontWeight:600}}>
+          ⚠️ {apiError}
+        </div>
+      )}
         <StatCard icon="👥" label="Team Headcount"  value="320"    change="+5 this quarter"    up  accent="#3b82f6" />
         <StatCard icon="✅" label="Team Attendance" value="91.2%"  change="vs 89% last month"  up  accent="#10b981" />
         <StatCard icon="📊" label="Sprint Velocity" value="84 pts" change="+6 this sprint"     up  accent="#f59e0b" />

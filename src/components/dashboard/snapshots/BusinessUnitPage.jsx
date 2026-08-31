@@ -1,6 +1,6 @@
 // FILE: BusinessUnitPage.jsx - Luxury Business Unit / Division Setup
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 
 const THEME = { gradient:'linear-gradient(135deg,#f59e0b 0%,#ef4444 100%)' }
 
@@ -50,29 +50,6 @@ function ContextMenu({ x, y, item, onClose, onAction }) {
     {icon:'📤',label:'Export Excel',key:'export'},
     {icon:'🗑️',label:'Deactivate',key:'deactivate',danger:true},
   ]
-
-  // SaaS DB — load real tenant data (fallback to mock if no token/API down)
-  useEffect(() => {
-    const _token = localStorage.getItem('access_token')
-    const _slug  = _getSlug()
-    if (!_token) return
-    _setApiLoading(true)
-    fetch('/api/v1/org/business-units', {
-      headers: {
-        'Authorization': `Bearer ${_token}`,
-        'X-Tenant-Slug': _slug,
-        'Content-Type': 'application/json',
-      }
-    })
-      .then(r => r.ok ? r.json() : Promise.reject(r.status))
-      .then(d => {
-        const items = d.business_units || d.data || d.items || []
-        if (items.length > 0) setFocused(items)
-      })
-      .catch(() => {/* keep mock */})
-      .finally(() => _setApiLoading(false))
-  }, [])
-
   return (
     <div style={{ position:'fixed', zIndex:9999, left:x, top:y, background:'#fff',
       borderRadius:12, width:220, boxShadow:'0 20px 60px rgba(0,0,0,.2)',
@@ -98,7 +75,6 @@ function ContextMenu({ x, y, item, onClose, onAction }) {
 }
 
 function LuxInput({ label, value, onChange, type='text', options, required }) {
-  const [_apiLoading, _setApiLoading] = useState(false)
   const [focused, setFocused] = useState(false)
   const style = { width:'100%', padding:'10px 12px', borderRadius:10, boxSizing:'border-box',
     border:`1.5px solid ${focused?'#f59e0b':'#e2e8f0'}`, fontSize:13, outline:'none',
@@ -172,14 +148,6 @@ function AddUnitModal({ onClose, onSave }) {
       </div>
     </div>
   )
-}
-
-
-function _getSlug() {
-  try {
-    const s = JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{}
-    return s?.company?.slug || s?.tenant || localStorage.getItem('elogix_tenant_slug') || ''
-  } catch(_e) { return '' }
 }
 
 export default function BusinessUnitPage() {

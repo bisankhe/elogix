@@ -1,6 +1,6 @@
 // FILE: AIReportGeneratorPage.jsx — AI Report Generator
 // NL prompt → AI-generated report with preview and export
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { BarChart,Bar,PieChart,Pie,Cell,XAxis,YAxis,CartesianGrid,Tooltip,ResponsiveContainer } from 'recharts'
 import { useApp } from '../../../context/AppContext.jsx'
 
@@ -43,7 +43,21 @@ const MsgLine=({l})=>{
   return<div dangerouslySetInnerHTML={{__html:h}}/>
 }
 
+
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}}
+}
+function _getTenantCtx() {
+  const s=_getSession()
+  const token=localStorage.getItem('access_token')||s?.token||''
+  const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+  return {token,slug,valid:!!(token&&slug)}
+}
+
 export default function AIReportGeneratorPage(){
+  const [apiData,setApiData]=useState(null)
+  const [apiLoading,setApiLoading]=useState(true)
+  const [apiError,setApiError]=useState(null)
   const [prompt,setPrompt]=useState('')
   const [report,setReport]=useState('')
   const [loading,setLoading]=useState(false)

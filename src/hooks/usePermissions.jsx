@@ -31,7 +31,7 @@ async function fetchMyPermissions() {
     if (!res.ok) return { role: null, modules: [] }
     const json = await res.json()
     return json?.data || { role: null, modules: [] }
-  } catch {
+  } catch(_e) {
     return { role: null, modules: [] }
   }
 }

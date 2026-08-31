@@ -5,7 +5,7 @@
 //          rating distribution, competency radar
 // ============================================================
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   BarChart, Bar, RadarChart, Radar, PolarGrid, PolarAngleAxis,
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -114,6 +114,7 @@ function AppraisalGauge({ pct, total, completed }) {
         <text x="50" y="58" textAnchor="middle" fontSize="8"  fill="#94a3b8">completed</text>
       </svg>
       <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>
+
         {completed} / {total} reviews completed
       </div>
       <div style={{ fontSize: 10, color: '#94a3b8' }}>
@@ -124,12 +125,37 @@ function AppraisalGauge({ pct, total, completed }) {
 }
 
 // ── Main Component ───────────────────────────────────────────
+
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}}
+}
+function _getTenantCtx() {
+  const s=_getSession()
+  const token=localStorage.getItem('access_token')||s?.token||''
+  const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+  return {token,slug,valid:!!(token&&slug)}
+}
+
 export default function PerformanceSnapshot() {
+  const [apiData,setApiData]=useState(null)
+  const [apiLoading,setApiLoading]=useState(true)
+  const [apiError,setApiError]=useState(null)
   const [msg, setMsg] = useState('')
   const notify = (m) => { setMsg(m); setTimeout(()=>setMsg(''),3000) }
   const { t, cc } = useApp()
   const [activeTab, setActiveTab] = useState('overview')
   const [selectedDept, setSelectedDept] = useState('All')
+
+  useEffect(()=>{
+    const {token,slug,valid} = _getTenantCtx()
+    if(!valid){setApiLoading(false);return}
+    setApiLoading(true);setApiError(null)
+    fetch('/api/v1/performance/snapshot',{headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}})
+      .then(r=>{if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));throw new Error('Session expired')}if(!r.ok)throw new Error(`Error ${r.status}`);return r.json()})
+      .then(d=>{const p=d.snapshot||d.data||d;if(p)setApiData(p)})
+      .catch(err=>setApiError(err.message))
+      .finally(()=>setApiLoading(false))
+  },[])
 
   return (
     <div>

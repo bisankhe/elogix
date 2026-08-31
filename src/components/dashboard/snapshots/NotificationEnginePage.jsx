@@ -7,7 +7,7 @@
 // second logging table. Alert-fatigue addressed via per-channel,
 // per-type opt-out and a digest-mode toggle.
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Field, PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
 
 const G = 'linear-gradient(135deg,#0c4a6e 0%,#0284c7 60%,#7dd3fc 100%)'
@@ -20,13 +20,38 @@ const NOTIFICATION_TYPES = [
    flag_note:'High volume (34 in 30 days) across 3 channels -- a strong alert-fatigue candidate. Consider digest mode.'},
 ]
 
+
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}}
+}
+function _getTenantCtx() {
+  const s=_getSession()
+  const token=localStorage.getItem('access_token')||s?.token||''
+  const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+  return {token,slug,valid:!!(token&&slug)}
+}
+
 export default function NotificationEnginePage() {
+  const [apiData,setApiData]=useState(null)
+  const [apiLoading,setApiLoading]=useState(true)
+  const [apiError,setApiError]=useState(null)
   const [search, setSearch] = useState('')
   const [showAdd, setShowAdd] = useState(false)
   const [ctx, setCtx] = useState(null)
 
   const filtered = NOTIFICATION_TYPES.filter(n=>!search||n.type.toLowerCase().includes(search.toLowerCase()))
   const CHANNEL_ICONS = { in_app:'📱', email:'✉️', sms:'💬', slack:'#️⃣' }
+
+  useEffect(()=>{
+    const {token,slug,valid} = _getTenantCtx()
+    if(!valid){setApiLoading(false);return}
+    setApiLoading(true);setApiError(null)
+    fetch('/api/v1/notifications/engine',{headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}})
+      .then(r=>{if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));throw new Error('Session expired')}if(!r.ok)throw new Error(`Error ${r.status}`);return r.json()})
+      .then(d=>{const p=d.rules||d.data||d;if(p)setApiData(p)})
+      .catch(err=>setApiError(err.message))
+      .finally(()=>setApiLoading(false))
+  },[])
 
   return (
     <div onClick={()=>setCtx(null)}>
@@ -42,6 +67,17 @@ export default function NotificationEnginePage() {
         onAdd={()=>setShowAdd(true)} addLabel="New Notification Type"/>
 
       <div style={{background:'#eff6ff',border:'1px solid #bfdbfe',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#1e40af',display:'flex',gap:10,flexWrap:'wrap'}}>
+      {apiLoading && (
+        <div style={{textAlign:'center',padding:40,color:'#7c3aed',fontSize:13,fontWeight:600}}>
+          <div style={{fontSize:32,marginBottom:8}}>⟳</div>Loading...
+        </div>
+      )}
+      {apiError && !apiLoading && (
+        <div style={{padding:'8px 14px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,fontSize:12,color:'#dc2626',marginBottom:8,fontWeight:600}}>
+          ⚠️ {apiError}
+        </div>
+      )}
         <span style={{fontSize:18}}>🔗</span>
         <div style={{flex:1,minWidth:200}}><strong>The Delivery Layer, Not a Second Log:</strong> Every notification across this entire system already writes to one universal record -- this page configures WHERE it gets delivered and what it says, never a duplicate notification store.</div>
       </div>

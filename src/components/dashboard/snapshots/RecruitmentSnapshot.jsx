@@ -5,7 +5,7 @@
 //          source of hire, Nepal work permit compliance
 // ============================================================
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   FunnelChart, Funnel, LabelList,
@@ -87,6 +87,7 @@ function FunnelStage({ stage, value, total, fill, convRate }) {
   return (
     <div style={{ marginBottom: 10 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
+
         <span style={{ color: '#475569', fontWeight: 500 }}>{stage}</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontWeight: 800, color: '#0f172a' }}>{value}</span>
@@ -108,7 +109,21 @@ function FunnelStage({ stage, value, total, fill, convRate }) {
 }
 
 // ── Main Component ───────────────────────────────────────────
+
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}}
+}
+function _getTenantCtx() {
+  const s=_getSession()
+  const token=localStorage.getItem('access_token')||s?.token||''
+  const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+  return {token,slug,valid:!!(token&&slug)}
+}
+
 export default function RecruitmentSnapshot() {
+  const [apiData,setApiData]=useState(null)
+  const [apiLoading,setApiLoading]=useState(true)
+  const [apiError,setApiError]=useState(null)
   const { t, cc } = useApp()
   const [activeTab, setActiveTab] = useState('overview')
 
@@ -116,6 +131,17 @@ export default function RecruitmentSnapshot() {
     if (val >= 1000) return `${cc.symbol}${(val / 1000).toFixed(1)}K`
     return `${cc.symbol}${val}`
   }
+
+  useEffect(()=>{
+    const {token,slug,valid} = _getTenantCtx()
+    if(!valid){setApiLoading(false);return}
+    setApiLoading(true);setApiError(null)
+    fetch('/api/v1/recruitment/snapshot',{headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}})
+      .then(r=>{if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));throw new Error('Session expired')}if(!r.ok)throw new Error(`Error ${r.status}`);return r.json()})
+      .then(d=>{const p=d.snapshot||d.data||d;if(p)setApiData(p)})
+      .catch(err=>setApiError(err.message))
+      .finally(()=>setApiLoading(false))
+  },[])
 
   return (
     <div>
