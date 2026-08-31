@@ -1,25 +1,33 @@
-"""
-FILE: backend/extensions.py
-Shared Flask extension instances — imported by all models and routes.
-eLogix Technologies · www.elogix.com.np
-"""
+# FILE: backend/extensions.py
+# eLogix HRMS — Flask Extension Instances
+# All extensions created here, initialized in app.py via init_app()
+# This prevents circular imports across the entire codebase
+# eLogix Technologies · www.elogix.com.np
+
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate    import Migrate
+from flask_jwt_extended import JWTManager
 from flask_caching    import Cache
 from flask_limiter    import Limiter
 from flask_limiter.util import get_remote_address
+from flask_mail       import Mail
 
-# Core database extension
-db = SQLAlchemy()
+# ── Core database ──────────────────────────────────────────────────────
+db      = SQLAlchemy()
+migrate = Migrate()
 
-# Cache (Redis in prod, SimpleCache in dev/test)
-cache = Cache()
+# ── Authentication ──────────────────────────────────────────────────────
+jwt     = JWTManager()
 
-# Rate limiter
-limiter = Limiter(key_func=get_remote_address)
+# ── Caching (Redis in prod, SimpleCache in dev) ─────────────────────────
+cache   = Cache()
 
+# ── Rate limiting ───────────────────────────────────────────────────────
+limiter = Limiter(
+    key_func          = get_remote_address,
+    default_limits    = ['200 per hour'],
+    storage_uri       = 'memory://',   # overridden in init_app with Redis
+)
 
-def init_extensions(app):
-    """Initialise all Flask extensions with the app."""
-    db.init_app(app)
-    cache.init_app(app)
-    limiter.init_app(app)
+# ── Email ───────────────────────────────────────────────────────────────
+mail    = Mail()
