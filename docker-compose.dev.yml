@@ -1,0 +1,52 @@
+# FILE: docker-compose.dev.yml
+# eLogix HRMS — Local development with full backend
+# Run: docker-compose -f docker-compose.dev.yml up -d
+# Then: npm run dev
+
+version: '3.8'
+
+services:
+  elogix_db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER    : postgres
+      POSTGRES_PASSWORD: elogixpass2026
+      POSTGRES_DB      : postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./database/complete_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  elogix_redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  elogix_backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      DATABASE_URL     : postgresql://postgres:elogixpass2026@elogix_db:5432/postgres
+      REDIS_URL        : redis://elogix_redis:6379/0
+      SECRET_KEY       : elogix-local-dev-secret
+      JWT_SECRET_KEY   : elogix-local-dev-jwt
+      ELOGIX_ADMIN_KEY : elogix-admin-2026
+      FLASK_ENV        : development
+    depends_on:
+      elogix_db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/opt/elogix/backend
+      - ./uploads:/opt/elogix/uploads
+
+volumes:
+  pg_data:
