@@ -73,20 +73,20 @@ const quickActions = [
 ]
 
 
-function _getSession() {
-  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}}
+function _sess() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
 }
-function _getTenantCtx() {
-  const s=_getSession()
+function _headers() {
+  const s=_sess()
   const token=localStorage.getItem('access_token')||s?.token||''
   const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
-  return {token,slug,valid:!!(token&&slug)}
+  return {token,slug,valid:!!(token&&slug),session:s}
 }
 
 export default function EmployeeDashboard() {
-  const [apiData,setApiData]=useState(null)
-  const [apiLoading,setApiLoading]=useState(true)
-  const [apiError,setApiError]=useState(null)
+  const [dashData,setDashData]=useState(null)
+  const [loading,setLoading]=useState(true)
+  const [error,setError]=useState(null)
   const { t, cc, navTo } = useApp()
   const [tasks, setTasks] = useState(myTasks)
   const [activeTab, setActiveTab] = useState('overview')
@@ -96,14 +96,21 @@ export default function EmployeeDashboard() {
   const fmt = (val) => `${cc.symbol}${val.toLocaleString()}`
 
   useEffect(()=>{
-    const {token,slug,valid} = _getTenantCtx()
-    if(!valid){setApiLoading(false);return}
-    setApiLoading(true);setApiError(null)
-    fetch('/api/v1/dashboard/employee',{headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}})
-      .then(r=>{if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));throw new Error('Session expired')}if(!r.ok)throw new Error(`Error ${r.status}`);return r.json()})
-      .then(d=>{const p=d.dashboard||d.data||d;if(p)setApiData(p)})
-      .catch(err=>setApiError(err.message))
-      .finally(()=>setApiLoading(false))
+    const {token,slug,valid,session} = _headers()
+    if(!valid){setLoading(false);return}
+    setLoading(true);setError(null)
+    const empId = session?.user?.employee_id||''
+    fetch('/api/v1/dashboard/employee' + (empId?`?emp_id=${empId}`:''), {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{
+        if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));throw new Error('Session expired')}
+        if(!r.ok) throw new Error(`Server error ${r.status}`)
+        return r.json()
+      })
+      .then(d=>{ if(d.success) setDashData(d.data) })
+      .catch(err=>{setError(err.message);console.error('[eLogix dashboard] /employee:',err)})
+      .finally(()=>setLoading(false))
   },[])
 
   return (
@@ -111,15 +118,24 @@ export default function EmployeeDashboard() {
       <PageTitle title="Employee Self-Service Portal" sub="Welcome, Ram Bahadur Thapa · IT Department · Senior Developer · ID: NHR-2024-0847 · 🔒 Your data is private & confidential." badge="ESS" />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-      {apiLoading && (
-        <div style={{textAlign:'center',padding:40,color:'#7c3aed',fontSize:13,fontWeight:600}}>
-          <div style={{fontSize:32,marginBottom:8}}>⟳</div>Loading...
+      {loading && (
+        <div style={{textAlign:'center',padding:60,color:'#7c3aed'}}>
+          <div style={{fontSize:36,marginBottom:12,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+          <div style={{fontSize:13,fontWeight:600}}>Loading your dashboard...</div>
+          <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
         </div>
       )}
-      {apiError && !apiLoading && (
-        <div style={{padding:'8px 14px',background:'#fef2f2',border:'1px solid #fecaca',
-          borderRadius:8,fontSize:12,color:'#dc2626',marginBottom:8,fontWeight:600}}>
-          ⚠️ {apiError}
+      {error && !loading && (
+        <div style={{padding:'12px 20px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:10,marginBottom:16,fontSize:13,color:'#dc2626',fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
+      {!loading && !dashData && !error && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:40,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600}}>No data available</div>
+          <div style={{fontSize:12,marginTop:4}}>Data will appear once your company is set up in eLogix</div>
         </div>
       )}
         <StatCard icon="📅" label="Leave Balance"       value="8 days"         change="Annual leave"          up  accent="#3b82f6" />

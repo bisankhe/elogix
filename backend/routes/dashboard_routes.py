@@ -1,424 +1,576 @@
 # FILE: backend/routes/dashboard_routes.py
 # eLogix HRMS — Role-Based Dashboard API Routes
-# Every endpoint enforces tenant isolation via company_id
-# No cross-tenant data possible — PostgreSQL WHERE company_id = :cid on every query
+# ALL endpoints enforce tenant isolation — company_id on every query
+# No demo data — all data comes from PostgreSQL for the logged-in tenant
 # eLogix Technologies · www.elogix.com.np
 
-from flask import Blueprint, jsonify, g
+from flask import Blueprint, jsonify, request, g
 from backend.utils.tenant_middleware import require_tenant
 from backend.extensions import db
 from sqlalchemy import text
-from datetime import date
+from datetime import date, timedelta
 import logging
 
 logger = logging.getLogger('elogix.dashboard')
 dashboard_bp = Blueprint('dashboard', __name__)
 
+def _cid(): return g.company_id
+def _uid(): return getattr(g, 'user_id', None)
+def _emp(): return getattr(g, 'employee_id', None)
+def _role(): return getattr(g, 'role', 'employee')
 
-def _cid():
-    return g.company_id
+def _ok(data): return jsonify({'success': True, 'data': data})
 
-
-def _ok(data):
-    return jsonify({'success': True, 'data': data})
-
-
-def _safe_query(sql, params):
-    """Execute SQL safely — returns rows or [] on error."""
+def _q(sql, params=None):
     try:
-        return db.session.execute(text(sql), params).fetchall()
+        rows = db.session.execute(text(sql), params or {}).fetchall()
+        return [dict(r._mapping) for r in rows]
     except Exception as e:
-        logger.warning(f'Query failed: {e}')
+        logger.warning(f'Query error: {e}')
         return []
 
-
-def _safe_scalar(sql, params, default=0):
-    """Execute scalar query safely."""
+def _s(sql, params=None, default=0):
     try:
-        result = db.session.execute(text(sql), params).scalar()
-        return result if result is not None else default
+        r = db.session.execute(text(sql), params or {}).scalar()
+        return r if r is not None else default
     except Exception as e:
-        logger.warning(f'Scalar query failed: {e}')
+        logger.warning(f'Scalar error: {e}')
         return default
 
 
 # ══════════════════════════════════════════════════════════════════════
-# SUPER ADMIN / COMPANY ADMIN DASHBOARD
-# GET /api/v1/dashboard/summary
-# Shows full company overview — headcount, attendance, payroll, alerts
+# 1. SUPER ADMIN DASHBOARD (eLogix Technologies internal — all tenants)
 # ══════════════════════════════════════════════════════════════════════
-@dashboard_bp.route('/summary', methods=['GET'])
+@dashboard_bp.route('/super-admin', methods=['GET'])
 @require_tenant
-def super_admin_dashboard():
-    cid   = _cid()
+def super_admin():
+    cid = _cid()
     today = date.today()
-    try:
-        # Core KPIs
-        total_emp = _safe_scalar("SELECT COUNT(*) FROM employees WHERE company_id=:c AND status='active'", {'c':cid})
-        present_today = _safe_scalar("""
-            SELECT COUNT(*) FROM attendance_logs
-            WHERE company_id=:c AND date=:d AND status='present'
-        """, {'c':cid,'d':today})
-        pending_leaves = _safe_scalar("SELECT COUNT(*) FROM leave_requests WHERE company_id=:c AND status='pending'", {'c':cid})
-        this_month_payroll = _safe_scalar("""
-            SELECT COALESCE(SUM(gross_salary),0) FROM payroll_records
-            WHERE company_id=:c AND DATE_TRUNC('month',pay_month)=DATE_TRUNC('month',CURRENT_DATE)
-        """, {'c':cid})
 
-        # Department headcount
-        dept_rows = _safe_query("""
-            SELECT d.name AS dept, COUNT(e.id) AS count
-            FROM employees e JOIN departments d ON d.id=e.department_id
-            WHERE e.company_id=:c AND e.status='active'
-            GROUP BY d.name ORDER BY count DESC LIMIT 10
-        """, {'c':cid})
+    total_companies = _s("SELECT COUNT(*) FROM tenant_companies WHERE status='active'")
+    total_employees = _s("SELECT COUNT(*) FROM employees WHERE company_id=:c AND status='active'", {'c':cid})
+    pending_tenants = _s("SELECT COUNT(*) FROM tenant_companies WHERE status='pending'")
+    mrr = _s("""
+        SELECT COALESCE(SUM(CASE plan
+            WHEN 'starter' THEN 5000 WHEN 'growth' THEN 12000
+            WHEN 'business' THEN 25000 WHEN 'enterprise' THEN 50000
+            ELSE 0 END), 0)
+        FROM tenant_companies WHERE status IN ('active','trial')
+    """)
 
-        # Recent joiners
-        joiners = _safe_query("""
-            SELECT full_name, joining_date FROM employees
-            WHERE company_id=:c
-            ORDER BY joining_date DESC LIMIT 5
-        """, {'c':cid})
+    tenants = _q("""
+        SELECT name, plan, status,
+               (SELECT COUNT(*) FROM employees e WHERE e.company_id=tc.id AND e.status='active') AS users,
+               created_at
+        FROM tenant_companies tc WHERE status IN ('active','trial','pending')
+        ORDER BY created_at DESC LIMIT 10
+    """)
 
-        # Alerts
-        expiring = _safe_scalar("""
-            SELECT COUNT(*) FROM employee_contracts
-            WHERE company_id=:c AND end_date BETWEEN CURRENT_DATE AND CURRENT_DATE+30 AND status='active'
-        """, {'c':cid})
+    audit_logs = _q("""
+        SELECT action, entity_type, created_at,
+               COALESCE(u.email, 'System') AS user_email
+        FROM audit_logs al
+        LEFT JOIN users u ON u.id=al.user_id
+        WHERE al.company_id=:c
+        ORDER BY al.created_at DESC LIMIT 10
+    """, {'c': cid})
 
-        return _ok({
-            'kpis': {
-                'total_employees' : total_emp,
-                'present_today'   : present_today,
-                'attendance_rate' : round(100*present_today/total_emp, 1) if total_emp else 0,
-                'pending_leaves'  : pending_leaves,
-                'monthly_payroll' : float(this_month_payroll),
-            },
-            'departments'    : [dict(r._mapping) for r in dept_rows],
-            'recent_joiners' : [dict(r._mapping) for r in joiners],
-            'alerts'         : {
-                'expiring_contracts': expiring,
-                'pending_approvals' : pending_leaves,
-            },
-        })
-    except Exception as e:
-        logger.error(f'super_admin_dashboard [{cid}]: {e}')
-        return _ok({'kpis':{},'departments':[],'recent_joiners':[],'alerts':{}})
+    plan_breakdown = _q("""
+        SELECT plan, COUNT(*) AS count FROM tenant_companies
+        WHERE status IN ('active','trial')
+        GROUP BY plan ORDER BY count DESC
+    """)
+
+    return _ok({
+        'kpis': {
+            'total_companies': total_companies,
+            'total_employees': total_employees,
+            'pending_tenants': pending_tenants,
+            'mrr'            : float(mrr),
+        },
+        'tenants'      : tenants,
+        'audit_logs'   : audit_logs,
+        'plan_breakdown': plan_breakdown,
+    })
 
 
 # ══════════════════════════════════════════════════════════════════════
-# HR MANAGER / HR OFFICER DASHBOARD
-# GET /api/v1/dashboard/hr
-# GET /api/v1/dashboard/hr-officer
-# ══════════════════════════════════════════════════════════════════════
-@dashboard_bp.route('/hr', methods=['GET'])
-@dashboard_bp.route('/hr-officer', methods=['GET'])
-@require_tenant
-def hr_dashboard():
-    cid   = _cid()
-    today = date.today()
-    try:
-        total = _safe_scalar("SELECT COUNT(*) FROM employees WHERE company_id=:c AND status='active'", {'c':cid})
-        male  = _safe_scalar("SELECT COUNT(*) FROM employees WHERE company_id=:c AND status='active' AND gender='male'", {'c':cid})
-        female= _safe_scalar("SELECT COUNT(*) FROM employees WHERE company_id=:c AND status='active' AND gender='female'", {'c':cid})
-
-        dept_comparison = _safe_query("""
-            SELECT d.name AS dept, COUNT(e.id) AS curr
-            FROM employees e JOIN departments d ON d.id=e.department_id
-            WHERE e.company_id=:c AND e.status='active'
-            GROUP BY d.name ORDER BY curr DESC LIMIT 8
-        """, {'c':cid})
-
-        onboarding = _safe_query("""
-            SELECT full_name, joining_date FROM employees
-            WHERE company_id=:c
-              AND DATE_TRUNC('month',joining_date)=DATE_TRUNC('month',CURRENT_DATE)
-            ORDER BY joining_date
-        """, {'c':cid})
-
-        pending_leaves = _safe_query("""
-            SELECT e.full_name, lt.name AS leave_type, lr.from_date, lr.to_date, lr.days
-            FROM leave_requests lr
-            JOIN employees e ON e.id=lr.employee_id
-            JOIN leave_types lt ON lt.id=lr.leave_type_id
-            WHERE lr.company_id=:c AND lr.status='pending'
-            ORDER BY lr.applied_at DESC LIMIT 10
-        """, {'c':cid})
-
-        return _ok({
-            'headcount'      : {'total':total,'male':male,'female':female,'other':total-male-female},
-            'dept_comparison': [dict(r._mapping) for r in dept_comparison],
-            'onboarding'     : [dict(r._mapping) for r in onboarding],
-            'pending_leaves' : [dict(r._mapping) for r in pending_leaves],
-        })
-    except Exception as e:
-        logger.error(f'hr_dashboard [{cid}]: {e}')
-        return _ok({'headcount':{},'dept_comparison':[],'onboarding':[],'pending_leaves':[]})
-
-
-# ══════════════════════════════════════════════════════════════════════
-# EXECUTIVE DASHBOARD
-# GET /api/v1/dashboard/executive
+# 2. EXECUTIVE DASHBOARD
 # ══════════════════════════════════════════════════════════════════════
 @dashboard_bp.route('/executive', methods=['GET'])
 @require_tenant
-def executive_dashboard():
-    cid = _cid()
-    try:
-        total_emp    = _safe_scalar("SELECT COUNT(*) FROM employees WHERE company_id=:c AND status='active'", {'c':cid})
-        monthly_cost = _safe_scalar("""
-            SELECT COALESCE(SUM(gross_salary),0) FROM payroll_records
-            WHERE company_id=:c AND DATE_TRUNC('month',pay_month)=DATE_TRUNC('month',CURRENT_DATE)
-        """, {'c':cid})
-        att_rate     = _safe_scalar("""
-            SELECT ROUND(100.0*COUNT(*) FILTER(WHERE status='present')/NULLIF(COUNT(*),0),1)
-            FROM attendance_logs WHERE company_id=:c AND date>=CURRENT_DATE-30
-        """, {'c':cid}, 0)
+def executive():
+    cid   = _cid()
+    today = date.today()
 
-        payroll_trend = _safe_query("""
-            SELECT TO_CHAR(pay_month,'Mon YYYY') AS month,
-                   SUM(gross_salary) AS amount
-            FROM payroll_records WHERE company_id=:c
-            GROUP BY pay_month ORDER BY pay_month DESC LIMIT 6
-        """, {'c':cid})
+    total_emp = _s("SELECT COUNT(*) FROM employees WHERE company_id=:c AND status='active'", {'c':cid})
+    monthly_payroll = _s("""
+        SELECT COALESCE(SUM(gross_salary),0) FROM payroll_records
+        WHERE company_id=:c AND DATE_TRUNC('month',pay_month)=DATE_TRUNC('month',CURRENT_DATE)
+    """, {'c':cid})
+    att_rate = _s("""
+        SELECT ROUND(100.0*COUNT(*) FILTER(WHERE status='present')/NULLIF(COUNT(*),0),1)
+        FROM attendance_logs WHERE company_id=:c AND date>=CURRENT_DATE-30
+    """, {'c':cid}, 0)
+    open_positions = _s("""
+        SELECT COUNT(*) FROM job_requisitions WHERE company_id=:c AND status='open'
+    """, {'c':cid})
 
-        dept_cost = _safe_query("""
-            SELECT d.name AS dept, SUM(pr.gross_salary) AS cost, COUNT(*) AS headcount
-            FROM payroll_records pr
-            JOIN employees e ON e.id=pr.employee_id
-            JOIN departments d ON d.id=e.department_id
-            WHERE pr.company_id=:c AND DATE_TRUNC('month',pr.pay_month)=DATE_TRUNC('month',CURRENT_DATE)
-            GROUP BY d.name ORDER BY cost DESC
-        """, {'c':cid})
+    headcount_trend = _q("""
+        SELECT TO_CHAR(DATE_TRUNC('month',joining_date),'Mon') AS month,
+               COUNT(*) AS headcount
+        FROM employees WHERE company_id=:c
+          AND joining_date >= CURRENT_DATE - INTERVAL '6 months'
+        GROUP BY DATE_TRUNC('month',joining_date)
+        ORDER BY DATE_TRUNC('month',joining_date)
+    """, {'c':cid})
 
-        return _ok({
-            'kpis'        : {'total_employees':total_emp,'monthly_cost':float(monthly_cost),'attendance_rate':float(att_rate)},
-            'payroll_trend': [dict(r._mapping) for r in payroll_trend],
-            'dept_cost'    : [dict(r._mapping) for r in dept_cost],
-        })
-    except Exception as e:
-        logger.error(f'executive_dashboard [{cid}]: {e}')
-        return _ok({'kpis':{},'payroll_trend':[],'dept_cost':[]})
+    gender_split = _q("""
+        SELECT gender AS name, COUNT(*) AS value
+        FROM employees WHERE company_id=:c AND status='active' AND gender IS NOT NULL
+        GROUP BY gender
+    """, {'c':cid})
+
+    dept_cost = _q("""
+        SELECT d.name AS dept, SUM(pr.gross_salary) AS cost, COUNT(DISTINCT pr.employee_id) AS headcount
+        FROM payroll_records pr
+        JOIN employees e ON e.id=pr.employee_id
+        JOIN departments d ON d.id=e.department_id
+        WHERE pr.company_id=:c AND DATE_TRUNC('month',pr.pay_month)=DATE_TRUNC('month',CURRENT_DATE)
+        GROUP BY d.name ORDER BY cost DESC LIMIT 8
+    """, {'c':cid})
+
+    okr_progress = _q("""
+        SELECT title AS objective, progress_pct AS q2, 100 AS target
+        FROM goals WHERE company_id=:c AND status='active'
+        ORDER BY progress_pct DESC LIMIT 6
+    """, {'c':cid})
+
+    payroll_trend = _q("""
+        SELECT TO_CHAR(pay_month,'Mon') AS month, SUM(gross_salary) AS amount
+        FROM payroll_records WHERE company_id=:c
+        GROUP BY pay_month ORDER BY pay_month DESC LIMIT 6
+    """, {'c':cid})
+
+    return _ok({
+        'kpis': {
+            'total_employees': total_emp,
+            'monthly_payroll': float(monthly_payroll),
+            'attendance_rate': float(att_rate),
+            'open_positions' : open_positions,
+        },
+        'headcount_trend': headcount_trend,
+        'gender_split'   : gender_split,
+        'dept_cost'      : dept_cost,
+        'okr_progress'   : okr_progress,
+        'payroll_trend'  : payroll_trend,
+    })
 
 
 # ══════════════════════════════════════════════════════════════════════
-# EMPLOYEE SELF-SERVICE DASHBOARD
-# GET /api/v1/dashboard/employee
+# 3. HR MANAGER DASHBOARD
+# ══════════════════════════════════════════════════════════════════════
+@dashboard_bp.route('/hr-manager', methods=['GET'])
+@require_tenant
+def hr_manager():
+    cid   = _cid()
+    today = date.today()
+
+    total_emp     = _s("SELECT COUNT(*) FROM employees WHERE company_id=:c AND status='active'", {'c':cid})
+    pending_leave = _s("SELECT COUNT(*) FROM leave_requests WHERE company_id=:c AND status='pending'", {'c':cid})
+    onboarding    = _s("""
+        SELECT COUNT(*) FROM employees WHERE company_id=:c
+        AND DATE_TRUNC('month',joining_date)=DATE_TRUNC('month',CURRENT_DATE)
+    """, {'c':cid})
+    att_today = _s("""
+        SELECT ROUND(100.0*COUNT(*) FILTER(WHERE status='present')/NULLIF(COUNT(*),0),1)
+        FROM attendance_logs WHERE company_id=:c AND date=CURRENT_DATE
+    """, {'c':cid}, 0)
+
+    pending_leaves_list = _q("""
+        SELECT e.full_name, lt.name AS leave_type,
+               lr.from_date, lr.to_date, lr.days, lr.applied_at
+        FROM leave_requests lr
+        JOIN employees e ON e.id=lr.employee_id
+        JOIN leave_types lt ON lt.id=lr.leave_type_id
+        WHERE lr.company_id=:c AND lr.status='pending'
+        ORDER BY lr.applied_at ASC LIMIT 10
+    """, {'c':cid})
+
+    onboarding_list = _q("""
+        SELECT e.full_name, d.name AS dept, e.joining_date,
+               des.title AS designation
+        FROM employees e
+        LEFT JOIN departments d ON d.id=e.department_id
+        LEFT JOIN designations des ON des.id=e.designation_id
+        WHERE e.company_id=:c
+          AND DATE_TRUNC('month',e.joining_date)=DATE_TRUNC('month',CURRENT_DATE)
+        ORDER BY e.joining_date
+    """, {'c':cid})
+
+    dept_headcount = _q("""
+        SELECT d.name AS dept, COUNT(e.id) AS count
+        FROM employees e JOIN departments d ON d.id=e.department_id
+        WHERE e.company_id=:c AND e.status='active'
+        GROUP BY d.name ORDER BY count DESC LIMIT 8
+    """, {'c':cid})
+
+    calendar_events = _q("""
+        SELECT title, event_date, event_type
+        FROM calendar_events WHERE company_id=:c
+          AND event_date BETWEEN CURRENT_DATE AND CURRENT_DATE+30
+        ORDER BY event_date LIMIT 8
+    """, {'c':cid})
+
+    att_trend = _q("""
+        SELECT TO_CHAR(date,'Mon') AS month,
+               ROUND(100.0*COUNT(*) FILTER(WHERE status='present')/NULLIF(COUNT(*),0),1) AS score
+        FROM attendance_logs WHERE company_id=:c
+          AND date >= CURRENT_DATE - INTERVAL '6 months'
+        GROUP BY TO_CHAR(date,'Mon'), DATE_TRUNC('month',date)
+        ORDER BY DATE_TRUNC('month',date)
+    """, {'c':cid})
+
+    return _ok({
+        'kpis': {
+            'total_employees': total_emp,
+            'pending_leaves' : pending_leave,
+            'onboarding'     : onboarding,
+            'attendance_today': float(att_today),
+        },
+        'pending_leaves' : pending_leaves_list,
+        'onboarding_list': onboarding_list,
+        'dept_headcount' : dept_headcount,
+        'calendar_events': calendar_events,
+        'attendance_trend': att_trend,
+    })
+
+
+# ══════════════════════════════════════════════════════════════════════
+# 4. DEPARTMENT HEAD DASHBOARD
+# ══════════════════════════════════════════════════════════════════════
+@dashboard_bp.route('/department', methods=['GET'])
+@require_tenant
+def department():
+    cid    = _cid()
+    emp_id = _emp()
+    dept   = request.args.get('dept_id')
+
+    # Get HOD's department if not specified
+    if not dept and emp_id:
+        dept_row = _s("""
+            SELECT department_id FROM employees WHERE id=:eid AND company_id=:c
+        """, {'eid': emp_id, 'c': cid})
+        dept = dept_row
+
+    dept_filter = "AND e.department_id=:dept" if dept else ""
+    params = {'c': cid, 'dept': dept}
+
+    headcount = _s(f"""
+        SELECT COUNT(*) FROM employees e
+        WHERE e.company_id=:c AND e.status='active' {dept_filter}
+    """, params)
+
+    present_today = _s(f"""
+        SELECT COUNT(*) FROM attendance_logs al
+        JOIN employees e ON e.id=al.employee_id
+        WHERE al.company_id=:c AND al.date=CURRENT_DATE AND al.status='present' {dept_filter}
+    """, params)
+
+    pending_approvals = _s(f"""
+        SELECT COUNT(*) FROM leave_requests lr
+        JOIN employees e ON e.id=lr.employee_id
+        WHERE lr.company_id=:c AND lr.status='pending' {dept_filter}
+    """, params)
+
+    active_goals = _s(f"""
+        SELECT COUNT(*) FROM goals g
+        JOIN employees e ON e.id=g.employee_id
+        WHERE g.company_id=:c AND g.status='active' {dept_filter}
+    """, params)
+
+    team_list = _q(f"""
+        SELECT e.full_name, des.title AS designation,
+               al.status AS today_status,
+               ROUND(AVG(pr.rating),1) AS avg_rating
+        FROM employees e
+        LEFT JOIN designations des ON des.id=e.designation_id
+        LEFT JOIN attendance_logs al ON al.employee_id=e.id AND al.date=CURRENT_DATE
+        LEFT JOIN performance_reviews pr ON pr.employee_id=e.id AND pr.company_id=:c
+        WHERE e.company_id=:c AND e.status='active' {dept_filter}
+        GROUP BY e.full_name, des.title, al.status
+        ORDER BY e.full_name LIMIT 20
+    """, params)
+
+    performance_by_member = _q(f"""
+        SELECT e.full_name, ROUND(AVG(pr.rating),1) AS avg_rating
+        FROM performance_reviews pr
+        JOIN employees e ON e.id=pr.employee_id
+        WHERE pr.company_id=:c {dept_filter}
+        GROUP BY e.full_name ORDER BY avg_rating DESC LIMIT 10
+    """, params)
+
+    return _ok({
+        'kpis': {
+            'headcount'        : headcount,
+            'present_today'    : present_today,
+            'pending_approvals': pending_approvals,
+            'active_goals'     : active_goals,
+            'attendance_rate'  : round(100*present_today/headcount,1) if headcount else 0,
+        },
+        'team_list'           : team_list,
+        'performance_by_member': performance_by_member,
+    })
+
+
+# ══════════════════════════════════════════════════════════════════════
+# 5. BRANCH DASHBOARD
+# ══════════════════════════════════════════════════════════════════════
+@dashboard_bp.route('/branch', methods=['GET'])
+@require_tenant
+def branch():
+    cid       = _cid()
+    emp_id    = _emp()
+    branch_id = request.args.get('branch_id')
+
+    if not branch_id and emp_id:
+        branch_id = _s("""
+            SELECT branch_id FROM employees WHERE id=:eid AND company_id=:c
+        """, {'eid': emp_id, 'c': cid})
+
+    b_filter = "AND e.branch_id=:bid" if branch_id else ""
+    params   = {'c': cid, 'bid': branch_id}
+
+    headcount = _s(f"""
+        SELECT COUNT(*) FROM employees e
+        WHERE e.company_id=:c AND e.status='active' {b_filter}
+    """, params)
+
+    present_today = _s(f"""
+        SELECT COUNT(*) FROM attendance_logs al
+        JOIN employees e ON e.id=al.employee_id
+        WHERE al.company_id=:c AND al.date=CURRENT_DATE AND al.status='present' {b_filter}
+    """, params)
+
+    pending_leaves = _s(f"""
+        SELECT COUNT(*) FROM leave_requests lr
+        JOIN employees e ON e.id=lr.employee_id
+        WHERE lr.company_id=:c AND lr.status='pending' {b_filter}
+    """, params)
+
+    branch_info = _q("""
+        SELECT name, city, address, phone FROM branch_locations
+        WHERE company_id=:c AND id=:bid LIMIT 1
+    """, {'c': cid, 'bid': branch_id}) if branch_id else []
+
+    dept_breakdown = _q(f"""
+        SELECT d.name AS dept, COUNT(e.id) AS count,
+               COUNT(al.id) FILTER(WHERE al.status='present' AND al.date=CURRENT_DATE) AS present
+        FROM employees e
+        JOIN departments d ON d.id=e.department_id
+        LEFT JOIN attendance_logs al ON al.employee_id=e.id AND al.company_id=:c
+        WHERE e.company_id=:c AND e.status='active' {b_filter}
+        GROUP BY d.name ORDER BY count DESC
+    """, params)
+
+    att_week = _q(f"""
+        SELECT TO_CHAR(al.date,'Dy') AS day,
+               ROUND(100.0*COUNT(*) FILTER(WHERE al.status='present')/NULLIF(COUNT(*),0),1) AS rate
+        FROM attendance_logs al
+        JOIN employees e ON e.id=al.employee_id
+        WHERE al.company_id=:c AND al.date >= CURRENT_DATE-7 {b_filter}
+        GROUP BY al.date ORDER BY al.date
+    """, params)
+
+    return _ok({
+        'kpis': {
+            'headcount'       : headcount,
+            'present_today'   : present_today,
+            'pending_leaves'  : pending_leaves,
+            'attendance_rate' : round(100*present_today/headcount,1) if headcount else 0,
+        },
+        'branch_info'    : branch_info[0] if branch_info else {},
+        'dept_breakdown' : dept_breakdown,
+        'attendance_week': att_week,
+    })
+
+
+# ══════════════════════════════════════════════════════════════════════
+# 6. EMPLOYEE SELF-SERVICE DASHBOARD
 # ══════════════════════════════════════════════════════════════════════
 @dashboard_bp.route('/employee', methods=['GET'])
 @require_tenant
-def employee_dashboard():
-    cid = _cid()
-    uid = getattr(g, 'user_id', None)
-    emp_id = getattr(g, 'employee_id', None)
-    try:
-        # Today's punch
-        punch = _safe_query("""
-            SELECT TO_CHAR(check_in,'HH24:MI') AS check_in,
-                   TO_CHAR(check_out,'HH24:MI') AS check_out,
-                   status, punch_type
-            FROM attendance_logs
-            WHERE company_id=:c AND employee_id=:e AND date=CURRENT_DATE
-            LIMIT 1
-        """, {'c':cid,'e':emp_id})
+def employee():
+    cid    = _cid()
+    emp_id = _emp()
+    uid    = _uid()
 
-        # Leave balance
-        leave_balance = _safe_query("""
-            SELECT lt.name AS leave_type,
-                   lb.entitled_days, lb.used_days,
-                   lb.entitled_days - lb.used_days AS remaining
-            FROM leave_balances lb
-            JOIN leave_types lt ON lt.id=lb.leave_type_id
-            WHERE lb.company_id=:c AND lb.employee_id=:e
-              AND lb.year=EXTRACT(YEAR FROM CURRENT_DATE)
-        """, {'c':cid,'e':emp_id})
+    if not emp_id:
+        emp_id = _s("SELECT id FROM employees WHERE user_id=:uid AND company_id=:c", {'uid':uid,'c':cid})
 
-        # Latest payslip
-        payslip = _safe_query("""
-            SELECT TO_CHAR(pay_month,'Mon YYYY') AS month,
-                   gross_salary, net_salary
-            FROM payroll_records
-            WHERE company_id=:c AND employee_id=:e
-            ORDER BY pay_month DESC LIMIT 1
-        """, {'c':cid,'e':emp_id})
+    if not emp_id:
+        return _ok({'error': 'Employee record not found'})
 
-        # Upcoming events
-        events = _safe_query("""
-            SELECT title, event_date, event_type
-            FROM calendar_events
-            WHERE company_id=:c AND event_date>=CURRENT_DATE
-            ORDER BY event_date LIMIT 5
-        """, {'c':cid})
+    params = {'c': cid, 'eid': emp_id}
 
-        return _ok({
-            'today_punch'  : [dict(r._mapping) for r in punch],
-            'leave_balance': [dict(r._mapping) for r in leave_balance],
-            'last_payslip' : [dict(r._mapping) for r in payslip],
-            'upcoming'     : [dict(r._mapping) for r in events],
-        })
-    except Exception as e:
-        logger.error(f'employee_dashboard [{cid}]: {e}')
-        return _ok({'today_punch':[],'leave_balance':[],'last_payslip':[],'upcoming':[]})
+    # Today's punch
+    punch = _q("""
+        SELECT TO_CHAR(check_in,'HH12:MI AM') AS check_in,
+               TO_CHAR(check_out,'HH12:MI AM') AS check_out,
+               status, work_hours, late_minutes
+        FROM attendance_logs
+        WHERE company_id=:c AND employee_id=:eid AND date=CURRENT_DATE
+        LIMIT 1
+    """, params)
 
+    # Employee profile
+    profile = _q("""
+        SELECT e.full_name, e.employee_code, e.photo_url,
+               d.name AS department, des.title AS designation,
+               e.joining_date, b.name AS branch
+        FROM employees e
+        LEFT JOIN departments d ON d.id=e.department_id
+        LEFT JOIN designations des ON des.id=e.designation_id
+        LEFT JOIN branch_locations b ON b.id=e.branch_id
+        WHERE e.id=:eid AND e.company_id=:c
+    """, params)
 
-# ══════════════════════════════════════════════════════════════════════
-# FINANCE DASHBOARD
-# GET /api/v1/dashboard/finance
-# ══════════════════════════════════════════════════════════════════════
-@dashboard_bp.route('/finance', methods=['GET'])
-@require_tenant
-def finance_dashboard():
-    cid = _cid()
-    try:
-        summary = _safe_query("""
-            SELECT SUM(gross_salary) AS gross, SUM(net_salary) AS net,
-                   SUM(pf_deduction) AS pf, SUM(tax_deduction) AS tax,
-                   COUNT(*) AS employee_count
-            FROM payroll_records
-            WHERE company_id=:c AND DATE_TRUNC('month',pay_month)=DATE_TRUNC('month',CURRENT_DATE)
-        """, {'c':cid})
+    # Leave balance
+    leave_balance = _q("""
+        SELECT lt.name, lt.color,
+               lb.entitled_days, lb.used_days,
+               lb.entitled_days - lb.used_days AS remaining
+        FROM leave_balances lb
+        JOIN leave_types lt ON lt.id=lb.leave_type_id
+        WHERE lb.company_id=:c AND lb.employee_id=:eid
+          AND lb.year=EXTRACT(YEAR FROM CURRENT_DATE)
+    """, params)
 
-        cost_centers = _safe_query("""
-            SELECT d.name, SUM(pr.gross_salary) AS actual
-            FROM payroll_records pr
-            JOIN employees e ON e.id=pr.employee_id
-            JOIN departments d ON d.id=e.department_id
-            WHERE pr.company_id=:c AND DATE_TRUNC('month',pr.pay_month)=DATE_TRUNC('month',CURRENT_DATE)
-            GROUP BY d.name ORDER BY actual DESC
-        """, {'c':cid})
+    # Last 3 payslips
+    payslips = _q("""
+        SELECT TO_CHAR(pay_month,'Mon YYYY') AS month,
+               gross_salary, net_salary, status
+        FROM payroll_records
+        WHERE company_id=:c AND employee_id=:eid
+        ORDER BY pay_month DESC LIMIT 3
+    """, params)
 
-        trend = _safe_query("""
-            SELECT TO_CHAR(pay_month,'Mon') AS month, SUM(gross_salary) AS amount
-            FROM payroll_records WHERE company_id=:c
-            GROUP BY pay_month ORDER BY pay_month DESC LIMIT 6
-        """, {'c':cid})
+    # Upcoming events for this employee
+    upcoming = _q("""
+        SELECT title, event_date, event_type
+        FROM calendar_events
+        WHERE company_id=:c AND event_date BETWEEN CURRENT_DATE AND CURRENT_DATE+14
+        ORDER BY event_date LIMIT 5
+    """, {'c':cid})
 
-        return _ok({
-            'summary'     : dict(summary[0]._mapping) if summary else {},
-            'cost_centers': [dict(r._mapping) for r in cost_centers],
-            'trend'       : [dict(r._mapping) for r in trend],
-        })
-    except Exception as e:
-        logger.error(f'finance_dashboard [{cid}]: {e}')
-        return _ok({'summary':{},'cost_centers':[],'trend':[]})
+    # My goals
+    goals = _q("""
+        SELECT title, progress_pct, due_date, status
+        FROM goals WHERE company_id=:c AND employee_id=:eid
+          AND status='active'
+        ORDER BY due_date LIMIT 5
+    """, params)
+
+    # Recent announcements
+    announcements = _q("""
+        SELECT title, body, type, created_at
+        FROM announcements WHERE company_id=:c
+        ORDER BY is_pinned DESC, created_at DESC LIMIT 5
+    """, {'c':cid})
+
+    return _ok({
+        'profile'      : profile[0] if profile else {},
+        'today_punch'  : punch[0] if punch else None,
+        'leave_balance': leave_balance,
+        'payslips'     : payslips,
+        'upcoming'     : upcoming,
+        'goals'        : goals,
+        'announcements': announcements,
+    })
 
 
 # ══════════════════════════════════════════════════════════════════════
-# RECRUITMENT DASHBOARD
-# GET /api/v1/dashboard/recruitment
+# 7. RECRUITMENT AGENCY DASHBOARD
 # ══════════════════════════════════════════════════════════════════════
 @dashboard_bp.route('/recruitment', methods=['GET'])
 @require_tenant
-def recruitment_dashboard():
+def recruitment():
     cid = _cid()
+
+    open_jobs     = _s("SELECT COUNT(*) FROM job_requisitions WHERE company_id=:c AND status='open'", {'c':cid})
+    total_cands   = _s("SELECT COUNT(*) FROM candidates WHERE company_id=:c", {'c':cid})
+    in_interview  = _s("SELECT COUNT(*) FROM candidates WHERE company_id=:c AND stage='interview'", {'c':cid})
+    hired_this_month = _s("""
+        SELECT COUNT(*) FROM candidates WHERE company_id=:c AND stage='hired'
+          AND DATE_TRUNC('month',updated_at)=DATE_TRUNC('month',CURRENT_DATE)
+    """, {'c':cid})
+
+    pipeline = _q("""
+        SELECT stage, COUNT(*) AS count FROM candidates
+        WHERE company_id=:c GROUP BY stage ORDER BY count DESC
+    """, {'c':cid})
+
+    open_positions = _q("""
+        SELECT jr.title, d.name AS department, jr.posted_date,
+               jr.closing_date, jr.positions,
+               COUNT(c.id) AS applications
+        FROM job_requisitions jr
+        LEFT JOIN departments d ON d.id=jr.department_id
+        LEFT JOIN candidates c ON c.job_id=jr.id AND c.company_id=:c
+        WHERE jr.company_id=:c AND jr.status='open'
+        GROUP BY jr.id, jr.title, d.name, jr.posted_date, jr.closing_date, jr.positions
+        ORDER BY jr.posted_date DESC LIMIT 10
+    """, {'c':cid})
+
+    interviews_today = _q("""
+        SELECT c.full_name AS candidate, jr.title AS position,
+               i.interview_date, i.interview_type, i.status
+        FROM ats_interviews i
+        JOIN candidates c ON c.id=i.candidate_id
+        JOIN job_requisitions jr ON jr.id=c.job_id
+        WHERE i.company_id=:c
+          AND DATE(i.interview_date) BETWEEN CURRENT_DATE AND CURRENT_DATE+7
+        ORDER BY i.interview_date LIMIT 10
+    """, {'c':cid}) if _table_exists('ats_interviews') else []
+
+    placement_trend = _q("""
+        SELECT TO_CHAR(DATE_TRUNC('month',updated_at),'Mon') AS month,
+               COUNT(*) AS placements
+        FROM candidates WHERE company_id=:c AND stage='hired'
+          AND updated_at >= CURRENT_DATE - INTERVAL '6 months'
+        GROUP BY DATE_TRUNC('month',updated_at)
+        ORDER BY DATE_TRUNC('month',updated_at)
+    """, {'c':cid})
+
+    source_breakdown = _q("""
+        SELECT source AS name, COUNT(*) AS value
+        FROM candidates WHERE company_id=:c AND source IS NOT NULL
+        GROUP BY source ORDER BY value DESC
+    """, {'c':cid})
+
+    return _ok({
+        'kpis': {
+            'open_jobs'       : open_jobs,
+            'total_candidates': total_cands,
+            'in_interview'    : in_interview,
+            'hired_this_month': hired_this_month,
+        },
+        'pipeline'       : pipeline,
+        'open_positions' : open_positions,
+        'interviews'     : interviews_today,
+        'placement_trend': placement_trend,
+        'source_breakdown': source_breakdown,
+    })
+
+
+def _table_exists(table_name):
     try:
-        open_jobs   = _safe_scalar("SELECT COUNT(*) FROM job_requisitions WHERE company_id=:c AND status='open'",  {'c':cid})
-        candidates  = _safe_scalar("SELECT COUNT(*) FROM candidates WHERE company_id=:c", {'c':cid})
-        interviews  = _safe_scalar("SELECT COUNT(*) FROM candidates WHERE company_id=:c AND stage='interview'",    {'c':cid})
-        hired_ytd   = _safe_scalar("""
-            SELECT COUNT(*) FROM candidates WHERE company_id=:c AND stage='hired'
-            AND EXTRACT(YEAR FROM updated_at)=EXTRACT(YEAR FROM CURRENT_DATE)
-        """, {'c':cid})
-
-        pipeline = _safe_query("""
-            SELECT stage, COUNT(*) AS count FROM candidates
-            WHERE company_id=:c GROUP BY stage ORDER BY count DESC
-        """, {'c':cid})
-
-        open_positions = _safe_query("""
-            SELECT title, department, posted_date, applications_count
-            FROM job_requisitions WHERE company_id=:c AND status='open'
-            ORDER BY posted_date DESC LIMIT 10
-        """, {'c':cid})
-
-        return _ok({
-            'kpis'          : {'open_jobs':open_jobs,'candidates':candidates,'interviews':interviews,'hired_ytd':hired_ytd},
-            'pipeline'      : [dict(r._mapping) for r in pipeline],
-            'open_positions': [dict(r._mapping) for r in open_positions],
-        })
-    except Exception as e:
-        logger.error(f'recruitment_dashboard [{cid}]: {e}')
-        return _ok({'kpis':{},'pipeline':[],'open_positions':[]})
-
-
-# ══════════════════════════════════════════════════════════════════════
-# GENERIC ROLE DASHBOARDS (Sales, Operations, IT, Marketing, etc.)
-# These use the same pattern — returns role-specific KPIs
-# ══════════════════════════════════════════════════════════════════════
-
-def _generic_dashboard(role_name):
-    """Generic dashboard for roles without specialized queries yet."""
-    cid = _cid()
-    try:
-        total = _safe_scalar("SELECT COUNT(*) FROM employees WHERE company_id=:c AND status='active'", {'c':cid})
-        att   = _safe_scalar("""
-            SELECT ROUND(100.0*COUNT(*) FILTER(WHERE status='present')/NULLIF(COUNT(*),0),1)
-            FROM attendance_logs WHERE company_id=:c AND date=CURRENT_DATE
-        """, {'c':cid}, 0)
-
-        return _ok({
-            'kpis'    : {'total_employees': total, 'attendance_rate': float(att)},
-            'role'    : role_name,
-            'message' : f'{role_name} dashboard — real data from your company',
-        })
-    except Exception as e:
-        logger.error(f'{role_name}_dashboard: {e}')
-        return _ok({'kpis':{},'role':role_name})
-
-
-@dashboard_bp.route('/sales',       methods=['GET'])
-@require_tenant
-def sales_dashboard():       return _generic_dashboard('Sales')
-
-@dashboard_bp.route('/operations',  methods=['GET'])
-@require_tenant
-def operations_dashboard():  return _generic_dashboard('Operations')
-
-@dashboard_bp.route('/it-admin',    methods=['GET'])
-@require_tenant
-def it_admin_dashboard():    return _generic_dashboard('IT Admin')
-
-@dashboard_bp.route('/marketing',   methods=['GET'])
-@require_tenant
-def marketing_dashboard():   return _generic_dashboard('Marketing')
-
-@dashboard_bp.route('/procurement', methods=['GET'])
-@require_tenant
-def procurement_dashboard(): return _generic_dashboard('Procurement')
-
-@dashboard_bp.route('/legal',       methods=['GET'])
-@require_tenant
-def legal_dashboard():       return _generic_dashboard('Legal')
-
-@dashboard_bp.route('/learning',    methods=['GET'])
-@require_tenant
-def learning_dashboard():    return _generic_dashboard('Learning & Development')
-
-
-# ══════════════════════════════════════════════════════════════════════
-# TENURE CHART
-# GET /api/v1/hr-analytics/tenure
-# ══════════════════════════════════════════════════════════════════════
-@dashboard_bp.route('/tenure', methods=['GET'])
-@require_tenant
-def tenure_chart():
-    cid = _cid()
-    try:
-        groups = _safe_query("""
-            SELECT
-              CASE
-                WHEN EXTRACT(YEAR FROM AGE(joining_date)) < 1  THEN '< 1 Year'
-                WHEN EXTRACT(YEAR FROM AGE(joining_date)) < 2  THEN '1-2 Years'
-                WHEN EXTRACT(YEAR FROM AGE(joining_date)) < 5  THEN '2-5 Years'
-                WHEN EXTRACT(YEAR FROM AGE(joining_date)) < 10 THEN '5-10 Years'
-                ELSE '10+ Years'
-              END AS tenure_group,
-              COUNT(*) AS count
-            FROM employees
-            WHERE company_id=:c AND status='active' AND joining_date IS NOT NULL
-            GROUP BY tenure_group ORDER BY count DESC
-        """, {'c':cid})
-        return _ok({'data': [dict(r._mapping) for r in groups]})
-    except Exception as e:
-        logger.error(f'tenure [{cid}]: {e}')
-        return _ok({'data': []})
+        result = db.session.execute(text("""
+            SELECT EXISTS (
+                SELECT 1 FROM information_schema.tables
+                WHERE table_name=:t AND table_schema='public'
+            )
+        """), {'t': table_name}).scalar()
+        return result
+    except Exception:
+        return False

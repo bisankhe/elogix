@@ -284,7 +284,41 @@ export default function LoginPage({ onLoginSuccess }) {
         data = mockResolve(id, form.password)
       } else {
         // Production: real API with mock fallback
-        try   { data = await eLogixAPI.login({ login_id: id, password: form.password }) } catch(_e) { data = mockResolve(id, form.password) }
+        // ── PRIMARY: Real backend API ────────────────────────────────
+        // Extracts company slug from email domain or entered value
+        const company_slug = (() => {
+          // Check if user typed slug@company.elogix.com.np format
+          if (id.includes('@') && id.includes('.elogix.com.np')) {
+            return id.split('@')[1].replace('.elogix.com.np', '')
+          }
+          // Check if login is an employee code like ELX-SLUG-0001
+          if (id.match(/^ELX-[A-Z]+-\d+$/i)) {
+            return id.split('-')[1].toLowerCase()
+          }
+          // Use stored tenant slug from session or URL
+          const sess = (() => { try { return JSON.parse(sessionStorage.getItem('elogix_session')||'null') } catch{return null} })()
+          return sess?.company?.slug || localStorage.getItem('elogix_tenant_slug') || form.slug || ''
+        })()
+
+        try {
+          data = await eLogixAPI.login({
+            email        : id,
+            password     : form.password,
+            company_slug : company_slug,
+          })
+          if (!data?.success && !data?.access_token) {
+            throw new Error(data?.error || 'Login failed')
+          }
+        } catch (apiErr) {
+          // ── FALLBACK: Mock data (dev mode / API unavailable) ──────
+          const isDev = import.meta.env.DEV
+          if (isDev) {
+            console.warn('[eLogix] API unavailable, using mock data:', apiErr.message)
+            data = mockResolve(id, form.password)
+          } else {
+            throw apiErr  // In production, never fall back to mock
+          }
+        }
       }
 
       if (!data?.success) { setError(data?.error || 'Login failed.'); return }
