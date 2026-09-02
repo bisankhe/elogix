@@ -253,23 +253,19 @@ app.post('/api/elogix-admin/v1/companies/:slug/approve', (req, res) => {
     writeDB('companies', companies)
     console.log(`[eLogix] Approved: ${slug} → ${companies[slug].status}`)
 
-    // Also create user account in PostgreSQL via Flask backend (if available)
-    // This lets the tenant admin log in with their registered email + password
-    try {
-      const flaskRes = await fetch(`http://127.0.0.1:5000/api/internal/provision-tenant`, {
-        method : 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Internal-Key': process.env.ELOGIX_ADMIN_KEY || 'elogix-admin-2026' },
-        body   : JSON.stringify({
-          slug,
-          company_id   : companies[slug].id,
-          admin_email  : companies[slug].admin_email,
-          admin_name   : companies[slug].admin_name || '',
-          plan         : companies[slug].plan,
-          business_type: companies[slug].business_type,
-        }),
-      }).catch(() => null)
-      if (flaskRes?.ok) console.log(`[eLogix] Tenant provisioned in DB: ${slug}`)
-    } catch(_e) { /* Flask may not be running — DB user created next login */ }
+    // Notify Flask to create PostgreSQL user record (fire and forget)
+    fetch('http://127.0.0.1:5000/api/internal/provision-tenant', {
+      method : 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Internal-Key': ADMIN_KEY },
+      body   : JSON.stringify({
+        slug,
+        admin_email  : companies[slug].admin_email,
+        admin_name   : companies[slug].admin_name || '',
+        plan         : companies[slug].plan,
+        business_type: companies[slug].business_type,
+      }),
+    }).then(r => r.ok && console.log(`[eLogix] DB provisioned: ${slug}`))
+      .catch(() => console.log(`[eLogix] Flask not running — DB user not created yet for ${slug}`))
 
     res.json({
       success: true,
@@ -328,10 +324,6 @@ if (fs.existsSync(DIST)) {
 }
 
 // ── Start ──────────────────────────────────────────────────────────────
-// Listen on both IPv4 and IPv6
-// '0.0.0.0' → all IPv4 interfaces
-// '::' would be all IPv6 interfaces
-// Node.js on 0.0.0.0 also accepts IPv6 on dual-stack systems
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ eLogix HRMS running on port ${PORT}`)
   console.log(`   API: http://localhost:${PORT}/api/health`)
