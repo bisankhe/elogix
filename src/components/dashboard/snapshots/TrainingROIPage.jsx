@@ -1,127 +1,85 @@
-// FILE: TrainingROIPage.jsx - ROI (Return on Investment) on Training
-// (Performance & Talent > Talent Development > Learning & Development)
-// Calculation engine: ROI% = (Net Benefits / Costs) x 100. Extends the
-// EXISTING training_roi_snapshots (Performance Analytics) with full
-// cost-input breakdown -- never duplicates the score-lift mechanism.
+// FILE: src/components/dashboard/snapshots/TrainingROIPage.jsx
+// eLogix HRMS — Training R O I
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { Field, PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#052e16 0%,#15803d 60%,#86efac 100%)'
-const A = '#15803d'
-
-const ROI_CALCULATIONS = [
-  { id:'r1', course:'AWS Solutions Architect', costs:{course_fees:45000,facilitator:0,lost_productivity:38400,lms_license_share:2000},
-    benefits:{error_reduction_npr:62000,productivity_gain_npr:48000}, participants:8,
-    impact_links:['Effectiveness of Training','Course Management'] },
-  { id:'r2', course:'CI/CD Pipeline Mastery', costs:{course_fees:28000,facilitator:15000,lost_productivity:24000,lms_license_share:1500},
-    benefits:{error_reduction_npr:12000,productivity_gain_npr:9000}, participants:6,
-    impact_links:['Effectiveness of Training'] },
-]
-
-function calcROI(r) {
-  const totalCost = Object.values(r.costs).reduce((a,b)=>a+b,0)
-  const totalBenefit = Object.values(r.benefits).reduce((a,b)=>a+b,0)
-  const netBenefit = totalBenefit - totalCost
-  const roiPct = Math.round(netBenefit/totalCost*100)
-  return { totalCost, totalBenefit, netBenefit, roiPct }
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
 }
 
 export default function TrainingROIPage() {
-  const [search, setSearch] = useState('')
-  const [showCalc, setShowCalc] = useState(false)
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = ROI_CALCULATIONS.filter(r=>!search||r.course.toLowerCase().includes(search.toLowerCase()))
-  const avgROI = Math.round(ROI_CALCULATIONS.reduce((s,r)=>s+calcROI(r).roiPct,0)/ROI_CALCULATIONS.length)
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/training-calendar', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Training R O I...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="💰" title="ROI on Training"
-        breadcrumb="Performance & Talent Management > Talent Development > Learning & Development"
-        gradient={G}
-        stats={[
-          {icon:'💰',label:'Avg ROI',           value:avgROI+'%'},
-          {icon:'📊',label:'Courses Calculated',  value:ROI_CALCULATIONS.length},
-          {icon:'✅',label:'Positive ROI',          value:ROI_CALCULATIONS.filter(r=>calcROI(r).roiPct>0).length},
-          {icon:'📐',label:'Formula',                value:'(Benefit/Cost)×100'},
-        ]}
-        onAdd={()=>setShowCalc(true)} addLabel="New ROI Calculation"/>
-
-      <div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#065f46',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>📐</span>
-        <div style={{flex:1,minWidth:200}}><strong>ROI % = (Net Training Benefits ÷ Training Costs) × 100.</strong> You don't need to be a finance expert -- enter direct costs (fees, facilitator, lost productivity) and tangible benefits (error reduction, productivity gain); the system calculates the rest.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          🎓 Training R O I
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search by course name..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{display:'grid',gap:16,marginTop:14}}>
-        {filtered.map(r=>{
-          const calc = calcROI(r)
-          return (
-            <div key={r.id}
-              onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:r.course,...r,impact_links:r.impact_links}})}}
-              style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,overflow:'hidden',boxShadow:'0 2px 10px rgba(0,0,0,.05)',borderLeft:`5px solid ${calc.roiPct>=0?'#10b981':'#ef4444'}`}}>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',padding:'14px 18px',borderBottom:'1px solid #f1f5f9',flexWrap:'wrap',gap:10}}>
-                <div>
-                  <div style={{fontSize:13,fontWeight:900,color:'#0f172a'}}>{r.course}</div>
-                  <div style={{fontSize:10,color:'#64748b'}}>{r.participants} participants</div>
-                </div>
-                <div style={{textAlign:'center',flexShrink:0}}>
-                  <div style={{fontSize:22,fontWeight:900,color:calc.roiPct>=0?'#10b981':'#ef4444'}}>{calc.roiPct>=0?'+':''}{calc.roiPct}%</div>
-                  <div style={{fontSize:8,color:'#94a3b8',fontWeight:700}}>ROI</div>
-                </div>
-              </div>
-              <div style={{padding:'12px 18px',display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10}}>
-                <div style={{textAlign:'center',background:'#fef2f2',borderRadius:8,padding:'10px 6px'}}>
-                  <div style={{fontSize:11,fontWeight:800,color:'#dc2626'}}>NPR {calc.totalCost.toLocaleString()}</div>
-                  <div style={{fontSize:8,color:'#94a3b8',marginTop:2}}>Total Cost</div>
-                </div>
-                <div style={{textAlign:'center',background:'#f0fdf4',borderRadius:8,padding:'10px 6px'}}>
-                  <div style={{fontSize:11,fontWeight:800,color:'#15803d'}}>NPR {calc.totalBenefit.toLocaleString()}</div>
-                  <div style={{fontSize:8,color:'#94a3b8',marginTop:2}}>Total Benefit</div>
-                </div>
-                <div style={{textAlign:'center',background:'#f8fafc',borderRadius:8,padding:'10px 6px'}}>
-                  <div style={{fontSize:11,fontWeight:800,color:'#0f172a'}}>NPR {calc.netBenefit.toLocaleString()}</div>
-                  <div style={{fontSize:8,color:'#94a3b8',marginTop:2}}>Net Benefit</div>
-                </div>
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
-      {showCalc&&(
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.65)',zIndex:5000,display:'flex',alignItems:'center',justifyContent:'center',padding:16}} onClick={()=>setShowCalc(false)}>
-          <div style={{background:'#fff',borderRadius:20,width:'min(600px,100%)',maxHeight:'90vh',overflow:'auto'}} onClick={e=>e.stopPropagation()}>
-            <div style={{background:G,padding:'20px 28px'}}><div style={{fontSize:18,fontWeight:900,color:'#fff'}}>New ROI Calculation</div></div>
-            <div style={{padding:'22px 28px'}}>
-              <Field label="Course" type="select" value="" onChange={()=>{}} accent={A} options={['AWS Solutions Architect','CI/CD Pipeline Mastery']}/>
-              <div style={{fontSize:10,fontWeight:700,color:'#15803d',margin:'10px 0 4px'}}>💸 Direct Costs (NPR)</div>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 16px'}}>
-                <Field label="Course Fees" type="number" value="" onChange={()=>{}} accent={A}/>
-                <Field label="Facilitator Cost" type="number" value="" onChange={()=>{}} accent={A}/>
-                <Field label="Lost Productivity" type="number" value="" onChange={()=>{}} accent={A}/>
-                <Field label="LMS License Share" type="number" value="" onChange={()=>{}} accent={A}/>
-              </div>
-              <div style={{fontSize:10,fontWeight:700,color:'#15803d',margin:'10px 0 4px'}}>📈 Tangible Benefits (NPR)</div>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 16px'}}>
-                <Field label="Error Reduction Value" type="number" value="" onChange={()=>{}} accent={A}/>
-                <Field label="Productivity Gain Value" type="number" value="" onChange={()=>{}} accent={A}/>
-              </div>
-              <AIImpact color={A} lines={['Benefits estimated from Productivity Analytics output correlation where available -- not just self-reported.','Isolates training impact from market/management variables where possible, flagged as a confidence range.','Auto-feeds into the Performance Analytics Training ROI dashboard for company-wide rollup.']}/>
-              <div style={{display:'flex',gap:10,marginTop:8,flexWrap:'wrap'}}>
-                <button onClick={()=>setShowCalc(false)} style={{flex:1,minWidth:140,padding:14,borderRadius:12,border:'none',background:G,color:'#fff',fontSize:14,fontWeight:700,cursor:'pointer'}}>Calculate ROI</button>
-                <button onClick={()=>setShowCalc(false)} style={{padding:'14px 24px',borderRadius:12,border:'1px solid #e2e8f0',background:'#fff',color:'#475569',fontSize:13,cursor:'pointer'}}>Cancel</button>
-              </div>
-            </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
         </div>
       )}
 
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Calculation Detail',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

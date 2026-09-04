@@ -206,11 +206,6 @@ export const SIDEBAR_MENU = [
       { id: 'ats-rbac',                   label: 'ATS — AI Tools Hub',        badge: 'AI', group: 'Recruitment' },
       { id: 'recruitment-analytics',      label: 'Recruitment Analytics',                group: 'Recruitment' },
 
-      // ── Recruitment Management — Tracking Pages ───────────
-      { id: 'applicant-status',   label: 'Applicant Status',  icon: '👤', group: 'Recruitment Management', badge: 'MDB', desc: 'Track all applicants with status, source, follow-up, and client details' },
-      { id: 'vacancy-status',     label: 'Vacancy Status',    icon: '💼', group: 'Recruitment Management', badge: 'MDB', desc: 'Track open vacancies with funnel metrics and conversion %' },
-      { id: 'master-database',    label: 'Master Database',   icon: '📊', group: 'Recruitment Management', badge: 'MDB', desc: '12-tab master employee database: Dashboard, Branch, Gender, AON, Client, Position views' },
-
       // ── Employer Branding ─────────────────────────────────
       { id: 'employer-branding-evp',      label: 'Employee Value Proposition (EVP)',     group: 'Employer Branding' },
       { id: 'evp-management',             label: 'EVP Management',                       group: 'Employer Branding' },

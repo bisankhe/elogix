@@ -1,69 +1,85 @@
-// ATSTalentPoolPage.jsx — Talent Pool
-// Passive candidates · Pool management · Re-engage · Tag skills
-import { useState } from 'react'
-import { useApp } from '../../../context/AppContext.jsx'
+// FILE: src/components/dashboard/snapshots/ATSTalentPoolPage.jsx
+// eLogix HRMS — A T S Talent Pool
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-const TABS = ['Overview', 'Active', 'History', 'Settings']
-const STATS = [
-  { l:'This Month', v:'24', c:'#0891b2' },
-  { l:'In Progress', v:'8',  c:'#1e40af' },
-  { l:'Completed',  v:'16', c:'#059669' },
-  { l:'Pending',    v:'3',  c:'#f59e0b' },
-]
+import { useState, useEffect } from 'react'
+
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function ATSTalentPoolPage() {
-  const { navigate } = useApp()
-  const [tab, setTab] = useState(0)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/ats', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading A T S Talent Pool...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div style={{fontFamily:'system-ui,sans-serif'}}>
-      {/* Header */}
-      <div style={{background:'linear-gradient(135deg,#0f172a,#1e293b,#0891b2)',borderRadius:14,padding:'16px 20px',marginBottom:14,color:'#fff'}}>
-        <div style={{display:'flex',gap:12,alignItems:'center',marginBottom:12}}>
-          <div style={{width:44,height:44,borderRadius:11,background:'rgba(255,255,255,.15)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22}}>🌊</div>
-          <div style={{flex:1}}>
-            <h2 style={{margin:0,fontSize:18,fontWeight:900}}>Talent Pool</h2>
-            <p style={{margin:'3px 0 0',fontSize:9,opacity:.75}}>Passive candidates · Pool management · Re-engage · Tag skills</p>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          🎯 A T S Talent Pool
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
+      </div>
+
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
+
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
         </div>
-        <div style={{display:'flex',gap:14,flexWrap:'wrap'}}>
-          {STATS.map((s,i)=>(
-            <div key={i} style={{textAlign:'center'}}>
-              <div style={{fontSize:20,fontWeight:900,color:s.c}}>{}</div>
-              <div style={{fontSize:8,opacity:.7}}>{s.l}</div>
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
 
-      {/* Tabs */}
-      <div style={{display:'flex',gap:6,marginBottom:14}}>
-        {TABS.map((t,i)=>(
-          <button key={t} onClick={()=>setTab(i)}
-            style={{padding:'8px 18px',borderRadius:9,border:tab!==i?'1px solid #e2e8f0':'none',background:tab===i?'#0891b2':'#fff',color:tab===i?'#fff':'#475569',fontSize:10,fontWeight:tab===i?800:400,cursor:'pointer'}}>
-            {t}
-          </button>
-        ))}
-      </div>
-
-      {/* Content */}
-      <div style={{background:'#fff',borderRadius:14,border:'1px solid #e2e8f0',padding:'32px',textAlign:'center'}}>
-        <div style={{fontSize:48,marginBottom:16}}>🌊</div>
-        <div style={{fontSize:15,fontWeight:700,color:'#0f172a',marginBottom:8}}>Talent Pool</div>
-        <div style={{fontSize:10,color:'#64748b',lineHeight:1.8,marginBottom:24,maxWidth:500,margin:'0 auto 24px'}}>Passive candidates · Pool management · Re-engage · Tag skills</div>
-        <div style={{display:'flex',gap:10,justifyContent:'center',flexWrap:'wrap'}}>
-          <button onClick={()=>navigate('ats-dashboard')}
-            style={{padding:'9px 22px',borderRadius:9,border:'none',background:'#0891b2',color:'#fff',fontSize:10,fontWeight:700,cursor:'pointer'}}>
-            🏠 Go to Dashboard
-          </button>
-          <button style={{padding:'9px 22px',borderRadius:9,border:'1px solid #e2e8f0',background:'#fff',color:'#374151',fontSize:10,cursor:'pointer'}}>
-            📖 View Documentation
-          </button>
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
         </div>
-        <div style={{marginTop:28,padding:'14px',background:'#f8fafc',borderRadius:10,fontSize:9,color:'#94a3b8',border:'1px solid #f1f5f9'}}>
-          Full UI being connected to backend <code style={{color:'#0891b2'}}>POST /api/v1/ats-talent-pool/</code>
-        </div>
-      </div>
+      )}
     </div>
   )
 }

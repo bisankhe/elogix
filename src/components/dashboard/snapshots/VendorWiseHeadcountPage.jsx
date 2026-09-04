@@ -1,85 +1,85 @@
-// FILE: VendorWiseHeadcountPage.jsx - Vendor-wise Headcount
-// (Reports, Analytics & BI > HR Analytics)
-// Pure aggregation over the EXISTING vendor_employees_extended (already
-// tracks Section 64 compliance: id_verified, bg_verified, ssf_paid,
-// insurance_active, min_wage_ok) -- never a second outsourced-worker
-// registry. Distinct from the existing Vendor Billing pages (invoicing/
-// payment execution) -- this is headcount and compliance visibility.
+// FILE: src/components/dashboard/snapshots/VendorWiseHeadcountPage.jsx
+// eLogix HRMS — Vendor Wise Headcount
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#1e1b4b 0%,#4338ca 60%,#818cf8 100%)'
-const A = '#4338ca'
-
-const VENDORS = [
-  {vendor:'Kathmandu Manpower Suppliers',headcount:18,service_category:'Security & Reception',cost_per_head_npr:24000,contract_renewal:'2025-09-15',license_valid:true,is_core_work:false},
-  {vendor:'CleanPro Facilities Pvt Ltd',headcount:9,service_category:'Cleaning & Housekeeping',cost_per_head_npr:18500,contract_renewal:'2025-07-20',license_valid:true,is_core_work:false},
-  {vendor:'QuickStaff Outsourcing',headcount:6,service_category:'Software Development',cost_per_head_npr:65000,contract_renewal:'2025-08-01',license_valid:true,is_core_work:true,
-   flag_note:'Service category overlaps with core engineering work -- legal review recommended; outsourcing core functions is prohibited.'},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function VendorWiseHeadcountPage() {
-  const [search, setSearch] = useState('')
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = VENDORS.filter(v=>!search||v.vendor.toLowerCase().includes(search.toLowerCase()))
-  const totalOutsourced = VENDORS.reduce((s,v)=>s+v.headcount,0)
-  const coreWorkFlags = VENDORS.filter(v=>v.is_core_work).length
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/vendors', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Vendor Wise Headcount...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🏭" title="Vendor-wise Headcount"
-        breadcrumb="Reports, Analytics & BI > HR Analytics"
-        gradient={G}
-        stats={[
-          {icon:'🏭',label:'Active Vendors',  value:VENDORS.length},
-          {icon:'👥',label:'Total Outsourced',     value:totalOutsourced},
-          {icon:'⚠',label:'Core-Work Flags',           value:coreWorkFlags},
-          {icon:'⚖',label:'Licensed Suppliers',            value:VENDORS.filter(v=>v.license_valid).length+'/'+VENDORS.length},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#eef2ff',border:'1px solid #c7d2fe',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#3730a3',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>⚖</span>
-        <div style={{flex:1,minWidth:200}}><strong>Core Work Cannot Be Outsourced:</strong> If a vendor's workers are performing your business's core functions rather than peripheral support, the law deems them your own direct employees -- this view flags that overlap before it becomes a liability, not after a labour audit.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          🤝 Vendor Wise Headcount
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search vendors..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{display:'grid',gap:16,marginTop:14}}>
-        {filtered.map((v,i)=>(
-          <div key={i}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:v.vendor,...v,impact_links:['Vendor Billing']}})}}
-            style={{background:'#fff',border:`1px solid ${v.flag_note?'#fed7aa':'#e2e8f0'}`,borderRadius:16,padding:'18px'}}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:10}}>
-              <div>
-                <div style={{fontSize:12,fontWeight:800,color:'#0f172a'}}>{v.vendor}</div>
-                <div style={{fontSize:9,color:'#94a3b8',marginTop:3}}>{v.service_category} . Renews {v.contract_renewal}</div>
-              </div>
-              <div style={{textAlign:'right'}}>
-                <div style={{fontSize:16,fontWeight:900,color:A}}>{v.headcount}</div>
-                <div style={{fontSize:8,color:'#94a3b8'}}>NPR {v.cost_per_head_npr.toLocaleString()}/head</div>
-              </div>
-            </div>
-            <div style={{display:'flex',gap:6,marginTop:10}}>
-              <span style={{background:v.license_valid?'#f0fdf4':'#fef2f2',color:v.license_valid?'#15803d':'#dc2626',fontSize:8,fontWeight:700,padding:'2px 8px',borderRadius:20}}>
-                {v.license_valid?'✓ Licensed':'⚠ Unlicensed'}
-              </span>
-              {v.is_core_work&&<span style={{background:'#fef2f2',color:'#dc2626',fontSize:8,fontWeight:700,padding:'2px 8px',borderRadius:20}}>⚠ Core Work Overlap</span>}
-            </div>
-            {v.flag_note&&<div style={{marginTop:8,fontSize:9,color:'#b45309'}}>⚠ {v.flag_note}</div>}
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Headcount syncs live from each vendor employee\'s active contract record -- never a separately maintained count.','Unlicensed suppliers are flagged before a single hour gets billed -- engaging one risks those workers being deemed your own direct employees.','Click any vendor to drill into its full billing and compliance detail.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Detail',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

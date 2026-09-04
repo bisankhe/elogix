@@ -1,105 +1,85 @@
-// FILE: ComplaintManagementPage.jsx - Complaint Management
-// (Employee Experience & Culture > Employee Relations)
-// Broader intake than formal Grievances -- harassment, unfair
-// treatment, policy violations. SLA-timed case dashboard, evidence
-// upload, RBAC-restricted to assigned investigator only.
+// FILE: src/components/dashboard/snapshots/ComplaintManagementPage.jsx
+// eLogix HRMS — Complaint Management
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { Field, PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#0c4a6e 0%,#0284c7 60%,#7dd3fc 100%)'
-const A = '#0284c7'
-
-const PRIORITY_CFG = { high:{c:'#ef4444',label:'High'},medium:{c:'#f59e0b',label:'Medium'},low:{c:'#10b981',label:'Low'} }
-const STATUS_CFG = { intake:{c:'#94a3b8',label:'Intake'},assigned:{c:'#0284c7',label:'Assigned'},investigating:{c:'#7c3aed',label:'Investigating'},closed:{c:'#10b981',label:'Closed'} }
-
-const COMPLAINTS = [
-  { id:'c1', case_no:'CMP-2025-014', type:'Harassment', priority:'high', status:'investigating', investigator:'HR Director', sla_days_left:2, has_evidence:true,
-    impact_links:['Conflict Resolution','Disciplinary Management'] },
-  { id:'c2', case_no:'CMP-2025-018', type:'Policy Violation', priority:'medium', status:'assigned', investigator:'HR Manager', sla_days_left:6, has_evidence:false },
-  { id:'c3', case_no:'CMP-2025-009', type:'Unfair Treatment', priority:'low', status:'closed', investigator:'HR Manager', sla_days_left:null, has_evidence:true,
-    resolution_note:'Investigation found no policy violation -- coaching provided to both parties.' },
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function ComplaintManagementPage() {
-  const [search, setSearch] = useState('')
-  const [showSubmit, setShowSubmit] = useState(false)
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = COMPLAINTS.filter(c=>!search||c.type.toLowerCase().includes(search.toLowerCase())||c.case_no.toLowerCase().includes(search.toLowerCase()))
-  const slaBreachRisk = COMPLAINTS.filter(c=>c.sla_days_left!=null&&c.sla_days_left<=3).length
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Complaint Management...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🗂" title="Complaint Management"
-        breadcrumb="Employee Experience & Culture > Employee Relations"
-        gradient={G}
-        stats={[
-          {icon:'🗂',label:'Open Cases',  value:COMPLAINTS.filter(c=>c.status!=='closed').length},
-          {icon:'⏰',label:'SLA Breach Risk', value:slaBreachRisk},
-          {icon:'✅',label:'Closed',         value:COMPLAINTS.filter(c=>c.status==='closed').length},
-          {icon:'🔒',label:'Access',           value:'Investigator-Only'},
-        ]}
-        onAdd={()=>setShowSubmit(true)} addLabel="File a Complaint"/>
-
-      <div style={{background:'#eff6ff',border:'1px solid #bfdbfe',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#1e40af',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🔒</span>
-        <div style={{flex:1,minWidth:200}}><strong>Restricted by Design:</strong> Case visibility is limited to the assigned investigator and necessary management only -- never visible company-wide. SLA timers auto-escalate if acknowledgment lags beyond 48 hours.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Complaint Management
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search by case number or type..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,overflow:'hidden',overflowX:'auto',marginTop:14}}>
-        <table style={{width:'100%',borderCollapse:'collapse',fontSize:11,minWidth:600}}>
-          <thead><tr style={{background:'#f8fafc'}}>
-            {['Case #','Type','Priority','Status','Investigator','SLA','Evidence'].map(h=><th key={h} style={{padding:'10px 12px',textAlign:'left',fontSize:9,fontWeight:800,color:A}}>{h}</th>)}
-          </tr></thead>
-          <tbody>
-            {filtered.map(c=>{
-              const pc = PRIORITY_CFG[c.priority], sc = STATUS_CFG[c.status]
-              return (
-                <tr key={c.id} style={{borderBottom:'1px solid #f8fafc'}}
-                  onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:c.case_no,...c}})}}>
-                  <td style={{padding:'9px 12px',fontWeight:700,color:'#0f172a'}}>{c.case_no}</td>
-                  <td style={{padding:'9px 12px',color:'#374151'}}>{c.type}</td>
-                  <td style={{padding:'9px 12px'}}><span style={{background:`${pc.c}15`,color:pc.c,fontSize:8,fontWeight:700,padding:'2px 8px',borderRadius:20}}>{pc.label}</span></td>
-                  <td style={{padding:'9px 12px'}}><span style={{background:`${sc.c}15`,color:sc.c,fontSize:8,fontWeight:700,padding:'2px 8px',borderRadius:20}}>{sc.label}</span></td>
-                  <td style={{padding:'9px 12px',color:'#64748b',fontSize:9}}>{c.investigator}</td>
-                  <td style={{padding:'9px 12px',fontSize:9,fontWeight:700,color:c.sla_days_left!=null&&c.sla_days_left<=3?'#ef4444':'#10b981'}}>{c.sla_days_left!=null?`${c.sla_days_left}d left`:'--'}</td>
-                  <td style={{padding:'9px 12px'}}>{c.has_evidence?'📎':'--'}</td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      {showSubmit&&(
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.65)',zIndex:5000,display:'flex',alignItems:'center',justifyContent:'center',padding:16}} onClick={()=>setShowSubmit(false)}>
-          <div style={{background:'#fff',borderRadius:20,width:'min(520px,100%)',maxHeight:'90vh',overflow:'auto'}} onClick={e=>e.stopPropagation()}>
-            <div style={{background:G,padding:'20px 28px'}}><div style={{fontSize:17,fontWeight:900,color:'#fff'}}>File a Complaint</div></div>
-            <div style={{padding:'22px 28px'}}>
-              <Field label="Type" type="select" value="" onChange={()=>{}} accent={A} options={['Harassment','Unfair Treatment','Policy Violation','Other']}/>
-              <Field label="Involved Parties" value="" onChange={()=>{}} accent={A}/>
-              <Field label="Description" type="textarea" value="" onChange={()=>{}} accent={A} required hint="Voice input supported"/>
-              <div style={{border:'2px dashed #bfdbfe',borderRadius:12,padding:'20px',textAlign:'center',background:'#eff6ff',marginBottom:14}}>
-                <div style={{fontSize:20,marginBottom:6}}>📎</div>
-                <div style={{fontSize:10,color:'#1e40af'}}>Upload evidence (screenshots, documents, emails)</div>
-              </div>
-              <button onClick={()=>setShowSubmit(false)} style={{width:'100%',padding:13,borderRadius:11,border:'none',background:G,color:'#fff',fontSize:13,fontWeight:700,cursor:'pointer'}}>Submit Complaint</button>
-            </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
         </div>
       )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['AI flags complaint clusters by department to surface cultural red flags before they escalate.','Evidence files are encrypted at rest and accessible only to the assigned investigator.','Closed complaints with upheld findings can auto-trigger Disciplinary Management workflows.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Case File',key:'view'},{icon:'👤',label:'Reassign Investigator',key:'reassign'},
-        {icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

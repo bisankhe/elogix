@@ -3,7 +3,6 @@
 // tracking. Genuinely distinct from ProcurementDashboard despite
 // the brief listing identical Nepali description text for both --
 // this persona scopes to HR Helpdesk's own ticketing data.
-import { useApp } from '../../context/AppContext.jsx'
 import { StatCard } from '../shared/StatCard.jsx'
 import { Card } from '../shared/Card.jsx'
 const TICKETS=[
@@ -12,20 +11,29 @@ const TICKETS=[
 ]
 
 function _getSession() {
-  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}}
+  try {
+    return JSON.parse(
+      sessionStorage.getItem('elogix_session') ||
+      localStorage.getItem('elogix_session') || 'null'
+    ) || {}
+  } catch (_e) { return {} }
 }
-function _getTenantCtx() {
-  const s=_getSession()
-  const token=localStorage.getItem('access_token')||s?.token||''
-  const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
-  return {token,slug,valid:!!(token&&slug)}
+function _useAppFallback() {
+  const s = _getSession()
+  return {
+    sub: s?.last_page || '', persona: s?.persona || s?.user?.role || 'employee',
+    lang: s?.lang || 'en', currency: s?.currency || 'NPR',
+    company: s?.company || {}, user: s?.user || {},
+    darkMode: false, setDarkMode: () => {},
+    navTo: (p) => window.dispatchEvent(new CustomEvent('elogix:nav', { detail: { page: p } })),
+    switchPersona: () => {}, setShowNotif: () => {}, setShowAI: () => {},
+    setSidebarOpen: () => {}, sidebarOpen: true,
+    currentPersona: { id: s?.persona || 'employee', icon: '👤', color: '#7c3aed', label: '' },
+  }
 }
 
 export default function CustomerServiceDashboard(){
-  const [apiData,setApiData]=useState(null)
-  const [apiLoading,setApiLoading]=useState(true)
-  const [apiError,setApiError]=useState(null)
-  const { navTo } = useApp()
+  const { navTo } = _useAppFallback()
   return(
     <div>
       <h1 style={{fontSize:20,fontWeight:900,color:'#0f172a',marginBottom:4}}>🎧 Customer Service Workspace</h1>

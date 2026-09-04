@@ -1,94 +1,85 @@
-// FILE: TravelManagementPage.jsx - Travel Management
-// (Finance, Assets & Administration > Administrative Operations)
-// Origin/destination/dates wizard, manager approval routing. Section
-// 37 (Daily Allowance per bylaws) and the compensatory-rest trigger
-// when travel pushes someone past the 8h/day, 48h/week ceiling.
+// FILE: src/components/dashboard/snapshots/TravelManagementPage.jsx
+// eLogix HRMS — Travel Management
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { Field, PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#7c2d12 0%,#c2410c 60%,#fdba74 100%)'
-const A = '#c2410c'
-
-const STATUS_CFG = { pending:{c:'#f59e0b',label:'Pending Manager Approval'},approved:{c:'#10b981',label:'Approved'},rejected:{c:'#ef4444',label:'Rejected'} }
-
-const TRIPS = [
-  { id:'t1', employee:'Hari Thapa', origin:'Kathmandu', destination:'Pokhara', dates:'2025-07-08 to 2025-07-10', purpose:'Client site visit', status:'pending', daily_allowance:1500 },
-  { id:'t2', employee:'Gita Maharjan', origin:'Kathmandu', destination:'Dubai', dates:'2025-07-15 to 2025-07-18', purpose:'Vendor conference', status:'approved', daily_allowance:8000,
-    flag_note:'Travel duration crosses standard hours -- compensatory rest auto-scheduled on return.' },
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function TravelManagementPage() {
-  const [search, setSearch] = useState('')
-  const [showNew, setShowNew] = useState(false)
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = TRIPS.filter(t=>!search||t.employee.toLowerCase().includes(search.toLowerCase()))
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Travel Management...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="✈️" title="Travel Management"
-        breadcrumb="Finance, Assets & Administration > Administrative Operations"
-        gradient={G}
-        stats={[
-          {icon:'✈️',label:'Active Trips',  value:TRIPS.length},
-          {icon:'⏳',label:'Pending Approval',  value:TRIPS.filter(t=>t.status==='pending').length},
-          {icon:'⚖',label:'Comp Rest Triggered',    value:TRIPS.filter(t=>t.flag_note).length},
-          {icon:'💰',label:'Total Allowance',          value:'NPR '+TRIPS.reduce((s,t)=>s+t.daily_allowance,0).toLocaleString()},
-        ]}
-        onAdd={()=>setShowNew(true)} addLabel="Request Travel"/>
-
-      <div style={{background:'#fff7ed',border:'1px solid #fed7aa',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#7c2d12',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>⚖</span>
-        <div style={{flex:1,minWidth:200}}><strong>Duty of Care, Built In:</strong> Trips that push an employee past the 48-hour weekly ceiling auto-trigger compensatory rest scheduling on return -- never left to chance or forgotten in a calendar.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Travel Management
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search trips..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{display:'grid',gap:14,marginTop:14}}>
-        {filtered.map(t=>{
-          const sc = STATUS_CFG[t.status]
-          return (
-            <div key={t.id}
-              onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:t.employee,...t}})}}
-              style={{background:'#fff',border:`1px solid ${sc.c}33`,borderRadius:14,padding:'16px 18px',borderLeft:`4px solid ${sc.c}`}}>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:8}}>
-                <div>
-                  <div style={{fontSize:12,fontWeight:700,color:'#0f172a'}}>{t.employee}</div>
-                  <div style={{fontSize:9,color:'#94a3b8',marginTop:3}}>{t.origin} {'>'} {t.destination} . {t.dates}</div>
-                  <div style={{fontSize:9,color:'#374151',marginTop:3}}>{t.purpose}</div>
-                </div>
-                <span style={{background:`${sc.c}15`,color:sc.c,fontSize:9,fontWeight:700,padding:'3px 10px',borderRadius:20}}>{sc.label}</span>
-              </div>
-              <div style={{marginTop:8,fontSize:9,color:'#94a3b8'}}>Daily Allowance: NPR {t.daily_allowance.toLocaleString()}/day</div>
-              {t.flag_note&&<div style={{marginTop:8,fontSize:9,color:'#b45309'}}>⚠ {t.flag_note}</div>}
-            </div>
-          )
-        })}
-      </div>
-
-      {showNew&&(
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.65)',zIndex:5000,display:'flex',alignItems:'center',justifyContent:'center',padding:16}} onClick={()=>setShowNew(false)}>
-          <div style={{background:'#fff',borderRadius:20,width:'min(500px,100%)'}} onClick={e=>e.stopPropagation()}>
-            <div style={{background:G,padding:'18px 24px'}}><div style={{fontSize:15,fontWeight:900,color:'#fff'}}>Request Travel</div></div>
-            <div style={{padding:'20px 24px'}}>
-              <Field label="Origin" value="" onChange={()=>{}} accent={A} required/>
-              <Field label="Destination" value="" onChange={()=>{}} accent={A} required/>
-              <Field label="Travel Dates" type="date" value="" onChange={()=>{}} accent={A}/>
-              <Field label="Purpose" type="textarea" value="" onChange={()=>{}} accent={A} required hint="Voice input supported"/>
-              <button onClick={()=>setShowNew(false)} style={{width:'100%',padding:13,borderRadius:11,border:'none',background:G,color:'#fff',fontSize:13,fontWeight:700,cursor:'pointer'}}>Submit for Approval</button>
-            </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
         </div>
       )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Out-of-policy requests (exceeding allowance caps or unapproved booking channels) flag before submission, not after rejection.','Itinerary and daily allowance calculate automatically from origin, destination, and trip length.','Real-time location tracking is opt-in and used solely for duty-of-care during emergencies -- never general surveillance.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Itinerary',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,70 +1,85 @@
-// FILE: MyLeavePage.jsx - My Leave
-// (HR Services & Support > Employee Self Service)
-// ESS-facing balance snapshot, pure UI over the EXISTING
-// employee_leave_balances (Leave Setup session) -- never recalculated
-// here. Circular progress bars per leave type, statutory entitlement context.
+// FILE: src/components/dashboard/snapshots/MyLeavePage.jsx
+// eLogix HRMS — My Leave
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#052e16 0%,#15803d 60%,#86efac 100%)'
-const A = '#15803d'
-
-const BALANCES = [
-  { type:'Annual/Home Leave', current:14, entitled:18, c:'#15803d', legal_note:'1 day per 20 days worked' },
-  { type:'Sick Leave', current:9, entitled:12, c:'#0284c7', legal_note:'12 days annually' },
-  { type:'Mourning Leave', current:13, entitled:13, c:'#7c3aed', legal_note:'13 days annually' },
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function MyLeavePage() {
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/leave', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading My Leave...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🏖" title="My Leave"
-        breadcrumb="HR Services & Support > Employee Self Service"
-        gradient={G}
-        stats={[
-          {icon:'🏖',label:'Annual Remaining',  value:BALANCES[0].current},
-          {icon:'🤒',label:'Sick Remaining',       value:BALANCES[1].current},
-          {icon:'📅',label:'Used This Year',          value:BALANCES.reduce((s,b)=>s+(b.entitled-b.current),0)},
-          {icon:'⚖',label:'Basis',                       value:'Sections 40-49'},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#065f46',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>📐</span>
-        <div style={{flex:1,minWidth:200}}><strong>Know Before You Apply:</strong> Your exact balance, every time -- calculated live from the same accrual engine HR and payroll use. No guessing, no surprises when you request time off.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📅 My Leave
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:16}}>
-        {BALANCES.map((b,i)=>{
-          const pct = Math.round(b.current/b.entitled*100)
-          return (
-            <div key={i}
-              onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:b.type,...b,impact_links:['Leave Request']}})}}
-              style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'20px',textAlign:'center'}}>
-              <svg width="100" height="100" viewBox="0 0 36 36" style={{margin:'0 auto'}}>
-                <circle cx="18" cy="18" r="15.5" fill="none" stroke="#f1f5f9" strokeWidth="5"/>
-                <circle cx="18" cy="18" r="15.5" fill="none" stroke={b.c} strokeWidth="5" strokeDasharray={`${pct} ${100-pct}`} strokeDashoffset="25" transform="rotate(-90 18 18)"/>
-              </svg>
-              <div style={{fontSize:18,fontWeight:900,color:b.c,marginTop:-66}}>{b.current}</div>
-              <div style={{fontSize:8,color:'#94a3b8',marginTop:36}}>of {b.entitled} days</div>
-              <div style={{fontSize:11,fontWeight:700,color:'#0f172a',marginTop:8}}>{b.type}</div>
-              <div style={{fontSize:8,color:'#94a3b8',marginTop:4}}>{b.legal_note}</div>
-            </div>
-          )
-        })}
-      </div>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Balances update the instant a leave request is approved -- never a stale, manually-refreshed number.','Maternity leave (14 weeks paid) and paternity leave are tracked separately and shown only when applicable.','Low balance warnings appear before you submit a request that would overdraw -- not after rejection.']}/>
-      </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
+          </div>
+        </div>
+      )}
 
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View History',key:'view'},{icon:'📝',label:'Request This Leave Type',key:'request'},
-        {icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

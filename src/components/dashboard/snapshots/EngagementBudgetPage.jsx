@@ -1,71 +1,85 @@
-// FILE: EngagementBudgetPage.jsx - Engagement Budget
-// (Finance, Assets & Administration > HR Budgeting)
-// Wellbeing, recognition, team-building spend -- genuinely new
-// engagement_budget_lines table; no precedent existed for engagement
-// cost tracking. Intangible-ROI framing addressed directly via
-// participation-correlated metrics, not just raw spend.
+// FILE: src/components/dashboard/snapshots/EngagementBudgetPage.jsx
+// eLogix HRMS — Engagement Budget
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#7c2d12 0%,#c2410c 60%,#fdba74 100%)'
-const A = '#c2410c'
-
-const SPEND_CATEGORIES = [
-  {category:'Recognition & Rewards Platform',amount:280000,participation_pct:74,c:'#c2410c'},
-  {category:'Wellness & EAP',amount:340000,participation_pct:31,c:'#0284c7'},
-  {category:'Team-Building Events',amount:210000,participation_pct:82,c:'#15803d'},
-  {category:'ERG & Inclusion Programs',amount:90000,participation_pct:18,c:'#7c3aed',
-   flag_note:'Low participation relative to spend -- may need awareness push, not just budget.'},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function EngagementBudgetPage() {
-  const [ctx, setCtx] = useState(null)
-  const total = SPEND_CATEGORIES.reduce((s,c)=>s+c.amount,0)
-  const maxAmount = Math.max(...SPEND_CATEGORIES.map(c=>c.amount))
-  const fmt = n => 'NPR '+(n/1000).toFixed(0)+'K'
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/engagement', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Engagement Budget...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="❤️" title="Engagement Budget"
-        breadcrumb="Finance, Assets & Administration > HR Budgeting"
-        gradient={G}
-        stats={[
-          {icon:'❤️',label:'Total Spend',  value:fmt(total)},
-          {icon:'📊',label:'Avg Participation',  value:Math.round(SPEND_CATEGORIES.reduce((s,c)=>s+c.participation_pct,0)/SPEND_CATEGORIES.length)+'%'},
-          {icon:'⚠',label:'Low-Participation Spend', value:SPEND_CATEGORIES.filter(c=>c.flag_note).length},
-          {icon:'🔗',label:'Categories',                  value:SPEND_CATEGORIES.length},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#fff7ed',border:'1px solid #fed7aa',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#7c2d12',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>📈</span>
-        <div style={{flex:1,minWidth:200}}><strong>Spend Tied to Participation, Not Just Cost:</strong> Engagement ROI is genuinely hard to quantify in pure financial terms -- so every category here is shown alongside actual usage, giving a fuller picture than spend alone.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          😊 Engagement Budget
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'20px'}}>
-        <div style={{fontSize:11,fontWeight:800,color:'#0f172a',marginBottom:14}}>💰 Spend vs Participation</div>
-        {SPEND_CATEGORIES.map((c,i)=>(
-          <div key={i}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:c.category,...c,impact_links:['Employee Engagement']}})}}
-            style={{marginBottom:14}}>
-            <div style={{display:'flex',justifyContent:'space-between',marginBottom:3,fontSize:10}}>
-              <span style={{color:'#374151'}}>{c.category}</span>
-              <span style={{fontWeight:700,color:c.c}}>{fmt(c.amount)} . {c.participation_pct}% participation</span>
-            </div>
-            <div style={{height:8,background:'#f1f5f9',borderRadius:8,overflow:'hidden'}}><div style={{width:`${c.amount/maxAmount*100}%`,height:'100%',background:c.c,borderRadius:8}}/></div>
-            {c.flag_note&&<div style={{marginTop:6,fontSize:8,color:'#b45309'}}>⚠ {c.flag_note}</div>}
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
+
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Participation rates pull live from Employee Engagement -- never a separately tracked, stale percentage.','High-spend, low-participation categories flag here before renewal decisions, not after the budget is already committed.','Correlates engagement spend trends against eNPS and retention data to build a genuine business case for leadership.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Detail',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

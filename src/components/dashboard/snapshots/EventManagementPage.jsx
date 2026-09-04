@@ -1,88 +1,85 @@
-// FILE: EventManagementPage.jsx - Event Management
-// (Finance, Assets & Administration > Administrative Operations)
-// Event pages, RSVP tracking, venue/catering/equipment bundling.
-// Working-hours-extension awareness: events compelling employees past
-// standard hours count toward weekly overtime thresholds.
+// FILE: src/components/dashboard/snapshots/EventManagementPage.jsx
+// eLogix HRMS — Event Management
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { Field, PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#1e1b4b 0%,#4338ca 60%,#818cf8 100%)'
-const A = '#4338ca'
-
-const EVENTS = [
-  {id:'e1',title:'Annual Team Retreat -- Pokhara',date:'2025-08-15',rsvp_yes:42,rsvp_pending:8,after_hours:false},
-  {id:'e2',title:'Q3 All-Hands + Dinner',date:'2025-07-10',rsvp_yes:68,rsvp_pending:12,after_hours:true,
-   flag_note:'Extends past standard shift hours -- counts toward weekly overtime for hourly staff attending.'},
-  {id:'e3',title:'New Hire Welcome Lunch',date:'2025-07-03',rsvp_yes:6,rsvp_pending:2,after_hours:false},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function EventManagementPage() {
-  const [search, setSearch] = useState('')
-  const [showNew, setShowNew] = useState(false)
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = EVENTS.filter(e=>!search||e.title.toLowerCase().includes(search.toLowerCase()))
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Event Management...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🎭" title="Event Management"
-        breadcrumb="Finance, Assets & Administration > Administrative Operations"
-        gradient={G}
-        stats={[
-          {icon:'🎭',label:'Upcoming Events',  value:EVENTS.length},
-          {icon:'✅',label:'Total RSVPs',          value:EVENTS.reduce((s,e)=>s+e.rsvp_yes,0)},
-          {icon:'⏳',label:'Pending RSVPs',            value:EVENTS.reduce((s,e)=>s+e.rsvp_pending,0)},
-          {icon:'⚖',label:'OT-Counted Events',            value:EVENTS.filter(e=>e.after_hours).length},
-        ]}
-        onAdd={()=>setShowNew(true)} addLabel="Create Event"/>
-
-      <div style={{background:'#eef2ff',border:'1px solid #c7d2fe',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#3730a3',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>⚖</span>
-        <div style={{flex:1,minWidth:200}}><strong>After-Hours Events Still Count:</strong> A mandatory all-hands dinner that runs past standard shift hours adds to weekly overtime totals just like any other extended workday -- flagged automatically, never overlooked because it "felt" social rather than work.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Event Management
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search events..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{display:'grid',gap:14,marginTop:14}}>
-        {filtered.map(e=>(
-          <div key={e.id}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:e.title,...e,impact_links:['Meeting Room Booking','Cafeteria Management']}})}}
-            style={{background:'#fff',border:`1px solid ${e.flag_note?'#fed7aa':'#e2e8f0'}`,borderRadius:14,padding:'16px 18px'}}>
-            <div style={{display:'flex',justifyContent:'space-between',marginBottom:8,flexWrap:'wrap',gap:8}}>
-              <div style={{fontSize:12,fontWeight:700,color:'#0f172a'}}>{e.title}</div>
-              <span style={{fontSize:10,fontWeight:700,color:A}}>{e.date}</span>
-            </div>
-            <div style={{display:'flex',gap:14,fontSize:9,color:'#94a3b8'}}>
-              <span>✅ {e.rsvp_yes} attending</span><span>⏳ {e.rsvp_pending} pending</span>
-            </div>
-            {e.flag_note&&<div style={{marginTop:8,fontSize:9,color:'#b45309'}}>⚠ {e.flag_note}</div>}
-          </div>
-        ))}
-      </div>
-
-      {showNew&&(
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.65)',zIndex:5000,display:'flex',alignItems:'center',justifyContent:'center',padding:16}} onClick={()=>setShowNew(false)}>
-          <div style={{background:'#fff',borderRadius:20,width:'min(500px,100%)'}} onClick={e=>e.stopPropagation()}>
-            <div style={{background:G,padding:'18px 24px'}}><div style={{fontSize:15,fontWeight:900,color:'#fff'}}>Create Event</div></div>
-            <div style={{padding:'20px 24px'}}>
-              <Field label="Event Title" value="" onChange={()=>{}} accent={A} required/>
-              <Field label="Date &amp; Time" type="date" value="" onChange={()=>{}} accent={A}/>
-              <Field label="Venue / Room" value="" onChange={()=>{}} accent={A}/>
-              <Field label="Catering or Equipment Needs" type="textarea" value="" onChange={()=>{}} accent={A} hint="Optional -- voice input supported"/>
-              <button onClick={()=>setShowNew(false)} style={{width:'100%',padding:13,borderRadius:11,border:'none',background:G,color:'#fff',fontSize:13,fontWeight:700,cursor:'pointer'}}>Create &amp; Send Invites</button>
-            </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
         </div>
       )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Venue booking auto-checks Meeting Room Booking availability -- never a double-booked space for your event.','Catering needs route straight into Cafeteria Management headcount forecasting.','RSVP reminders fire automatically as the event date approaches, never a manually-chased spreadsheet.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Event',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

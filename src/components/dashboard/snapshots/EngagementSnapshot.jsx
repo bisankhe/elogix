@@ -11,7 +11,6 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend, PieChart, Pie, Cell,
 } from 'recharts'
-import { useApp }        from '../../../context/AppContext.jsx'
 import { StatCard }      from '../../shared/StatCard.jsx'
 import { Card }          from '../../shared/Card.jsx'
 import { Pill }          from '../../shared/Pill.jsx'
@@ -119,7 +118,17 @@ function ENPSGauge({ score }) {
         <text x="172" y="115" fontSize="9" fill="#94a3b8">+100</text>
       </svg>
       <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
-
+      {apiLoading && (
+        <div style={{textAlign:'center',padding:40,color:'#7c3aed',fontSize:13,fontWeight:600}}>
+          <div style={{fontSize:32,marginBottom:8}}>⟳</div>Loading...
+        </div>
+      )}
+      {apiError && !apiLoading && (
+        <div style={{padding:'8px 14px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,fontSize:12,color:'#dc2626',marginBottom:8,fontWeight:600}}>
+          ⚠️ {apiError}
+        </div>
+      )}
         Promoters 61% · Passives 20% · Detractors 19%
       </div>
       <div style={{ marginTop: 6 }}>
@@ -145,7 +154,7 @@ export default function EngagementSnapshot() {
   const [apiData,setApiData]=useState(null)
   const [apiLoading,setApiLoading]=useState(true)
   const [apiError,setApiError]=useState(null)
-  const { t } = useApp()
+  const { t } = _useAppFallback()
   const [activeTab, setActiveTab] = useState('overview')
 
   useEffect(()=>{

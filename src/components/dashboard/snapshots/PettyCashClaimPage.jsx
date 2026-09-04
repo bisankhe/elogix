@@ -1,108 +1,85 @@
-// FILE: PettyCashClaimPage.jsx - Petty Cash Claim
-// (Finance, Assets & Administration > Finance & Claims)
-// Per-branch cash box ledger, per-transaction limits, replenishment
-// tracking. Genuinely new -- addresses the brief's explicit fraud-risk
-// and reconciliation pain points with a digital audit trail.
+// FILE: src/components/dashboard/snapshots/PettyCashClaimPage.jsx
+// eLogix HRMS — Petty Cash Claim
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { Field, PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#7c2d12 0%,#c2410c 60%,#fdba74 100%)'
-const A = '#c2410c'
-
-const PER_TRANSACTION_LIMIT = 2000
-
-const BRANCH_LEDGERS = [
-  {branch:'Kathmandu HQ',float_amount:25000,spent:18400,custodian:'Reception Admin'},
-  {branch:'Pokhara Branch',float_amount:10000,spent:9650,custodian:'Branch Admin',
-   flag_note:'Approaching float exhaustion -- replenishment request recommended.'},
-]
-
-const RECENT_CLAIMS = [
-  {branch:'Kathmandu HQ',item:'Courier charges',amount:850,claimed_by:'Hari Thapa',date:'2025-06-26'},
-  {branch:'Kathmandu HQ',item:'Office tea/coffee supplies',amount:1200,claimed_by:'Reception Admin',date:'2025-06-24'},
-  {branch:'Pokhara Branch',item:'Printer cartridge -- emergency',amount:2400,claimed_by:'Branch Admin',date:'2025-06-23',
-   flag_note:'Exceeds the NPR 2,000 per-transaction limit -- requires Finance Head approval.'},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function PettyCashClaimPage() {
-  const [search, setSearch] = useState('')
-  const [showClaim, setShowClaim] = useState(false)
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = RECENT_CLAIMS.filter(c=>!search||c.item.toLowerCase().includes(search.toLowerCase()))
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/finance', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Petty Cash Claim...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="💵" title="Petty Cash Claim"
-        breadcrumb="Finance, Assets & Administration > Finance & Claims"
-        gradient={G}
-        stats={[
-          {icon:'💵',label:'Branches Tracked',  value:BRANCH_LEDGERS.length},
-          {icon:'⚠',label:'Needs Replenishment',   value:BRANCH_LEDGERS.filter(b=>b.flag_note).length},
-          {icon:'📐',label:'Per-Transaction Limit',     value:'NPR '+PER_TRANSACTION_LIMIT.toLocaleString()},
-          {icon:'📋',label:'Digital Audit Trail',          value:'Always On'},
-        ]}
-        onAdd={()=>setShowClaim(true)} addLabel="File Petty Cash Claim"/>
-
-      <div style={{background:'#fff7ed',border:'1px solid #fed7aa',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#7c2d12',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🔒</span>
-        <div style={{flex:1,minWidth:200}}><strong>No More Physical Logbook:</strong> Every withdrawal is digitally logged the moment it happens -- no more reconciling a paper ledger against a cash box at month-end, and every claim is attributable to a real person.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Petty Cash Claim
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:14,marginBottom:18}}>
-        {BRANCH_LEDGERS.map((b,i)=>{
-          const pct = Math.round(b.spent/b.float_amount*100)
-          return (
-            <div key={i} style={{background:'#fff',border:`1px solid ${b.flag_note?'#fed7aa':'#e2e8f0'}`,borderRadius:16,padding:'18px'}}>
-              <div style={{fontSize:12,fontWeight:800,color:'#0f172a'}}>{b.branch}</div>
-              <div style={{fontSize:9,color:'#94a3b8',marginTop:3}}>Custodian: {b.custodian}</div>
-              <div style={{height:8,background:'#f1f5f9',borderRadius:8,overflow:'hidden',marginTop:10}}><div style={{width:`${pct}%`,height:'100%',background:pct>85?'#ef4444':A,borderRadius:8}}/></div>
-              <div style={{fontSize:9,color:'#94a3b8',marginTop:6}}>NPR {b.spent.toLocaleString()} / {b.float_amount.toLocaleString()}</div>
-              {b.flag_note&&<div style={{marginTop:8,fontSize:8,color:'#b45309'}}>⚠ {b.flag_note}</div>}
-            </div>
-          )
-        })}
-      </div>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search claims..."/>
-
-      <div style={{display:'grid',gap:12,marginTop:14}}>
-        {filtered.map((c,i)=>(
-          <div key={i}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:c.item,...c,impact_links:['Approval Workflow']}})}}
-            style={{background:'#fff',border:`1px solid ${c.flag_note?'#fed7aa':'#e2e8f0'}`,borderRadius:12,padding:'12px 16px',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:8}}>
-            <div>
-              <div style={{fontSize:10,fontWeight:700,color:'#0f172a'}}>{c.item}</div>
-              <div style={{fontSize:8,color:'#94a3b8',marginTop:2}}>{c.branch} . {c.claimed_by} . {c.date}</div>
-              {c.flag_note&&<div style={{marginTop:4,fontSize:8,color:'#b45309'}}>⚠ {c.flag_note}</div>}
-            </div>
-            <span style={{fontSize:12,fontWeight:800,color:A}}>NPR {c.amount.toLocaleString()}</span>
-          </div>
-        ))}
-      </div>
-
-      {showClaim&&(
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.65)',zIndex:5000,display:'flex',alignItems:'center',justifyContent:'center',padding:16}} onClick={()=>setShowClaim(false)}>
-          <div style={{background:'#fff',borderRadius:20,width:'min(460px,100%)'}} onClick={e=>e.stopPropagation()}>
-            <div style={{background:G,padding:'18px 24px'}}><div style={{fontSize:15,fontWeight:900,color:'#fff'}}>File Petty Cash Claim</div></div>
-            <div style={{padding:'20px 24px'}}>
-              <Field label="Branch" type="select" value="" onChange={()=>{}} accent={A} options={BRANCH_LEDGERS.map(b=>b.branch)}/>
-              <Field label="Item / Reason" value="" onChange={()=>{}} accent={A} required hint="Voice input supported"/>
-              <Field label="Amount (NPR)" type="number" value="" onChange={()=>{}} accent={A} required hint={`Per-transaction limit: NPR ${PER_TRANSACTION_LIMIT.toLocaleString()}`}/>
-              <button onClick={()=>setShowClaim(false)} style={{width:'100%',padding:13,borderRadius:11,border:'none',background:G,color:'#fff',fontSize:13,fontWeight:700,cursor:'pointer'}}>Submit Claim</button>
-            </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
         </div>
       )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Claims exceeding the per-transaction limit auto-route to Finance Head, never bypassed at the branch level.','Float exhaustion triggers a replenishment request automatically -- never discovered when the box runs dry mid-day.','Every withdrawal is attributed to a real custodian, removing the "multiple people, one cash box" risk entirely.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Detail',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

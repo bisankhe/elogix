@@ -1,80 +1,85 @@
-// FILE: DepartmentBudgetPage.jsx - Department Budget
-// (Finance, Assets & Administration > HR Budgeting)
-// Permission-scoped: department heads see only their own allocation,
-// never company-wide confidential figures. Genuinely new
-// department_budget_allocations table, following the proven
-// accommodation_budget allocated-vs-spent pattern.
+// FILE: src/components/dashboard/snapshots/DepartmentBudgetPage.jsx
+// eLogix HRMS — Department Budget
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#0c4a6e 0%,#0284c7 60%,#7dd3fc 100%)'
-const A = '#0284c7'
-
-const DEPARTMENTS = [
-  {dept:'IT',allocated:1200000,spent:980000,headcount_budget:24,headcount_actual:22},
-  {dept:'Sales & Marketing',allocated:900000,spent:870000,headcount_budget:18,headcount_actual:19,
-    flag_note:'Headcount slightly over budget -- requires HR review before next hire.'},
-  {dept:'Finance',allocated:450000,spent:210000,headcount_budget:8,headcount_actual:7},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function DepartmentBudgetPage() {
-  const [search, setSearch] = useState('')
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = DEPARTMENTS.filter(d=>!search||d.dept.toLowerCase().includes(search.toLowerCase()))
-  const fmt = n => 'NPR '+(n/1000).toFixed(0)+'K'
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/departments', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Department Budget...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🏢" title="Department Budget"
-        breadcrumb="Finance, Assets & Administration > HR Budgeting"
-        gradient={G}
-        stats={[
-          {icon:'🏢',label:'Departments',  value:DEPARTMENTS.length},
-          {icon:'⚠',label:'Over Headcount',   value:DEPARTMENTS.filter(d=>d.headcount_actual>d.headcount_budget).length},
-          {icon:'💰',label:'Total Allocated',     value:fmt(DEPARTMENTS.reduce((s,d)=>s+d.allocated,0))},
-          {icon:'🔒',label:'Visibility',              value:'Permission-Scoped'},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#eff6ff',border:'1px solid #bfdbfe',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#1e40af',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🔒</span>
-        <div style={{flex:1,minWidth:200}}><strong>Delegated, Not Disclosed:</strong> Each department head sees only their own ledger here -- never confidential company-wide figures from other business units.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          🏢 Department Budget
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search departments..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{display:'grid',gap:16,marginTop:14}}>
-        {filtered.map((d,i)=>{
-          const pct = Math.round(d.spent/d.allocated*100)
-          const hcOver = d.headcount_actual > d.headcount_budget
-          return (
-            <div key={i}
-              onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:d.dept,...d,impact_links:['Annual HR Budget']}})}}
-              style={{background:'#fff',border:`1px solid ${d.flag_note?'#fed7aa':'#e2e8f0'}`,borderRadius:16,padding:'18px'}}>
-              <div style={{display:'flex',justifyContent:'space-between',marginBottom:10}}>
-                <div style={{fontSize:12,fontWeight:800,color:'#0f172a'}}>{d.dept}</div>
-                <div style={{fontSize:10,fontWeight:700,color:A}}>{fmt(d.spent)} / {fmt(d.allocated)}</div>
-              </div>
-              <div style={{height:9,background:'#f1f5f9',borderRadius:9,overflow:'hidden'}}><div style={{width:`${pct}%`,height:'100%',background:A,borderRadius:9}}/></div>
-              <div style={{display:'flex',justifyContent:'space-between',marginTop:8,fontSize:9,color:'#94a3b8'}}>
-                <span>{pct}% utilized</span>
-                <span style={{color:hcOver?'#dc2626':'#64748b',fontWeight:hcOver?700:400}}>Headcount: {d.headcount_actual}/{d.headcount_budget}</span>
-              </div>
-              {d.flag_note&&<div style={{marginTop:8,fontSize:9,color:'#b45309'}}>⚠ {d.flag_note}</div>}
-            </div>
-          )
-        })}
-      </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
+          </div>
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Headcount budget syncs with actual employee count automatically -- no manual reconciliation needed.','Department heads can request budget revisions directly here, routed for HR/Finance approval.','Rolls up into Annual HR Budget automatically -- never a separately maintained total.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Ledger',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

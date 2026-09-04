@@ -2,7 +2,6 @@
 // Luxury Group Company management - SAP-style with Excel upload, audio, right-click context
 
 import React, { useState, useRef, useCallback, useEffect } from 'react'
-import { useApp } from '../../../context/AppContext.jsx'
 
 // -- Shared luxury UI atoms ------------------------------------
 const THEME = {
@@ -28,7 +27,6 @@ function useTenantCompany() {
       // 1. Try real API
       try {
         const token = localStorage.getItem('elogix_token') ||
-          JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')?.access_token ||
           JSON.parse(localStorage.getItem('elogix_auth')||'{}').token
         if (token) {
           const res = await fetch('/api/v1/companies/me', {
@@ -41,7 +39,7 @@ function useTenantCompany() {
             return
           }
         }
-      } catch(_e) {}
+      } catch {}
       // 2. Fallback: localStorage auth
       try {
         const auth = JSON.parse(localStorage.getItem('elogix_auth')||'{}')
@@ -67,7 +65,7 @@ function useTenantCompany() {
           phone: regData.phone || '', email: regData.admin_email || co.admin_email || '',
           province:'', district:'', municipality:'', registered_address:'', website:'',
         })
-      } catch(_e) {}
+      } catch {}
       setLoading(false)
     }
     load()
@@ -80,7 +78,7 @@ function useTenantCompany() {
       auth.company = { ...(auth.company||{}), ...updates }
       localStorage.setItem('elogix_auth', JSON.stringify(auth))
       setCompany(p => ({...p, ...updates}))
-    } catch(_e) {}
+    } catch {}
     // Try API
     try {
       const token = localStorage.getItem('elogix_token') ||
@@ -92,7 +90,7 @@ function useTenantCompany() {
           body: JSON.stringify(updates)
         })
       }
-    } catch(_e) {}
+    } catch {}
   }
 
   return { company, loading, saveTenantCompany }
@@ -490,11 +488,30 @@ function AddGroupModal({ onClose, onSave }) {
   )
 }
 
-
-// ── Empty initial groups (tenant adds their own) ─────────────
-const MOCK_GROUPS = []
-
 // -- Main Page -------------------------------------------------
+
+function _getSession() {
+  try {
+    return JSON.parse(
+      sessionStorage.getItem('elogix_session') ||
+      localStorage.getItem('elogix_session') || 'null'
+    ) || {}
+  } catch (_e) { return {} }
+}
+function _useAppFallback() {
+  const s = _getSession()
+  return {
+    sub: s?.last_page || '', persona: s?.persona || s?.user?.role || 'employee',
+    lang: s?.lang || 'en', currency: s?.currency || 'NPR',
+    company: s?.company || {}, user: s?.user || {},
+    darkMode: false, setDarkMode: () => {},
+    navTo: (p) => window.dispatchEvent(new CustomEvent('elogix:nav', { detail: { page: p } })),
+    switchPersona: () => {}, setShowNotif: () => {}, setShowAI: () => {},
+    setSidebarOpen: () => {}, sidebarOpen: true,
+    currentPersona: { id: s?.persona || 'employee', icon: '👤', color: '#7c3aed', label: '' },
+  }
+}
+
 export default function GroupCompanyPage() {
   const [groups,      setGroups]      = useState(MOCK_GROUPS)
   const [contextMenu, setContextMenu] = useState(null)

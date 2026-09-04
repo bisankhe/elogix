@@ -1,6 +1,5 @@
 // FILE: AIPolicyAssistantPage.jsx — AI Policy Assistant
-import { useState, useEffect } from 'react'
-import { useApp } from '../../../context/AppContext.jsx'
+import { useState } from 'react'
 
 const P='#7c3aed'
 const G='linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)'
@@ -42,19 +41,28 @@ async function askPolicyAI(question){
 
 
 function _getSession() {
-  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}}
+  try {
+    return JSON.parse(
+      sessionStorage.getItem('elogix_session') ||
+      localStorage.getItem('elogix_session') || 'null'
+    ) || {}
+  } catch (_e) { return {} }
 }
-function _getTenantCtx() {
-  const s=_getSession()
-  const token=localStorage.getItem('access_token')||s?.token||''
-  const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
-  return {token,slug,valid:!!(token&&slug)}
+function _useAppFallback() {
+  const s = _getSession()
+  return {
+    sub: s?.last_page || '', persona: s?.persona || s?.user?.role || 'employee',
+    lang: s?.lang || 'en', currency: s?.currency || 'NPR',
+    company: s?.company || {}, user: s?.user || {},
+    darkMode: false, setDarkMode: () => {},
+    navTo: (p) => window.dispatchEvent(new CustomEvent('elogix:nav', { detail: { page: p } })),
+    switchPersona: () => {}, setShowNotif: () => {}, setShowAI: () => {},
+    setSidebarOpen: () => {}, sidebarOpen: true,
+    currentPersona: { id: s?.persona || 'employee', icon: '👤', color: '#7c3aed', label: '' },
+  }
 }
 
 export default function AIPolicyAssistantPage(){
-  const [apiData,setApiData]=useState(null)
-  const [apiLoading,setApiLoading]=useState(true)
-  const [apiError,setApiError]=useState(null)
   const [query,setQuery]=useState('')
   const [answer,setAnswer]=useState('')
   const [loading,setLoading]=useState(false)

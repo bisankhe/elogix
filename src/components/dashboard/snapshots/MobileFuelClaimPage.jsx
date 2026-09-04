@@ -1,93 +1,85 @@
-// FILE: MobileFuelClaimPage.jsx - Mobile & Fuel Claim
-// (Finance, Assets & Administration > Finance & Claims)
-// Monthly recurring allowance claims with mileage/usage tracking.
-// Genuinely new -- addresses the personal-vs-business split pain point
-// and the legal note that these perks cannot substitute for minimum wage.
+// FILE: src/components/dashboard/snapshots/MobileFuelClaimPage.jsx
+// eLogix HRMS — Mobile Fuel Claim
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { Field, PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#581c87 0%,#7c3aed 60%,#c4b5fd 100%)'
-const A = '#7c3aed'
-
-const MONTHLY_CLAIMS = [
-  {employee:'Hari Thapa',type:'Mobile',amount:1500,cap:2000,month:'June 2025',status:'paid'},
-  {employee:'Sunil Magar',type:'Fuel',amount:6200,cap:6000,month:'June 2025',status:'pending',
-   flag_note:'Mileage log shows 12% over the monthly cap -- requires manager justification before payment.'},
-  {employee:'Hari Thapa',type:'Fuel',amount:4800,cap:6000,month:'June 2025',status:'pending'},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function MobileFuelClaimPage() {
-  const [search, setSearch] = useState('')
-  const [showNew, setShowNew] = useState(false)
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = MONTHLY_CLAIMS.filter(c=>!search||c.employee.toLowerCase().includes(search.toLowerCase()))
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Mobile Fuel Claim...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="📱" title="Mobile &amp; Fuel Claim"
-        breadcrumb="Finance, Assets & Administration > Finance & Claims"
-        gradient={G}
-        stats={[
-          {icon:'📱',label:'Active Claims',  value:MONTHLY_CLAIMS.length},
-          {icon:'⚠',label:'Over Monthly Cap',   value:MONTHLY_CLAIMS.filter(c=>c.flag_note).length},
-          {icon:'✅',label:'Paid This Cycle',        value:MONTHLY_CLAIMS.filter(c=>c.status==='paid').length},
-          {icon:'⚖',label:'Wage Floor Protection',      value:'Enforced'},
-        ]}
-        onAdd={()=>setShowNew(true)} addLabel="Submit Monthly Claim"/>
-
-      <div style={{background:'#faf5ff',border:'1px solid #e9d5ff',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#581c87',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>⚖</span>
-        <div style={{flex:1,minWidth:200}}><strong>An Allowance, Never a Wage Substitute:</strong> Mobile and fuel allowances are governed by your employment contract, not a statutory entitlement -- but they can never be used to bring your effective pay below the legal minimum wage.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Mobile Fuel Claim
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search by employee..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{display:'grid',gap:14,marginTop:14}}>
-        {filtered.map((c,i)=>{
-          const pct = Math.min(Math.round(c.amount/c.cap*100),100)
-          const isOver = c.amount > c.cap
-          return (
-            <div key={i}
-              onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:c.employee,...c,impact_links:['Reimbursement']}})}}
-              style={{background:'#fff',border:`1px solid ${c.flag_note?'#fed7aa':'#e2e8f0'}`,borderRadius:14,padding:'16px 18px'}}>
-              <div style={{display:'flex',justifyContent:'space-between',marginBottom:8,flexWrap:'wrap',gap:8}}>
-                <div>
-                  <div style={{fontSize:11,fontWeight:700,color:'#0f172a'}}>{c.employee}</div>
-                  <div style={{fontSize:9,color:'#94a3b8',marginTop:2}}>{c.type} . {c.month}</div>
-                </div>
-                <div style={{fontSize:13,fontWeight:800,color:isOver?'#dc2626':A}}>NPR {c.amount.toLocaleString()}</div>
-              </div>
-              <div style={{height:7,background:'#f1f5f9',borderRadius:7,overflow:'hidden'}}><div style={{width:`${pct}%`,height:'100%',background:isOver?'#ef4444':A,borderRadius:7}}/></div>
-              <div style={{fontSize:8,color:'#94a3b8',marginTop:6}}>Cap: NPR {c.cap.toLocaleString()}/month</div>
-              {c.flag_note&&<div style={{marginTop:8,fontSize:8,color:'#b45309'}}>⚠ {c.flag_note}</div>}
-            </div>
-          )
-        })}
-      </div>
-
-      {showNew&&(
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.65)',zIndex:5000,display:'flex',alignItems:'center',justifyContent:'center',padding:16}} onClick={()=>setShowNew(false)}>
-          <div style={{background:'#fff',borderRadius:20,width:'min(460px,100%)'}} onClick={e=>e.stopPropagation()}>
-            <div style={{background:G,padding:'18px 24px'}}><div style={{fontSize:15,fontWeight:900,color:'#fff'}}>Submit Monthly Claim</div></div>
-            <div style={{padding:'20px 24px'}}>
-              <Field label="Claim Type" type="select" value="" onChange={()=>{}} accent={A} options={['Mobile','Fuel']}/>
-              <Field label="Amount (NPR)" type="number" value="" onChange={()=>{}} accent={A} required/>
-              <Field label="Business Use Justification" type="textarea" value="" onChange={()=>{}} accent={A} hint="Voice input supported -- helps with the personal-vs-business split"/>
-              <button onClick={()=>setShowNew(false)} style={{width:'100%',padding:13,borderRadius:11,border:'none',background:G,color:'#fff',fontSize:13,fontWeight:700,cursor:'pointer'}}>Submit</button>
-            </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
         </div>
       )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Claims over the monthly cap auto-flag for manager justification -- never silently auto-approved.','Mileage logs cross-check against Travel Request entries to separate genuine business trips from personal use.','Caps are tiered by role -- field-based roles see a different ceiling than office-based ones, never one flat number.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Detail',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

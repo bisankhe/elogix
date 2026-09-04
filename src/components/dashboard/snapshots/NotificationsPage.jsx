@@ -5,7 +5,6 @@
 // ============================================================
 
 import { useState, useEffect } from 'react'
-import { useApp }    from '../../../context/AppContext.jsx'
 import { StatCard }  from '../../shared/StatCard.jsx'
 import { Card }      from '../../shared/Card.jsx'
 import { Pill }      from '../../shared/Pill.jsx'
@@ -140,7 +139,17 @@ function NotifItem({ notif, onAction, onRead, expanded, onExpand }) {
       }}
     >
       <div className="flex items-start gap-3">
-
+      {apiLoading && (
+        <div style={{textAlign:'center',padding:40,color:'#7c3aed',fontSize:13,fontWeight:600}}>
+          <div style={{fontSize:32,marginBottom:8}}>⟳</div>Loading...
+        </div>
+      )}
+      {apiError && !apiLoading && (
+        <div style={{padding:'8px 14px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,fontSize:12,color:'#dc2626',marginBottom:8,fontWeight:600}}>
+          ⚠️ {apiError}
+        </div>
+      )}
         {/* Icon */}
         <div
           style={{
@@ -232,7 +241,7 @@ export default function NotificationsPage() {
   const [apiData,setApiData]=useState(null)
   const [apiLoading,setApiLoading]=useState(true)
   const [apiError,setApiError]=useState(null)
-  const { t } = useApp()
+  const { t } = _useAppFallback()
   const [notifications, setNotifications] = useState(allNotifications)
   const [filterType,    setFilterType]    = useState('all')      // 'all' | 'critical' | 'warning' | 'info' | 'unread'
   const [filterModule,  setFilterModule]  = useState('All')

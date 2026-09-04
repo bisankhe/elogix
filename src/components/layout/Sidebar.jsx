@@ -6,7 +6,6 @@
 // ============================================================
 
 import { useState, useCallback, useEffect } from 'react'
-import { useApp }  from '../../context/AppContext.jsx'
 import { SIDEBAR_MENU, getVisibleMenu } from '../../data/sidebarMenu.js'
 import { getTenantModules } from '../../utils/tenantPermissions.js'
 import { PERSONAS }     from '../../data/personas.js'
@@ -280,6 +279,29 @@ function MenuSection({ menu, isExpanded, onToggle, activeSub, onNavTo, t }) {
 }
 
 // ── Main Sidebar ──────────────────────────────────────────────
+
+function _getSession() {
+  try {
+    return JSON.parse(
+      sessionStorage.getItem('elogix_session') ||
+      localStorage.getItem('elogix_session') || 'null'
+    ) || {}
+  } catch (_e) { return {} }
+}
+function _useAppFallback() {
+  const s = _getSession()
+  return {
+    sub: s?.last_page || '', persona: s?.persona || s?.user?.role || 'employee',
+    lang: s?.lang || 'en', currency: s?.currency || 'NPR',
+    company: s?.company || {}, user: s?.user || {},
+    darkMode: false, setDarkMode: () => {},
+    navTo: (p) => window.dispatchEvent(new CustomEvent('elogix:nav', { detail: { page: p } })),
+    switchPersona: () => {}, setShowNotif: () => {}, setShowAI: () => {},
+    setSidebarOpen: () => {}, sidebarOpen: true,
+    currentPersona: { id: s?.persona || 'employee', icon: '👤', color: '#7c3aed', label: '' },
+  }
+}
+
 export default function Sidebar({ open }) {
   // ── Permission-aware sidebar filtering ─────────────────────────
   // Only show menu sections/items that eLogix SuperAdmin has granted
@@ -297,7 +319,7 @@ export default function Sidebar({ open }) {
     sub, navTo,
     expanded, toggleExpanded,
     t, language,
-  } = useApp()
+  } = _useAppFallback()
 
   const [search, setSearch] = useState('')
   const [showSearch, setShowSearch] = useState(false)
@@ -455,80 +477,34 @@ export default function Sidebar({ open }) {
         scrollbarColor: '#334155 #0f172a',
       }}
     >
-      {/* ── Brand — shows TENANT company name/logo, not eLogix ── */}
-      {/* Tenants should feel this is THEIR own HRMS software        */}
+      {/* ── Brand ── */}
       <div style={{
         padding: '18px 16px 14px',
         borderBottom: '1px solid rgba(255,255,255,.07)',
         flexShrink: 0,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-
-          {/* Company logo — shows tenant logo if available, else coloured initials */}
-          {_sessRaw?.company?.logo_url ? (
-            <img
-              src={_sessRaw.company.logo_url}
-              alt={_sessRaw?.company?.name || 'Company'}
-              style={{
-                width: 36, height: 36, borderRadius: 10,
-                objectFit: 'contain', background: '#fff',
-                padding: 3, flexShrink: 0,
-                boxShadow: '0 4px 12px rgba(0,0,0,.25)',
-              }}
-              onError={e => { e.target.style.display='none'; e.target.nextSibling.style.display='flex' }}
-            />
-          ) : null}
           <div style={{
             width: 36, height: 36, borderRadius: 10,
-            background: (() => {
-              const colors = [
-                'linear-gradient(135deg,#3b82f6,#8b5cf6)',
-                'linear-gradient(135deg,#0d9488,#3b82f6)',
-                'linear-gradient(135deg,#dc2626,#f59e0b)',
-                'linear-gradient(135deg,#7c3aed,#ec4899)',
-                'linear-gradient(135deg,#059669,#0d9488)',
-              ]
-              const slug = _sessRaw?.company?.slug || ''
-              return colors[slug.charCodeAt(0) % colors.length] || colors[0]
-            })(),
-            display: _sessRaw?.company?.logo_url ? 'none' : 'flex',
-            alignItems: 'center', justifyContent: 'center',
-            fontSize: 14, fontWeight: 900, color: '#fff',
-            flexShrink: 0,
+            background: 'linear-gradient(135deg,#3b82f6,#8b5cf6)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 18, flexShrink: 0,
             boxShadow: '0 4px 12px rgba(59,130,246,.3)',
-            letterSpacing: '-0.5px',
           }}>
-            {(_sessRaw?.company?.name || 'E')
-              .split(' ')
-              .filter(Boolean)
-              .slice(0, 2)
-              .map(w => w[0].toUpperCase())
-              .join('')}
+            🏢
           </div>
-
-          {/* Company name — tenant's own company name */}
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{
-              fontSize: 13, fontWeight: 900, color: '#f8fafc',
-              letterSpacing: '-.3px', whiteSpace: 'nowrap',
-              overflow: 'hidden', textOverflow: 'ellipsis',
-              maxWidth: 140,
-            }}
-              title={_sessRaw?.company?.name || 'Your Company'}
-            >
-              {_sessRaw?.company?.name || 'Your Company'}
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 900, color: '#f8fafc', letterSpacing: '-.3px' }}>
+              eLogix HRMS
             </div>
-            <div style={{ fontSize: 10, color: '#475569', marginTop: 1 }}>
-              {_sessRaw?.company?.plan
-                ? `${_sessRaw.company.plan.charAt(0).toUpperCase()}${_sessRaw.company.plan.slice(1)} Plan · HRMS`
-                : 'HR Management System'}
+            <div style={{ fontSize: 10, color: '#475569' }}>
+              HRIS · HRMS · HRIM
             </div>
           </div>
-
           {/* Search toggle */}
           <button
             onClick={() => setShowSearch(s => !s)}
-            style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: '#475569', cursor: 'pointer', fontSize: 14, padding: 4, borderRadius: 6, flexShrink: 0 }}
+            style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: '#475569', cursor: 'pointer', fontSize: 14, padding: 4, borderRadius: 6 }}
             title="Search menu"
           >
             🔍
@@ -700,12 +676,10 @@ export default function Sidebar({ open }) {
         flexShrink: 0,
       }}>
         <div style={{ fontSize: 9, color: '#334155', marginBottom: 2 }}>
-          {_sessRaw?.company?.slug
-            ? `${_sessRaw.company.slug}.elogix.com.np`
-            : 'Powered by eLogix HRMS'}
+          eLogix HRMS v3.0 · Multi-Tenant SaaS
         </div>
         <div style={{ fontSize: 9, color: '#334155', marginBottom: 2 }}>
-          Nepal Labour Act 2074 · RBAC · Privacy Act 2018
+          Nepal Labour Act 2017 · RBAC · Privacy Act 2018
         </div>
         <div style={{ fontSize: 9, color: '#1e3a8a', background: 'rgba(59,130,246,.1)', padding: '3px 7px', borderRadius: 5, display: 'inline-block', marginTop: 2 }}>
           🔒 All data encrypted · AES-256

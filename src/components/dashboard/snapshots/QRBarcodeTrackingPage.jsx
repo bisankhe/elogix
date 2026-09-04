@@ -1,79 +1,85 @@
-// FILE: QRBarcodeTrackingPage.jsx - QR or Barcode Tracking
-// (Finance, Assets & Administration > Asset & Inventory)
-// Mobile-first scanner interface -- the single entry point linking a
-// physical scan to the asset_items catalog. Every asset across IT,
-// Furniture, and Stationery gets a QR code generated here, following
-// the same verify_qr_code pattern already used for certificates.
+// FILE: src/components/dashboard/snapshots/QRBarcodeTrackingPage.jsx
+// eLogix HRMS — Q R Barcode Tracking
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#1e1b4b 0%,#4338ca 60%,#818cf8 100%)'
-const A = '#4338ca'
-
-const RECENT_SCANS = [
-  {tag:'IT-LT-0042',item:'MacBook Pro 14" M3',action:'Audit Verification',time:'2 min ago',by:'Facilities Admin'},
-  {tag:'FUR-CH-0203',item:'Ergonomic Office Chair',action:'Location Update',time:'1 hour ago',by:'Gita Maharjan'},
-  {tag:'IT-LT-0019',item:'ThinkPad X1 Carbon',action:'Repair Check-in',time:'Yesterday',by:'IT Support'},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function QRBarcodeTrackingPage() {
-  const [search, setSearch] = useState('')
-  const [showScanner, setShowScanner] = useState(false)
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = RECENT_SCANS.filter(s=>!search||s.item.toLowerCase().includes(search.toLowerCase())||s.tag.toLowerCase().includes(search.toLowerCase()))
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Q R Barcode Tracking...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="📱" title="QR or Barcode Tracking"
-        breadcrumb="Finance, Assets & Administration > Asset & Inventory"
-        gradient={G}
-        stats={[
-          {icon:'📱',label:'Scans Today',  value:RECENT_SCANS.length},
-          {icon:'🏷',label:'Tagged Assets',    value:'2,336'},
-          {icon:'⏱',label:'Avg Scan Time',         value:'1.2s'},
-          {icon:'📋',label:'Audit Mode',               value:'Ready'},
-        ]}
-        onAdd={()=>setShowScanner(true)} addLabel="Open Scanner"/>
-
-      <div style={{background:'#eef2ff',border:'1px solid #c7d2fe',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#3730a3',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>📱</span>
-        <div style={{flex:1,minWidth:200}}><strong>One Scan, Full Context:</strong> Point your phone camera at any asset's QR code to instantly pull up specifications, assignment history, warranty status, and maintenance log -- on any device, no specialized scanner needed.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Q R Barcode Tracking
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      {showScanner&&(
-        <div style={{background:'#0f172a',borderRadius:18,padding:'30px',marginBottom:18,textAlign:'center'}}>
-          <div style={{width:160,height:160,border:'3px dashed #4338ca',borderRadius:16,margin:'0 auto',display:'flex',alignItems:'center',justifyContent:'center',fontSize:40}}>📷</div>
-          <div style={{fontSize:11,color:'#cbd5e1',marginTop:14}}>Point your camera at a QR code or barcode</div>
-          <button onClick={()=>setShowScanner(false)} style={{marginTop:14,padding:'8px 20px',borderRadius:20,border:'none',background:A,color:'#fff',fontSize:10,fontWeight:700,cursor:'pointer'}}>Close Scanner</button>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
         </div>
       )}
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search by tag or item name..."/>
-
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'18px',marginTop:14}}>
-        <div style={{fontSize:11,fontWeight:800,color:'#0f172a',marginBottom:12}}>🕐 Recent Scans</div>
-        {filtered.map((s,i)=>(
-          <div key={i}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:s.item,...s,impact_links:['IT Inventory','Asset Management']}})}}
-            style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'9px 0',borderBottom:i<filtered.length-1?'1px solid #f8fafc':'none'}}>
-            <div>
-              <div style={{fontSize:10,color:'#374151'}}>{s.item} <span style={{color:'#94a3b8'}}>({s.tag})</span></div>
-              <div style={{fontSize:8,color:'#94a3b8',marginTop:2}}>{s.action} by {s.by}</div>
-            </div>
-            <span style={{fontSize:8,color:'#94a3b8'}}>{s.time}</span>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Audit Mode lets a single person scan every asset on a floor in minutes -- a process that used to take days of manual checklists.','Each scan is timestamped and geo-tagged, building an automatic chain of custody for high-value equipment.','Unscanned assets for 180+ days surface as "ghost asset" candidates in Asset Management.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Asset Detail',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

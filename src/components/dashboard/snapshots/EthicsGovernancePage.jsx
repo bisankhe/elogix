@@ -1,105 +1,85 @@
-// FILE: EthicsGovernancePage.jsx - Ethics & Governance
-// (Compliance & Risk Management > Legal Management)
-// Confidential whistleblower channel -- genuinely new table, but
-// follows the SAME server-side identity-discard discipline proven on
-// suggestions.is_anonymous (Employee Engagement session). Distinct from
-// suggestions (workplace improvement ideas) and complaints (HR-handled
-// harassment/policy disputes) -- this is specifically for ethics/
-// governance violations (bribery, fraud, abuse of authority).
+// FILE: src/components/dashboard/snapshots/EthicsGovernancePage.jsx
+// eLogix HRMS — Ethics Governance
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { Field, PageHeader, AIImpact, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#581c87 0%,#7c3aed 60%,#c4b5fd 100%)'
-const A = '#7c3aed'
-
-const STATUS_CFG = { under_review:{c:'#f59e0b',label:'Under Review'},investigating:{c:'#0284c7',label:'Investigating'},resolved:{c:'#10b981',label:'Resolved'} }
-
-const REPORTS = [
-  { id:'eg1', category:'Conflict of Interest', summary:'Anonymous report regarding a procurement decision favoring a vendor with an undisclosed personal connection', status:'investigating', filed:'2025-06-20',
-    impact_links:['Vendor Management'] },
-  { id:'eg2', category:'Abuse of Authority', summary:'Anonymous report -- a manager allegedly pressuring direct reports to falsify timesheet entries', status:'under_review', filed:'2025-06-26',
-    flag_note:'Routed directly to the Ethics Committee, bypassing the reported manager\'s own chain of command.' },
-]
-
-const GOVERNANCE_METRICS = [
-  {label:'Code of Conduct Acknowledgment',value:'97%',c:'#10b981'},
-  {label:'Equal Pay Audit Status',value:'Compliant',c:'#10b981'},
-  {label:'Open Ethics Reports',value:2,c:'#f59e0b'},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function EthicsGovernancePage() {
-  const [showReport, setShowReport] = useState(false)
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Ethics Governance...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🛡" title="Ethics &amp; Governance"
-        breadcrumb="Compliance & Risk Management > Legal Management"
-        gradient={G}
-        stats={[
-          {icon:'🛡',label:'Open Reports',  value:REPORTS.length},
-          {icon:'✅',label:'Code Acknowledgment',  value:'97%'},
-          {icon:'⚖',label:'Equal Pay Status',          value:'Compliant'},
-          {icon:'🔒',label:'Anonymity',                    value:'Identity Discarded'},
-        ]}
-        onAdd={()=>setShowReport(true)} addLabel="File Confidential Report"/>
-
-      <div style={{background:'#faf5ff',border:'1px solid #e9d5ff',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#581c87',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🔒</span>
-        <div style={{flex:1,minWidth:200}}><strong>Identity Discarded, Not Just Hidden:</strong> An anonymous report's submitter identity is never stored in the first place -- not masked in the UI, genuinely never written to the database. Routing bypasses the reported person's own chain of command automatically.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Ethics Governance
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',gap:14,marginBottom:18}}>
-        {GOVERNANCE_METRICS.map((m,i)=>(
-          <div key={i} style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:14,padding:'16px',textAlign:'center'}}>
-            <div style={{fontSize:16,fontWeight:900,color:m.c}}>{m.value}</div>
-            <div style={{fontSize:9,color:'#94a3b8',marginTop:4}}>{m.label}</div>
-          </div>
-        ))}
-      </div>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{display:'grid',gap:14}}>
-        {REPORTS.map(r=>{
-          const sc = STATUS_CFG[r.status]
-          return (
-            <div key={r.id}
-              onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:r.category,...r}})}}
-              style={{background:'#fff',border:`1px solid ${sc.c}33`,borderRadius:14,padding:'16px 18px',borderLeft:`4px solid ${sc.c}`}}>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:8}}>
-                <div>
-                  <div style={{fontSize:12,fontWeight:700,color:'#0f172a'}}>{r.category}</div>
-                  <div style={{fontSize:9,color:'#94a3b8',marginTop:3}}>{r.summary}</div>
-                </div>
-                <span style={{background:`${sc.c}15`,color:sc.c,fontSize:9,fontWeight:700,padding:'3px 10px',borderRadius:20}}>{sc.label}</span>
-              </div>
-              {r.flag_note&&<div style={{marginTop:8,fontSize:9,color:'#581c87'}}>↪ {r.flag_note}</div>}
-            </div>
-          )
-        })}
-      </div>
-
-      {showReport&&(
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.65)',zIndex:5000,display:'flex',alignItems:'center',justifyContent:'center',padding:16}} onClick={()=>setShowReport(false)}>
-          <div style={{background:'#fff',borderRadius:20,width:'min(520px,100%)'}} onClick={e=>e.stopPropagation()}>
-            <div style={{background:G,padding:'20px 28px'}}><div style={{fontSize:16,fontWeight:900,color:'#fff'}}>File a Confidential Report</div></div>
-            <div style={{padding:'22px 28px'}}>
-              <Field label="Category" type="select" value="" onChange={()=>{}} accent={A} options={['Conflict of Interest','Bribery or Fraud','Abuse of Authority','Forced or Child Labor Concern','Other']}/>
-              <Field label="Description" type="textarea" value="" onChange={()=>{}} accent={A} required hint="Voice input supported -- your identity is never recorded unless you choose to disclose it"/>
-              <div style={{background:'#faf5ff',borderRadius:10,padding:'10px 14px',fontSize:9,color:'#581c87',marginBottom:10}}>This report routes directly to the Ethics Committee -- never through the reported person's management chain, regardless of seniority.</div>
-              <button onClick={()=>setShowReport(false)} style={{width:'100%',padding:13,borderRadius:11,border:'none',background:G,color:'#fff',fontSize:13,fontWeight:700,cursor:'pointer'}}>Submit Confidentially</button>
-            </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
         </div>
       )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Code of Conduct acknowledgment syncs live with Policy Compliance -- never a separately tracked number.','Equal pay and non-discrimination metrics correlate against Gender Analytics to catch compliance gaps proactively, not after a complaint.','Forced or child labor concerns route with the highest priority -- the legal exposure (up to NPR 500,000 in fines) demands it.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Report',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

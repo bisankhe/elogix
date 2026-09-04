@@ -1,114 +1,85 @@
-// FILE: PerformanceReviewPage.jsx - Performance Review (Performance & Talent > Goal & Performance > Performance Evaluation)
-// Collaborative development discussion - consolidates the whole-cycle
-// record (Appraisal + Continuous Feedback + Behaviour Eval) to prevent
-// recency bias; separated from compensation discussion.
+// FILE: src/components/dashboard/snapshots/PerformanceReviewPage.jsx
+// eLogix HRMS — Performance Review
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { Field, PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#1e1b4b 0%,#4338ca 60%,#818cf8 100%)'
-const A = '#4338ca'
-
-const REVIEWS = [
-  { id:'rv1', employee:'Gita Maharjan', cycle:'Annual FY 2082/83', meeting_date:'2025-06-25',
-    full_cycle_evidence:{appraisal_rating:4,continuous_feedback_count:12,behaviour_avg:8.6},
-    discussion_notes:'Discussed career growth toward Senior Engineer track. Agreed on 2 stretch projects for H2.',
-    career_development_topics:['Senior Engineer readiness','Cloud architecture certification'],
-    status:'completed', impact_links:['Performance Appraisal','Training Records'] },
-  { id:'rv2', employee:'Bikash Rai', cycle:'Annual FY 2082/83', meeting_date:'2025-06-28',
-    full_cycle_evidence:{appraisal_rating:2,continuous_feedback_count:8,behaviour_avg:6.4},
-    discussion_notes:null,
-    career_development_topics:[],
-    status:'scheduled', impact_links:['PIP Management'] },
-]
-
-const STATUS_CFG = {scheduled:{c:'#f59e0b',bg:'#fffbeb',label:'Scheduled'},completed:{c:'#10b981',bg:'#f0fdf4',label:'Completed'}}
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function PerformanceReviewPage() {
-  const [search, setSearch] = useState('')
-  const [showNotesFor, setShowNotesFor] = useState(null)
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = REVIEWS.filter(r=>!search||r.employee.toLowerCase().includes(search.toLowerCase()))
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/performance', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Performance Review...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🗣" title="Performance Review"
-        breadcrumb="Performance & Talent Management > Goal & Performance > Performance Evaluation"
-        gradient={G}
-        stats={[
-          {icon:'🗣',label:'Reviews This Cycle', value:REVIEWS.length},
-          {icon:'✅',label:'Completed',           value:REVIEWS.filter(r=>r.status==='completed').length},
-          {icon:'⏳',label:'Scheduled',           value:REVIEWS.filter(r=>r.status==='scheduled').length},
-          {icon:'🚫',label:'Comp Discussion',     value:'Separated'},
-        ]}
-        onAdd={()=>{}} addLabel="Schedule Review"/>
-
-      <div style={{background:'#eef2ff',border:'1px solid #c7d2fe',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#3730a3',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>📚</span>
-        <div style={{flex:1,minWidth:200}}><strong>Whole-Cycle Evidence, Not Recency:</strong> Pulls every Continuous Feedback entry and Behaviour Evaluation from the full period - preventing managers from over-weighting the last 2-4 weeks. Compensation is discussed separately to keep this conversation honest and development-focused.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          🎯 Performance Review
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search by employee name..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{display:'grid',gap:16,marginTop:14}}>
-        {filtered.map(r=>{
-          const sc = STATUS_CFG[r.status]
-          return (
-            <div key={r.id}
-              onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:r.employee,...r}})}}
-              style={{background:'#fff',border:`1.5px solid ${sc.c}33`,borderRadius:16,overflow:'hidden',boxShadow:'0 2px 10px rgba(0,0,0,.05)',borderLeft:`5px solid ${sc.c}`}}>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',padding:'14px 18px',borderBottom:'1px solid #f1f5f9',flexWrap:'wrap',gap:10}}>
-                <div>
-                  <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',marginBottom:3}}>
-                    <span style={{fontSize:13,fontWeight:900,color:'#0f172a'}}>{r.employee}</span>
-                    <span style={{background:sc.bg,color:sc.c,fontSize:10,fontWeight:700,padding:'2px 10px',borderRadius:20}}>{sc.label}</span>
-                  </div>
-                  <div style={{fontSize:10,color:'#64748b'}}>{r.cycle} . Meeting: {r.meeting_date}</div>
-                </div>
-              </div>
-              <div style={{padding:'12px 18px',display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8}}>
-                {[{l:'Appraisal Rating',v:r.full_cycle_evidence.appraisal_rating+'/5',c:'#7c3aed'},
-                  {l:'Feedback Entries',v:r.full_cycle_evidence.continuous_feedback_count,c:'#0284c7'},
-                  {l:'Behaviour Avg',v:r.full_cycle_evidence.behaviour_avg+'/10',c:'#c2410c'}].map((s,i)=>(
-                  <div key={i} style={{textAlign:'center',background:'#f8fafc',borderRadius:8,padding:'8px 4px'}}>
-                    <div style={{fontSize:12,fontWeight:800,color:s.c}}>{s.v}</div>
-                    <div style={{fontSize:8,color:'#94a3b8',marginTop:2}}>{s.l}</div>
-                  </div>
-                ))}
-              </div>
-              {r.discussion_notes&&<div style={{padding:'10px 18px',fontSize:10,color:'#374151'}}><strong>Notes:</strong> {r.discussion_notes}</div>}
-              {r.career_development_topics.length>0&&(
-                <div style={{padding:'8px 18px',display:'flex',gap:6,flexWrap:'wrap'}}>
-                  {r.career_development_topics.map((t,i)=>(<span key={i} style={{background:'#eef2ff',color:'#4338ca',fontSize:9,fontWeight:600,padding:'2px 9px',borderRadius:20}}>📈 {t}</span>))}
-                </div>
-              )}
-              <div style={{padding:'10px 18px'}}>
-                <button onClick={()=>setShowNotesFor(r)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:A,color:'#fff',fontSize:10,fontWeight:700,cursor:'pointer'}}>{r.status==='completed'?'View Full Notes':'Log Discussion Notes'}</button>
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
-      {showNotesFor&&(
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.65)',zIndex:5000,display:'flex',alignItems:'center',justifyContent:'center',padding:16}} onClick={()=>setShowNotesFor(null)}>
-          <div style={{background:'#fff',borderRadius:20,width:'min(540px,100%)'}} onClick={e=>e.stopPropagation()}>
-            <div style={{background:G,padding:'18px 24px'}}><div style={{fontSize:15,fontWeight:900,color:'#fff'}}>Discussion Notes - {showNotesFor.employee}</div></div>
-            <div style={{padding:'20px 24px'}}>
-              <Field label="Discussion Notes" type="textarea" value="" onChange={()=>{}} accent={A} hint="Voice input supported"/>
-              <Field label="Career Development Topics (comma-separated)" value="" onChange={()=>{}} accent={A}/>
-              <div style={{display:'flex',gap:10,marginTop:8}}>
-                <button onClick={()=>setShowNotesFor(null)} style={{flex:1,padding:12,borderRadius:10,border:'none',background:G,color:'#fff',fontSize:13,fontWeight:700,cursor:'pointer'}}>Save & Mark Completed</button>
-              </div>
-            </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
         </div>
       )}
 
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Cycle Evidence',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

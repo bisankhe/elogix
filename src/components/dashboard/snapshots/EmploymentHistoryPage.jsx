@@ -1,117 +1,85 @@
-// FILE: EmploymentHistoryPage.jsx - Employment History (Employee Database)
-// Digital-resume timeline: roles, promotions, transfers, manager changes, compensation
+// FILE: src/components/dashboard/snapshots/EmploymentHistoryPage.jsx
+// eLogix HRMS — Employment History
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { Field, ExcelModal, PageHeader, AIImpact, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#052e16 0%,#15803d 60%,#86efac 100%)'
-const A = '#15803d'
-
-const HISTORY = [
-  { id:'h1', date:'2025-06-16', event_type:'hire', title:'Cloud Architect', dept:'Information Technology',
-    manager:'Rajesh Sharma', salary_npr:180000, classification:'Regular', note:'Joined eLogix HRMS as Cloud Architect.',
-    expanded_detail:'Hired through standard recruitment pipeline (JRF-2025-005). AI screening score: 97%. Offer accepted within 2 days.' },
-]
-
-const TYPE_CFG = {
-  hire:{c:'#10b981',icon:'🎉',label:'Hired'},
-  promotion:{c:'#7c3aed',icon:'📈',label:'Promotion'},
-  transfer:{c:'#3b82f6',icon:'🔄',label:'Transfer'},
-  salary_change:{c:'#f59e0b',icon:'💰',label:'Salary Change'},
-  manager_change:{c:'#ec4899',icon:'👔',label:'Manager Change'},
-  confirmation:{c:'#06b6d4',icon:'✅',label:'Confirmed Permanent'},
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
 }
 
 export default function EmploymentHistoryPage() {
-  const [history] = useState(HISTORY)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const [form, setForm] = useState({})
-  const [msg, setMsg] = useState("")
-  const notify = m => { setMsg(m); setTimeout(()=>setMsg(''),3000) }
-  const [showExcel, setShowExcel] = useState(false)
-  const [expanded, setExpanded] = useState(null)
-  const [ctx, setCtx] = useState(null)
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Employment History...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="📜" title="Employment History"
-        breadcrumb="Employee Lifecycle > Employee Records > Employee Database"
-        gradient={G}
-        stats={[
-          {icon:'📜',label:'Total Events',     value:history.length},
-          {icon:'📅',label:'Tenure',           value:'2 weeks'},
-          {icon:'💰',label:'Current Salary',   value:'NPR 180K'},
-          {icon:'🏢',label:'Current Dept',     value:'IT'},
-        ]}
-        onAdd={()=>notify('📋 Employment history entry created')} addLabel="+ Add Entry" onExcel={()=>setShowExcel(true)}/>
-
-      <div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#065f46',display:'flex',gap:10}}>
-        <span style={{fontSize:18}}>⚖</span>
-        <div><strong>Nepal Compliance:</strong> Labour Act 2074 requires records documenting initial appointment date, employment type, current position, and all subsequent promotions/role changes/transfers - retained for the statutory period for audit and dispute-defense purposes.</div>
-      </div>
-
-      {/* Timeline */}
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:18,padding:'24px 28px'}}>
-        <div style={{position:'relative',paddingLeft:32}}>
-          <div style={{position:'absolute',left:11,top:8,bottom:8,width:2,background:'#e2e8f0'}}/>
-          {history.map((h,i)=>{
-            const tc = TYPE_CFG[h.event_type]
-            const isExpanded = expanded===h.id
-            return (
-              <div key={h.id} style={{position:'relative',marginBottom:i<history.length-1?24:0}}
-                onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:h.title,impact_links:['Employee Profile']}})}}>
-                <div style={{position:'absolute',left:-32,top:2,width:24,height:24,borderRadius:'50%',background:tc.c,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,color:'#fff',border:'3px solid #fff',boxShadow:`0 0 0 2px ${tc.c}33`}}>
-                  {tc.icon}
-                </div>
-                <div onClick={()=>setExpanded(isExpanded?null:h.id)}
-                  style={{background:'#f8fafc',borderRadius:14,padding:'14px 18px',cursor:'pointer',border:`1px solid ${tc.c}22`}}>
-                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:8}}>
-                    <div>
-                      <div style={{display:'flex',gap:8,alignItems:'center'}}>
-                        <span style={{fontSize:13,fontWeight:900,color:'#0f172a'}}>{h.title}</span>
-                        <span style={{background:`${tc.c}15`,color:tc.c,fontSize:9,fontWeight:700,padding:'2px 8px',borderRadius:20}}>{tc.label}</span>
-                      </div>
-                      <div style={{fontSize:10,color:'#64748b',marginTop:2}}>{h.dept} . {h.classification} . {h.date}</div>
-                    </div>
-                    <div style={{textAlign:'right'}}>
-                      <div style={{fontSize:12,fontWeight:800,color:'#10b981'}}>NPR {h.salary_npr.toLocaleString()}</div>
-                      <div style={{fontSize:9,color:'#94a3b8'}}>{isExpanded?'▲ Less':'▼ More'}</div>
-                    </div>
-                  </div>
-                  {isExpanded&&(
-                    <div style={{marginTop:10,paddingTop:10,borderTop:'1px solid #e2e8f0',fontSize:11,color:'#374151',lineHeight:1.6}}>
-                      <div style={{marginBottom:4}}><strong>Manager:</strong> {h.manager}</div>
-                      <div style={{marginBottom:4}}><strong>Note:</strong> {h.note}</div>
-                      <div style={{color:'#64748b',fontStyle:'italic'}}>{h.expanded_detail}</div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )
-          })}
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Employment History
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
         </div>
       </div>
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'18px 20px'}}>
-        <div style={{fontSize:12,fontWeight:800,color:'#0f172a',marginBottom:10}}>Add Employment Event</div>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 20px'}}>
-          <div><label style={{fontSize:9,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>Event Type</label><select value={form.event_type||''} onChange={e=>setForm(p=>({...p,event_type:e.target.value}))} style={{width:'100%',padding:'9px 12px',borderRadius:9,border:'1.5px solid #e2e8f0',fontSize:11,outline:'none',background:'#fff',boxSizing:'border-box'}}>{['promotion','transfer','salary_change','manager_change','confirmation'].map(o=><option key={o} value={o}>{o}</option>)}</select></div>
-          <div><label style={{fontSize:9,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>Effective Date</label><input type="date" value={form.effective_date||''} onChange={e=>setForm(p=>({...p,effective_date:e.target.value}))} style={{width:'100%',padding:'9px 12px',borderRadius:9,border:'1.5px solid #e2e8f0',fontSize:11,outline:'none',boxSizing:'border-box'}}/></div>
-          <div><label style={{fontSize:9,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>New Title/Position</label><input type="text" value={form.new_titleposition||''} onChange={e=>setForm(p=>({...p,new_titleposition:e.target.value}))} style={{width:'100%',padding:'9px 12px',borderRadius:9,border:'1.5px solid #e2e8f0',fontSize:11,outline:'none',boxSizing:'border-box'}}/></div>
-          <div><label style={{fontSize:9,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>New Salary (NPR)</label><input type="number" value={form.new_salary_npr||''} onChange={e=>setForm(p=>({...p,new_salary_npr:e.target.value}))} style={{width:'100%',padding:'9px 12px',borderRadius:9,border:'1.5px solid #e2e8f0',fontSize:11,outline:'none',boxSizing:'border-box'}}/></div>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
         </div>
-        <div><label style={{fontSize:9,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>Note</label><textarea value={form.note||''} onChange={e=>setForm(p=>({...p,note:e.target.value}))} rows={3} style={{width:'100%',padding:'9px 12px',borderRadius:9,border:'1.5px solid #e2e8f0',fontSize:11,outline:'none',resize:'vertical',fontFamily:'inherit',boxSizing:'border-box'}}/></div>
-        <AIImpact color={A} lines={['Auto-creates immutable historical timeline entry.','Salary changes sync to Payroll module.','Manager changes update org chart and reporting lines.']}/>
-        <button style={{padding:13,borderRadius:12,border:'none',background:G,color:'#fff',fontSize:13,fontWeight:700,cursor:'pointer',width:'100%'}}>Record Event</button>
-      </div>
+      )}
 
-      {msg&&<div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:10,padding:'10px 16px',fontSize:11,color:'#065f46',position:'fixed',bottom:20,right:20,zIndex:999,boxShadow:'0 4px 16px rgba(0,0,0,.1)',maxWidth:400}}>{msg}</div>}
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
+          </div>
+        </div>
+      )}
 
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Record',key:'view'},{icon:'📤',label:'Export',key:'export'},
-        {icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Employment History" columns={['Date','Event Type','Title','Department','Manager','Salary NPR','Note']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

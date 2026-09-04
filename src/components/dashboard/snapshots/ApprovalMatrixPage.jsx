@@ -1,84 +1,85 @@
-// FILE: ApprovalMatrixPage.jsx - Approval Matrix / Workflow Setup
-// (System Administration > Workflow & Automation)
-// The single, unified threshold-based routing table powering every
-// module's approval chain -- distinct from ApprovalCenterPage (MSS,
-// the manager's action queue) and ApprovalWorkflowPage (Finance &
-// Claims, the claims-specific chain visualization). This is the
-// CONFIGURATION layer those pages' routing logic should ultimately
-// read from, addressing the brief's explicit "matrix maintenance
-// drift as personnel change" pain point with a stale-reference check.
+// FILE: src/components/dashboard/snapshots/ApprovalMatrixPage.jsx
+// eLogix HRMS — Approval Matrix
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#581c87 0%,#7c3aed 60%,#c4b5fd 100%)'
-const A = '#7c3aed'
-
-const MATRIX_RULES = [
-  {process:'Leave Request',threshold:'> 3 days',chain:['Department Head','HR Manager']},
-  {process:'Expense Claim',threshold:'NPR 0 - 10,000',chain:['Line Manager']},
-  {process:'Expense Claim',threshold:'NPR 10,001+',chain:['Line Manager','Project Head','Finance']},
-  {process:'IT Equipment Provisioning',threshold:'Any',chain:['IT Lead','Department Head'],
-   approver_unresolved:true,flag_note:'Listed approver "IT Lead" no longer maps to an active employee -- requests here would route nowhere until reassigned.'},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function ApprovalMatrixPage() {
-  const [search, setSearch] = useState('')
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = MATRIX_RULES.filter(r=>!search||r.process.toLowerCase().includes(search.toLowerCase()))
-  const staleCount = MATRIX_RULES.filter(r=>r.approver_unresolved).length
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Approval Matrix...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="📐" title="Approval Matrix / Workflow Setup"
-        breadcrumb="System Administration > Workflow & Automation"
-        gradient={G}
-        stats={[
-          {icon:'📐',label:'Matrix Rules',  value:MATRIX_RULES.length},
-          {icon:'⚠',label:'Stale Approver Refs',value:staleCount},
-          {icon:'🧩',label:'Modules Powered',       value:'12+'},
-          {icon:'🔁',label:'Single Source of Truth',    value:'Yes'},
-        ]}
-        onAdd={()=>{}} addLabel="New Matrix Rule"/>
-
-      <div style={{background:'#faf5ff',border:'1px solid #e9d5ff',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#581c87',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🔁</span>
-        <div style={{flex:1,minWidth:200}}><strong>One Matrix, Not One Per Module:</strong> Leave, expense, and equipment approvals all route through this same table -- never a custom, siloed chain hidden inside one feature that the rest of the system can't see or maintain.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Approval Matrix
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search by process..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{overflowX:'auto',marginTop:14}}>
-        <table style={{width:'100%',borderCollapse:'collapse',fontSize:10,minWidth:600}}>
-          <thead><tr style={{background:'#f8fafc'}}>
-            {['Process','Threshold','Approval Chain'].map(h=><th key={h} style={{padding:'10px 12px',textAlign:'left',fontSize:9,fontWeight:800,color:A}}>{h}</th>)}
-          </tr></thead>
-          <tbody>
-            {filtered.map((r,i)=>(
-              <tr key={i} style={{borderBottom:'1px solid #f8fafc',background:r.flag_note?'#fff7ed':'transparent'}}
-                onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:r.process,...r,impact_links:['Multi-Level Approval']}})}}>
-                <td style={{padding:'10px 12px',fontWeight:700,color:'#0f172a'}}>{r.process}</td>
-                <td style={{padding:'10px 12px',color:'#64748b'}}>{r.threshold}</td>
-                <td style={{padding:'10px 12px'}}>
-                  <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>
-                    {r.chain.map((c,j)=><span key={j} style={{background:'#faf5ff',color:'#7c3aed',fontSize:8,fontWeight:600,padding:'2px 8px',borderRadius:20}}>{c}</span>)}
-                  </div>
-                  {r.flag_note&&<div style={{marginTop:6,fontSize:8,color:'#b45309'}}>⚠ {r.flag_note}</div>}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
+          </div>
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['AI scans every approver reference against active employee records nightly -- a personnel change that breaks the matrix surfaces here before a request silently stalls.','Threshold tiers compose directly -- raise the NPR 10,000 line once here, every module reading this matrix updates immediately.','Every matrix change is logged with who edited it and when, the audit trail the brief\'s pain point explicitly asks for.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Rule',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

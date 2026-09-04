@@ -1,84 +1,85 @@
-// FILE: InsourcePayrollPage.jsx - Insource Payroll (Payroll & Compensation)
-// Direct-employee payroll register: gross-to-net per employee, statutory
-// deduction breakdown, batch finalize/lock.
+// FILE: src/components/dashboard/snapshots/InsourcePayrollPage.jsx
+// eLogix HRMS — Insource Payroll
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#052e16 0%,#15803d 60%,#86efac 100%)'
-const A = '#15803d'
-
-const PAYROLL_REGISTER = [
-  { id:'ip1', employee:'Gita Maharjan', dept:'IT', gross_npr:60000, ssf_npr:4092, tds_npr:2100, other_deductions_npr:0, net_npr:53808, status:'finalized', impact_links:['Salary Structure','Tax Setup'] },
-  { id:'ip2', employee:'Bikash Shrestha', dept:'IT', gross_npr:55000, ssf_npr:3750, tds_npr:1750, other_deductions_npr:1500, net_npr:48000, status:'finalized', impact_links:[] },
-  { id:'ip3', employee:'Maya Pradhan', dept:'Finance', gross_npr:48000, ssf_npr:3300, tds_npr:1200, other_deductions_npr:0, net_npr:43500, status:'pending', impact_links:['Cash Advance'] },
-]
-
-const STATUS_CFG = {finalized:{c:'#10b981',bg:'#f0fdf4',label:'Finalized'},pending:{c:'#f59e0b',bg:'#fffbeb',label:'Pending Review'}}
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function InsourcePayrollPage() {
-  const [register, setRegister] = useState(PAYROLL_REGISTER)
-  const [search, setSearch] = useState('')
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = register.filter(r=>!search||r.employee.toLowerCase().includes(search.toLowerCase()))
-  const totalGross = register.reduce((s,r)=>s+r.gross_npr,0)
-  const totalNet = register.reduce((s,r)=>s+r.net_npr,0)
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/payroll', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Insource Payroll...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🏢" title="Insource Payroll"
-        breadcrumb="Workforce Operations > Payroll & Compensation > Payroll Setup"
-        gradient={G}
-        stats={[
-          {icon:'👥',label:'Direct Employees', value:register.length},
-          {icon:'💰',label:'Total Gross',       value:'NPR '+(totalGross/1000).toFixed(0)+'K'},
-          {icon:'💵',label:'Total Net Payable', value:'NPR '+(totalNet/1000).toFixed(0)+'K'},
-          {icon:'✅',label:'Finalized',          value:register.filter(r=>r.status==='finalized').length},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#065f46',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🏢</span>
-        <div style={{flex:1,minWidth:220}}><strong>Full Control, In-House:</strong> Direct/permanent staff payroll processed entirely within eLogix HRMS - zero third-party hand-off. All appointment letters, remuneration terms, and benefit entitlements stay native to this system per Nepal LA2074.</div>
-      </div>
-
-      <SearchBar value={search} onChange={setSearch} placeholder="Search by employee name..."/>
-
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,overflow:'hidden',marginTop:14}}>
-        <div style={{overflowX:'auto'}}>
-          <table style={{width:'100%',borderCollapse:'collapse',fontSize:11}}>
-            <thead><tr style={{background:'#f8fafc'}}>
-              {['Employee','Dept','Gross','SSF','TDS','Other Ded.','Net Pay','Status'].map(h=>(
-                <th key={h} style={{padding:'10px 12px',textAlign:'left',fontSize:9,fontWeight:800,color:A,whiteSpace:'nowrap'}}>{h}</th>
-              ))}
-            </tr></thead>
-            <tbody>
-              {filtered.map(r=>{
-                const sc = STATUS_CFG[r.status]
-                return (
-                  <tr key={r.id} style={{borderBottom:'1px solid #f8fafc'}}
-                    onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:r.employee,...r}})}}>
-                    <td style={{padding:'9px 12px',fontWeight:700,color:'#0f172a'}}>{r.employee}</td>
-                    <td style={{padding:'9px 12px',color:'#64748b',fontSize:10}}>{r.dept}</td>
-                    <td style={{padding:'9px 12px',fontWeight:700,color:'#0f172a'}}>{r.gross_npr.toLocaleString()}</td>
-                    <td style={{padding:'9px 12px',color:'#ef4444'}}>-{r.ssf_npr.toLocaleString()}</td>
-                    <td style={{padding:'9px 12px',color:'#ef4444'}}>-{r.tds_npr.toLocaleString()}</td>
-                    <td style={{padding:'9px 12px',color:'#ef4444'}}>{r.other_deductions_npr>0?'-'+r.other_deductions_npr.toLocaleString():'-'}</td>
-                    <td style={{padding:'9px 12px',fontWeight:800,color:A}}>{r.net_npr.toLocaleString()}</td>
-                    <td style={{padding:'9px 12px'}}><span style={{background:sc.bg,color:sc.c,fontSize:9,fontWeight:700,padding:'2px 8px',borderRadius:20}}>{sc.label}</span></td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          💰 Insource Payroll
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
         </div>
       </div>
 
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Payslip',key:'view'},{icon:'✏',label:'Edit (if pending)',key:'edit'},
-        {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📤',label:'Export',key:'export'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
+
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
+          </div>
+        </div>
+      )}
+
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

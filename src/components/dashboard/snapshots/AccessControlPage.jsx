@@ -1,104 +1,85 @@
-// FILE: AccessControlPage.jsx - Access Control
-// (System Administration > User & Access)
-// Field-level masking + MFA -- reuses the EXISTING mfa_enrollment
-// (Security Risk session) directly, never a second MFA tracking table.
-// Distinct from Role & Permission (which roles exist and what they
-// can broadly do) -- this is the field-level masking and ad-hoc
-// access-request layer underneath those roles.
+// FILE: src/components/dashboard/snapshots/AccessControlPage.jsx
+// eLogix HRMS — Access Control
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { Field, PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#7c2d12 0%,#c2410c 60%,#fdba74 100%)'
-const A = '#c2410c'
-
-const MASKED_FIELDS = [
-  {field:'National ID / Citizenship Number',masked_for:'All roles except HR Manager, Super Admin',sample:'XXXX-XXXX-1234'},
-  {field:'Bank Account Details',masked_for:'All roles except HR Manager, Finance',sample:'****6789'},
-  {field:'Salary (Company Directory View)',masked_for:'Non-payroll roles',sample:'Hidden'},
-]
-
-const ACCESS_REQUESTS = [
-  {requester:'Sunil Magar',resource:'Cross-team project dashboard -- Marketing',status:'pending_approval',approver:'Gita Maharjan'},
-  {requester:'Bikash Rai',resource:'Vendor Billing read access (temporary, 14 days)',status:'approved',approver:'Hari Thapa'},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function AccessControlPage() {
-  const [search, setSearch] = useState('')
-  const [showRequest, setShowRequest] = useState(false)
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = ACCESS_REQUESTS.filter(a=>!search||a.requester.toLowerCase().includes(search.toLowerCase()))
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Access Control...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🔐" title="Access Control"
-        breadcrumb="System Administration > User & Access"
-        gradient={G}
-        stats={[
-          {icon:'🔐',label:'MFA Adoption',  value:'76%'},
-          {icon:'🛡',label:'Masked Field Types',  value:MASKED_FIELDS.length},
-          {icon:'⏳',label:'Pending Requests',        value:ACCESS_REQUESTS.filter(a=>a.status==='pending_approval').length},
-          {icon:'⏱',label:'Temporary Grants Active',      value:ACCESS_REQUESTS.filter(a=>a.resource.includes('temporary')).length},
-        ]}
-        onAdd={()=>setShowRequest(true)} addLabel="Request Access"/>
-
-      <div style={{background:'#fff7ed',border:'1px solid #fed7aa',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#7c2d12',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🛡</span>
-        <div style={{flex:1,minWidth:200}}><strong>Masked by Default, Visible by Exception:</strong> National IDs, bank details, and salary figures stay masked everywhere except the specific roles that genuinely need them -- nobody has to remember to hide sensitive data, because it was never shown to begin with.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Access Control
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <div style={{display:'grid',gap:14,marginBottom:18}}>
-        {MASKED_FIELDS.map((m,i)=>(
-          <div key={i} style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:14,padding:'14px 18px',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:10}}>
-            <div>
-              <div style={{fontSize:11,fontWeight:700,color:'#0f172a'}}>{m.field}</div>
-              <div style={{fontSize:9,color:'#94a3b8',marginTop:3}}>Masked for: {m.masked_for}</div>
-            </div>
-            <span style={{fontFamily:'monospace',fontSize:10,color:'#94a3b8',background:'#f8fafc',padding:'4px 10px',borderRadius:8}}>{m.sample}</span>
-          </div>
-        ))}
-      </div>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search access requests..."/>
-
-      <div style={{display:'grid',gap:12,marginTop:14}}>
-        {filtered.map((a,i)=>(
-          <div key={i}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:a.requester,...a}})}}
-            style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:12,padding:'12px 16px',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:8}}>
-            <div>
-              <div style={{fontSize:10,fontWeight:700,color:'#0f172a'}}>{a.requester}</div>
-              <div style={{fontSize:9,color:'#94a3b8',marginTop:2}}>{a.resource} . Approver: {a.approver}</div>
-            </div>
-            <span style={{background:a.status==='approved'?'#f0fdf4':'#fffbeb',color:a.status==='approved'?'#15803d':'#b45309',fontSize:8,fontWeight:700,padding:'3px 10px',borderRadius:20}}>
-              {a.status==='approved'?'✓ Approved':'⏳ Pending'}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      {showRequest&&(
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.65)',zIndex:5000,display:'flex',alignItems:'center',justifyContent:'center',padding:16}} onClick={()=>setShowRequest(false)}>
-          <div style={{background:'#fff',borderRadius:20,width:'min(460px,100%)'}} onClick={e=>e.stopPropagation()}>
-            <div style={{background:G,padding:'18px 24px'}}><div style={{fontSize:15,fontWeight:900,color:'#fff'}}>Request Access</div></div>
-            <div style={{padding:'20px 24px'}}>
-              <Field label="Resource Needed" value="" onChange={()=>{}} accent={A} required hint="Voice input supported"/>
-              <Field label="Reason" type="textarea" value="" onChange={()=>{}} accent={A} required/>
-              <Field label="Duration" type="select" value="" onChange={()=>{}} accent={A} options={['Permanent','30 days','14 days','7 days']}/>
-              <button onClick={()=>setShowRequest(false)} style={{width:'100%',padding:13,borderRadius:11,border:'none',background:G,color:'#fff',fontSize:13,fontWeight:700,cursor:'pointer'}}>Submit for Approval</button>
-            </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
         </div>
       )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Temporary grants expire automatically at the end of the requested duration -- never a forgotten exception that quietly becomes permanent.','MFA enforcement applies in the background -- a push notification to confirm, never a disruptive extra login screen.','Access requests route to the requester\'s actual manager, never a generic admin queue with no context.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Detail',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

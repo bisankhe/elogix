@@ -1,95 +1,85 @@
-// FILE: PayslipDownloadPage.jsx - Payslip Download
-// (HR Services & Support > Employee Self Service)
-// Secure historical archive, pure UI over the EXISTING payslips table
-// (which already has published_to_ess + pdf_url designed exactly for
-// this). Distinct from My Payroll (the analytical view); this is the
-// document repository.
+// FILE: src/components/dashboard/snapshots/PayslipDownloadPage.jsx
+// eLogix HRMS — Payslip Download
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#7c2d12 0%,#c2410c 60%,#fdba74 100%)'
-const A = '#c2410c'
-
-const PAYSLIPS = [
-  {id:'p1',pay_period:'2025-06',gross:62000,net:52000,published:true},
-  {id:'p2',pay_period:'2025-05',gross:68500,net:58500,published:true},
-  {id:'p3',pay_period:'2025-04',gross:62000,net:52000,published:true},
-  {id:'p4',pay_period:'2025-03',gross:64200,net:54200,published:true},
-  {id:'p5',pay_period:'2025-02',gross:62000,net:52000,published:true},
-  {id:'p6',pay_period:'2025-01',gross:62000,net:52000,published:true},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function PayslipDownloadPage() {
-  const [search, setSearch] = useState('')
-  const [pinModal, setPinModal] = useState(null)
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = PAYSLIPS.filter(p=>!search||p.pay_period.includes(search))
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/payroll', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Payslip Download...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🧾" title="Payslip Download"
-        breadcrumb="HR Services & Support > Employee Self Service"
-        gradient={G}
-        stats={[
-          {icon:'🧾',label:'Available Payslips',  value:PAYSLIPS.length},
-          {icon:'🔒',label:'Encryption',              value:'AES-256'},
-          {icon:'📥',label:'Format',                     value:'PDF, Password-Protected'},
-          {icon:'🗂',label:'History',                       value:'Full Archive'},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#fff7ed',border:'1px solid #fed7aa',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#7c2d12',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🔒</span>
-        <div style={{flex:1,minWidth:200}}><strong>Your Secured Archive:</strong> Every PDF requires your security PIN before opening. Available the instant payroll finalizes -- never wait on HR to email a copy again.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Payslip Download
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search by month (e.g. 2025-06)..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,overflow:'hidden',marginTop:14}}>
-        <table style={{width:'100%',borderCollapse:'collapse',fontSize:11}}>
-          <thead><tr style={{background:'#f8fafc'}}>
-            {['Pay Period','Gross','Net','Status','Action'].map(h=><th key={h} style={{padding:'10px 14px',textAlign:'left',fontSize:9,fontWeight:800,color:A}}>{h}</th>)}
-          </tr></thead>
-          <tbody>
-            {filtered.map(p=>(
-              <tr key={p.id} style={{borderBottom:'1px solid #f8fafc'}}
-                onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:p.pay_period,...p,impact_links:['My Payroll']}})}}>
-                <td style={{padding:'10px 14px',fontWeight:700,color:'#0f172a'}}>{p.pay_period}</td>
-                <td style={{padding:'10px 14px',color:'#374151'}}>NPR {p.gross.toLocaleString()}</td>
-                <td style={{padding:'10px 14px',fontWeight:700,color:A}}>NPR {p.net.toLocaleString()}</td>
-                <td style={{padding:'10px 14px'}}><span style={{background:'#f0fdf4',color:'#15803d',fontSize:8,fontWeight:700,padding:'2px 9px',borderRadius:20}}>Published</span></td>
-                <td style={{padding:'10px 14px'}}>
-                  <button onClick={()=>setPinModal(p)} style={{padding:'6px 14px',borderRadius:8,border:'none',background:A,color:'#fff',fontSize:9,fontWeight:700,cursor:'pointer'}}>📥 Download</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {pinModal&&(
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.65)',zIndex:5000,display:'flex',alignItems:'center',justifyContent:'center',padding:16}} onClick={()=>setPinModal(null)}>
-          <div style={{background:'#fff',borderRadius:20,width:'min(380px,100%)',textAlign:'center'}} onClick={e=>e.stopPropagation()}>
-            <div style={{background:G,padding:'18px 24px'}}><div style={{fontSize:14,fontWeight:900,color:'#fff'}}>Enter PIN to Open</div></div>
-            <div style={{padding:'22px 24px'}}>
-              <div style={{fontSize:10,color:'#64748b',marginBottom:14}}>{pinModal.pay_period} Payslip</div>
-              <input maxLength={4} placeholder="----" style={{width:120,padding:'12px',borderRadius:10,border:'1px solid #e2e8f0',fontSize:20,textAlign:'center',letterSpacing:8,marginBottom:14}}/>
-              <button onClick={()=>setPinModal(null)} style={{width:'100%',padding:13,borderRadius:11,border:'none',background:G,color:'#fff',fontSize:13,fontWeight:700,cursor:'pointer'}}>Unlock &amp; Download</button>
-            </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
         </div>
       )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Payslips publish to this archive the instant payroll finalizes and locks -- never a manually-uploaded copy.','Bank account numbers display masked everywhere except the final downloaded PDF.','Every download is logged with a timestamp, satisfying audit-trail requirements for sensitive financial documents.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'Preview',key:'view'},{icon:'📥',label:'Download',key:'download'},
-        {icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

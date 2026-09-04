@@ -1,98 +1,85 @@
-// FILE: ReadinessAssessmentPage.jsx - Readiness Assessment
-// (Performance & Talent > Talent Development > Succession Planning)
-// Objective gap-analysis: required executive competencies vs current
-// candidate skills (reuses employee_skill_levels). Standardized,
-// calibrated time horizons -- never a subjective manager "gut feel" tag.
+// FILE: src/components/dashboard/snapshots/ReadinessAssessmentPage.jsx
+// eLogix HRMS — Readiness Assessment
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#7c2d12 0%,#c2410c 60%,#fdba74 100%)'
-const A = '#c2410c'
-
-const ASSESSMENTS = [
-  { id:'a1', employee:'Gita Maharjan', target_role:'Engineering Director',
-    competencies:[{name:'Strategic Planning',current:7,required:8},{name:'Budget Management',current:5,required:8},{name:'Cross-Functional Influence',current:8,required:7}],
-    calibrated_by:['Direct Manager','Skip-Level','HR Partner'], readiness:'ready_1_2yr', impact_links:['Successor Identification'] },
-  { id:'a2', employee:'Anjali Sharma', target_role:'Sales Director',
-    competencies:[{name:'Strategic Planning',current:6,required:8},{name:'Team Leadership',current:9,required:7},{name:'Executive Communication',current:7,required:8}],
-    calibrated_by:['Direct Manager','HR Partner'], readiness:'ready_now',
-    flag_note:'Calibration incomplete: missing Skip-Level sign-off before this can be finalized as Ready Now.', impact_links:[] },
-]
-
-const READINESS_CFG = { ready_now:{c:'#10b981',label:'Ready Now'},ready_1_2yr:{c:'#f59e0b',label:'Ready in 1-2 Years'},ready_3plus_yr:{c:'#ef4444',label:'Ready in 3+ Years'} }
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function ReadinessAssessmentPage() {
-  const [search, setSearch] = useState('')
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = ASSESSMENTS.filter(a=>!search||a.employee.toLowerCase().includes(search.toLowerCase()))
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Readiness Assessment...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="📐" title="Readiness Assessment"
-        breadcrumb="Performance & Talent Management > Talent Development > Succession Planning"
-        gradient={G}
-        stats={[
-          {icon:'📐',label:'Assessments',     value:ASSESSMENTS.length},
-          {icon:'✅',label:'Ready Now',          value:ASSESSMENTS.filter(a=>a.readiness==='ready_now').length},
-          {icon:'⏳',label:'Ready 1-2 Yrs',        value:ASSESSMENTS.filter(a=>a.readiness==='ready_1_2yr').length},
-          {icon:'⚖',label:'Calibration Tiers',      value:3},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#fff7ed',border:'1px solid #fed7aa',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#7c2d12',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>⚖</span>
-        <div style={{flex:1,minWidth:200}}><strong>Objective, Calibrated, Never a Guess:</strong> "Ready Now" requires sign-off from Direct Manager, Skip-Level, AND HR Partner -- a single manager's nomination is never enough. Avoids the "Ready Now Fallacy" of declaring readiness without standardized evaluation of cross-functional complexity.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Readiness Assessment
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search by employee name..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{display:'grid',gap:16,marginTop:14}}>
-        {filtered.map(a=>{
-          const rc = READINESS_CFG[a.readiness]
-          return (
-            <div key={a.id}
-              onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:a.employee,...a}})}}
-              style={{background:'#fff',border:`1.5px solid ${rc.c}33`,borderRadius:16,overflow:'hidden',boxShadow:'0 2px 10px rgba(0,0,0,.05)',borderLeft:`5px solid ${rc.c}`}}>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',padding:'14px 18px',borderBottom:'1px solid #f1f5f9',flexWrap:'wrap',gap:10}}>
-                <div>
-                  <div style={{fontSize:13,fontWeight:900,color:'#0f172a'}}>{a.employee}</div>
-                  <div style={{fontSize:10,color:'#64748b'}}>Target: {a.target_role}</div>
-                </div>
-                <span style={{background:`${rc.c}15`,color:rc.c,fontSize:10,fontWeight:700,padding:'4px 12px',borderRadius:20}}>{rc.label}</span>
-              </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
+          </div>
+        </div>
+      )}
 
-              <div style={{padding:'12px 18px'}}>
-                {a.competencies.map((c,i)=>(
-                  <div key={i} style={{marginBottom:10}}>
-                    <div style={{display:'flex',justifyContent:'space-between',fontSize:10,marginBottom:3}}>
-                      <span style={{color:'#374151'}}>{c.name}</span><span style={{fontWeight:700,color:c.current>=c.required?'#10b981':'#ef4444'}}>{c.current}/{c.required}</span>
-                    </div>
-                    <div style={{height:7,background:'#f1f5f9',borderRadius:7,overflow:'hidden',position:'relative'}}>
-                      <div style={{width:`${c.current/10*100}%`,height:'100%',background:c.current>=c.required?'#10b981':'#f59e0b',borderRadius:7}}/>
-                      <div style={{position:'absolute',left:`${c.required/10*100}%`,top:0,bottom:0,width:2,background:'#1e293b'}}/>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div style={{padding:'8px 18px',display:'flex',gap:6,flexWrap:'wrap'}}>
-                {a.calibrated_by.map((m,i)=>(<span key={i} style={{background:'#f0fdf4',color:'#15803d',fontSize:8,fontWeight:600,padding:'2px 8px',borderRadius:20}}>✓ {m}</span>))}
-              </div>
-              {a.flag_note&&<div style={{padding:'10px 18px',background:'#fef2f2',fontSize:10,color:'#991b1b'}}><strong>⚠</strong> {a.flag_note}</div>}
-            </div>
-          )
-        })}
-      </div>
-
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Competency gaps pulled live from the existing Skill Matrix -- never re-entered manually.','Readiness auto-recalculates the moment a candidate completes a tagged development course.','"Ready Now" status is locked until all three calibration tiers have signed off.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Assessment',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,110 +1,85 @@
-// FILE: DiversityDashboardPage.jsx - Diversity Dashboard
-// (Employee Experience & Culture > Diversity, Equity & Inclusion)
-// Donut/cohort charts for representation, funnel for applicant->hire->
-// promotion conversion by demographic, intersectional filtering.
-// Aggregated views only -- never exposes individual self-ID responses.
+// FILE: src/components/dashboard/snapshots/DiversityDashboardPage.jsx
+// eLogix HRMS — Diversity Dashboard
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#581c87 0%,#7c3aed 60%,#c4b5fd 100%)'
-const A = '#7c3aed'
-
-const REPRESENTATION = [
-  {group:'Self-Identified',pct:62,c:'#7c3aed'},{group:'Prefer Not to Disclose',pct:38,c:'#cbd5e1'},
-]
-
-const FUNNEL = [
-  {stage:'Applicants',count:1240,diverse_pct:48},{stage:'Interviewed',count:312,diverse_pct:44},
-  {stage:'Hired',count:58,diverse_pct:41},{stage:'Promoted (12mo)',count:14,diverse_pct:36},
-]
-
-const DEPT_REPRESENTATION = [
-  {dept:'IT',diverse_pct:38},{dept:'Sales & Marketing',diverse_pct:52},{dept:'Finance',diverse_pct:61},{dept:'Operations',diverse_pct:47},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function DiversityDashboardPage() {
-  const [filterDept, setFilterDept] = useState('all')
-  const [ctx, setCtx] = useState(null)
-  const maxFunnel = FUNNEL[0].count
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const dropoffFlag = FUNNEL[FUNNEL.length-1].diverse_pct < FUNNEL[0].diverse_pct - 10
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Diversity Dashboard...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🌍" title="Diversity Dashboard"
-        breadcrumb="Employee Experience & Culture > Diversity, Equity & Inclusion"
-        gradient={G}
-        stats={[
-          {icon:'🌍',label:'Self-ID Participation',  value:'62%'},
-          {icon:'📊',label:'Hire Diversity',             value:'41%'},
-          {icon:'⚠',label:'Promotion Drop-off',            value:dropoffFlag?'Flagged':'Stable'},
-          {icon:'🔒',label:'Visibility',                     value:'Aggregated Only'},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#faf5ff',border:'1px solid #e9d5ff',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#581c87',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🔒</span>
-        <div style={{flex:1,minWidth:200}}><strong>Aggregated, Never Individual:</strong> Every chart here reflects group-level patterns from voluntary, confidential self-ID data. No view in this dashboard can ever expose a single employee's response -- diagnostic metrics, not vanity headcounts.</div>
-      </div>
-
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:18}}>
-        {/* Self-ID participation donut */}
-        <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'20px',display:'flex',gap:16,alignItems:'center'}}>
-          <svg width="110" height="110" viewBox="0 0 36 36">
-            <circle cx="18" cy="18" r="15.5" fill="none" stroke="#cbd5e1" strokeWidth="6"/>
-            <circle cx="18" cy="18" r="15.5" fill="none" stroke={A} strokeWidth="6" strokeDasharray="62 38" strokeDashoffset="25" transform="rotate(-90 18 18)"/>
-          </svg>
-          <div>
-            <div style={{fontSize:11,fontWeight:800,color:'#0f172a',marginBottom:8}}>Self-ID Participation</div>
-            {REPRESENTATION.map((r,i)=>(
-              <div key={i} style={{display:'flex',gap:6,alignItems:'center',marginBottom:4}}>
-                <span style={{width:8,height:8,borderRadius:4,background:r.c,display:'inline-block'}}/>
-                <span style={{fontSize:9,color:'#374151'}}>{r.group} ({(r.pct||0)}%)</span>
-              </div>
-            ))}
-          </div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Diversity Dashboard
         </div>
-
-        {/* Department representation bar */}
-        <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'20px'}}>
-          <div style={{fontSize:11,fontWeight:800,color:'#0f172a',marginBottom:12}}>Representation by Department</div>
-          <div style={{display:'flex',gap:10,alignItems:'flex-end',height:80}}>
-            {DEPT_REPRESENTATION.map((d,i)=>(
-              <div key={i} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
-                <div style={{fontSize:8,fontWeight:700,color:A}}>{d.diverse_pct}%</div>
-                <div style={{width:'100%',background:A,borderRadius:'4px 4px 0 0',height:`${d.diverse_pct*0.7}px`}}/>
-                <div style={{fontSize:7,color:'#94a3b8'}}>{d.dept}</div>
-              </div>
-            ))}
-          </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
         </div>
       </div>
 
-      {/* Funnel: applicant -> hire -> promotion */}
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'20px'}}>
-        <div style={{fontSize:11,fontWeight:800,color:'#0f172a',marginBottom:14}}>📐 Diversity Funnel: Applicant &gt; Hire &gt; Promotion</div>
-        {FUNNEL.map((f,i)=>(
-          <div key={i}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:f.stage,impact_links:['Gender Analytics']}})}}
-            style={{marginBottom:12}}>
-            <div style={{display:'flex',justifyContent:'space-between',marginBottom:4,fontSize:10}}>
-              <span style={{color:'#374151',fontWeight:600}}>{f.stage} ({f.count})</span>
-              <span style={{fontWeight:700,color:i===FUNNEL.length-1&&dropoffFlag?'#ef4444':A}}>{f.diverse_pct}% diverse</span>
-            </div>
-            <div style={{height:10,background:'#f1f5f9',borderRadius:10,overflow:'hidden'}}><div style={{width:`${f.count/maxFunnel*100}%`,height:'100%',background:A,borderRadius:10}}/></div>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
+
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-        {dropoffFlag&&<div style={{marginTop:10,fontSize:9,color:'#b45309'}}>⚠ Diverse representation drops meaningfully between hire and promotion -- a diagnostic signal, not a hiring success story.</div>}
-      </div>
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Self-ID data is opt-in and encrypted at rest -- aggregated views require a minimum group size before displaying, protecting individual anonymity.','Funnel tracks promotion and retention, not just hiring headcount -- avoiding the vanity-metric trap.','Filtering by geography or management tier never drops below the minimum-group-size threshold.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Detail',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

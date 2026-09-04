@@ -1,92 +1,85 @@
-// FILE: ComplianceReportsPage.jsx - Compliance Reports
-// (Reports, Analytics & BI > HR Analytics)
-// Statutory returns hub: employee rosters, attendance logs for
-// inspection, work-permit status (reuses business_licenses,
-// license_type='work_permit' from Compliance Management), workplace
-// accident reporting (genuinely new -- no precedent existed anywhere
-// in the build), and collective bargaining agreement filings.
-// Distinct from ComplianceRiskPage (risk-severity lens) and
-// PolicyCompliancePage (policy acknowledgment) -- this is the
-// statutory-returns/inspector-facing report.
+// FILE: src/components/dashboard/snapshots/ComplianceReportsPage.jsx
+// eLogix HRMS — Compliance Reports
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { Field, PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#0c4a6e 0%,#0284c7 60%,#7dd3fc 100%)'
-const A = '#0284c7'
-
-const RETURNS = [
-  {label:'Employee Roster & Attendance Logs',status:'current',detail:'Updated daily -- ready for inspector review',target:'Workforce Summary'},
-  {label:'Foreign National Work Permits',status:'attention',detail:'2 permits expiring within 30 days',target:'License Management'},
-  {label:'Workplace Accident Reports',status:'current',detail:'0 unreported incidents this quarter'},
-  {label:'Collective Bargaining Filings',status:'current',detail:'Latest agreement filed with Labour Office 2025-03-10'},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function ComplianceReportsPage() {
-  const [search, setSearch] = useState('')
-  const [showReport, setShowReport] = useState(false)
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = RETURNS.filter(r=>!search||r.label.toLowerCase().includes(search.toLowerCase()))
-  const needsAttention = RETURNS.filter(r=>r.status==='attention').length
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/compliance', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Compliance Reports...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="📋" title="Compliance Reports"
-        breadcrumb="Reports, Analytics & BI > HR Analytics"
-        gradient={G}
-        stats={[
-          {icon:'📋',label:'Statutory Returns Tracked',  value:RETURNS.length},
-          {icon:'⚠',label:'Needs Attention',                 value:needsAttention},
-          {icon:'🚨',label:'Unreported Incidents',                value:'0'},
-          {icon:'⚖',label:'Inspector-Ready',                         value:'Always'},
-        ]}
-        onAdd={()=>setShowReport(true)} addLabel="Report Workplace Accident"/>
-
-      <div style={{background:'#eff6ff',border:'1px solid #bfdbfe',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#1e40af',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🚨</span>
-        <div style={{flex:1,minWidth:200}}><strong>Serious Accidents Must Be Reported Immediately:</strong> A workplace injury triggers an instant notification to the Labour Office -- never batched into a routine monthly filing, because the law requires the inspector to be able to examine workplace safety right away.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          ⚖️ Compliance Reports
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search statutory returns..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{display:'grid',gap:14,marginTop:14}}>
-        {filtered.map((r,i)=>(
-          <div key={i}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:r.label,...r,impact_links:r.target?[r.target]:[]}})}}
-            style={{background:'#fff',border:`1px solid ${r.status==='attention'?'#fed7aa':'#e2e8f0'}`,borderRadius:14,padding:'16px 18px',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:10}}>
-            <div>
-              <div style={{fontSize:12,fontWeight:700,color:'#0f172a'}}>{r.label}</div>
-              <div style={{fontSize:9,color:'#94a3b8',marginTop:3}}>{r.detail}</div>
-            </div>
-            <span style={{background:r.status==='current'?'#f0fdf4':'#fffbeb',color:r.status==='current'?'#15803d':'#b45309',fontSize:9,fontWeight:700,padding:'3px 10px',borderRadius:20}}>
-              {r.status==='current'?'✓ Current':'⚠ Attention'}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      {showReport&&(
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.65)',zIndex:5000,display:'flex',alignItems:'center',justifyContent:'center',padding:16}} onClick={()=>setShowReport(false)}>
-          <div style={{background:'#fff',borderRadius:20,width:'min(480px,100%)'}} onClick={e=>e.stopPropagation()}>
-            <div style={{background:G,padding:'18px 24px'}}><div style={{fontSize:15,fontWeight:900,color:'#fff'}}>Report Workplace Accident</div></div>
-            <div style={{padding:'20px 24px'}}>
-              <Field label="Affected Employee" value="" onChange={()=>{}} accent={A} required/>
-              <Field label="Description of Incident" type="textarea" value="" onChange={()=>{}} accent={A} required hint="Voice input supported"/>
-              <Field label="Severity" type="select" value="" onChange={()=>{}} accent={A} options={['Minor','Serious -- requires immediate Labour Office notification','Fatal']}/>
-              <button onClick={()=>setShowReport(false)} style={{width:'100%',padding:13,borderRadius:11,border:'none',background:G,color:'#fff',fontSize:13,fontWeight:700,cursor:'pointer'}}>Submit &amp; Notify Labour Office</button>
-            </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
         </div>
       )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Work permit expiries pull live from License Management -- never a separately tracked deadline.','AI flags missing or stale roster entries before a Labour Inspector visit ever finds them.','Auto-populates the correct statutory template the moment a filing is due -- never a blank form to fill from memory.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Detail',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

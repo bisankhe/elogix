@@ -1,113 +1,85 @@
-// FILE: LeaveCalendarPage.jsx - Leave Calendar (Leave Operations)
-// Color-coded team availability grid: who's off today, overlap warnings,
-// monthly view, filter by department.
+// FILE: src/components/dashboard/snapshots/LeaveCalendarPage.jsx
+// eLogix HRMS — Leave Calendar
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#581c87 0%,#7c3aed 60%,#c4b5fd 100%)'
-const A = '#7c3aed'
-
-const TEAM_LEAVES = [
-  { id:'tc1', employee:'Sunil Magar', dept:'Customer Service', leave_type:'Home/Annual Leave', color:'#10b981', start:10, end:12 },
-  { id:'tc2', employee:'Priya Shah', dept:'Customer Service', leave_type:'Home/Annual Leave', color:'#10b981', start:11, end:11 },
-  { id:'tc3', employee:'Bikash Rai', dept:'IT', leave_type:'Sick Leave', color:'#ef4444', start:22, end:22 },
-  { id:'tc4', employee:'Maya Pradhan', dept:'Finance', leave_type:'Maternity Leave', color:'#ec4899', start:1, end:30 },
-]
-const DAYS_IN_MONTH = 31
-const DEPTS = ['All','Customer Service','IT','Finance']
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function LeaveCalendarPage() {
-  const [search, setSearch] = useState('')
-  const [filterDept, setFilterDept] = useState('All')
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = TEAM_LEAVES.filter(t=>{
-    if (filterDept!=='All'&&t.dept!==filterDept) return false
-    if (search&&!t.employee.toLowerCase().includes(search.toLowerCase())) return false
-    return true
-  })
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/leave', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
 
-  // Find days with overlap (2+ people off from same dept)
-  const overlapDays = {}
-  filtered.forEach(t=>{
-    for (let d=t.start;d<=t.end;d++){
-      if(!overlapDays[d]) overlapDays[d]={}
-      overlapDays[d][t.dept]=(overlapDays[d][t.dept]||0)+1
-    }
-  })
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Leave Calendar...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="📅" title="Leave Calendar"
-        breadcrumb="Workforce Operations > Leave Management > Leave Operations"
-        gradient={G}
-        stats={[
-          {icon:'📅',label:'On Leave This Month', value:filtered.length},
-          {icon:'⚠',label:'Overlap Days',          value:Object.values(overlapDays).filter(d=>Object.values(d).some(c=>c>1)).length},
-          {icon:'🏢',label:'Departments',            value:DEPTS.length-1},
-          {icon:'🔗',label:'Synced Calendars',        value:'Outlook + Google'},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#faf5ff',border:'1px solid #e9d5ff',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#581c87',display:'flex',gap:10}}>
-        <span style={{fontSize:18}}>👁</span>
-        <div><strong>Team Transparency:</strong> Color-coded by leave type, this calendar lets you check coverage before submitting your own request. Two-color stripes on a date mean overlapping team absences - review before approving more leave on those days.</div>
-      </div>
-
-      <div style={{display:'flex',gap:8,marginBottom:14,flexWrap:'wrap'}}>
-        <SearchBar value={search} onChange={setSearch} placeholder="Search by employee name..."/>
-        <div style={{display:'flex',gap:4,background:'#f1f5f9',padding:3,borderRadius:9}}>
-          {DEPTS.map(d=>(
-            <button key={d} onClick={()=>setFilterDept(d)}
-              style={{padding:'7px 12px',borderRadius:7,border:'none',cursor:'pointer',fontSize:10,
-                background:filterDept===d?'#fff':'transparent',color:filterDept===d?A:'#64748b',
-                fontWeight:filterDept===d?700:400,boxShadow:filterDept===d?'0 1px 3px rgba(0,0,0,.08)':'none'}}>
-              {d}
-            </button>
-          ))}
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📅 Leave Calendar
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
         </div>
       </div>
 
-      {/* Monthly grid */}
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'18px 20px',marginBottom:16,overflowX:'auto'}}>
-        <div style={{fontSize:12,fontWeight:800,color:'#0f172a',marginBottom:12}}>📅 July 2025 - Team Availability</div>
-        <div style={{display:'grid',gridTemplateColumns:`80px repeat(${DAYS_IN_MONTH},28px)`,gap:2,minWidth:980}}>
-          <div></div>
-          {Array.from({length:DAYS_IN_MONTH},(_,i)=>i+1).map(d=>(
-            <div key={d} style={{textAlign:'center',fontSize:8,color:Object.values(overlapDays[d]||{}).some(c=>c>1)?'#dc2626':'#94a3b8',fontWeight:Object.values(overlapDays[d]||{}).some(c=>c>1)?800:600}}>{d}</div>
-          ))}
-          {[...new Set(filtered.map(t=>t.employee))].map(emp=>(
-            <>
-              <div key={emp} style={{fontSize:9,fontWeight:700,color:'#374151',whiteSpace:'nowrap',paddingRight:6}}>{emp.split(' ')[0]}</div>
-              {Array.from({length:DAYS_IN_MONTH},(_,i)=>i+1).map(d=>{
-                const leave = filtered.find(t=>t.employee===emp&&d>=t.start&&d<=t.end)
-                return <div key={d} style={{height:20,borderRadius:3,background:leave?leave.color:'#f8fafc'}} title={leave?leave.leave_type:''}/>
-              })}
-            </>
-          ))}
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
         </div>
-      </div>
+      )}
 
-      {/* Today's absence list */}
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'18px 20px'}}>
-        <div style={{fontSize:12,fontWeight:800,color:'#0f172a',marginBottom:12}}>👥 On Leave Today</div>
-        {filtered.map(t=>(
-          <div key={t.id}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:t.employee,impact_links:['Leave Request','Leave Approval']}})}}
-            style={{display:'flex',gap:12,alignItems:'center',padding:'8px 0',borderBottom:'1px solid #f8fafc'}}>
-            <span style={{width:10,height:10,borderRadius:'50%',background:t.color,flexShrink:0}}/>
-            <div style={{flex:1}}>
-              <span style={{fontSize:11,fontWeight:700,color:'#0f172a'}}>{t.employee}</span>
-              <span style={{fontSize:10,color:'#94a3b8',marginLeft:8}}>{t.dept} . {t.leave_type}</span>
-            </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Leave Detail',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

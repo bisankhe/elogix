@@ -1,115 +1,85 @@
-// FILE: TrainingPortfolioPage.jsx - Training Portfolio
-// (Performance & Talent > Talent Development > Career Development)
-// "Netflix-style" personal portfolio -- pure consumption over the
-// EXISTING v_my_learning_path + v_my_credentials_employee (Course
-// Management / Certificate Generation). Never duplicates course or
-// certification data; just a curated, career-pathing-aware personal view.
+// FILE: src/components/dashboard/snapshots/TrainingPortfolioPage.jsx
+// eLogix HRMS — Training Portfolio
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#7c2d12 0%,#c2410c 60%,#fdba74 100%)'
-const A = '#c2410c'
-
-const MY_PORTFOLIO = [
-  { id:'p1', title:'AWS Solutions Architect', format:'Workshop', progress_pct:65, cpe_hours:16, linked_to_path:'Senior Software Engineer', impact_links:['Career Pathing','Course Management'] },
-  { id:'p2', title:'CI/CD Pipeline Mastery', format:'Video', progress_pct:100, cpe_hours:8, linked_to_path:null, impact_links:['Certification Tracking'] },
-  { id:'p3', title:'OSH & Fire Safety Refresher', format:'In-Person', progress_pct:100, cpe_hours:3, linked_to_path:null, impact_links:[] },
-]
-
-const MY_CERTIFICATES = [
-  {title:'CI/CD Pipeline Mastery',issued:'2025-05-12',cpe_hours:8},
-  {title:'OSH & Fire Safety Refresher',issued:'2025-04-18',cpe_hours:3},
-]
-
-const RECOMMENDED_FOR_YOU = [
-  {title:'System Design Fundamentals',reason:'Closes a gap on your Senior Software Engineer path',format:'Video'},
-  {title:'AWS Cloud Practitioner Certification',reason:'Prerequisite for your in-progress Solutions Architect course',format:'Workshop'},
-]
-
-const FORMAT_CFG = {Video:{c:'#0284c7',icon:'🎥'},Workshop:{c:'#7c3aed',icon:'🛠'},'In-Person':{c:'#f59e0b',icon:'🏛'}}
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function TrainingPortfolioPage() {
-  const [search, setSearch] = useState('')
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const totalCPE = MY_PORTFOLIO.reduce((s,p)=>s+p.cpe_hours,0)
-  const filtered = MY_PORTFOLIO.filter(p=>!search||p.title.toLowerCase().includes(search.toLowerCase()))
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/training-calendar', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Training Portfolio...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🎬" title="Training Portfolio"
-        breadcrumb="Performance & Talent Management > Talent Development > Career Development"
-        gradient={G}
-        stats={[
-          {icon:'📚',label:'Courses in Portfolio', value:MY_PORTFOLIO.length},
-          {icon:'🏆',label:'Certificates Earned',     value:MY_CERTIFICATES.length},
-          {icon:'⏱',label:'Total CPE Hours',           value:totalCPE},
-          {icon:'🎯',label:'Linked to Career Path',     value:MY_PORTFOLIO.filter(p=>p.linked_to_path).length},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#fff7ed',border:'1px solid #fed7aa',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#7c2d12',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🎬</span>
-        <div style={{flex:1,minWidth:200}}><strong>Your Personal Learning Catalog:</strong> Every course, certificate, and CPE hour you've earned, surfaced the way a streaming app surfaces what to watch next -- not buried in HR paperwork.</div>
-      </div>
-
-      <SearchBar value={search} onChange={setSearch} placeholder="Search your portfolio..."/>
-
-      {/* Tile-based course grid */}
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:14,marginTop:14,marginBottom:18}}>
-        {filtered.map(p=>{
-          const fc = FORMAT_CFG[p.format]
-          return (
-            <div key={p.id}
-              onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:p.title,...p}})}}
-              style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:14,overflow:'hidden',boxShadow:'0 2px 8px rgba(0,0,0,.04)'}}>
-              <div style={{height:60,background:`${fc.c}15`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:28}}>{fc.icon}</div>
-              <div style={{padding:'12px 14px'}}>
-                <div style={{fontSize:11,fontWeight:800,color:'#0f172a',marginBottom:6}}>{p.title}</div>
-                <div style={{height:6,background:'#f1f5f9',borderRadius:6,overflow:'hidden',marginBottom:6}}><div style={{width:`${p.progress_pct}%`,height:'100%',background:p.progress_pct===100?'#10b981':A,borderRadius:6}}/></div>
-                <div style={{display:'flex',justifyContent:'space-between',fontSize:8,color:'#94a3b8'}}>
-                  <span>{p.cpe_hours}h CPE</span><span>{p.progress_pct}%</span>
-                </div>
-                {p.linked_to_path&&<div style={{marginTop:6,fontSize:8,color:A,fontWeight:600}}>🗺 {'>'} {p.linked_to_path}</div>}
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
-      {/* AI Recommendations */}
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'18px',marginBottom:18}}>
-        <div style={{fontSize:11,fontWeight:800,color:'#0f172a',marginBottom:12}}>🤖 Recommended for You</div>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:12}}>
-          {RECOMMENDED_FOR_YOU.map((r,i)=>(
-            <div key={i} style={{background:'#fff7ed',borderRadius:12,padding:'12px 14px'}}>
-              <div style={{fontSize:10,fontWeight:700,color:'#0f172a'}}>{r.title}</div>
-              <div style={{fontSize:9,color:'#92400e',marginTop:4}}>{r.reason}</div>
-              <button style={{marginTop:8,padding:'5px 12px',borderRadius:8,border:'none',background:A,color:'#fff',fontSize:9,fontWeight:700,cursor:'pointer'}}>Add to Portfolio</button>
-            </div>
-          ))}
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          🎓 Training Portfolio
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
         </div>
       </div>
 
-      {/* Certificates */}
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'18px'}}>
-        <div style={{fontSize:11,fontWeight:800,color:'#0f172a',marginBottom:12}}>🏆 Certificates</div>
-        {MY_CERTIFICATES.map((c,i)=>(
-          <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:i<MY_CERTIFICATES.length-1?'1px solid #f8fafc':'none'}}>
-            <span style={{fontSize:10,fontWeight:600,color:'#0f172a'}}>{c.title}</span>
-            <span style={{fontSize:9,color:'#94a3b8'}}>{c.issued} . {c.cpe_hours}h CPE</span>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
+
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Recommendations weigh your active Career Pathing target roles above generic popularity.','CPE/CPD hour totals export-ready for professional license renewal.','Portfolio auto-updates the instant a course completes -- no manual syncing.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Detail',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

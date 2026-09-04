@@ -1,94 +1,85 @@
-// FILE: EmployeeAssistanceProgramPage.jsx - Employee Assistance Program (EAP)
-// (Employee Experience & Culture > Wellness & Support)
-// Discreet, judgment-free hub for legal/financial/emotional support.
-// Addresses the brief's low-utilization pain point with proactive
-// milestone nudges, not reactive crisis-only framing. Privacy
-// guarantee stated explicitly -- usage never affects reviews.
+// FILE: src/components/dashboard/snapshots/EmployeeAssistanceProgramPage.jsx
+// eLogix HRMS — Employee Assistance Program
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#1e1b4b 0%,#4338ca 60%,#818cf8 100%)'
-const A = '#4338ca'
-
-const SERVICES = [
-  { category:'Legal', desc:'Free 30-min consultation on personal legal matters -- contracts, family law, tenancy disputes.', icon:'⚖' },
-  { category:'Financial', desc:'Confidential budgeting, debt management, and retirement planning guidance.', icon:'💰' },
-  { category:'Emotional', desc:'Short-term counseling for personal or work-related stress, separate from Mental Health Support sessions.', icon:'🫂' },
-]
-
-const MY_CASES = [
-  { id:'eap1', category:'Financial', status:'scheduled', date:'2025-06-28', confidential:true },
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function EmployeeAssistanceProgramPage() {
-  const [search, setSearch] = useState('')
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = SERVICES.filter(s=>!search||s.category.toLowerCase().includes(search.toLowerCase()))
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/employees', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Employee Assistance Program...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🤲" title="Employee Assistance Program"
-        breadcrumb="Employee Experience & Culture > Wellness & Support"
-        gradient={G}
-        stats={[
-          {icon:'🤲',label:'Services Available',  value:SERVICES.length},
-          {icon:'📅',label:'My Active Cases',         value:MY_CASES.length},
-          {icon:'🔒',label:'Confidentiality',            value:'Guaranteed'},
-          {icon:'📞',label:'Helpline',                      value:'Toll-Free 24/7'},
-        ]}
-        onAdd={()=>{}} addLabel="Request Support"/>
-
-      <div style={{background:'#eef2ff',border:'1px solid #c7d2fe',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#3730a3',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🔒</span>
-        <div style={{flex:1,minWidth:200}}><strong>Your Privacy, Guaranteed:</strong> Using the EAP never appears in your performance reviews, never reaches your manager, and is never visible in your personnel file. This is judgment-free support, not a crisis-only last resort.</div>
-      </div>
-
-      {/* One-click toll-free dial */}
-      <div style={{background:G,borderRadius:16,padding:'18px 22px',marginBottom:18,color:'#fff',display:'flex',alignItems:'center',gap:16}}>
-        <span style={{fontSize:30}}>📞</span>
-        <div style={{flex:1}}>
-          <div style={{fontSize:13,fontWeight:900}}>Talk to Someone Now</div>
-          <div style={{fontSize:9,opacity:.85,marginTop:2}}>One-tap call to the confidential toll-free EAP helpline</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          👥 Employee Assistance Program
         </div>
-        <button style={{padding:'10px 20px',borderRadius:10,border:'none',background:'#fff',color:A,fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap'}}>Call Now</button>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search support services..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:14,marginTop:14,marginBottom:18}}>
-        {filtered.map((s,i)=>(
-          <div key={i} style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:14,padding:'16px',cursor:'pointer'}}>
-            <div style={{fontSize:24,marginBottom:8}}>{s.icon}</div>
-            <div style={{fontSize:11,fontWeight:800,color:'#0f172a'}}>{s.category} Support</div>
-            <div style={{fontSize:9,color:'#64748b',marginTop:4}}>{s.desc}</div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      {/* My cases */}
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'18px'}}>
-        <div style={{fontSize:11,fontWeight:800,color:'#0f172a',marginBottom:12}}>📅 My Scheduled Sessions</div>
-        {MY_CASES.length===0?(
-          <div style={{fontSize:10,color:'#94a3b8'}}>No active sessions. Request support above whenever you're ready.</div>
-        ):MY_CASES.map(c=>(
-          <div key={c.id}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:`${c.category} Session`,...c}})}}
-            style={{display:'flex',justifyContent:'space-between',padding:'8px 0'}}>
-            <span style={{fontSize:10,color:'#374151'}}>{c.category} Support {c.confidential&&'🔒'}</span>
-            <span style={{fontSize:9,color:'#94a3b8'}}>{c.date} -- {c.status}</span>
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
           </div>
-        ))}
-      </div>
-
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Proactive nudges surface this page after onboarding or a return from prolonged leave -- not just buried in a handbook.','Usage data is never linked to your employee profile in any report visible to management.','Designed as a first stop for everyday stress, not only a last resort during crisis -- addressing the typical 2-5% utilization problem directly.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} actions={[
-        {icon:'👁',label:'View Detail',key:'view'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

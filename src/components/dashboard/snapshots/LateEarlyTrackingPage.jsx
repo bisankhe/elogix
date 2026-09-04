@@ -1,126 +1,85 @@
-// FILE: LateEarlyTrackingPage.jsx - Late & Early Tracking (Attendance Management)
-// Grace-period-aware exception log: late arrivals/early departures vs scheduled
-// shift, chronic-pattern detection, consistent cross-department policy enforcement.
+// FILE: src/components/dashboard/snapshots/LateEarlyTrackingPage.jsx
+// eLogix HRMS — Late Early Tracking
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { Field, ExcelModal, PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#581c87 0%,#7c3aed 60%,#c4b5fd 100%)'
-const A = '#7c3aed'
-
-const GRACE_PERIOD_MIN = 10
-
-const EXCEPTIONS = [
-  { id:'le1', employee:'Hari Thapa', dept:'IT', date:'2025-06-21', type:'late_arrival',
-    scheduled:'09:00 AM', actual:'09:18 AM', deviation_min:18, beyond_grace:true,
-    occurrences_this_month:4, chronic_flag:true, impact_links:['Employee Movement','Disciplinary Records'] },
-  { id:'le2', employee:'Maya Pradhan', dept:'Finance', date:'2025-06-21', type:'late_arrival',
-    scheduled:'09:00 AM', actual:'09:06 AM', deviation_min:6, beyond_grace:false,
-    occurrences_this_month:1, chronic_flag:false, impact_links:[] },
-  { id:'le3', employee:'Anjali Sharma', dept:'Sales', date:'2025-06-20', type:'early_departure',
-    scheduled:'05:00 PM', actual:'04:22 PM', deviation_min:38, beyond_grace:true,
-    occurrences_this_month:3, chronic_flag:true, impact_links:['Performance Review'] },
-  { id:'le4', employee:'Bikash Shrestha', dept:'IT', date:'2025-06-21', type:'late_arrival',
-    scheduled:'09:00 AM', actual:'09:03 AM', deviation_min:3, beyond_grace:false,
-    occurrences_this_month:1, chronic_flag:false, impact_links:[] },
-]
-
-const TYPE_CFG = {late_arrival:{c:'#ef4444',bg:'#fef2f2',icon:'⏰',label:'Late Arrival'},early_departure:{c:'#f59e0b',bg:'#fffbeb',icon:'🚪',label:'Early Departure'}}
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function LateEarlyTrackingPage() {
-  const [exceptions, setExceptions] = useState(EXCEPTIONS)
-  const [search, setSearch] = useState('')
-  const [filterType, setFilterType] = useState('all')
-  const [showExcel, setShowExcel] = useState(false)
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = exceptions.filter(e=>{
-    if (filterType!=='all'&&e.type!==filterType) return false
-    if (search&&!e.employee.toLowerCase().includes(search.toLowerCase())) return false
-    return true
-  })
-  const chronicCount = exceptions.filter(e=>e.chronic_flag).length
-  const beyondGraceCount = exceptions.filter(e=>e.beyond_grace).length
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Late Early Tracking...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="⏰" title="Late & Early Tracking"
-        breadcrumb="Workforce Operations > Attendance Management > Overtime"
-        gradient={G}
-        stats={[
-          {icon:'📋',label:"Today's Exceptions", value:exceptions.length},
-          {icon:'⏰',label:'Late Arrivals',       value:exceptions.filter(e=>e.type==='late_arrival').length},
-          {icon:'🚪',label:'Early Departures',    value:exceptions.filter(e=>e.type==='early_departure').length},
-          {icon:'🔁',label:'Chronic Pattern',      value:chronicCount},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>setShowExcel(true)}/>
-
-      <div style={{background:'#faf5ff',border:'1px solid #e9d5ff',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#581c87',display:'flex',gap:10}}>
-        <span style={{fontSize:18}}>🕐</span>
-        <div><strong>Grace Period: {GRACE_PERIOD_MIN} minutes</strong> - applied uniformly across all departments per consistent policy enforcement best practice. Deviations within this window are not flagged. Chronic patterns (3+ occurrences/month) surface for a coaching conversation, not automatic penalty - disclosed in advance per Nepal LA2074 internal disciplinary rules.</div>
-      </div>
-
-      <div style={{display:'flex',gap:8,marginBottom:14,flexWrap:'wrap'}}>
-        <SearchBar value={search} onChange={setSearch} placeholder="Search by employee name..."/>
-        <div style={{display:'flex',gap:4,background:'#f1f5f9',padding:3,borderRadius:9}}>
-          {['all','late_arrival','early_departure'].map(t=>(
-            <button key={t} onClick={()=>setFilterType(t)}
-              style={{padding:'7px 12px',borderRadius:7,border:'none',cursor:'pointer',fontSize:10,
-                background:filterType===t?'#fff':'transparent',color:filterType===t?A:'#64748b',
-                fontWeight:filterType===t?700:400,boxShadow:filterType===t?'0 1px 3px rgba(0,0,0,.08)':'none'}}>
-              {t==='all'?'All':TYPE_CFG[t].label}
-            </button>
-          ))}
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Late Early Tracking
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
         </div>
       </div>
 
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,overflow:'hidden'}}>
-        <div style={{overflowX:'auto'}}>
-          <table style={{width:'100%',borderCollapse:'collapse',fontSize:11}}>
-            <thead><tr style={{background:'#f8fafc'}}>
-              {['Employee','Dept','Date','Type','Scheduled','Actual','Deviation','This Month','Flag'].map(h=>(
-                <th key={h} style={{padding:'10px 12px',textAlign:'left',fontSize:9,fontWeight:800,color:A,borderBottom:`2px solid ${A}22`,whiteSpace:'nowrap'}}>{h}</th>
-              ))}
-            </tr></thead>
-            <tbody>
-              {filtered.map(e=>{
-                const tc = TYPE_CFG[e.type]
-                return (
-                  <tr key={e.id} style={{borderBottom:'1px solid #f8fafc'}}
-                    onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:e.employee,...e}})}}>
-                    <td style={{padding:'9px 12px',fontWeight:700,color:'#0f172a'}}>{e.employee}</td>
-                    <td style={{padding:'9px 12px',color:'#64748b',fontSize:10}}>{e.dept}</td>
-                    <td style={{padding:'9px 12px',color:'#94a3b8',fontSize:10}}>{e.date}</td>
-                    <td style={{padding:'9px 12px'}}><span style={{background:tc.bg,color:tc.c,fontSize:9,fontWeight:700,padding:'2px 8px',borderRadius:20}}>{tc.icon} {tc.label}</span></td>
-                    <td style={{padding:'9px 12px',color:'#94a3b8'}}>{e.scheduled}</td>
-                    <td style={{padding:'9px 12px',fontWeight:700,color:tc.c}}>{e.actual}</td>
-                    <td style={{padding:'9px 12px',fontWeight:800,color:e.beyond_grace?'#ef4444':'#10b981'}}>{e.deviation_min}min {e.beyond_grace?'⚠':'✓'}</td>
-                    <td style={{padding:'9px 12px',color:'#64748b'}}>{e.occurrences_this_month}x</td>
-                    <td style={{padding:'9px 12px'}}>{e.chronic_flag&&<span style={{background:'#fef2f2',color:'#dc2626',fontSize:9,fontWeight:700,padding:'2px 8px',borderRadius:20}}>🔁 Chronic</span>}</td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {chronicCount>0&&(
-        <div style={{marginTop:16,background:'#fff',border:'1px solid #fed7aa',borderRadius:16,padding:'16px 20px'}}>
-          <div style={{fontSize:12,fontWeight:800,color:'#0f172a',marginBottom:10}}>🤖 AI Pattern Insight</div>
-          <AIImpact color={A} lines={[
-            `${chronicCount} employee(s) show chronic late/early patterns (3+ times this month).`,
-            'AI suggests checking shift timing or commute distance before assuming a discipline issue.',
-            'Recommended: a coaching conversation, not an automatic pay deduction.',
-          ]}/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
         </div>
       )}
 
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View History',key:'view'},{icon:'💬',label:'Schedule Coaching',key:'coach'},
-        {icon:'🔗',label:'Impact Analysis',key:'impact'},{icon:'📤',label:'Export',key:'export'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Late & Early Tracking" columns={['Employee','Department','Date','Type','Scheduled','Actual','Deviation (min)','Occurrences This Month','Chronic Flag']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
+          </div>
+        </div>
+      )}
+
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

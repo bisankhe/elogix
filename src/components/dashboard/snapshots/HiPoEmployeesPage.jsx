@@ -1,94 +1,85 @@
-// FILE: HiPoEmployeesPage.jsx - HiPo Employees (High Potential)
-// (Performance & Talent > Talent Development > Succession Planning)
-// Dedicated identification/tracking page over the EXISTING
-// leadership_pipeline.is_hipo flag. Balances current performance with
-// future capacity -- learning agility, ambiguity tolerance, leadership
-// motivation -- not just tenure or a single high score.
+// FILE: src/components/dashboard/snapshots/HiPoEmployeesPage.jsx
+// eLogix HRMS — Hi Po Employees
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#1e1b4b 0%,#4338ca 60%,#818cf8 100%)'
-const A = '#4338ca'
-
-const HIPO_LIST = [
-  { id:'h1', employee:'Anjali Sharma', dept:'Sales', tenure_years:1.8,
-    indicators:{learning_agility:9,ambiguity_tolerance:8,leadership_motivation:9},
-    engagement_score:88, flight_risk:'low', development_track:'Emerging Leader Program',
-    impact_links:['Talent Mapping','Leadership Pipeline'] },
-  { id:'h2', employee:'Gita Maharjan', dept:'IT', tenure_years:3.2,
-    indicators:{learning_agility:9,ambiguity_tolerance:9,leadership_motivation:8},
-    engagement_score:91, flight_risk:'low', development_track:'Senior IC Leadership Track',
-    impact_links:['Readiness Assessment'] },
-  { id:'h3', employee:'Sunil Magar', dept:'IT', tenure_years:2.5,
-    indicators:{learning_agility:8,ambiguity_tolerance:7,leadership_motivation:6},
-    engagement_score:62, flight_risk:'high', development_track:'Technical Leadership Track',
-    flag_note:'Engagement dropped 18pts this quarter despite strong indicators -- disengagement risk for a key HiPo.', impact_links:[] },
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function HiPoEmployeesPage() {
-  const [search, setSearch] = useState('')
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = HIPO_LIST.filter(h=>!search||h.employee.toLowerCase().includes(search.toLowerCase()))
-  const atRiskCount = HIPO_LIST.filter(h=>h.flight_risk==='high').length
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/employees', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Hi Po Employees...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="⭐" title="HiPo Employees (High Potential)"
-        breadcrumb="Performance & Talent Management > Talent Development > Succession Planning"
-        gradient={G}
-        stats={[
-          {icon:'⭐',label:'Identified HiPos',  value:HIPO_LIST.length},
-          {icon:'✅',label:'Low Flight Risk',     value:HIPO_LIST.filter(h=>h.flight_risk==='low').length},
-          {icon:'⚠',label:'Disengagement Risk',    value:atRiskCount},
-          {icon:'📈',label:'Avg Engagement',        value:Math.round(HIPO_LIST.reduce((s,h)=>s+h.engagement_score,0)/HIPO_LIST.length)+'%'},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#eef2ff',border:'1px solid #c7d2fe',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#3730a3',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🧠</span>
-        <div style={{flex:1,minWidth:200}}><strong>Potential, Not Just Performance:</strong> A high performer who excels at their current job isn't automatically HiPo. Identification weighs learning agility, comfort with ambiguity, and genuine leadership motivation -- the scalable traits that predict executive-level success.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          👥 Hi Po Employees
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search by employee name..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{display:'grid',gap:16,marginTop:14}}>
-        {filtered.map(h=>(
-          <div key={h.id}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:h.employee,...h}})}}
-            style={{background:'#fff',border:`1.5px solid ${h.flight_risk==='high'?'#fecaca':'#e2e8f0'}`,borderRadius:16,overflow:'hidden',boxShadow:'0 2px 10px rgba(0,0,0,.05)',borderLeft:`5px solid ${h.flight_risk==='high'?'#ef4444':'#4338ca'}`}}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',padding:'14px 18px',borderBottom:'1px solid #f1f5f9',flexWrap:'wrap',gap:10}}>
-              <div>
-                <div style={{fontSize:13,fontWeight:900,color:'#0f172a'}}>⭐ {h.employee}</div>
-                <div style={{fontSize:10,color:'#64748b'}}>{h.dept} . {h.tenure_years} yrs tenure</div>
-              </div>
-              <div style={{textAlign:'center'}}>
-                <div style={{fontSize:18,fontWeight:900,color:h.engagement_score>=75?'#10b981':'#ef4444'}}>{h.engagement_score}%</div>
-                <div style={{fontSize:8,color:'#94a3b8',fontWeight:700}}>ENGAGEMENT</div>
-              </div>
-            </div>
-            <div style={{padding:'12px 18px',display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8}}>
-              {Object.entries(h.indicators).map(([k,v])=>(
-                <div key={k} style={{textAlign:'center',background:'#f8fafc',borderRadius:8,padding:'8px 4px'}}>
-                  <div style={{fontSize:13,fontWeight:800,color:A}}>{v}/10</div>
-                  <div style={{fontSize:7,color:'#94a3b8',marginTop:2,textTransform:'capitalize'}}>{k.replace(/_/g,' ')}</div>
-                </div>
-              ))}
-            </div>
-            <div style={{padding:'8px 18px'}}><span style={{background:'#eef2ff',color:'#4338ca',fontSize:9,fontWeight:700,padding:'3px 10px',borderRadius:20}}>🌱 {h.development_track}</span></div>
-            {h.flag_note&&<div style={{padding:'10px 18px',background:'#fef2f2',fontSize:10,color:'#991b1b'}}><strong>⚠</strong> {h.flag_note}</div>}
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Indicators sourced from 360 feedback, learning-agility assessments, and project-stretch outcomes -- never tenure alone.','Engagement drops of 15+ points auto-trigger a manager check-in alert for at-risk HiPos.','HiPo status syncs directly with Career Pathing and Talent Mapping -- no duplicate data entry.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Profile',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

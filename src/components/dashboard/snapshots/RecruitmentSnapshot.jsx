@@ -12,7 +12,6 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
 } from 'recharts'
-import { useApp }        from '../../../context/AppContext.jsx'
 import { StatCard }      from '../../shared/StatCard.jsx'
 import { Card }          from '../../shared/Card.jsx'
 import { Pill }          from '../../shared/Pill.jsx'
@@ -87,7 +86,17 @@ function FunnelStage({ stage, value, total, fill, convRate }) {
   return (
     <div style={{ marginBottom: 10 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
-
+      {apiLoading && (
+        <div style={{textAlign:'center',padding:40,color:'#7c3aed',fontSize:13,fontWeight:600}}>
+          <div style={{fontSize:32,marginBottom:8}}>⟳</div>Loading...
+        </div>
+      )}
+      {apiError && !apiLoading && (
+        <div style={{padding:'8px 14px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,fontSize:12,color:'#dc2626',marginBottom:8,fontWeight:600}}>
+          ⚠️ {apiError}
+        </div>
+      )}
         <span style={{ color: '#475569', fontWeight: 500 }}>{stage}</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontWeight: 800, color: '#0f172a' }}>{value}</span>
@@ -124,7 +133,7 @@ export default function RecruitmentSnapshot() {
   const [apiData,setApiData]=useState(null)
   const [apiLoading,setApiLoading]=useState(true)
   const [apiError,setApiError]=useState(null)
-  const { t, cc } = useApp()
+  const { t, cc } = _useAppFallback()
   const [activeTab, setActiveTab] = useState('overview')
 
   const fmt = (val) => {

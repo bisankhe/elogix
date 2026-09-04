@@ -8,9 +8,6 @@
 // Customizable: user can click ⚙ to see all options.
 
 import { useState, useRef, useEffect } from 'react'
-import { useApp } from '../../context/AppContext.jsx'
-import { getVisibleDockItems } from '../../data/sidebarMenu.js'
-import { getTenantModules } from '../../utils/tenantPermissions.js'
 
 // ── DOCK ITEMS PER ROLE ───────────────────────────────────────
 // emoji  = the icon displayed
@@ -20,21 +17,6 @@ import { getTenantModules } from '../../utils/tenantPermissions.js'
 // color  = accent color for this item
 
 const DOCK_CONFIGS = {
-  // ── ELOGIX SAAS ADMIN (eLogix Technologies internal staff) ──────────
-  // These people manage ALL tenant companies on the platform
-  'elogix_superadmin': [
-    { emoji:'🏢', label:'Companies',       page:'elogix-admin',          color:'#7c3aed' },
-    { emoji:'⏳', label:'Pending',          page:'elogix-pending',        color:'#f59e0b' },
-    { emoji:'💰', label:'Billing',          page:'elogix-billing',        color:'#16a34a' },
-    { emoji:'🔐', label:'Permissions',      page:'elogix-permissions',    color:'#0284c7' },
-    { emoji:'📣', label:'Broadcast',        page:'elogix-broadcast',      color:'#e11d48' },
-    { emoji:'🤖', label:'AI Co-Pilot',      action:'ai',                  color:'#7c3aed', center:true },
-    { emoji:'🤝', label:'Commission',       page:'elogix-referral',       color:'#8b5cf6' },
-    { emoji:'🎫', label:'Support',          page:'elogix-support',        color:'#0d9488' },
-    { emoji:'🔔', label:'Alerts',           action:'notif',               color:'#f97316' },
-    { emoji:'👤', label:'Profile',          page:'employee-profile',      color:'#64748b' },
-  ],
-
   // ── SUPER ADMIN ──────────────────────────────────────────
   'super-admin': [
     { emoji:'🏠', label:'Dashboard',       page:'super-admin-dashboard', color:'#7c3aed' },
@@ -64,34 +46,34 @@ const DOCK_CONFIGS = {
     { emoji:'👤', label:'My Profile',       page:'employee-profile',      color:'#64748b' },
   ],
 
-  // ── HR MANAGER — What HR does every day ─────────────────────
+  // ── HR MANAGER ───────────────────────────────────────────
   hr: [
-    { emoji:'🏠', label:'Dashboard',        page:'hr-dashboard',               color:'#7c3aed' },
-    { emoji:'👥', label:'Employees',         page:'employee-directory',         color:'#0284c7' },
-    { emoji:'⏰', label:'Live Attendance',   page:'live-attendance',            color:'#0d9488' },
-    { emoji:'✅', label:'Leave Approvals',   page:'leave-approval',             color:'#f59e0b' },
-    { emoji:'🔄', label:'Regularize',        page:'attendance-regularization',  color:'#06b6d4' },
-    { emoji:'🤖', label:'AI Co-Pilot',       action:'ai',                       color:'#7c3aed', center:true },
-    { emoji:'💰', label:'Payroll',           page:'payroll-processing',         color:'#16a34a' },
-    { emoji:'📋', label:'Recruitment',       page:'ats-dashboard',              color:'#e11d48' },
-    { emoji:'🆕', label:'New Joiners',       page:'employee-joining',           color:'#8b5cf6' },
-    { emoji:'📣', label:'Announcements',     page:'announcement-board',         color:'#0ea5e9' },
-    { emoji:'🔔', label:'Notifications',     action:'notif',                    color:'#f97316' },
+    { emoji:'🏠', label:'Dashboard',        page:'hr-dashboard',          color:'#7c3aed' },
+    { emoji:'👨‍💼', label:'Employees',        page:'employee-directory',    color:'#0284c7' },
+    { emoji:'⏰', label:'Attendance',        page:'live-attendance',       color:'#0d9488' },
+    { emoji:'📅', label:'Leave',             page:'leave-approval',        color:'#f59e0b' },
+    { emoji:'💰', label:'Payroll',           page:'automated-payroll',     color:'#16a34a' },
+    { emoji:'🤖', label:'AI Co-Pilot',       action:'ai',                  color:'#7c3aed', center:true },
+    { emoji:'📋', label:'Recruitment',       page:'ats-dashboard',         color:'#e11d48' },
+    { emoji:'🎯', label:'Performance',       page:'performance-dashboard', color:'#0ea5e9' },
+    { emoji:'📣', label:'Announcements',     page:'announcement-board',    color:'#8b5cf6' },
+    { emoji:'🔔', label:'Notifications',     action:'notif',               color:'#f97316' },
+    { emoji:'⚙️', label:'Settings',          page:'system-setting',        color:'#64748b' },
   ],
 
-  // ── DEPARTMENT HEAD — What managers need every day ──────────────
+  // ── DEPARTMENT HEAD ──────────────────────────────────────
   department: [
-    { emoji:'🏠', label:'Dashboard',         page:'department-dashboard',      color:'#7c3aed' },
-    { emoji:'👥', label:'My Team',           page:'employee-directory',        color:'#0284c7' },
-    { emoji:'⏰', label:'Who is In',          page:'live-attendance',           color:'#0d9488' },
-    { emoji:'✅', label:'Pending Approvals',  page:'leave-approval',            color:'#16a34a' },
-    { emoji:'🗓️', label:'Team Roster',        page:'roster-management',         color:'#f59e0b' },
-    { emoji:'🤖', label:'AI Co-Pilot',        action:'ai',                      color:'#7c3aed', center:true },
-    { emoji:'🎯', label:'Team Goals',         page:'goal-assignment',           color:'#8b5cf6' },
-    { emoji:'📊', label:'Dept Reports',       page:'standard-reports',          color:'#0ea5e9' },
-    { emoji:'🎓', label:'Training',           page:'training-calendar',         color:'#e11d48' },
-    { emoji:'🔔', label:'Notifications',      action:'notif',                   color:'#f97316' },
-    { emoji:'👤', label:'My Profile',         page:'employee-profile',          color:'#64748b' },
+    { emoji:'🏠', label:'Dashboard',        page:'department-dashboard',  color:'#7c3aed' },
+    { emoji:'👥', label:'My Team',          page:'employee-directory',    color:'#0284c7' },
+    { emoji:'⏰', label:'Attendance',        page:'live-attendance',       color:'#0d9488' },
+    { emoji:'✅', label:'Approvals',         page:'leave-approval',        color:'#16a34a' },
+    { emoji:'📅', label:'Leave',             page:'leave-calendar',        color:'#f59e0b' },
+    { emoji:'🤖', label:'AI Co-Pilot',       action:'ai',                  color:'#7c3aed', center:true },
+    { emoji:'🎯', label:'Goals / OKR',       page:'okr-management',        color:'#8b5cf6' },
+    { emoji:'📊', label:'Reports',           page:'bi-dashboard',          color:'#0ea5e9' },
+    { emoji:'🎓', label:'Training',          page:'course-management',     color:'#e11d48' },
+    { emoji:'🔔', label:'Notifications',     action:'notif',               color:'#f97316' },
+    { emoji:'👤', label:'My Profile',        page:'employee-profile',      color:'#64748b' },
   ],
 
   // ── BRANCH MANAGER ───────────────────────────────────────
@@ -107,17 +89,17 @@ const DOCK_CONFIGS = {
     { emoji:'👤', label:'My Profile',        page:'employee-profile',      color:'#64748b' },
   ],
 
-  // ── EMPLOYEE (ESS) — What employees use EVERY DAY ──────────
+  // ── EMPLOYEE (ESS) ───────────────────────────────────────
   employee: [
     { emoji:'🏠', label:'Home',             page:'employee-dashboard',    color:'#7c3aed' },
-    { emoji:'⏰', label:'My Attendance',     page:'my-attendance-ess',     color:'#0d9488' },   // Daily punch view
-    { emoji:'📅', label:'Apply Leave',       page:'leave-request-ess',     color:'#f59e0b' },   // Leave application
-    { emoji:'🌴', label:'Leave Balance',     page:'leave-balance',         color:'#16a34a' },   // How many days left
-    { emoji:'💰', label:'My Payslip',        page:'my-payroll-ess',        color:'#0284c7' },   // Payslip download
+    { emoji:'⏰', label:'My Attendance',     page:'live-attendance',       color:'#0d9488' },
+    { emoji:'📅', label:'Apply Leave',       page:'leave-request',         color:'#f59e0b' },
+    { emoji:'🌴', label:'Leave Balance',     page:'leave-balance',         color:'#16a34a' },
+    { emoji:'💰', label:'My Payslip',        page:'payslip-generation',    color:'#0284c7' },
     { emoji:'🤖', label:'AI Co-Pilot',       action:'ai',                  color:'#7c3aed', center:true },
-    { emoji:'🔑', label:'Web Check-In',      page:'web-check-in',          color:'#0d9488' },   // Mark attendance online
-    { emoji:'📄', label:'My Documents',      page:'my-documents',          color:'#8b5cf6' },   // Offer letter, contract
-    { emoji:'📣', label:'Announcements',     page:'announcement-board',    color:'#e11d48' },   // Company news
+    { emoji:'📄', label:'My Documents',      page:'document-management',   color:'#8b5cf6' },
+    { emoji:'📣', label:'Announcements',     page:'announcement-board',    color:'#e11d48' },
+    { emoji:'🎯', label:'My Goals',          page:'goal-assignment',       color:'#0ea5e9' },
     { emoji:'🔔', label:'Notifications',     action:'notif',               color:'#f97316' },
     { emoji:'👤', label:'My Profile',        page:'employee-profile',      color:'#64748b' },
   ],
@@ -255,34 +237,47 @@ function DockItem({ item, isActive, onClick, darkMode }) {
 }
 
 // ── MAIN DOCK COMPONENT ───────────────────────────────────────
+
+function _getSession() {
+  try {
+    return JSON.parse(
+      sessionStorage.getItem('elogix_session') ||
+      localStorage.getItem('elogix_session') || 'null'
+    ) || {}
+  } catch (_e) { return {} }
+}
+function _useAppFallback() {
+  const s = _getSession()
+  return {
+    sub: s?.last_page || '', persona: s?.persona || s?.user?.role || 'employee',
+    lang: s?.lang || 'en', currency: s?.currency || 'NPR',
+    company: s?.company || {}, user: s?.user || {},
+    darkMode: false, setDarkMode: () => {},
+    navTo: (p) => window.dispatchEvent(new CustomEvent('elogix:nav', { detail: { page: p } })),
+    switchPersona: () => {}, setShowNotif: () => {}, setShowAI: () => {},
+    setSidebarOpen: () => {}, sidebarOpen: true,
+    currentPersona: { id: s?.persona || 'employee', icon: '👤', color: '#7c3aed', label: '' },
+  }
+}
+
 export default function QuickDock() {
-  const { navTo, currentPersona, persona, sub, darkMode, setShowNotif, setShowAI } = useApp()
+  const { navTo, currentPersona, persona, sub, darkMode, setShowNotif, setShowAI } = _useAppFallback()
 
   // Get dock items for current persona
-  const personaId  = currentPersona?.id || ''
-  const _rawItems  = DOCK_CONFIGS[personaId] || DEFAULT_DOCK
-
-  // ── Dock shows ALL items — access denied is handled by each page ──────
-  // Previously plan-filtered here → dock items disappeared for trial/starter
-  // Fix: Always show all dock items. The page opens but shows AccessDenied
-  // if the tenant's plan doesn't include that module. Much better UX.
-  const items = _rawItems
+  const personaId = currentPersona?.id || ''
+  const items = DOCK_CONFIGS[personaId] || DEFAULT_DOCK
 
   const handleClick = (item) => {
     if (item.action === 'ai') {
-      // Try floating button first, then AppContext, then custom event
+      // Toggle HR Co-Pilot panel
+      // Find the floating button and click it, or set a global state
       const btn = document.querySelector('[data-copilot-toggle]')
-      if (btn) { btn.click(); return }
-      if (typeof setShowAI === 'function') { setShowAI(v => !v); return }
-      window.dispatchEvent(new CustomEvent('elogix:open-ai'))
+      if (btn) btn.click()
+      else setShowAI(v => !v)
     } else if (item.action === 'notif') {
-      if (typeof setShowNotif === 'function') { setShowNotif(v => !v); return }
-      window.dispatchEvent(new CustomEvent('elogix:open-notif'))
+      setShowNotif(v => !v)
     } else if (item.page && navTo) {
       navTo(item.page)
-    } else if (item.page) {
-      // Fallback if navTo not in context
-      window.dispatchEvent(new CustomEvent('elogix:nav', { detail: { page: item.page } }))
     }
   }
 

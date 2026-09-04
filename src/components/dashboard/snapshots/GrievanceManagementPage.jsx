@@ -1,115 +1,85 @@
-// FILE: GrievanceManagementPage.jsx - Grievance Management
-// (Employee Experience & Culture > Employee Relations)
-// Labour Act Sections 113-115: written application -> 15-day internal
-// negotiation -> Labour Office escalation (21-day facilitation, 15-day
-// decision) -> Labour Court appeal (35 days). Confidential, RBAC-gated.
+// FILE: src/components/dashboard/snapshots/GrievanceManagementPage.jsx
+// eLogix HRMS — Grievance Management
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { Field, PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#581c87 0%,#7c3aed 60%,#c4b5fd 100%)'
-const A = '#7c3aed'
-
-const STAGE_CFG = {
-  submitted:{c:'#94a3b8',label:'Submitted'},negotiation:{c:'#0284c7',label:'Internal Negotiation'},
-  labour_office:{c:'#f59e0b',label:'Labour Office Review'},labour_court:{c:'#ef4444',label:'Labour Court Appeal'},resolved:{c:'#10b981',label:'Resolved'},
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
 }
 
-const GRIEVANCES = [
-  { id:'g1', employee:'Bikash Rai', category:'Unfair Treatment', stage:'negotiation', submitted_at:'2025-06-15', deadline:'2025-06-30',
-    days_remaining:5, assigned_to:'HR Manager', impact_links:['Conflict Resolution'] },
-  { id:'g2', employee:'Anonymous', category:'Workplace Safety', stage:'labour_office', submitted_at:'2025-05-20', deadline:'2025-07-04',
-    days_remaining:9, assigned_to:'Labour Office, Kathmandu',
-    flag_note:'Internal negotiation period expired without resolution -- escalated per Section 113.', impact_links:[] },
-  { id:'g3', employee:'Sushila Gurung', category:'Compensation Dispute', stage:'resolved', submitted_at:'2025-04-10', deadline:null,
-    resolution_note:'Resolved via mutual agreement within the 15-day negotiation window -- back-pay processed.' },
-]
-
 export default function GrievanceManagementPage() {
-  const [search, setSearch] = useState('')
-  const [showSubmit, setShowSubmit] = useState(false)
-  const [anonymous, setAnonymous] = useState(false)
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = GRIEVANCES.filter(g=>!search||g.employee.toLowerCase().includes(search.toLowerCase())||g.category.toLowerCase().includes(search.toLowerCase()))
-  const atRiskCount = GRIEVANCES.filter(g=>g.days_remaining!=null&&g.days_remaining<=7).length
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/relations', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Grievance Management...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="⚖" title="Grievance Management"
-        breadcrumb="Employee Experience & Culture > Employee Relations"
-        gradient={G}
-        stats={[
-          {icon:'⚖',label:'Active Cases',  value:GRIEVANCES.filter(g=>g.stage!=='resolved').length},
-          {icon:'⏰',label:'SLA At Risk',     value:atRiskCount},
-          {icon:'✅',label:'Resolved',          value:GRIEVANCES.filter(g=>g.stage==='resolved').length},
-          {icon:'📐',label:'Statutory Window',    value:'15 + 21 + 15 days'},
-        ]}
-        onAdd={()=>setShowSubmit(true)} addLabel="Submit Grievance"/>
-
-      <div style={{background:'#faf5ff',border:'1px solid #e9d5ff',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#581c87',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>📜</span>
-        <div style={{flex:1,minWidth:200}}><strong>Statutory Clock, Not a Guideline:</strong> Section 113-115 mandates a written application, 15 days for internal negotiation, then automatic Labour Office escalation (21-day facilitation + 15-day decision), and a 35-day window to appeal at Labour Court. Every deadline here is a legal one.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          ⚠️ Grievance Management
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search by employee or category..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{display:'grid',gap:16,marginTop:14}}>
-        {filtered.map(g=>{
-          const sc = STAGE_CFG[g.stage]
-          return (
-            <div key={g.id}
-              onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:g.category,...g}})}}
-              style={{background:'#fff',border:`1.5px solid ${sc.c}33`,borderRadius:16,overflow:'hidden',boxShadow:'0 2px 10px rgba(0,0,0,.05)',borderLeft:`5px solid ${sc.c}`}}>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',padding:'14px 18px',borderBottom:'1px solid #f1f5f9',flexWrap:'wrap',gap:10}}>
-                <div>
-                  <div style={{fontSize:13,fontWeight:900,color:'#0f172a'}}>{g.category}</div>
-                  <div style={{fontSize:10,color:'#64748b'}}>{g.employee} {g.employee==='Anonymous'&&'🔒'} . Submitted {g.submitted_at}</div>
-                </div>
-                <span style={{background:`${sc.c}15`,color:sc.c,fontSize:9,fontWeight:700,padding:'4px 12px',borderRadius:20}}>{sc.label}</span>
-              </div>
-              <div style={{padding:'12px 18px'}}>
-                <div style={{fontSize:10,color:'#374151'}}>👤 Assigned to: {g.assigned_to||'Pending assignment'}</div>
-                {g.deadline&&(
-                  <div style={{marginTop:8,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                    <span style={{fontSize:9,color:'#94a3b8'}}>Statutory deadline: {g.deadline}</span>
-                    <span style={{fontSize:9,fontWeight:700,color:g.days_remaining<=7?'#ef4444':'#10b981'}}>{g.days_remaining} days remaining</span>
-                  </div>
-                )}
-                {g.flag_note&&<div style={{marginTop:8,fontSize:9,color:'#b45309'}}>⚠ {g.flag_note}</div>}
-                {g.resolution_note&&<div style={{marginTop:8,fontSize:9,color:'#15803d',background:'#f0fdf4',borderRadius:8,padding:'8px 10px'}}>✅ {g.resolution_note}</div>}
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
-      {showSubmit&&(
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.65)',zIndex:5000,display:'flex',alignItems:'center',justifyContent:'center',padding:16}} onClick={()=>setShowSubmit(false)}>
-          <div style={{background:'#fff',borderRadius:20,width:'min(520px,100%)',maxHeight:'90vh',overflow:'auto'}} onClick={e=>e.stopPropagation()}>
-            <div style={{background:G,padding:'20px 28px'}}><div style={{fontSize:17,fontWeight:900,color:'#fff'}}>Submit a Grievance</div></div>
-            <div style={{padding:'22px 28px'}}>
-              <Field label="Category" type="select" value="" onChange={()=>{}} accent={A} options={['Unfair Treatment','Workplace Safety','Compensation Dispute','Harassment','Other']}/>
-              <Field label="Description" type="textarea" value="" onChange={()=>{}} accent={A} required hint="Voice input supported"/>
-              <label style={{display:'flex',gap:8,alignItems:'center',marginBottom:10,fontSize:10,color:'#374151'}}>
-                <input type="checkbox" checked={anonymous} onChange={e=>setAnonymous(e.target.checked)} style={{accentColor:A}}/>
-                Submit anonymously
-              </label>
-              <div style={{background:'#faf5ff',borderRadius:10,padding:'10px 14px',fontSize:9,color:'#581c87',marginBottom:10}}>Per Section 113, your employer has 15 days to respond once this written application is received.</div>
-              <button onClick={()=>setShowSubmit(false)} style={{width:'100%',padding:13,borderRadius:11,border:'none',background:G,color:'#fff',fontSize:13,fontWeight:700,cursor:'pointer'}}>Submit Grievance</button>
-            </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
         </div>
       )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Statutory deadlines auto-calculate from submission date -- HR is alerted 7, 3, and 1 day before each window closes.','Case access is restricted to the assigned investigator and necessary management only -- never company-wide visibility.','Unresolved cases auto-escalate to Labour Office tracking the moment the 15-day window lapses.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Case',key:'view'},{icon:'📧',label:'Send Update',key:'notify'},
-        {icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

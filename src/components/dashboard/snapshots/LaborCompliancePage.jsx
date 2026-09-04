@@ -1,74 +1,85 @@
-// FILE: LaborCompliancePage.jsx - Labor Compliance
-// (Compliance & Risk Management > Compliance Management)
-// Aggregates working-hours/overtime risk (daily_attendance_records),
-// the Safety Committee inspection cadence (EXISTING
-// safety_committee_inspections, Admin Operations session), and
-// minimum-wage floor checks -- a unified compliance lens, never a
-// duplicate of the operational tables underneath it.
+// FILE: src/components/dashboard/snapshots/LaborCompliancePage.jsx
+// eLogix HRMS — Labor Compliance
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#7c2d12 0%,#c2410c 60%,#fdba74 100%)'
-const A = '#c2410c'
-
-const COMPLIANCE_CHECKS = [
-  {check:'Working Hours Cap (8h/day, 48h/week)',status:'compliant',detail:'0 employees exceeding the weekly ceiling this cycle'},
-  {check:'Overtime Cap (4h/day, 24h/week, 1.5x pay)',status:'at_risk',detail:'3 employees within 2h of the weekly OT ceiling',
-   flag_note:'Review scheduling for the affected team before next cycle.'},
-  {check:'Minimum Wage Floor (NPR 19,550/month)',status:'compliant',detail:'All active employees at or above the statutory minimum'},
-  {check:'Safety & Health Committee (Section 74, 20+ workers)',status:'compliant',detail:'Last inspection 2025-06-10, next due 2025-09-10'},
-]
-
-const STATUS_CFG = { compliant:{c:'#10b981',label:'Compliant'},at_risk:{c:'#f59e0b',label:'At Risk'},violation:{c:'#ef4444',label:'Violation'} }
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function LaborCompliancePage() {
-  const [ctx, setCtx] = useState(null)
-  const atRiskCount = COMPLIANCE_CHECKS.filter(c=>c.status!=='compliant').length
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/compliance', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Labor Compliance...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="⚖" title="Labor Compliance"
-        breadcrumb="Compliance & Risk Management > Compliance Management"
-        gradient={G}
-        stats={[
-          {icon:'⚖',label:'Checks Tracked',  value:COMPLIANCE_CHECKS.length},
-          {icon:'✅',label:'Compliant',          value:COMPLIANCE_CHECKS.filter(c=>c.status==='compliant').length},
-          {icon:'⚠',label:'At Risk',                value:atRiskCount},
-          {icon:'📐',label:'Health Score',              value:atRiskCount===0?'100%':'88%'},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#fff7ed',border:'1px solid #fed7aa',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#7c2d12',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🤖</span>
-        <div style={{flex:1,minWidth:200}}><strong>Continuous, Not Annual:</strong> Every check here pulls live from the same attendance, payroll, and facility data already tracked elsewhere in the system -- never a separate annual scramble to assemble evidence.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          ⚖️ Labor Compliance
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <div style={{display:'grid',gap:16}}>
-        {COMPLIANCE_CHECKS.map((c,i)=>{
-          const sc = STATUS_CFG[c.status]
-          return (
-            <div key={i}
-              onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:c.check,...c,impact_links:['Team Attendance','Facility Management']}})}}
-              style={{background:'#fff',border:`1px solid ${sc.c}33`,borderRadius:16,padding:'18px',borderLeft:`4px solid ${sc.c}`}}>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:8}}>
-                <div style={{fontSize:12,fontWeight:700,color:'#0f172a'}}>{c.check}</div>
-                <span style={{background:`${sc.c}15`,color:sc.c,fontSize:9,fontWeight:700,padding:'3px 10px',borderRadius:20}}>{sc.label}</span>
-              </div>
-              <div style={{marginTop:8,fontSize:9,color:'#374151'}}>{c.detail}</div>
-              {c.flag_note&&<div style={{marginTop:8,fontSize:9,color:'#b45309'}}>⚠ {c.flag_note}</div>}
-            </div>
-          )
-        })}
-      </div>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['AI scans attendance records continuously, flagging overtime risk days before the statutory cap is breached, not after.','Misclassification risk (contractor vs. employee) flags automatically when a worker\'s pattern resembles an employee relationship.','Each check links straight to the source page for the underlying evidence.']}/>
-      </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
+          </div>
+        </div>
+      )}
 
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Detail',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

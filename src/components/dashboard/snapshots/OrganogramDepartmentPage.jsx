@@ -1,69 +1,85 @@
-// FILE: OrganogramDepartmentPage.jsx - Organogram for my Department
-// (HR Services & Support > Employee Self Service)
-// Thin, pre-filtered wrapper -- auto-scopes to the viewer's own
-// department rather than the full company org chart. Reuses the same
-// node-rendering approach as the EXISTING OrgChartPage, never a
-// second org-structure data source.
+// FILE: src/components/dashboard/snapshots/OrganogramDepartmentPage.jsx
+// eLogix HRMS — Organogram Department
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#7c2d12 0%,#c2410c 60%,#fdba74 100%)'
-const A = '#c2410c'
-
-const MY_DEPT_NODES = [
-  { id:'n1', name:'Rajesh Sharma', title:'CTO', level:0, reports:2 },
-  { id:'n2', name:'Gita Maharjan', title:'Cloud Architect', level:1, manager:'Rajesh Sharma', reports:0 },
-  { id:'n3', name:'Sunil Magar', title:'Engineering Manager', level:1, manager:'Rajesh Sharma', reports:3 },
-  { id:'n4', name:'Hari Thapa', title:'Software Engineer II', level:2, manager:'Sunil Magar', reports:0 },
-  { id:'n5', name:'Bikash Rai', title:'Software Engineer I', level:2, manager:'Sunil Magar', reports:0 },
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function OrganogramDepartmentPage() {
-  const [ctx, setCtx] = useState(null)
-  const byLevel = MY_DEPT_NODES.reduce((acc,n)=>{(acc[n.level]=acc[n.level]||[]).push(n); return acc}, {})
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/departments', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Organogram Department...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🏢" title="Organogram for My Department"
-        breadcrumb="HR Services & Support > Employee Self Service"
-        gradient={G}
-        stats={[
-          {icon:'🏢',label:'Department',  value:'Information Technology'},
-          {icon:'👥',label:'Team Size',       value:MY_DEPT_NODES.length},
-          {icon:'📊',label:'Levels',              value:Object.keys(byLevel).length},
-          {icon:'🔗',label:'Full Org Chart',         value:'Available'},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#fff7ed',border:'1px solid #fed7aa',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#7c2d12',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🎯</span>
-        <div style={{flex:1,minWidth:200}}><strong>Just Your Team:</strong> Pre-filtered to your own department so you see the chain of command that matters to your daily work -- the full company-wide Organization Chart is one click away if you need it.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          🏢 Organogram Department
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'24px'}}>
-        {Object.keys(byLevel).sort().map(level=>(
-          <div key={level} style={{display:'flex',justifyContent:'center',gap:14,marginBottom:24,flexWrap:'wrap'}}>
-            {byLevel[level].map(n=>(
-              <div key={n.id}
-                onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:n.name,...n,impact_links:['Organization Chart']}})}}
-                style={{background:level==='0'?G:'#fff',color:level==='0'?'#fff':'#0f172a',border:level==='0'?'none':'1px solid #e2e8f0',borderRadius:12,padding:'12px 18px',textAlign:'center',minWidth:150,boxShadow:'0 2px 8px rgba(0,0,0,.06)'}}>
-                <div style={{fontSize:11,fontWeight:800}}>{n.name}</div>
-                <div style={{fontSize:9,opacity:.8,marginTop:2}}>{n.title}</div>
-                {n.reports>0&&<div style={{fontSize:8,marginTop:4,opacity:.7}}>{n.reports} direct reports</div>}
-              </div>
-            ))}
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
+
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Structure syncs live from the same org data HR maintains -- never a stale snapshot.','Right-click any node to jump straight into the company-wide Organization Chart for broader context.','Vacant or recently-changed roles highlight automatically when a reorganization happens.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Profile',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

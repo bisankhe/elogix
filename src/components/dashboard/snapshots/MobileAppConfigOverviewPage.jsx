@@ -1,66 +1,85 @@
-// FILE: MobileAppConfigOverviewPage.jsx - Mobile App Configuration (overview)
-// (System Administration > Integration & API)
-// The landing page for the 'mobile-configuration' sidebar entry --
-// confirmed before building that this was a genuine dead end (a real
-// sidebar leaf, not a section header, with no backing page at all).
-// Pure navigation hub linking to the 6 dedicated sub-pages, never
-// duplicating any of their content.
+// FILE: src/components/dashboard/snapshots/MobileAppConfigOverviewPage.jsx
+// eLogix HRMS — Mobile App Config Overview
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#1e293b 0%,#334155 60%,#94a3b8 100%)'
-const A = '#334155'
-
-const SUB_PAGES = [
-  {icon:'📱',label:'Mobile Attendance',target:'mobile-attendance',desc:'Biometric/facial check-in, geofence validation, offline caching'},
-  {icon:'📍',label:'GPS Tracking',target:'gps-tracking-config',desc:'Polling profiles, battery-aware intervals, device health'},
-  {icon:'🛡',label:'Geo-Fencing',target:'geo-fencing-mobile-config',desc:'Virtual perimeter setup per location'},
-  {icon:'🚗',label:'Field Visit Tracking',target:'field-visit-tracking-cfg',desc:'Pre-travel request, mileage TA, tiered DA, approvals'},
-  {icon:'🗺',label:'Route Monitoring',target:'route-monitoring',desc:'Breadcrumb trail, Privacy Mode, detour annotation'},
-  {icon:'✅',label:'Field Task Management',target:'field-task-management',desc:'Kanban tasks, photo/signature evidence capture'},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function MobileAppConfigOverviewPage() {
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Mobile App Config Overview...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="📲" title="Mobile App Configuration"
-        breadcrumb="System Administration > Integration & API"
-        gradient={G}
-        stats={[
-          {icon:'📲',label:'Configuration Areas',  value:SUB_PAGES.length},
-          {icon:'🔌',label:'Devices Connected',         value:'48'},
-          {icon:'🔋',label:'Avg Battery Impact',            value:'Medium'},
-          {icon:'🔒',label:'Privacy-First Design',              value:'Enabled'},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#f1f5f9',border:'1px solid #cbd5e1',borderRadius:12,padding:'10px 16px',marginBottom:18,fontSize:11,color:'#334155',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>📲</span>
-        <div style={{flex:1,minWidth:200}}><strong>One Mobile App, Six Configuration Areas:</strong> Every setting that governs the field-employee mobile experience -- attendance, location, tasks -- lives in one of these six dedicated pages.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Mobile App Config Overview
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:16}}>
-        {SUB_PAGES.map((s,i)=>(
-          <div key={i}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:s.label,...s}})}}
-            style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'20px',cursor:'pointer'}}>
-            <div style={{fontSize:24,marginBottom:10}}>{s.icon}</div>
-            <div style={{fontSize:12,fontWeight:800,color:'#0f172a'}}>{s.label}</div>
-            <div style={{fontSize:9,color:'#94a3b8',marginTop:6}}>{s.desc}</div>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
+
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Click any card to jump straight into its dedicated configuration page -- never a buried setting three clicks deep.','Settings here apply instantly to every connected mobile device -- never a separate app update or deployment cycle.','iOS and Android quirks are handled per-platform automatically, never a one-size-fits-all config that breaks on half your fleet.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={[]} actions={[
-        {icon:'👁',label:'Open Configuration',key:'view'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

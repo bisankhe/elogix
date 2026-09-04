@@ -1,90 +1,85 @@
-// FILE: LegalCaseTrackingPage.jsx - Legal Case Tracking
-// (Compliance & Risk Management > Legal Management)
-// The litigation-stage continuation of grievances/complaints once they
-// escalate past internal HR -- reuses the EXISTING grievances
-// (labour_office_deadline/labour_court_deadline already computed) and
-// complaints tables directly. Never a second intake system; this is
-// the legal team's defensible case-file view for matters already at
-// the Labour Office or Labour Court.
+// FILE: src/components/dashboard/snapshots/LegalCaseTrackingPage.jsx
+// eLogix HRMS — Legal Case Tracking
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#1e1b4b 0%,#4338ca 60%,#818cf8 100%)'
-const A = '#4338ca'
-
-const STAGE_CFG = { labour_office:{c:'#f59e0b',label:'Labour Office'},labour_court:{c:'#ef4444',label:'Labour Court'},resolved:{c:'#10b981',label:'Resolved'} }
-
-const LEGAL_CASES = [
-  { id:'lc1', case_no:'LC-2025-003', source:'Grievance', employee:'Anjali Sharma', matter:'Unfair treatment in territory reassignment', stage:'labour_office',
-    appeal_deadline:'2025-07-15', days_remaining:16, counsel:'External -- Pradhan & Associates', impact_links:['Grievance Management'] },
-  { id:'lc2', case_no:'LC-2025-001', source:'Complaint', employee:'Confidential', matter:'Workplace harassment investigation outcome disputed', stage:'labour_court',
-    appeal_deadline:'2025-08-01', days_remaining:33, counsel:'In-house Legal',
-    flag_note:'Litigation hold active -- exiting-employee data freeze in effect per e-discovery protocol.', impact_links:['Complaint Management'] },
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function LegalCaseTrackingPage() {
-  const [search, setSearch] = useState('')
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = LEGAL_CASES.filter(c=>!search||c.matter.toLowerCase().includes(search.toLowerCase())||c.case_no.toLowerCase().includes(search.toLowerCase()))
-  const courtStage = LEGAL_CASES.filter(c=>c.stage==='labour_court').length
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Legal Case Tracking...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="⚖" title="Legal Case Tracking"
-        breadcrumb="Compliance & Risk Management > Legal Management"
-        gradient={G}
-        stats={[
-          {icon:'⚖',label:'Active Legal Cases',  value:LEGAL_CASES.length},
-          {icon:'🏛',label:'At Labour Court',         value:courtStage},
-          {icon:'🔒',label:'Litigation Holds Active',     value:LEGAL_CASES.filter(c=>c.flag_note).length},
-          {icon:'⏰',label:'Next Appeal Deadline',            value:'16 days'},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#eef2ff',border:'1px solid #c7d2fe',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#3730a3',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🔗</span>
-        <div style={{flex:1,minWidth:200}}><strong>The Litigation Continuation, Not a New Intake:</strong> Every case here started as a Grievance or Complaint -- this view exists for matters that escalated past internal HR resolution into the Labour Office or Labour Court, where legal counsel and a defensible case file matter most.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Legal Case Tracking
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search by case number or matter..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{display:'grid',gap:16,marginTop:14}}>
-        {filtered.map(c=>{
-          const sc = STAGE_CFG[c.stage]
-          return (
-            <div key={c.id}
-              onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:c.matter,...c}})}}
-              style={{background:'#fff',border:`1.5px solid ${sc.c}33`,borderRadius:16,overflow:'hidden',borderLeft:`5px solid ${sc.c}`}}>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',padding:'14px 18px',borderBottom:'1px solid #f1f5f9',flexWrap:'wrap',gap:10}}>
-                <div>
-                  <div style={{fontSize:13,fontWeight:900,color:'#0f172a'}}>{c.case_no}</div>
-                  <div style={{fontSize:10,color:'#64748b'}}>{c.matter}</div>
-                </div>
-                <span style={{background:`${sc.c}15`,color:sc.c,fontSize:9,fontWeight:700,padding:'4px 12px',borderRadius:20}}>{sc.label}</span>
-              </div>
-              <div style={{padding:'12px 18px'}}>
-                <div style={{fontSize:10,color:'#374151'}}>👤 {c.employee} . Originated as: {c.source}</div>
-                <div style={{fontSize:10,color:'#374151',marginTop:4}}>⚖ Counsel: {c.counsel}</div>
-                <div style={{marginTop:8,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                  <span style={{fontSize:9,color:'#94a3b8'}}>Appeal deadline: {c.appeal_deadline}</span>
-                  <span style={{fontSize:9,fontWeight:700,color:c.days_remaining<=14?'#ef4444':'#10b981'}}>{c.days_remaining} days remaining</span>
-                </div>
-                {c.flag_note&&<div style={{marginTop:8,fontSize:9,color:'#dc2626',fontWeight:700}}>🔒 {c.flag_note}</div>}
-              </div>
-            </div>
-          )
-        })}
-      </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
+          </div>
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Drag and drop case files, timeline notes, and email communications directly into the secure, defensible case profile.','A litigation hold here automatically freezes the deletion of an involved employee\'s digital records, even mid-offboarding.','Access is filtered by role -- a legal executive sees the full case file, while broader HR sees only the status, never the underlying PII.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Case File',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

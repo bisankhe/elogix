@@ -1,101 +1,85 @@
-// FILE: EmployeeQueriesPage.jsx - Employee Queries
-// (HR Services & Support > HR Helpdesk)
-// ESS-facing: global search bar with predictive KB suggestions (reuses
-// the EXISTING knowledge_base_articles from Internal Communication),
-// categorized help tree, "My Tickets" personal dashboard.
+// FILE: src/components/dashboard/snapshots/EmployeeQueriesPage.jsx
+// eLogix HRMS — Employee Queries
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#0c4a6e 0%,#0284c7 60%,#7dd3fc 100%)'
-const A = '#0284c7'
-
-const HELP_TREE = [
-  {icon:'💰',label:'Ask a Benefits Question'},{icon:'⏱',label:'Report Timecard Issue'},
-  {icon:'📅',label:'Schedule a Consultation'},{icon:'📋',label:'Policy Lookup'},
-  {icon:'💵',label:'Payroll Question'},{icon:'🏖',label:'Leave Balance'},
-]
-
-const SUGGESTED_KB = [
-  {title:'How to submit a leave request',category:'HR Policies'},
-  {title:'Understanding your payslip deductions',category:'Payroll'},
-  {title:'Maternity and paternity leave entitlements',category:'Benefits'},
-]
-
-const MY_TICKETS = [
-  {ticket_no:'HRT-2025-248',subject:'Payroll deduction looks incorrect',status:'in_progress',c:'#f59e0b'},
-  {ticket_no:'HRT-2025-241',subject:'Holiday balance not updating',status:'resolved',c:'#10b981'},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function EmployeeQueriesPage() {
-  const [query, setQuery] = useState('')
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filteredKB = SUGGESTED_KB.filter(k=>!query||k.title.toLowerCase().includes(query.toLowerCase()))
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/employees', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Employee Queries...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="❓" title="Employee Queries"
-        breadcrumb="HR Services & Support > HR Helpdesk"
-        gradient={G}
-        stats={[
-          {icon:'❓',label:'My Open Queries',  value:MY_TICKETS.filter(t=>t.status!=='resolved').length},
-          {icon:'📚',label:'KB Articles',          value:SUGGESTED_KB.length+'+'},
-          {icon:'✅',label:'Resolved',              value:MY_TICKETS.filter(t=>t.status==='resolved').length},
-          {icon:'🤖',label:'AI Assistant',            value:'24/7'},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      {/* Global search bar -- the centerpiece */}
-      <div style={{background:G,borderRadius:18,padding:'28px 24px',marginBottom:18,textAlign:'center'}}>
-        <div style={{fontSize:14,fontWeight:800,color:'#fff',marginBottom:14}}>What can we help you with?</div>
-        <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search policies, payroll, benefits..."
-          style={{width:'100%',maxWidth:480,padding:'14px 20px',borderRadius:30,border:'none',fontSize:13,outline:'none'}}/>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          👥 Employee Queries
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      {/* Predictive KB suggestions */}
-      {filteredKB.length>0&&(
-        <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'18px',marginBottom:18}}>
-          <div style={{fontSize:11,fontWeight:800,color:'#0f172a',marginBottom:12}}>📚 Suggested Articles</div>
-          {filteredKB.map((k,i)=>(
-            <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'9px 0',borderBottom:i<filteredKB.length-1?'1px solid #f8fafc':'none',cursor:'pointer'}}>
-              <span style={{fontSize:10,color:'#374151'}}>{k.title}</span>
-              <span style={{background:'#eff6ff',color:'#1e40af',fontSize:7,fontWeight:600,padding:'2px 8px',borderRadius:20}}>{k.category}</span>
-            </div>
-          ))}
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
         </div>
       )}
 
-      {/* Categorized help tree */}
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',gap:12,marginBottom:18}}>
-        {HELP_TREE.map((h,i)=>(
-          <div key={i} style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:14,padding:'16px',textAlign:'center',cursor:'pointer'}}>
-            <div style={{fontSize:24,marginBottom:8}}>{h.icon}</div>
-            <div style={{fontSize:10,fontWeight:700,color:'#0f172a'}}>{h.label}</div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      {/* My Tickets dashboard */}
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'18px'}}>
-        <div style={{fontSize:11,fontWeight:800,color:'#0f172a',marginBottom:12}}>🎫 My Tickets</div>
-        {MY_TICKETS.map((t,i)=>(
-          <div key={i}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:t.subject,impact_links:['HR Ticketing System','Case Tracking']}})}}
-            style={{display:'flex',justifyContent:'space-between',padding:'10px 0',borderBottom:i<MY_TICKETS.length-1?'1px solid #f8fafc':'none'}}>
-            <span style={{fontSize:10,color:'#374151'}}>{t.ticket_no} -- {t.subject}</span>
-            <span style={{background:`${t.c}15`,color:t.c,fontSize:8,fontWeight:700,padding:'2px 9px',borderRadius:20}}>{t.status.replace('_',' ')}</span>
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
           </div>
-        ))}
-      </div>
-
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Predictive search surfaces the right article before you even finish typing -- often resolving the question without a ticket at all.','Help tree categories adapt to your role -- a manager sees approval workflows, an individual contributor sees self-service requests.','Every category routes directly into HR Ticketing System with the right tier pre-assigned.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Ticket',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

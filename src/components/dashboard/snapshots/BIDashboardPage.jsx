@@ -1,77 +1,85 @@
-// FILE: BIDashboardPage.jsx - BI Dashboard (Business Intelligence)
-// (Reports, Analytics & BI > Advanced Analytics)
-// The cross-module executive visual hub -- distinct from
-// HRAnalyticsStandardPage (single board view) and AIInsightsPage
-// (ML/forecasting-specific). Pure rollup pulling one tile each from
-// EXISTING views across Risk Management, Standard Reports, and HR
-// Analytics -- never a duplicate calculation, purely a unified canvas.
+// FILE: src/components/dashboard/snapshots/BIDashboardPage.jsx
+// eLogix HRMS — B I Dashboard
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#581c87 0%,#7c3aed 60%,#c4b5fd 100%)'
-const A = '#7c3aed'
-
-const KPI_TILES = [
-  {label:'Headcount',value:312,c:'#0284c7',target:'Headcount Analysis'},
-  {label:'Turnover Rate',value:'9.2%',c:'#ef4444',target:'Attrition Analysis'},
-  {label:'Labor Cost / FTE',value:'NPR 41.2K',c:'#15803d',target:'Cost Analysis'},
-  {label:'Quality of Hire',value:'8.1/10',c:'#7c3aed',target:'Recruitment Reports'},
-]
-
-const ATTRITION_VS_TENURE = [
-  {tenure:'< 1 yr',attrition_pct:18},{tenure:'1-3 yrs',attrition_pct:11},
-  {tenure:'3-5 yrs',attrition_pct:6},{tenure:'5+ yrs',attrition_pct:3},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function BIDashboardPage() {
-  const [ctx, setCtx] = useState(null)
-  const maxAttrition = Math.max(...ATTRITION_VS_TENURE.map(a=>a.attrition_pct))
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading B I Dashboard...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="📊" title="BI Dashboard"
-        breadcrumb="Reports, Analytics & BI > Advanced Analytics"
-        gradient={G}
-        stats={KPI_TILES.map(k=>({icon:'📈',label:k.label,value:k.value}))}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#faf5ff',border:'1px solid #e9d5ff',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#581c87',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🧩</span>
-        <div style={{flex:1,minWidth:200}}><strong>One Canvas, Every Source:</strong> Every tile here reads live from its own dedicated report -- click any KPI to drill straight into the full detail, never a number that only exists on this page.</div>
-      </div>
-
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(170px,1fr))',gap:14,marginBottom:18}}>
-        {KPI_TILES.map((k,i)=>(
-          <div key={i}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:k.label,...k,impact_links:[k.target]}})}}
-            style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:14,padding:'18px',textAlign:'center',cursor:'pointer'}}>
-            <div style={{fontSize:18,fontWeight:900,color:k.c}}>{k.value}</div>
-            <div style={{fontSize:9,color:'#94a3b8',marginTop:5}}>{k.label}</div>
-          </div>
-        ))}
-      </div>
-
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'20px'}}>
-        <div style={{fontSize:11,fontWeight:800,color:'#0f172a',marginBottom:14}}>📉 Attrition vs Tenure</div>
-        <div style={{display:'flex',gap:12,alignItems:'flex-end',height:90}}>
-          {ATTRITION_VS_TENURE.map((a,i)=>(
-            <div key={i} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
-              <div style={{fontSize:9,fontWeight:700,color:A}}>{a.attrition_pct}%</div>
-              <div style={{width:'100%',background:A,borderRadius:'4px 4px 0 0',height:`${a.attrition_pct/maxAttrition*60}px`}}/>
-              <div style={{fontSize:8,color:'#94a3b8'}}>{a.tenure}</div>
-            </div>
-          ))}
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 B I Dashboard
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
         </div>
       </div>
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Filter by department or demographic with a single click -- never a SQL query required.','Every widget here is read-only and never duplicates a calculation already owned by another report.','Drop any tile onto a custom dashboard layout using the Custom Report Builder.']}/>
-      </div>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'Drill into Detail',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
+          </div>
+        </div>
+      )}
+
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

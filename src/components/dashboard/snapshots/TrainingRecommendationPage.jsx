@@ -1,99 +1,85 @@
-// FILE: TrainingRecommendationPage.jsx - Training Recommendation (Performance & Talent > Goal & Performance)
-// AI maps skill gaps (from Behaviour Evaluation, PIP, 360 results) to
-// targeted learning modules; tracks statutory annual training quota.
+// FILE: src/components/dashboard/snapshots/TrainingRecommendationPage.jsx
+// eLogix HRMS — Training Recommendation
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#1e1b4b 0%,#4338ca 60%,#818cf8 100%)'
-const A = '#4338ca'
-
-const RECOMMENDATIONS = [
-  { id:'tr1', employee:'Hari Thapa', gap_source:'Behaviour Evaluation', gap_identified:'Communication scored 5/10 - missed stakeholder updates',
-    recommended_course:'Effective Stakeholder Communication', provider:'Internal LMS', enrolled:false, progress_pct:0,
-    impact_links:['Behaviour Evaluation'] },
-  { id:'tr2', employee:'Bikash Rai', gap_source:'PIP Milestone', gap_identified:'Sprint commitment reliability',
-    recommended_course:'Agile Project Management', provider:'Internal LMS', enrolled:true, progress_pct:45,
-    impact_links:['PIP Management'] },
-  { id:'tr3', employee:'Anjali Sharma', gap_source:'360 Degree Feedback', gap_identified:'Strategic Thinking - perception gap vs peers',
-    recommended_course:'Strategic Planning for Managers', provider:'External - Coursera', enrolled:true, progress_pct:80,
-    impact_links:['360 Degree Feedback','Individual Development Plan'] },
-]
-
-const STATUTORY_TRAINING = { employees_trained_ytd:142, total_employees:298, statutory_min_pct:30, current_pct:48 }
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function TrainingRecommendationPage() {
-  const [search, setSearch] = useState('')
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = RECOMMENDATIONS.filter(r=>!search||r.employee.toLowerCase().includes(search.toLowerCase()))
-  const enrolledCount = RECOMMENDATIONS.filter(r=>r.enrolled).length
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/training-calendar', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Training Recommendation...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🎓" title="Training Recommendation"
-        breadcrumb="Performance & Talent Management > Goal & Performance"
-        gradient={G}
-        stats={[
-          {icon:'🎓',label:'AI Recommendations', value:RECOMMENDATIONS.length},
-          {icon:'✅',label:'Enrolled',             value:enrolledCount},
-          {icon:'📊',label:'Statutory Training',   value:STATUTORY_TRAINING.current_pct+'%'},
-          {icon:'⚖',label:'Min Required',          value:STATUTORY_TRAINING.statutory_min_pct+'%'},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#eef2ff',border:'1px solid #c7d2fe',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#3730a3',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🎯</span>
-        <div style={{flex:1,minWidth:200}}><strong>Targeted, Not Generic:</strong> AI maps specific gaps from Behaviour Evaluations, PIP milestones, and 360 Feedback to exact courses - never a one-size-fits-all annual seminar. Nepal Labour Act Section 40 requires a minimum percentage of employees receive training annually; currently {STATUTORY_TRAINING.current_pct}% vs the {STATUTORY_TRAINING.statutory_min_pct}% statutory floor.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          🎓 Training Recommendation
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      {/* Statutory training tracker */}
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 18px',marginBottom:18}}>
-        <div style={{display:'flex',justifyContent:'space-between',marginBottom:8,fontSize:11}}>
-          <span style={{fontWeight:700,color:'#0f172a'}}>📊 Statutory Training Coverage (YTD)</span>
-          <span style={{fontWeight:700,color:'#10b981'}}>{STATUTORY_TRAINING.employees_trained_ytd}/{STATUTORY_TRAINING.total_employees} employees</span>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
         </div>
-        <div style={{height:10,background:'#f1f5f9',borderRadius:10,overflow:'hidden',position:'relative'}}>
-          <div style={{width:`${STATUTORY_TRAINING.current_pct}%`,height:'100%',background:'#10b981',borderRadius:10}}/>
-          <div style={{position:'absolute',left:`${STATUTORY_TRAINING.statutory_min_pct}%`,top:0,bottom:0,width:2,background:'#ef4444'}}/>
-        </div>
-        <div style={{fontSize:8,color:'#94a3b8',marginTop:4}}>Red line = statutory minimum ({STATUTORY_TRAINING.statutory_min_pct}%)</div>
-      </div>
+      )}
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search by employee name..."/>
-
-      <div style={{display:'grid',gap:14,marginTop:14}}>
-        {filtered.map(r=>(
-          <div key={r.id}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:r.employee,...r}})}}
-            style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,overflow:'hidden',boxShadow:'0 2px 10px rgba(0,0,0,.05)',borderLeft:`5px solid ${A}`}}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',padding:'14px 18px',borderBottom:'1px solid #f1f5f9',flexWrap:'wrap',gap:10}}>
-              <div>
-                <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',marginBottom:3}}>
-                  <span style={{fontSize:13,fontWeight:900,color:'#0f172a'}}>{r.employee}</span>
-                  <span style={{background:`${A}15`,color:A,fontSize:9,fontWeight:700,padding:'2px 8px',borderRadius:20}}>Source: {r.gap_source}</span>
-                </div>
-                <div style={{fontSize:10,color:'#64748b'}}>{r.gap_identified}</div>
-              </div>
-            </div>
-            <div style={{padding:'12px 18px'}}>
-              <div style={{fontSize:11,fontWeight:700,color:'#0f172a'}}>📚 {r.recommended_course}</div>
-              <div style={{fontSize:9,color:'#94a3b8',marginBottom:8}}>{r.provider}</div>
-              {r.enrolled?(<>
-                <div style={{height:7,background:'#f1f5f9',borderRadius:7,overflow:'hidden'}}><div style={{width:`${r.progress_pct}%`,height:'100%',background:A,borderRadius:7}}/></div>
-                <div style={{fontSize:8,color:'#94a3b8',marginTop:3}}>{r.progress_pct}% complete</div>
-              </>):(
-                <button style={{padding:'6px 14px',borderRadius:8,border:'none',background:A,color:'#fff',fontSize:10,fontWeight:700,cursor:'pointer'}}>Enroll Now</button>
-              )}
-            </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Detail',key:'view'},{icon:'📚',label:'Enroll',key:'enroll'},
-        {icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

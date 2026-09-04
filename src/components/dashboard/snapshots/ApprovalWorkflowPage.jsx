@@ -1,85 +1,85 @@
-// FILE: ApprovalWorkflowPage.jsx - Approval Workflow
-// (Finance, Assets & Administration > Finance & Claims)
-// The claims-specific multi-tier routing visualization (Line Manager
-// -> Project Head -> Finance) -- distinct from ApprovalCenterPage
-// (MSS, the manager's cross-module action queue). Auto-escalation on
-// manager absence; the formal dispute path if a claim goes unpaid.
+// FILE: src/components/dashboard/snapshots/ApprovalWorkflowPage.jsx
+// eLogix HRMS — Approval Workflow
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#1e1b4b 0%,#4338ca 60%,#818cf8 100%)'
-const A = '#4338ca'
-
-const CHAIN_STAGES = ['Line Manager','Project Head','Finance']
-
-const CLAIMS_IN_FLIGHT = [
-  {id:'w1',claim:'Expense Claim -- Client Entertainment',amount:4200,employee:'Hari Thapa',stage_idx:1,days_at_stage:1},
-  {id:'w2',claim:'Petty Cash -- Printer cartridge',amount:2400,employee:'Branch Admin',stage_idx:2,days_at_stage:4},
-  {id:'w3',claim:'Travel Request -- Dubai conference',amount:32000,employee:'Gita Maharjan',stage_idx:0,days_at_stage:6,
-   flag_note:'Line Manager has not actioned in 6 days -- auto-escalating to Project Head.'},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function ApprovalWorkflowPage() {
-  const [search, setSearch] = useState('')
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = CLAIMS_IN_FLIGHT.filter(c=>!search||c.claim.toLowerCase().includes(search.toLowerCase())||c.employee.toLowerCase().includes(search.toLowerCase()))
-  const stalledCount = CLAIMS_IN_FLIGHT.filter(c=>c.flag_note).length
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/workflows', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Approval Workflow...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🔗" title="Approval Workflow"
-        breadcrumb="Finance, Assets & Administration > Finance & Claims"
-        gradient={G}
-        stats={[
-          {icon:'🔗',label:'Claims in Flight',  value:CLAIMS_IN_FLIGHT.length},
-          {icon:'⚠',label:'Auto-Escalating',        value:stalledCount},
-          {icon:'⏱',label:'Avg Days per Stage',         value:'2.8'},
-          {icon:'⚖',label:'Dispute Path',                  value:'15d + 21d'},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#eef2ff',border:'1px solid #c7d2fe',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#3730a3',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>⚖</span>
-        <div style={{flex:1,minWidth:200}}><strong>Never Stuck in the Dark:</strong> If a claim sits unactioned too long, it escalates automatically -- and if it's ultimately unpaid despite approval, the Labour Act gives a clear path: 15 days of negotiation, then 21 days with the local Labour Office.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          🔄 Approval Workflow
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search claims in flight..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{display:'grid',gap:16,marginTop:14}}>
-        {filtered.map(c=>(
-          <div key={c.id}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:c.claim,...c,impact_links:['Expense Claims','Reimbursement']}})}}
-            style={{background:'#fff',border:`1px solid ${c.flag_note?'#fed7aa':'#e2e8f0'}`,borderRadius:16,padding:'18px'}}>
-            <div style={{display:'flex',justifyContent:'space-between',marginBottom:10,flexWrap:'wrap',gap:8}}>
-              <div>
-                <div style={{fontSize:12,fontWeight:800,color:'#0f172a'}}>{c.claim}</div>
-                <div style={{fontSize:9,color:'#94a3b8',marginTop:3}}>{c.employee}</div>
-              </div>
-              <div style={{fontSize:13,fontWeight:900,color:A}}>NPR {c.amount.toLocaleString()}</div>
-            </div>
-            <div style={{display:'flex',gap:4}}>
-              {CHAIN_STAGES.map((s,i)=>(
-                <div key={s} style={{flex:1,textAlign:'center'}}>
-                  <div style={{height:6,borderRadius:6,background:i<=c.stage_idx?A:'#f1f5f9'}}/>
-                  <div style={{fontSize:7,color:i<=c.stage_idx?A:'#94a3b8',fontWeight:i===c.stage_idx?700:400,marginTop:4}}>{s}</div>
-                </div>
-              ))}
-            </div>
-            <div style={{marginTop:8,fontSize:8,color:'#94a3b8'}}>{c.days_at_stage} days at current stage</div>
-            {c.flag_note&&<div style={{marginTop:8,fontSize:9,color:'#b45309'}}>⚠ {c.flag_note}</div>}
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Claims unactioned for 5+ days auto-escalate to the next tier -- a manager\'s out-of-office never silently stalls a payment.','Mobile approval works identically to desktop -- traveling executives never become the bottleneck.','Every routing decision is logged with who, when, and any comments -- a complete defensible trail if a dispute ever reaches the Labour Office.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Chain',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

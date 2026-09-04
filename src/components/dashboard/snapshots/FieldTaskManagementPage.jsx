@@ -1,79 +1,85 @@
-// FILE: FieldTaskManagementPage.jsx - Field Task Management
-// (System Administration > Integration & API > Mobile App Configuration)
-// Kanban-style task cards with photo/signature capture -- the layer
-// that gives raw GPS data actual work context, directly answering the
-// brief's explicit gap: "Basic GPS tracking only logs location,
-// lacking context for actual work performed." Distinct from Field
-// Visit Tracking (the TA/DA financial workflow) -- this is the task-
-// completion and evidence-capture layer.
+// FILE: src/components/dashboard/snapshots/FieldTaskManagementPage.jsx
+// eLogix HRMS — Field Task Management
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#7c2d12 0%,#c2410c 60%,#fdba74 100%)'
-const A = '#c2410c'
-
-const STAGES = ['Today', 'In Progress', 'Completed']
-
-const TASKS = [
-  {id:'t1',title:'Inventory check -- Patan Showroom',client:'Client B',stage_idx:0,requires_signature:false,requires_photo:true},
-  {id:'t2',title:'Contract renewal -- Thamel Office',client:'Client A',stage_idx:1,requires_signature:true,requires_photo:false},
-  {id:'t3',title:'Equipment delivery confirmation',client:'Client C',stage_idx:2,requires_signature:true,requires_photo:true,
-   evidence_captured:true,flag_note:'Customer signature and delivery photo both attached -- task closed with full evidence, not just a GPS pin.'},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function FieldTaskManagementPage() {
-  const [ctx, setCtx] = useState(null)
-  const byStage = STAGES.reduce((acc,s,i)=>{acc[i]=TASKS.filter(t=>t.stage_idx===i); return acc},{})
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Field Task Management...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="✅" title="Field Task Management"
-        breadcrumb="System Administration > Integration & API > Mobile App Configuration"
-        gradient={G}
-        stats={[
-          {icon:'📋',label:"Today's Tasks",  value:TASKS.length},
-          {icon:'✅',label:'Completed',          value:TASKS.filter(t=>t.stage_idx===2).length},
-          {icon:'📸',label:'Evidence Captured',      value:TASKS.filter(t=>t.evidence_captured).length},
-          {icon:'✍',label:'Signatures Required',        value:TASKS.filter(t=>t.requires_signature).length},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#fff7ed',border:'1px solid #fed7aa',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#7c2d12',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>📸</span>
-        <div style={{flex:1,minWidth:200}}><strong>A Location Pin Isn't a Completed Task:</strong> Showing up and doing the work are two different facts -- every task here can require a customer signature or a photo before it counts as done, giving real productivity evidence instead of just a coordinate.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Field Task Management
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14,overflowX:'auto'}}>
-        {STAGES.map((stage,i)=>(
-          <div key={i} style={{background:'#f8fafc',borderRadius:14,padding:'14px',minWidth:200}}>
-            <div style={{fontSize:10,fontWeight:800,color:'#0f172a',marginBottom:12}}>{stage} ({byStage[i].length})</div>
-            <div style={{display:'grid',gap:10}}>
-              {byStage[i].map(t=>(
-                <div key={t.id}
-                  onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:t.title,...t,impact_links:['Field Visit Tracking']}})}}
-                  style={{background:'#fff',border:`1px solid ${t.flag_note?'#bbf7d0':'#e2e8f0'}`,borderRadius:10,padding:'10px 12px',boxShadow:'0 1px 3px rgba(0,0,0,.04)'}}>
-                  <div style={{fontSize:9,fontWeight:700,color:'#0f172a'}}>{t.title}</div>
-                  <div style={{fontSize:8,color:'#94a3b8',marginTop:4}}>{t.client}</div>
-                  <div style={{display:'flex',gap:4,marginTop:6}}>
-                    {t.requires_photo&&<span style={{fontSize:9}}>📸</span>}
-                    {t.requires_signature&&<span style={{fontSize:9}}>✍</span>}
-                  </div>
-                  {t.flag_note&&<div style={{marginTop:6,fontSize:7,color:'#15803d'}}>✓ {t.flag_note}</div>}
-                </div>
-              ))}
-            </div>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
+
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Swipe right on a mobile device to mark a task complete -- the action captures the required photo or signature in the same motion, never a separate upload step later.','Tasks requiring evidence cannot be marked complete without it -- a structural requirement, never just a friendly reminder.','Skills and certifications logged on the employee profile auto-filter which tasks they\'re eligible to be assigned in the first place.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Task Detail',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

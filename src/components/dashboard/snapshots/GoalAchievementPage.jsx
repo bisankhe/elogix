@@ -1,107 +1,85 @@
-// FILE: GoalAchievementPage.jsx - Goal Achievement
-// (Performance & Talent > Goal & Performance > Performance Analytics)
-// Corporate OKR thermometer header, team-board card view (% complete/
-// on-track/at-risk), drill-down drawer with skills matrix. Consumes the
-// existing v_unified_goal_tracking rollup (KRA+KPI+OKR+Assignment).
+// FILE: src/components/dashboard/snapshots/GoalAchievementPage.jsx
+// eLogix HRMS — Goal Achievement
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#0c4a6e 0%,#0284c7 60%,#7dd3fc 100%)'
-const A = '#0284c7'
-
-const CORPORATE_OKR_PROGRESS = 68
-
-const TEAM_BOARD = [
-  { id:'tb1', team:'Sales & Marketing', goals_total:8, on_track:6, at_risk:2, completion_pct:72,
-    members:[{name:'Anjali Sharma',progress:85},{name:'Ramesh KC',progress:58}], impact_links:['Goal Tracking'] },
-  { id:'tb2', team:'IT', goals_total:12, on_track:7, at_risk:5, completion_pct:54,
-    members:[{name:'Bikash Rai',progress:40},{name:'Gita Maharjan',progress:75}], impact_links:['Workload Analysis'] },
-  { id:'tb3', team:'Finance', goals_total:6, on_track:6, at_risk:0, completion_pct:88,
-    members:[{name:'Maya Pradhan',progress:90},{name:'Dipesh Bhattarai',progress:86}], impact_links:[] },
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function GoalAchievementPage() {
-  const [search, setSearch] = useState('')
-  const [drawerFor, setDrawerFor] = useState(null)
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = TEAM_BOARD.filter(t=>!search||t.team.toLowerCase().includes(search.toLowerCase()))
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/goals', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Goal Achievement...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🌡" title="Goal Achievement"
-        breadcrumb="Performance & Talent Management > Goal & Performance > Performance Analytics"
-        gradient={G}
-        stats={[
-          {icon:'🌡',label:'Corporate OKR',    value:CORPORATE_OKR_PROGRESS+'%'},
-          {icon:'👥',label:'Teams Tracked',      value:TEAM_BOARD.length},
-          {icon:'✅',label:'Goals On Track',     value:TEAM_BOARD.reduce((s,t)=>s+t.on_track,0)},
-          {icon:'⚠',label:'Goals At Risk',       value:TEAM_BOARD.reduce((s,t)=>s+t.at_risk,0)},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      {/* Corporate OKR thermometer */}
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'20px',marginBottom:18}}>
-        <div style={{display:'flex',justifyContent:'space-between',marginBottom:8,fontSize:12}}>
-          <span style={{fontWeight:800,color:'#0f172a'}}>🎯 Overall Corporate OKR Progress</span><span style={{fontWeight:800,color:A}}>{CORPORATE_OKR_PROGRESS}%</span>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          🏆 Goal Achievement
         </div>
-        <div style={{height:14,background:'#f1f5f9',borderRadius:14,overflow:'hidden'}}>
-          <div style={{width:`${CORPORATE_OKR_PROGRESS}%`,height:'100%',background:`linear-gradient(90deg,#0284c7,#7dd3fc)`,borderRadius:14}}/>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
         </div>
-        <div style={{fontSize:9,color:'#94a3b8',marginTop:6}}>Cascades from Goal Management {'>'} KRA/KPI/OKR/Goal Assignment, unified via Goal Tracking</div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search by team name..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:16,marginTop:14}}>
-        {filtered.map(t=>(
-          <div key={t.id}
-            onClick={()=>setDrawerFor(t)}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:t.team,...t}})}}
-            style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'18px',cursor:'pointer'}}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:10}}>
-              <div style={{fontSize:13,fontWeight:900,color:'#0f172a'}}>{t.team}</div>
-              <div style={{fontSize:16,fontWeight:900,color:t.completion_pct>=70?'#10b981':'#f59e0b'}}>{t.completion_pct}%</div>
-            </div>
-            <div style={{height:8,background:'#f1f5f9',borderRadius:8,overflow:'hidden',marginBottom:10}}>
-              <div style={{width:`${t.completion_pct}%`,height:'100%',background:t.completion_pct>=70?'#10b981':'#f59e0b',borderRadius:8}}/>
-            </div>
-            <div style={{display:'flex',gap:8,fontSize:9}}>
-              <span style={{background:'#f0fdf4',color:'#15803d',fontWeight:700,padding:'2px 9px',borderRadius:20}}>✅ {t.on_track} on track</span>
-              {t.at_risk>0&&<span style={{background:'#fef2f2',color:'#dc2626',fontWeight:700,padding:'2px 9px',borderRadius:20}}>⚠ {t.at_risk} at risk</span>}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Drill-down drawer */}
-      {drawerFor&&(
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:5000,display:'flex',justifyContent:'flex-end'}} onClick={()=>setDrawerFor(null)}>
-          <div style={{background:'#fff',width:'min(420px,100%)',height:'100%',overflow:'auto',boxShadow:'-4px 0 24px rgba(0,0,0,.15)'}} onClick={e=>e.stopPropagation()}>
-            <div style={{background:G,padding:'20px 24px'}}>
-              <div style={{fontSize:16,fontWeight:900,color:'#fff'}}>{drawerFor.team}</div>
-              <div style={{fontSize:11,color:'rgba(255,255,255,.8)',marginTop:4}}>{drawerFor.goals_total} total goals . {drawerFor.completion_pct}% complete</div>
-            </div>
-            <div style={{padding:'20px 24px'}}>
-              <div style={{fontSize:11,fontWeight:800,color:'#0f172a',marginBottom:12}}>Team Member Contributions</div>
-              {drawerFor.members.map((m,i)=>(
-                <div key={i} style={{marginBottom:14}}>
-                  <div style={{display:'flex',justifyContent:'space-between',marginBottom:4,fontSize:11}}>
-                    <span style={{fontWeight:600,color:'#374151'}}>{m.name}</span><span style={{fontWeight:700,color:A}}>{m.progress}%</span>
-                  </div>
-                  <div style={{height:7,background:'#f1f5f9',borderRadius:7,overflow:'hidden'}}><div style={{width:`${m.progress}%`,height:'100%',background:m.progress>=70?'#10b981':'#f59e0b',borderRadius:7}}/></div>
-                </div>
-              ))}
-              <button onClick={()=>setDrawerFor(null)} style={{marginTop:10,width:'100%',padding:12,borderRadius:10,border:'1px solid #e2e8f0',background:'#f8fafc',color:'#475569',fontSize:12,fontWeight:600,cursor:'pointer'}}>Close</button>
-            </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
         </div>
       )}
 
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Team Detail',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

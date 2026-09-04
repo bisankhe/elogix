@@ -1,93 +1,85 @@
-// FILE: CustomReportBuilderPage.jsx - Custom Report Builder
-// (Reports, Analytics & BI > Advanced Analytics)
-// Drag-and-drop field selector over a pre-mapped data dictionary --
-// genuinely new (no generic cross-module report builder existed; only
-// module-specific report_template tables like leave_report_templates).
-// Section 139 safeguard: any report touching performance/disciplinary
-// fields gets flagged as evidence-grade, never silently treated as
-// equivalent to a routine headcount export.
+// FILE: src/components/dashboard/snapshots/CustomReportBuilderPage.jsx
+// eLogix HRMS — Custom Report Builder
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { Field, PageHeader, AIImpact, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#1e1b4b 0%,#4338ca 60%,#818cf8 100%)'
-const A = '#4338ca'
-
-const FIELD_CATEGORIES = [
-  {category:'Employee Profile',fields:['Name','Department','Designation','Tenure'],sensitive:false},
-  {category:'Compensation',fields:['Base Salary','Bonus','SSF Contribution'],sensitive:true},
-  {category:'Performance',fields:['Rating','Goal Completion','Disciplinary Flags'],sensitive:true,
-   legal_note:'Reports built from these fields are flagged evidence-grade -- an employee can contest an AI/BI-informed decision under Section 139, and this report must be defensible with verifiable human input attached.'},
-  {category:'Attendance',fields:['Overtime Hours','Absences','Late Arrivals'],sensitive:false},
-]
-
-const SAVED_REPORTS = [
-  {name:'Q2 Compensation Equity Review',fields:5,last_run:'2025-06-20',sensitive:true},
-  {name:'Department Headcount Snapshot',fields:3,last_run:'2025-06-28',sensitive:false},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function CustomReportBuilderPage() {
-  const [selectedFields, setSelectedFields] = useState([])
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const toggleField = (field) => setSelectedFields(p=>p.includes(field)?p.filter(f=>f!==field):[...p,field])
-  const touchesSensitive = FIELD_CATEGORIES.some(c=>c.sensitive&&c.fields.some(f=>selectedFields.includes(f)))
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/reports', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Custom Report Builder...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🧰" title="Custom Report Builder"
-        breadcrumb="Reports, Analytics & BI > Advanced Analytics"
-        gradient={G}
-        stats={[
-          {icon:'🧰',label:'Fields Selected',  value:selectedFields.length},
-          {icon:'📋',label:'Saved Reports',        value:SAVED_REPORTS.length},
-          {icon:'⚖',label:'Evidence-Grade Mode',       value:touchesSensitive?'Active':'Off'},
-          {icon:'🔒',label:'Access Logged',                value:'Always'},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#eef2ff',border:'1px solid #c7d2fe',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#3730a3',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>⚖</span>
-        <div style={{flex:1,minWidth:200}}><strong>No SQL, No IT Ticket -- Drag, Drop, Build:</strong> Pick fields from a pre-mapped dictionary and get a report in minutes. Reports touching performance or disciplinary data are flagged evidence-grade automatically, since an algorithm-based decision can be formally contested in Labour Court.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Custom Report Builder
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <div style={{display:'grid',gap:16,marginBottom:18}}>
-        {FIELD_CATEGORIES.map((c,i)=>(
-          <div key={i}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:c.category,...c}})}}
-            style={{background:'#fff',border:`1px solid ${c.legal_note?'#fed7aa':'#e2e8f0'}`,borderRadius:14,padding:'16px 18px'}}>
-            <div style={{fontSize:11,fontWeight:700,color:'#0f172a',marginBottom:10}}>{c.category} {c.sensitive&&'🔒'}</div>
-            <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
-              {c.fields.map((f,j)=>(
-                <button key={j} onClick={()=>toggleField(f)}
-                  style={{padding:'6px 12px',borderRadius:8,border:selectedFields.includes(f)?'none':'1px solid #e2e8f0',cursor:'pointer',fontSize:9,fontWeight:700,
-                    background:selectedFields.includes(f)?A:'#fff',color:selectedFields.includes(f)?'#fff':'#64748b'}}>
-                  {f}
-                </button>
-              ))}
-            </div>
-            {c.legal_note&&<div style={{marginTop:10,fontSize:8,color:'#b45309'}}>⚖ {c.legal_note}</div>}
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
+
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'18px'}}>
-        <div style={{fontSize:11,fontWeight:800,color:'#0f172a',marginBottom:12}}>📋 Saved Reports</div>
-        {SAVED_REPORTS.map((r,i)=>(
-          <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'9px 0',borderBottom:i<SAVED_REPORTS.length-1?'1px solid #f8fafc':'none'}}>
-            <span style={{fontSize:10,color:'#374151'}}>{r.name} {r.sensitive&&'🔒'}</span>
-            <span style={{fontSize:9,color:'#94a3b8'}}>{r.fields} fields . Last run {r.last_run}</span>
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
           </div>
-        ))}
-      </div>
-
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Evidence-grade reports require a human sign-off field before they can be exported -- never a purely algorithmic decision with no verifiable human review attached.','Every field combination saves as a reusable template -- never rebuild the same report from scratch next quarter.','Access to compensation and performance fields is logged per user, satisfying the mandatory accurate-recordkeeping requirement.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Field Detail',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

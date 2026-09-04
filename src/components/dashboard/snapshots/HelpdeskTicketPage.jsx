@@ -1,87 +1,85 @@
-// FILE: HelpdeskTicketPage.jsx - Helpdesk & Ticket
-// (HR Services & Support > Employee Self Service)
-// ESS-facing chat-style entry point + ticket history, pure UI over the
-// EXISTING hr_helpdesk_tickets (HR Helpdesk session) -- never a second
-// ticketing engine. The conversational AI-first lens on the same data
-// HR Ticketing System's agent console already manages.
+// FILE: src/components/dashboard/snapshots/HelpdeskTicketPage.jsx
+// eLogix HRMS — Helpdesk Ticket
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#0c4a6e 0%,#0284c7 60%,#7dd3fc 100%)'
-const A = '#0284c7'
-
-const CHAT_HISTORY = [
-  {from:'me',text:'How many vacation days do I have left?'},
-  {from:'bot',text:'You have 14 days of Annual Leave remaining out of 18 entitled this year. Want to start a leave request?'},
-]
-
-const MY_TICKETS = [
-  {ticket_no:'HRT-2025-248',subject:'Payroll deduction looks incorrect',status:'in_progress',c:'#f59e0b',category:'Payroll'},
-  {ticket_no:'HRT-2025-241',subject:'Holiday balance not updating',status:'resolved',c:'#10b981',category:'Leave'},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function HelpdeskTicketPage() {
-  const [search, setSearch] = useState('')
-  const [message, setMessage] = useState('')
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = MY_TICKETS.filter(t=>!search||t.subject.toLowerCase().includes(search.toLowerCase()))
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/helpdesk', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Helpdesk Ticket...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🎫" title="Helpdesk & Ticket"
-        breadcrumb="HR Services & Support > Employee Self Service"
-        gradient={G}
-        stats={[
-          {icon:'🎫',label:'My Tickets',  value:MY_TICKETS.length},
-          {icon:'⏳',label:'In Progress',     value:MY_TICKETS.filter(t=>t.status==='in_progress').length},
-          {icon:'✅',label:'Resolved',           value:MY_TICKETS.filter(t=>t.status==='resolved').length},
-          {icon:'🤖',label:'AI Assistant',          value:'Available Now'},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#eff6ff',border:'1px solid #bfdbfe',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#1e40af',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>💬</span>
-        <div style={{flex:1,minWidth:200}}><strong>Ask First, Ticket Second:</strong> Most routine questions resolve instantly in chat -- a formal ticket only gets created if you need a human to step in.</div>
-      </div>
-
-      {/* Chat-style assistant */}
-      <div style={{background:'#0f172a',borderRadius:16,padding:'18px',marginBottom:18}}>
-        {CHAT_HISTORY.map((c,i)=>(
-          <div key={i} style={{display:'flex',justifyContent:c.from==='me'?'flex-end':'flex-start',marginBottom:10}}>
-            <div style={{background:c.from==='me'?A:'#1e293b',color:'#fff',borderRadius:14,padding:'10px 14px',maxWidth:'75%',fontSize:10}}>{c.text}</div>
-          </div>
-        ))}
-        <div style={{display:'flex',gap:8,marginTop:12}}>
-          <input value={message} onChange={e=>setMessage(e.target.value)} placeholder="Ask anything..." style={{flex:1,padding:'10px 14px',borderRadius:20,border:'none',fontSize:11,outline:'none'}}/>
-          <button style={{padding:'10px 18px',borderRadius:20,border:'none',background:A,color:'#fff',fontSize:10,fontWeight:700,cursor:'pointer'}}>Send</button>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          🎫 Helpdesk Ticket
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
         </div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search my tickets..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{display:'grid',gap:12,marginTop:14}}>
-        {filtered.map((t,i)=>(
-          <div key={i}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:t.subject,...t,impact_links:['HR Ticketing System']}})}}
-            style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:14,padding:'14px 18px',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:10}}>
-            <div>
-              <div style={{fontSize:11,fontWeight:700,color:'#0f172a'}}>{t.subject}</div>
-              <div style={{fontSize:8,color:'#94a3b8',marginTop:3}}>{t.ticket_no} . {t.category}</div>
-            </div>
-            <span style={{background:`${t.c}15`,color:t.c,fontSize:9,fontWeight:700,padding:'3px 10px',borderRadius:20}}>{t.status.replace('_',' ')}</span>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Tickets here are the exact same record HR\'s agent console manages -- one source of truth, two views.','AI suggests the right category automatically -- you never have to guess between Payroll, Benefits, or IT.','SLA timers shown here mirror exactly what HR sees -- full transparency, no surprises.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Ticket',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,88 +1,85 @@
-// FILE: WorkforceAnalyticsPage.jsx - Workforce Analytics
-// (Reports, Analytics & BI > HR Analytics)
-// The HCM-layer strategic rollup -- distinct from HRAnalyticsStandardPage
-// (the minimalist 3-5 KPI board view, Standard Reports) and the 4-page
-// deep-dive group (Headcount/Attrition/Productivity/Cost Analysis,
-// each a single domain). This page is "what-if" scenario modeling and
-// cross-domain pattern detection -- pure synthesis, reuses
-// v_kri_health_index (Risk Management) and v_workforce_summary_by_dept
-// (Standard Reports) directly.
+// FILE: src/components/dashboard/snapshots/WorkforceAnalyticsPage.jsx
+// eLogix HRMS — Workforce Analytics
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#581c87 0%,#7c3aed 60%,#c4b5fd 100%)'
-const A = '#7c3aed'
-
-const SCENARIOS = [
-  {name:'Hire 15 more Engineers',headcount_impact:'+15',cost_impact_npr:9750000,risk_note:'Span of control for Engineering Manager would exceed 12 -- consider a new team lead first.'},
-  {name:'Freeze hiring for 2 quarters',headcount_impact:'0',cost_impact_npr:0,risk_note:'Attrition rate trending at 9.2% -- a freeze risks compounding existing gaps.'},
-]
-
-const CROSS_DOMAIN_PATTERNS = [
-  {pattern:'Span of control above 10 correlates with 2.3x higher regrettable attrition',domains:['Headcount Analysis','Attrition Analysis']},
-  {pattern:'Departments with overtime >18h/week show 14% lower training completion',domains:['Productivity Analysis','Training Reports']},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function WorkforceAnalyticsPage() {
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/hr-analytics', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Workforce Analytics...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🧬" title="Workforce Analytics"
-        breadcrumb="Reports, Analytics & BI > HR Analytics"
-        gradient={G}
-        stats={[
-          {icon:'🧬',label:'Health Index',  value:'78/100'},
-          {icon:'🔮',label:'Active Scenarios',  value:SCENARIOS.length},
-          {icon:'🔗',label:'Cross-Domain Patterns', value:CROSS_DOMAIN_PATTERNS.length},
-          {icon:'⚖',label:'Data Use Scope',           value:'Purpose-Limited'},
-        ]}
-        onAdd={()=>{}} addLabel="Run What-If Scenario"/>
-
-      <div style={{background:'#faf5ff',border:'1px solid #e9d5ff',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#581c87',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>⚖</span>
-        <div style={{flex:1,minWidth:200}}><strong>Data Used Only for Its Stated Purpose:</strong> Attendance and performance data feeding these models is used strictly for payroll, compliance, and performance management -- never repurposed into general surveillance, in line with the Privacy Act's purpose-limitation principle.</div>
-      </div>
-
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'20px',marginBottom:18}}>
-        <div style={{fontSize:11,fontWeight:800,color:'#0f172a',marginBottom:14}}>🔮 What-If Scenarios</div>
-        <div style={{display:'grid',gap:14}}>
-          {SCENARIOS.map((s,i)=>(
-            <div key={i}
-              onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:s.name,...s,impact_links:['Headcount Analysis']}})}}
-              style={{border:'1px solid #f1f5f9',borderRadius:12,padding:'14px 16px'}}>
-              <div style={{display:'flex',justifyContent:'space-between',marginBottom:6,flexWrap:'wrap',gap:8}}>
-                <span style={{fontSize:11,fontWeight:700,color:'#0f172a'}}>{s.name}</span>
-                <span style={{fontSize:10,fontWeight:700,color:A}}>Headcount {s.headcount_impact} . NPR {(s.cost_impact_npr/1000000).toFixed(1)}M</span>
-              </div>
-              <div style={{fontSize:9,color:'#b45309'}}>⚠ {s.risk_note}</div>
-            </div>
-          ))}
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📈 Workforce Analytics
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
         </div>
       </div>
 
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'18px'}}>
-        <div style={{fontSize:11,fontWeight:800,color:'#0f172a',marginBottom:12}}>🔗 Cross-Domain Patterns</div>
-        {CROSS_DOMAIN_PATTERNS.map((p,i)=>(
-          <div key={i}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:p.pattern,...p,impact_links:p.domains}})}}
-            style={{padding:'10px 0',borderBottom:i<CROSS_DOMAIN_PATTERNS.length-1?'1px solid #f8fafc':'none'}}>
-            <div style={{fontSize:10,color:'#374151'}}>{p.pattern}</div>
-            <div style={{display:'flex',gap:4,marginTop:6}}>
-              {p.domains.map((d,j)=><span key={j} style={{background:'#faf5ff',color:'#7c3aed',fontSize:7,fontWeight:600,padding:'2px 8px',borderRadius:20}}>{d}</span>)}
-            </div>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
+
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Scenarios run against your real headcount and cost data -- never a generic industry benchmark standing in for your own numbers.','Cross-domain patterns surface only when statistically meaningful, never a spurious correlation dressed up as insight.','Run a scenario any time -- results compute in seconds against the same live data every other report on this page reads from.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Model',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

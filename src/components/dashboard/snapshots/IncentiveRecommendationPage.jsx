@@ -1,90 +1,85 @@
-// FILE: IncentiveRecommendationPage.jsx - Incentive Recommendation (Performance & Talent > Goal & Performance)
-// KPI/OKR-tied bonus calculator with budget-constrained adjustment slider,
-// one-click manager approval - distinct from Reward Program's discretionary spot bonuses.
+// FILE: src/components/dashboard/snapshots/IncentiveRecommendationPage.jsx
+// eLogix HRMS — Incentive Recommendation
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#052e16 0%,#15803d 60%,#86efac 100%)'
-const A = '#15803d'
-
-const INCENTIVE_CALCS = [
-  { id:'ic1', employee:'Anjali Sharma', kpi_basis:'Q2 Sales Target Achievement', kpi_actual_pct:118,
-    base_incentive_npr:40000, calculated_npr:47200, manager_adjusted_npr:47200, budget_cap_npr:50000,
-    status:'pending_approval', impact_links:['KPI Management','Bonus Processing'] },
-  { id:'ic2', employee:'Ramesh KC', kpi_basis:'Q2 Sales Target Achievement', kpi_actual_pct:82,
-    base_incentive_npr:40000, calculated_npr:32800, manager_adjusted_npr:32800, budget_cap_npr:50000,
-    status:'approved', impact_links:[] },
-]
-
-const STATUS_CFG = {pending_approval:{c:'#f59e0b',bg:'#fffbeb',label:'Pending Approval'},approved:{c:'#10b981',bg:'#f0fdf4',label:'Approved'}}
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function IncentiveRecommendationPage() {
-  const [search, setSearch] = useState('')
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = INCENTIVE_CALCS.filter(i=>!search||i.employee.toLowerCase().includes(search.toLowerCase()))
-  const totalProposed = INCENTIVE_CALCS.reduce((s,i)=>s+i.manager_adjusted_npr,0)
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Incentive Recommendation...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="💵" title="Incentive Recommendation"
-        breadcrumb="Performance & Talent Management > Goal & Performance"
-        gradient={G}
-        stats={[
-          {icon:'💵',label:'Active Calculations', value:INCENTIVE_CALCS.length},
-          {icon:'💰',label:'Total Proposed',         value:'NPR '+totalProposed.toLocaleString()},
-          {icon:'⏳',label:'Pending Approval',       value:INCENTIVE_CALCS.filter(i=>i.status==='pending_approval').length},
-          {icon:'📊',label:'Basis',                  value:'KPI-Tied'},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#065f46',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>📐</span>
-        <div style={{flex:1,minWidth:200}}><strong>KPI-Tied, Not Discretionary:</strong> Calculated directly from KPI Management's tracked achievement percentage - no spreadsheet math. Managers can adjust within the pre-set budget cap, then submit for one-click approval. Communicated at the start of the cycle, so employees know exactly what triggers the payout.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Incentive Recommendation
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search by employee name..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{display:'grid',gap:16,marginTop:14}}>
-        {filtered.map(i=>{
-          const sc = STATUS_CFG[i.status]
-          const budgetPct = Math.round(i.manager_adjusted_npr/i.budget_cap_npr*100)
-          return (
-            <div key={i.id}
-              onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:i.employee,...i}})}}
-              style={{background:'#fff',border:`1.5px solid ${sc.c}33`,borderRadius:16,overflow:'hidden',boxShadow:'0 2px 10px rgba(0,0,0,.05)',borderLeft:`5px solid ${sc.c}`}}>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',padding:'14px 18px',borderBottom:'1px solid #f1f5f9',flexWrap:'wrap',gap:10}}>
-                <div>
-                  <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',marginBottom:3}}>
-                    <span style={{fontSize:13,fontWeight:900,color:'#0f172a'}}>{i.employee}</span>
-                    <span style={{background:sc.bg,color:sc.c,fontSize:10,fontWeight:700,padding:'2px 10px',borderRadius:20}}>{sc.label}</span>
-                  </div>
-                  <div style={{fontSize:10,color:'#64748b'}}>{i.kpi_basis} - {i.kpi_actual_pct}% achieved</div>
-                </div>
-                <div style={{fontSize:16,fontWeight:900,color:A}}>NPR {i.manager_adjusted_npr.toLocaleString()}</div>
-              </div>
-              <div style={{padding:'12px 18px'}}>
-                <div style={{display:'flex',justifyContent:'space-between',marginBottom:5,fontSize:9}}>
-                  <span style={{color:'#64748b'}}>Budget cap: NPR {i.budget_cap_npr.toLocaleString()}</span><span style={{fontWeight:700,color:A}}>{budgetPct}%</span>
-                </div>
-                <div style={{height:8,background:'#f1f5f9',borderRadius:8,overflow:'hidden'}}><div style={{width:`${budgetPct}%`,height:'100%',background:A,borderRadius:8}}/></div>
-              </div>
-              {i.status==='pending_approval'&&(
-                <div style={{padding:'10px 18px',display:'flex',gap:8}}>
-                  <button style={{padding:'7px 16px',borderRadius:8,border:'none',background:'#10b981',color:'#fff',fontSize:11,fontWeight:700,cursor:'pointer'}}>✅ One-Click Approve</button>
-                  <button style={{padding:'7px 16px',borderRadius:8,border:`1px solid ${A}33`,background:'#f0fdf4',color:A,fontSize:11,fontWeight:600,cursor:'pointer'}}>✏ Adjust Amount</button>
-                </div>
-              )}
-            </div>
-          )
-        })}
-      </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
+          </div>
+        </div>
+      )}
 
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Calculation Detail',key:'view'},{icon:'✅',label:'Approve',key:'approve'},
-        {icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

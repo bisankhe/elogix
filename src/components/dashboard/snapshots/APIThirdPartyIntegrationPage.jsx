@@ -1,95 +1,85 @@
-// FILE: APIThirdPartyIntegrationPage.jsx - API & Third Party Integration
-// (System Administration > Integration & API)
-// The connector marketplace + field-mapping layer -- genuinely new, no
-// webhook/API-connector configuration existed anywhere in the build.
-// Version-drift detection and field-mapping mismatch flags address
-// the brief's explicit pain points directly (APIs change without
-// warning, employment-status/pay-code mismatches corrupt downstream systems).
+// FILE: src/components/dashboard/snapshots/APIThirdPartyIntegrationPage.jsx
+// eLogix HRMS — A P I Third Party Integration
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { Field, PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#1e1b4b 0%,#4338ca 60%,#818cf8 100%)'
-const A = '#4338ca'
-
-const STATUS_CFG = { connected:{c:'#10b981',label:'Connected'},error:{c:'#ef4444',label:'Sync Error'},disconnected:{c:'#94a3b8',label:'Disconnected'} }
-
-const INTEGRATIONS = [
-  {name:'Slack',category:'Communication',status:'connected',last_sync:'2 min ago',fields_mapped:8},
-  {name:'QuickBooks (Accounting)',category:'ERP',status:'connected',last_sync:'1 hour ago',fields_mapped:14},
-  {name:'LinkedIn Talent Hub',category:'ATS',status:'error',last_sync:'3 days ago',fields_mapped:6,
-   flag_note:'Vendor updated their endpoint schema -- "employment_status" field mapping now returns an unrecognized value. Review required before data corrupts downstream.'},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function APIThirdPartyIntegrationPage() {
-  const [search, setSearch] = useState('')
-  const [showConnect, setShowConnect] = useState(false)
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = INTEGRATIONS.filter(i=>!search||i.name.toLowerCase().includes(search.toLowerCase()))
-  const errorCount = INTEGRATIONS.filter(i=>i.status==='error').length
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/integration-hub', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading A P I Third Party Integration...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🔌" title="API &amp; Third Party Integration"
-        breadcrumb="System Administration > Integration & API"
-        gradient={G}
-        stats={[
-          {icon:'🔌',label:'Active Connections',  value:INTEGRATIONS.filter(i=>i.status==='connected').length},
-          {icon:'⚠',label:'Sync Errors',              value:errorCount},
-          {icon:'🧩',label:'Total Fields Mapped',         value:INTEGRATIONS.reduce((s,i)=>s+i.fields_mapped,0)},
-          {icon:'📡',label:'Webhooks Active',                 value:'2'},
-        ]}
-        onAdd={()=>setShowConnect(true)} addLabel="Connect New App"/>
-
-      <div style={{background:'#eef2ff',border:'1px solid #c7d2fe',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#3730a3',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🧩</span>
-        <div style={{flex:1,minWidth:200}}><strong>Drag, Drop, Map -- No Hand-Coded Pipeline:</strong> Connect a third-party app and map its fields to your HR data visually -- a vendor's "employment_status" can mean something different than yours, and this is where that gets caught before it corrupts a downstream payroll or benefits feed.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 A P I Third Party Integration
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search integrations..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{display:'grid',gap:16,marginTop:14}}>
-        {filtered.map((i,idx)=>{
-          const sc = STATUS_CFG[i.status]
-          return (
-            <div key={idx}
-              onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:i.name,...i,impact_links:['Notification Engine']}})}}
-              style={{background:'#fff',border:`1px solid ${i.flag_note?'#fecaca':'#e2e8f0'}`,borderRadius:16,padding:'18px'}}>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:10}}>
-                <div>
-                  <div style={{fontSize:12,fontWeight:700,color:'#0f172a'}}>{i.name}</div>
-                  <div style={{fontSize:9,color:'#94a3b8',marginTop:3}}>{i.category} . {i.fields_mapped} fields mapped . Last sync: {i.last_sync}</div>
-                </div>
-                <span style={{background:`${sc.c}15`,color:sc.c,fontSize:9,fontWeight:700,padding:'3px 10px',borderRadius:20}}>{sc.label}</span>
-              </div>
-              {i.flag_note&&<div style={{marginTop:8,fontSize:9,color:'#dc2626'}}>🚨 {i.flag_note}</div>}
-            </div>
-          )
-        })}
-      </div>
-
-      {showConnect&&(
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.65)',zIndex:5000,display:'flex',alignItems:'center',justifyContent:'center',padding:16}} onClick={()=>setShowConnect(false)}>
-          <div style={{background:'#fff',borderRadius:20,width:'min(480px,100%)'}} onClick={e=>e.stopPropagation()}>
-            <div style={{background:G,padding:'18px 24px'}}><div style={{fontSize:15,fontWeight:900,color:'#fff'}}>Connect New App</div></div>
-            <div style={{padding:'20px 24px'}}>
-              <Field label="App / Service Name" value="" onChange={()=>{}} accent={A} required/>
-              <Field label="API Key / Webhook URL" value="" onChange={()=>{}} accent={A} required/>
-              <Field label="Category" type="select" value="" onChange={()=>{}} accent={A} options={['Communication','ERP','ATS','Payroll','Other']}/>
-              <button onClick={()=>setShowConnect(false)} style={{width:'100%',padding:13,borderRadius:11,border:'none',background:G,color:'#fff',fontSize:13,fontWeight:700,cursor:'pointer'}}>Connect &amp; Map Fields</button>
-            </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
         </div>
       )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['AI flags a vendor endpoint change the moment a sync starts returning an unrecognized value -- never silently passed through to corrupt a downstream system.','Webhooks push and pull in real time -- never a manual re-entry across two disconnected systems.','Every integration\'s API key is encrypted at rest -- never stored or displayed in plain text after the initial connection.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Field Mapping',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,93 +1,85 @@
-// FILE: MyTrainingPage.jsx - My Training
-// (HR Services & Support > Employee Self Service)
-// Netflix-style catalog over the EXISTING v_my_learning_path (Course
-// Management session) -- distinct from My Internal Training
-// Certificates (already-earned credentials); this is active enrollment
-// and the discovery catalog.
+// FILE: src/components/dashboard/snapshots/MyTrainingPage.jsx
+// eLogix HRMS — My Training
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#0c4a6e 0%,#0284c7 60%,#7dd3fc 100%)'
-const A = '#0284c7'
-
-const CATEGORY_CFG = { mandatory:{c:'#ef4444',label:'Mandatory Compliance'},in_progress:{c:'#f59e0b',label:'In Progress'},recommended:{c:'#7c3aed',label:'Recommended Skills'} }
-
-const MY_TRAINING = [
-  { id:'t1', title:'Data Privacy & Security Compliance', category:'mandatory', progress_pct:30, deadline:'2025-07-15', impact_links:['DEI Training'] },
-  { id:'t2', title:'AWS Solutions Architect', category:'in_progress', progress_pct:65, deadline:null },
-  { id:'t3', title:'Advanced System Design Patterns', category:'recommended', progress_pct:0, deadline:null,
-    flag_note:'Recommended based on your Senior Software Engineer career path gap.', impact_links:['Career Pathing'] },
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function MyTrainingPage() {
-  const [search, setSearch] = useState('')
-  const [filterCat, setFilterCat] = useState('all')
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = MY_TRAINING.filter(t=>{
-    if (filterCat!=='all'&&t.category!==filterCat) return false
-    if (search&&!t.title.toLowerCase().includes(search.toLowerCase())) return false
-    return true
-  })
-  const overdueRisk = MY_TRAINING.filter(t=>t.category==='mandatory'&&t.progress_pct<50).length
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/training-calendar', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading My Training...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🎓" title="My Training"
-        breadcrumb="HR Services & Support > Employee Self Service"
-        gradient={G}
-        stats={[
-          {icon:'🎓',label:'Active Courses',  value:MY_TRAINING.length},
-          {icon:'⚠',label:'Compliance Risk',      value:overdueRisk},
-          {icon:'🤖',label:'AI Recommended',          value:MY_TRAINING.filter(t=>t.category==='recommended').length},
-          {icon:'🔗',label:'Career-Path Linked',         value:MY_TRAINING.filter(t=>t.flag_note).length},
-        ]}
-        onAdd={()=>{}} addLabel="Browse Catalog"/>
-
-      <div style={{background:'#eff6ff',border:'1px solid #bfdbfe',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#1e40af',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🎯</span>
-        <div style={{flex:1,minWidth:200}}><strong>Personalized, Not Generic:</strong> Recommendations weigh your actual career path and skill gaps -- not a one-size-fits-all assignment list.</div>
-      </div>
-
-      <div style={{display:'flex',gap:10,marginBottom:14,flexWrap:'wrap'}}>
-        <SearchBar value={search} onChange={setSearch} placeholder="Search my courses..."/>
-        <div style={{display:'flex',gap:4,background:'#f1f5f9',padding:3,borderRadius:9,flexWrap:'wrap'}}>
-          {['all',...Object.keys(CATEGORY_CFG)].map(c=>(
-            <button key={c} onClick={()=>setFilterCat(c)}
-              style={{padding:'7px 12px',borderRadius:7,border:'none',cursor:'pointer',fontSize:9,whiteSpace:'nowrap',
-                background:filterCat===c?'#fff':'transparent',color:filterCat===c?A:'#64748b',
-                fontWeight:filterCat===c?700:400,boxShadow:filterCat===c?'0 1px 3px rgba(0,0,0,.08)':'none'}}>
-              {c==='all'?'All':CATEGORY_CFG[c].label}
-            </button>
-          ))}
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          🎓 My Training
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
         </div>
       </div>
 
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:14}}>
-        {filtered.map(t=>{
-          const cc = CATEGORY_CFG[t.category]
-          return (
-            <div key={t.id}
-              onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:t.title,...t}})}}
-              style={{background:'#fff',border:`1px solid ${cc.c}33`,borderRadius:14,padding:'16px'}}>
-              <span style={{background:`${cc.c}15`,color:cc.c,fontSize:8,fontWeight:700,padding:'2px 9px',borderRadius:20}}>{cc.label}</span>
-              <div style={{fontSize:11,fontWeight:700,color:'#0f172a',marginTop:8}}>{t.title}</div>
-              <div style={{height:6,background:'#f1f5f9',borderRadius:6,overflow:'hidden',marginTop:8}}><div style={{width:`${t.progress_pct}%`,height:'100%',background:cc.c,borderRadius:6}}/></div>
-              {t.deadline&&<div style={{fontSize:8,color:'#94a3b8',marginTop:6}}>Due {t.deadline}</div>}
-              {t.flag_note&&<div style={{fontSize:8,color:'#7c3aed',marginTop:6}}>🎯 {t.flag_note}</div>}
-            </div>
-          )
-        })}
-      </div>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Completion auto-syncs to Course Management -- the moment you finish, your certificate generates automatically.','Mandatory courses behind schedule escalate to your manager 14, 7, and 1 day before the deadline.','Browse the full catalog any time -- enrollment never requires HR to manually add you.']}/>
-      </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
+          </div>
+        </div>
+      )}
 
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'Continue Course',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

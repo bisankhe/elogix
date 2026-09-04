@@ -1,71 +1,85 @@
-// FILE: ThingsToDoPage.jsx - Things to Do
-// (HR Services & Support > Employee Self Service)
-// The ESS homepage: a personal inbox aggregating pending approvals,
-// missing timesheets, expiring documents, and signature requests --
-// pure read-only UNION across many EXISTING tables, never new data.
+// FILE: src/components/dashboard/snapshots/ThingsToDoPage.jsx
+// eLogix HRMS — Things To Do
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#581c87 0%,#7c3aed 60%,#c4b5fd 100%)'
-const A = '#7c3aed'
-
-const TASKS = [
-  { id:'t1', type:'signature', icon:'✍', title:'Sign: Written Warning -- Attendance Policy', urgency:'high', target:'my-digital-signature' },
-  { id:'t2', type:'attendance', icon:'⏰', title:'Missed clock-out yesterday -- submit a request', urgency:'high', target:'attendance-request' },
-  { id:'t3', type:'leave', icon:'🏖', title:'Leave request pending manager approval', urgency:'medium', target:'leave-request-ess' },
-  { id:'t4', type:'document', icon:'📂', title:'Work permit expires in 43 days', urgency:'medium', target:'my-documents' },
-  { id:'t5', type:'survey', icon:'📊', title:'New pulse survey available', urgency:'low', target:'employee-survey' },
-]
-
-const URGENCY_CFG = { high:{c:'#ef4444',label:'Urgent'},medium:{c:'#f59e0b',label:'This Week'},low:{c:'#94a3b8',label:'Whenever'} }
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function ThingsToDoPage() {
-  const [ctx, setCtx] = useState(null)
-  const urgentCount = TASKS.filter(t=>t.urgency==='high').length
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Things To Do...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="✅" title="Things to Do"
-        breadcrumb="HR Services & Support > Employee Self Service"
-        gradient={G}
-        stats={[
-          {icon:'✅',label:'Total Tasks',  value:TASKS.length},
-          {icon:'🔴',label:'Urgent',          value:urgentCount},
-          {icon:'🟡',label:'This Week',          value:TASKS.filter(t=>t.urgency==='medium').length},
-          {icon:'🤖',label:'AI Assistant',          value:'Ask Anytime'},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#faf5ff',border:'1px solid #e9d5ff',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#581c87',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>📥</span>
-        <div style={{flex:1,minWidth:200}}><strong>Your Personal Inbox:</strong> Everything that needs your attention -- pending signatures, missing punches, leave approvals, expiring documents -- pulled live from across the system into one place.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Things To Do
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <div style={{display:'grid',gap:12}}>
-        {TASKS.map(t=>{
-          const uc = URGENCY_CFG[t.urgency]
-          return (
-            <div key={t.id}
-              onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:t.title,impact_links:[t.target]}})}}
-              style={{background:'#fff',border:`1.5px solid ${uc.c}33`,borderRadius:14,padding:'16px 18px',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:10,borderLeft:`4px solid ${uc.c}`,cursor:'pointer'}}>
-              <div style={{display:'flex',gap:14,alignItems:'center'}}>
-                <span style={{fontSize:24}}>{t.icon}</span>
-                <div style={{fontSize:11,fontWeight:700,color:'#0f172a'}}>{t.title}</div>
-              </div>
-              <span style={{background:`${uc.c}15`,color:uc.c,fontSize:9,fontWeight:700,padding:'3px 10px',borderRadius:20}}>{uc.label}</span>
-            </div>
-          )
-        })}
-      </div>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Tasks pull live from every ESS module -- nothing here is manually maintained or can go stale.','Urgent items resurface daily until resolved -- never silently buried after one dismissal.','Ask the AI assistant directly from here -- "How many leave days do I have left?" resolves instantly without a ticket.']}/>
-      </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
+          </div>
+        </div>
+      )}
 
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'Open Task',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

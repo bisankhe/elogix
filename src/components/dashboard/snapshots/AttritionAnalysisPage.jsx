@@ -1,87 +1,85 @@
-// FILE: AttritionAnalysisPage.jsx - Attrition Analysis
-// (Reports, Analytics & BI > HR Analytics)
-// Voluntary vs involuntary, regrettable-loss rate, retention by manager
-// -- pure aggregation over the EXISTING exit_records (Exit Analytics
-// session, already has exit_type + is_regrettable). Distinct from
-// Attrition Risk (Risk Management, predictive/forward-looking) -- this
-// is the historical, analytical lens.
+// FILE: src/components/dashboard/snapshots/AttritionAnalysisPage.jsx
+// eLogix HRMS — Attrition Analysis
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#7c2d12 0%,#c2410c 60%,#fdba74 100%)'
-const A = '#c2410c'
-
-const QUARTERLY_EXITS = [{q:'Q1',voluntary:8,involuntary:2},{q:'Q2',voluntary:11,involuntary:1},{q:'Q3',voluntary:6,involuntary:3}]
-
-const RETENTION_BY_MANAGER = [
-  {manager:'Dipesh Bhattarai',retention_pct:78,exits:4,regrettable_pct:75,flag:true},
-  {manager:'Anjali Sharma',retention_pct:94,exits:1,regrettable_pct:0,flag:false},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function AttritionAnalysisPage() {
-  const [ctx, setCtx] = useState(null)
-  const totalVol = QUARTERLY_EXITS.reduce((s,q)=>s+q.voluntary,0)
-  const totalInvol = QUARTERLY_EXITS.reduce((s,q)=>s+q.involuntary,0)
-  const maxExits = Math.max(...QUARTERLY_EXITS.map(q=>q.voluntary+q.involuntary))
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Attrition Analysis...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🚪" title="Attrition Analysis"
-        breadcrumb="Reports, Analytics & BI > HR Analytics"
-        gradient={G}
-        stats={[
-          {icon:'🚪',label:'Total Exits (YTD)',  value:totalVol+totalInvol},
-          {icon:'📊',label:'Voluntary Rate',          value:Math.round(totalVol/(totalVol+totalInvol)*100)+'%'},
-          {icon:'⚠',label:'Regrettable Loss Rate',       value:'42%'},
-          {icon:'📐',label:'Avg Tenure at Exit',            value:'2.4 yrs'},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#fff7ed',border:'1px solid #fed7aa',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#7c2d12',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🔗</span>
-        <div style={{flex:1,minWidth:200}}><strong>Not All Turnover Is the Same:</strong> Voluntary vs involuntary, and regrettable vs not, pull directly from Exit Analytics' own exit_type and is_regrettable fields -- never a second classification system that could disagree with the original exit record.</div>
-      </div>
-
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'20px',marginBottom:18}}>
-        <div style={{fontSize:11,fontWeight:800,color:'#0f172a',marginBottom:14}}>📊 Quarterly Departures -- Voluntary vs Involuntary</div>
-        <div style={{display:'flex',gap:14,alignItems:'flex-end',height:90}}>
-          {QUARTERLY_EXITS.map((q,i)=>(
-            <div key={i} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:2}}>
-              <div style={{fontSize:8,color:'#94a3b8'}}>{q.voluntary+q.involuntary}</div>
-              <div style={{width:'100%',display:'flex',flexDirection:'column',height:`${(q.voluntary+q.involuntary)/maxExits*70}px`}}>
-                <div style={{flex:q.involuntary,background:'#ef4444',borderRadius:'4px 4px 0 0'}}/>
-                <div style={{flex:q.voluntary,background:A}}/>
-              </div>
-              <div style={{fontSize:8,color:'#94a3b8'}}>{q.q}</div>
-            </div>
-          ))}
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Attrition Analysis
         </div>
-        <div style={{display:'flex',gap:14,marginTop:10,fontSize:8,color:'#94a3b8'}}>
-          <span><span style={{display:'inline-block',width:8,height:8,background:A,borderRadius:2,marginRight:4}}/>Voluntary</span>
-          <span><span style={{display:'inline-block',width:8,height:8,background:'#ef4444',borderRadius:2,marginRight:4}}/>Involuntary</span>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
         </div>
       </div>
 
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'18px'}}>
-        <div style={{fontSize:11,fontWeight:800,color:'#0f172a',marginBottom:12}}>👤 Retention by Manager</div>
-        {RETENTION_BY_MANAGER.map((m,i)=>(
-          <div key={i}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:m.manager,...m,impact_links:['Attrition Risk']}})}}
-            style={{display:'flex',justifyContent:'space-between',padding:'9px 0',borderBottom:i<RETENTION_BY_MANAGER.length-1?'1px solid #f8fafc':'none'}}>
-            <span style={{fontSize:10,color:'#374151'}}>{m.manager} {m.flag&&'⚠'}</span>
-            <span style={{fontSize:9,color:m.flag?'#dc2626':'#94a3b8'}}>{m.retention_pct}% retention · {m.exits} exits ({m.regrettable_pct}% regrettable)</span>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
+
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Regrettable-loss flags weigh performance rating at exit -- a struggling performer leaving is never miscounted as a talent loss.','Managers with disproportionately high regrettable exits surface here as a coaching opportunity, never an automated blame signal.','Retrenchment-driven exits track separately, since the 30-day notice and 1-month-per-year severance obligation apply only there.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Detail',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

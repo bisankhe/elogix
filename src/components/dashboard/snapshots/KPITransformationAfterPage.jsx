@@ -1,70 +1,85 @@
-// FILE: KPITransformationAfterPage.jsx - KPI Transformation Infographic: After
-// (Performance & Talent > Goal & Performance > Performance Analytics > KPI)
-// ROI-clarity visual: live, computed metrics from the actual system -
-// contrasted directly against the Before page's legacy baseline.
+// FILE: src/components/dashboard/snapshots/KPITransformationAfterPage.jsx
+// eLogix HRMS — K P I Transformation After
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#052e16 0%,#15803d 60%,#86efac 100%)'
-const A = '#15803d'
-
-const AFTER_METRICS = [
-  {label:'Time Spent on Admin vs Strategy',before:'70% / 30%',after:'20% Admin / 80% Strategy',improvement:'+50pp to Strategy',icon:'🚀'},
-  {label:'Recruitment Time-to-Fill',before:'45+ days',after:'22 days (live ATS tracking)',improvement:'-51%',icon:'⚡'},
-  {label:'Compliance Tracking',before:'Manual, reactive',after:'Automated alerts, real-time health score',improvement:'Proactive',icon:'✅'},
-  {label:'Data State',before:'Scattered spreadsheets',after:'Single source of truth, real-time sync',improvement:'Centralized',icon:'🗄'},
-  {label:'Attendance & Productivity',before:'Untracked absenteeism',after:'Live Bradford Factor + burnout alerts',improvement:'Predictive',icon:'📈'},
-  {label:'Documentation',before:'Paper trails',after:'Digital, e-signature linked, audit-logged',improvement:'100% Digital',icon:'📲'},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function KPITransformationAfterPage() {
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/kpi', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading K P I Transformation After...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="⏭" title="KPI Transformation - After"
-        breadcrumb="Performance & Talent Management > Goal & Performance > Performance Analytics > KPI"
-        gradient={G}
-        stats={[
-          {icon:'🚀',label:'Strategy Time',  value:'80%'},
-          {icon:'⚡',label:'Time-to-Fill',     value:'22 days'},
-          {icon:'✅',label:'Audit Method',     value:'Automated'},
-          {icon:'📲',label:'Records',           value:'100% Digital'},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#065f46',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🎉</span>
-        <div style={{flex:1,minWidth:200}}><strong>The Measurable ROI:</strong> Every figure here is computed live from the system - not aspirational marketing copy. Centralized data, proactive alerts, and automated workflows replace the legacy manual baseline shown on the "Before" page.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 K P I Transformation After
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <div style={{display:'grid',gap:14}}>
-        {AFTER_METRICS.map((m,i)=>(
-          <div key={i}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:m.label,impact_links:['KPI Transformation - Before']}})}}
-            style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px',display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
-            <div style={{fontSize:28,flexShrink:0}}>{m.icon}</div>
-            <div style={{flex:1,minWidth:160}}>
-              <div style={{fontSize:11,fontWeight:700,color:'#0f172a',marginBottom:6}}>{m.label}</div>
-              <div style={{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}>
-                <span style={{fontSize:10,color:'#94a3b8',textDecoration:'line-through'}}>{m.before}</span>
-                <span style={{color:'#10b981'}}>{'>'}</span>
-                <span style={{fontSize:12,fontWeight:800,color:'#15803d'}}>{m.after}</span>
-              </div>
-            </div>
-            <span style={{background:'#f0fdf4',color:'#15803d',fontSize:10,fontWeight:800,padding:'5px 14px',borderRadius:20,flexShrink:0}}>{m.improvement}</span>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
+
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      <div style={{marginTop:20,textAlign:'center'}}>
-        <span style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:20,padding:'10px 24px',fontSize:11,fontWeight:700,color:A}}>⏮ Review the legacy baseline {'>'} KPI Transformation - Before</span>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Detail',key:'view'},{icon:'🔗',label:'Compare to Before',key:'compare'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

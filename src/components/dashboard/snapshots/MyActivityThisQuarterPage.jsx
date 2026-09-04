@@ -1,79 +1,85 @@
-// FILE: MyActivityThisQuarterPage.jsx - My Activity This Quarter
-// (HR Services & Support > Employee Self Service)
-// Month-comparison rollup over the SAME employee_activity_log, plus a
-// correlation against My Goals & KPI progress -- a quarter is the
-// natural review-cycle window, so the lens shifts toward outcomes.
+// FILE: src/components/dashboard/snapshots/MyActivityThisQuarterPage.jsx
+// eLogix HRMS — My Activity This Quarter
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#1e1b4b 0%,#4338ca 60%,#818cf8 100%)'
-const A = '#4338ca'
-
-const MONTHLY_COMPARISON = [{month:'April',count:88,goal_progress_delta:12},{month:'May',count:103,goal_progress_delta:18},{month:'June',count:95,goal_progress_delta:21}]
-
-const QUARTER_HIGHLIGHTS = [
-  {label:'Courses Completed',value:2,icon:'🎓'},{label:'Goals Advanced',value:3,icon:'🎯'},
-  {label:'Requests Submitted',value:11,icon:'📥'},{label:'Helpdesk Tickets Resolved',value:4,icon:'🎫'},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function MyActivityThisQuarterPage() {
-  const [ctx, setCtx] = useState(null)
-  const total = MONTHLY_COMPARISON.reduce((s,m)=>s+m.count,0)
-  const maxMonth = Math.max(...MONTHLY_COMPARISON.map(m=>m.count))
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading My Activity This Quarter...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="📆" title="My Activity This Quarter"
-        breadcrumb="HR Services & Support > Employee Self Service"
-        gradient={G}
-        stats={[
-          {icon:'📆',label:'Total Actions',  value:total},
-          {icon:'📈',label:'Trend',             value:'Growing'},
-          {icon:'🎯',label:'Goal Progress Gain',   value:'+21pts'},
-          {icon:'📊',label:'Monthly Average',          value:Math.round(total/3)},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#eef2ff',border:'1px solid #c7d2fe',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#3730a3',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🪞</span>
-        <div style={{flex:1,minWidth:200}}><strong>Quarter Reflection, Built In:</strong> Helpful context heading into a performance check-in -- not just raw counts, but how your activity correlates with real progress on My Goals & KPI.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 My Activity This Quarter
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      {/* Monthly comparison */}
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'20px',marginBottom:18}}>
-        <div style={{fontSize:11,fontWeight:800,color:'#0f172a',marginBottom:14}}>📊 Monthly Comparison</div>
-        {MONTHLY_COMPARISON.map((m,i)=>(
-          <div key={i}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:m.month,...m,impact_links:['My Goals & KPI']}})}}
-            style={{marginBottom:14}}>
-            <div style={{display:'flex',justifyContent:'space-between',marginBottom:4,fontSize:10}}>
-              <span style={{color:'#374151',fontWeight:600}}>{m.month}</span>
-              <span style={{fontWeight:700,color:A}}>{m.count} actions . +{m.goal_progress_delta}pts goal progress</span>
-            </div>
-            <div style={{height:9,background:'#f1f5f9',borderRadius:9,overflow:'hidden'}}><div style={{width:`${m.count/maxMonth*100}%`,height:'100%',background:A,borderRadius:9}}/></div>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
+
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      {/* Quarter highlights */}
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:12}}>
-        {QUARTER_HIGHLIGHTS.map((h,i)=>(
-          <div key={i} style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:14,padding:'16px',textAlign:'center'}}>
-            <div style={{fontSize:22,marginBottom:6}}>{h.icon}</div>
-            <div style={{fontSize:18,fontWeight:900,color:A}}>{h.value}</div>
-            <div style={{fontSize:8,color:'#94a3b8',marginTop:4}}>{h.label}</div>
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
           </div>
-        ))}
-      </div>
-
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Activity volume rising alongside goal-progress gains is a healthy signal -- both tracked together, never in isolation.','Use the Quarter Highlights as ready-made talking points for your upcoming check-in.','This entire view exports as a single summary if you want to bring it into a 1-on-1.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Month Detail',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

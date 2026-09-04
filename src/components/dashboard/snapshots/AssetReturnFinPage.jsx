@@ -1,76 +1,85 @@
-// FILE: AssetReturnFinPage.jsx - Asset Return (Asset & Inventory)
-// (Finance, Assets & Administration > Asset & Inventory)
-// Distinct from the EXISTING AssetReturnPage (Exit Management,
-// offboarding-triggered). This is the ONGOING return hub -- mid-tenure
-// returns (replacements, department transfers) AND the unreturned-
-// asset-vs-final-settlement deduction link, made explicit per the
-// brief's legal note on recovering losses from final salary.
+// FILE: src/components/dashboard/snapshots/AssetReturnFinPage.jsx
+// eLogix HRMS — Asset Return
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#7c2d12 0%,#c2410c 60%,#fdba74 100%)'
-const A = '#c2410c'
-
-const RETURN_QUEUE = [
-  {id:'r1',item:'ThinkPad X1 Carbon',tag:'IT-LT-0019',employee:'Bikash Rai',reason:'Department transfer -- reassigned hardware',status:'pending',due:'2025-07-02'},
-  {id:'r2',item:'Standing Desk',tag:'FUR-DK-0067',employee:'Maya Pradhan',reason:'Final settlement -- exited 2025-06-10',status:'overdue',due:'2025-06-17',
-   flag_note:'12 days overdue -- value eligible for deduction from final settlement per Labour Act due-process rules.', impact_links:['Final Settlement']},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function AssetReturnFinPage() {
-  const [search, setSearch] = useState('')
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = RETURN_QUEUE.filter(r=>!search||r.employee.toLowerCase().includes(search.toLowerCase()))
-  const overdueCount = RETURN_QUEUE.filter(r=>r.status==='overdue').length
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/assets', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Asset Return...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="↩" title="Asset Return"
-        breadcrumb="Finance, Assets & Administration > Asset & Inventory"
-        gradient={G}
-        stats={[
-          {icon:'↩',label:'Pending Returns',  value:RETURN_QUEUE.length},
-          {icon:'⚠',label:'Overdue',              value:overdueCount},
-          {icon:'⚖',label:'Settlement-Linked',        value:RETURN_QUEUE.filter(r=>r.impact_links).length},
-          {icon:'📋',label:'Audit Trail',                 value:'Always Stamped'},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#fff7ed',border:'1px solid #fed7aa',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#7c2d12',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>⚖</span>
-        <div style={{flex:1,minWidth:200}}><strong>Unreturned Has Real Consequences:</strong> Per the Labour Act, unreturned company property may be legally recovered from an employee's final salary -- but only with due process followed. Overdue items here link directly to Final Settlement so nothing gets deducted without a documented trail.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📦 Asset Return
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search by employee..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{display:'grid',gap:14,marginTop:14}}>
-        {filtered.map(r=>(
-          <div key={r.id}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:r.item,...r}})}}
-            style={{background:'#fff',border:`1.5px solid ${r.status==='overdue'?'#fecaca':'#e2e8f0'}`,borderRadius:14,padding:'16px 18px',borderLeft:`4px solid ${r.status==='overdue'?'#ef4444':'#f59e0b'}`}}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:8}}>
-              <div>
-                <div style={{fontSize:12,fontWeight:700,color:'#0f172a'}}>{r.item}</div>
-                <div style={{fontSize:9,color:'#94a3b8',marginTop:3}}>{r.tag} . {r.employee} . {r.reason}</div>
-              </div>
-              <span style={{background:r.status==='overdue'?'#fef2f2':'#fffbeb',color:r.status==='overdue'?'#dc2626':'#b45309',fontSize:9,fontWeight:700,padding:'3px 10px',borderRadius:20}}>{r.status}</span>
-            </div>
-            <div style={{marginTop:8,fontSize:9,color:'#94a3b8'}}>Due: {r.due}</div>
-            {r.flag_note&&<div style={{marginTop:8,fontSize:9,color:'#dc2626'}}>⚠ {r.flag_note}</div>}
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['QR scan on return auto-confirms the asset back into inventory -- never a manual checklist that gets forgotten.','Overdue items past a final working day route automatically into the Final Settlement deduction review, never silently written off.','Condition photos and a digital sign-off are captured at return, protecting both the company and the employee from later disputes.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Detail',key:'view'},{icon:'📱',label:'Confirm Return via QR',key:'scan'},
-        {icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

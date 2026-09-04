@@ -1,77 +1,85 @@
-// FILE: MyAttendancePage.jsx - My Attendance
-// (HR Services & Support > Employee Self Service)
-// ESS-facing calendar view, pure UI over the EXISTING
-// daily_attendance_records (Daily Attendance session) -- never a
-// second attendance table. Color-coded present/absent/late/overtime.
+// FILE: src/components/dashboard/snapshots/MyAttendancePage.jsx
+// eLogix HRMS — My Attendance
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#0c4a6e 0%,#0284c7 60%,#7dd3fc 100%)'
-const A = '#0284c7'
-
-const STATUS_CFG = {
-  present:{c:'#10b981',label:'Present'},late:{c:'#f59e0b',label:'Late'},absent:{c:'#ef4444',label:'Absent'},
-  missed_checkout:{c:'#7c3aed',label:'Missed Checkout'},weekend:{c:'#cbd5e1',label:'Weekend'},
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
 }
 
-const CALENDAR_DAYS = [
-  {day:1,status:'present',hours:8.5},{day:2,status:'present',hours:8.0},{day:3,status:'weekend',hours:0},
-  {day:4,status:'weekend',hours:0},{day:5,status:'late',hours:7.5},{day:6,status:'present',hours:8.0},
-  {day:7,status:'present',hours:9.2,overtime:1.2},{day:8,status:'missed_checkout',hours:null},
-  {day:9,status:'present',hours:8.0},{day:10,status:'weekend',hours:0},
-]
-
-const SUMMARY = { present_days:7, late_days:1, absent_days:0, total_hours:65.2, overtime_hours:1.2 }
-
 export default function MyAttendancePage() {
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/attendance', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading My Attendance...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="📅" title="My Attendance"
-        breadcrumb="HR Services & Support > Employee Self Service"
-        gradient={G}
-        stats={[
-          {icon:'✅',label:'Present Days',  value:SUMMARY.present_days},
-          {icon:'⏱',label:'Total Hours',      value:SUMMARY.total_hours},
-          {icon:'⚡',label:'Overtime',           value:SUMMARY.overtime_hours+'h'},
-          {icon:'⚠',label:'Late/Missing',          value:SUMMARY.late_days},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#eff6ff',border:'1px solid #bfdbfe',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#1e40af',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>📡</span>
-        <div style={{flex:1,minWidth:200}}><strong>Synced Live, Never Manual:</strong> This calendar reflects the exact same attendance record HR and payroll see -- biometric, GPS, and web punches, all in sync the moment they're captured.</div>
-      </div>
-
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'20px'}}>
-        <div style={{fontSize:11,fontWeight:800,color:'#0f172a',marginBottom:14}}>📅 This Month</div>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(70px,1fr))',gap:8}}>
-          {CALENDAR_DAYS.map(d=>{
-            const sc = STATUS_CFG[d.status]
-            return (
-              <div key={d.day}
-                onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:`Day ${d.day}`,...d,impact_links:['Attendance Request']}})}}
-                style={{background:`${sc.c}15`,borderRadius:10,padding:'10px 6px',textAlign:'center',border:`1px solid ${sc.c}33`}}>
-                <div style={{fontSize:12,fontWeight:800,color:sc.c}}>{d.day}</div>
-                <div style={{fontSize:7,color:sc.c,marginTop:2}}>{sc.label}</div>
-                {d.hours!=null&&<div style={{fontSize:7,color:'#94a3b8',marginTop:2}}>{d.hours}h</div>}
-                {d.overtime&&<div style={{fontSize:7,color:'#7c3aed',fontWeight:700}}>+{d.overtime}h OT</div>}
-              </div>
-            )
-          })}
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          ⏰ My Attendance
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
         </div>
       </div>
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Missed checkouts auto-suggest filing an Attendance Request the same day -- before it\'s forgotten.','Overtime hours calculated against the 4-hour daily statutory cap automatically.','Tap any day with an issue to jump straight into a pre-filled correction request.']}/>
-      </div>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Detail',key:'view'},{icon:'📝',label:'Request Correction',key:'correction'},
-        {icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
+          </div>
+        </div>
+      )}
+
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

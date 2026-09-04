@@ -1,96 +1,85 @@
-// FILE: TrainingFeedbackPage.jsx - Training Feedback
-// (Performance & Talent > Talent Development > Learning & Development)
-// Kirkpatrick Level 1 pulse survey, auto-triggered 48h post-completion.
-// Action-oriented questions ("how will you apply this"), not generic
-// "smile sheet" instructor ratings. Negative feedback auto-escalates.
+// FILE: src/components/dashboard/snapshots/TrainingFeedbackPage.jsx
+// eLogix HRMS — Training Feedback
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#581c87 0%,#7c3aed 60%,#c4b5fd 100%)'
-const A = '#7c3aed'
-
-const FEEDBACK_RESPONSES = [
-  { id:'f1', employee:'Sunil Magar', course:'AWS Solutions Architect', csat:5,
-    application_answer:'I\'ll use the VPC peering setup to fix our staging environment access issue this week.',
-    submitted_at:'2025-06-22', status:'positive', impact_links:['Course Management'] },
-  { id:'f2', employee:'Bikash Rai', course:'CI/CD Pipeline Mastery', csat:2,
-    application_answer:'Honestly not sure -- the pacing was too fast and skipped over the actual deployment steps.',
-    submitted_at:'2025-06-21', status:'negative', flag_note:'Auto-escalated to L&D Lead: CSAT below 3 threshold.', impact_links:['Course Management'] },
-]
-
-const COURSE_SCORECARD = [
-  {course:'AWS Solutions Architect',completion_rate:78,avg_csat:4.6,responses:34},
-  {course:'CI/CD Pipeline Mastery',completion_rate:62,avg_csat:3.1,responses:11},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function TrainingFeedbackPage() {
-  const [search, setSearch] = useState('')
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = FEEDBACK_RESPONSES.filter(f=>!search||f.employee.toLowerCase().includes(search.toLowerCase()))
-  const negativeCount = FEEDBACK_RESPONSES.filter(f=>f.status==='negative').length
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/training-calendar', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Training Feedback...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="💬" title="Training Feedback"
-        breadcrumb="Performance & Talent Management > Talent Development > Learning & Development"
-        gradient={G}
-        stats={[
-          {icon:'💬',label:'Responses This Month', value:FEEDBACK_RESPONSES.length},
-          {icon:'⭐',label:'Avg CSAT',                value:'3.85/5'},
-          {icon:'⚠',label:'Auto-Escalated',           value:negativeCount},
-          {icon:'⏱',label:'Sent',                       value:'48h post-completion'},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#faf5ff',border:'1px solid #e9d5ff',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#581c87',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🎯</span>
-        <div style={{flex:1,minWidth:200}}><strong>Beyond the "Smile Sheet":</strong> Pulse surveys ask "How will you apply this to your current work?" -- not just "Did you like the trainer?" This is Kirkpatrick Level 1, auto-triggered 48 hours post-completion while the experience is still fresh. Negative feedback (CSAT &lt; 3) routes directly to the L&D Lead.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          🎓 Training Feedback
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      {/* Course scorecard */}
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'18px 20px',marginBottom:18}}>
-        <div style={{fontSize:12,fontWeight:800,color:'#0f172a',marginBottom:12}}>📊 Course Scorecard</div>
-        {COURSE_SCORECARD.map((c,i)=>(
-          <div key={i} style={{padding:'8px 0',borderBottom:i<COURSE_SCORECARD.length-1?'1px solid #f8fafc':'none'}}>
-            <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
-              <span style={{fontSize:11,fontWeight:700,color:'#0f172a'}}>{c.course}</span>
-              <span style={{fontSize:10,color:c.avg_csat>=4?'#10b981':'#f59e0b',fontWeight:700}}>⭐ {c.avg_csat}/5 ({c.responses} responses)</span>
-            </div>
-            <div style={{height:6,background:'#f1f5f9',borderRadius:6,overflow:'hidden'}}><div style={{width:`${c.completion_rate}%`,height:'100%',background:A,borderRadius:6}}/></div>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
+
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search by employee name..."/>
-
-      <div style={{display:'grid',gap:14,marginTop:14}}>
-        {filtered.map(f=>(
-          <div key={f.id}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:f.employee,...f}})}}
-            style={{background:'#fff',border:`1.5px solid ${f.status==='negative'?'#fecaca':'#e2e8f0'}`,borderRadius:16,overflow:'hidden',boxShadow:'0 2px 10px rgba(0,0,0,.05)',borderLeft:`5px solid ${f.status==='negative'?'#ef4444':'#10b981'}`}}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',padding:'14px 18px',borderBottom:'1px solid #f1f5f9',flexWrap:'wrap',gap:10}}>
-              <div>
-                <div style={{fontSize:13,fontWeight:900,color:'#0f172a'}}>{f.employee}</div>
-                <div style={{fontSize:10,color:'#64748b'}}>{f.course}</div>
-              </div>
-              <div style={{fontSize:16}}>{'⭐'.repeat(f.csat)}{'☆'.repeat(5-f.csat)}</div>
-            </div>
-            <div style={{padding:'10px 18px',fontSize:10,color:'#374151'}}><strong>How will you apply this?</strong> "{f.application_answer}"</div>
-            {f.flag_note&&<div style={{padding:'10px 18px',background:'#fef2f2',fontSize:10,color:'#991b1b'}}><strong>⚠</strong> {f.flag_note}</div>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
           </div>
-        ))}
-      </div>
-
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Survey auto-triggers 48 hours post-completion -- close enough to recall accurately, far enough to reflect real application.','CSAT below 3 auto-routes to the L&D Lead for course content review.','Level 3 (Behavior) follow-up auto-schedules at 90 days, correlating against Performance Appraisal data.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Response',key:'view'},{icon:'📧',label:'Notify L&D Lead',key:'notify'},
-        {icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

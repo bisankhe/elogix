@@ -1,132 +1,85 @@
-// FILE: DigitalEmployeeFilePage.jsx - Digital Employee File (Employee Documents)
-// 360-degree single-view profile: masonry doc grid, expiring alerts, pending e-signatures
+// FILE: src/components/dashboard/snapshots/DigitalEmployeeFilePage.jsx
+// eLogix HRMS — Digital Employee File
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, Badge, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#3b82f6 100%)'
-const A = '#1e3a5f'
-
-const FILE_DATA = {
-  employee: { name:'Gita Maharjan', position:'Cloud Architect', dept:'Information Technology',
-    manager:'Rajesh Sharma (CTO)', code:'EMP-0041', avatar_color:'#3b82f6' },
-  sidebar_tabs: ['Personal Info','Contracts','Letters','Payroll','Performance'],
-  recently_viewed:[
-    {name:'Employment_Contract_v1.0.pdf',type:'Contract',viewed:'2 hours ago',icon:'📜'},
-    {name:'Citizenship_Certificate.pdf',type:'ID Proof',viewed:'1 day ago',icon:'🪪'},
-    {name:'NDA_Signed.pdf',type:'NDA',viewed:'3 days ago',icon:'🔒'},
-  ],
-  expiring_contracts:[
-    {employee:'Priya Khadka',type:'Time-Bound Contract',expires:'2025-07-05',days_left:14},
-  ],
-  pending_signatures:[
-    {employee:'Sunita Rai',document:'Employment Contract',sent:'2025-06-19',waiting_days:2},
-    {employee:'Ramesh B. Shrestha',document:'Vendor Service Agreement',sent:'2025-06-18',waiting_days:3},
-  ],
-  audit_log:[
-    {action:'Viewed',document:'Citizenship Certificate',by:'HR Admin',date:'2025-06-20 14:32'},
-    {action:'Downloaded',document:'Employment Contract',by:'Gita Maharjan',date:'2025-06-19 09:15'},
-    {action:'Uploaded',document:'NDA_Signed.pdf',by:'HR Admin',date:'2025-06-18 16:40'},
-  ],
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
 }
 
 export default function DigitalEmployeeFilePage() {
-  const [tab, setTab] = useState('Personal Info')
-  const [msg, setMsg] = useState('')
-  const notify = m => { setMsg(m); setTimeout(()=>setMsg(''),3000) }
-  const [ctx, setCtx] = useState(null)
-  const d = FILE_DATA
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/employees', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Digital Employee File...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🗂" title="Digital Employee File"
-        breadcrumb="Employee Lifecycle > Employee Records > Employee Documents"
-        gradient={G}
-        stats={[
-          {icon:'📁',label:'Recent Files',     value:d.recently_viewed.length},
-          {icon:'⏰',label:'Expiring Contracts',value:d.expiring_contracts.length},
-          {icon:'✍',label:'Pending e-Sign',     value:d.pending_signatures.length},
-          {icon:'🔍',label:'Audit Entries',     value:d.audit_log.length},
-        ]}
-        onAdd={()=>notify('📁 Digital employee file created')} addLabel="+ Create File" onExcel={()=>notify('📤 Exporting digital files...')}/>
-
-      {/* 360 profile header */}
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:18,overflow:'hidden',marginBottom:16}}>
-        <div style={{background:G,padding:'22px 26px',display:'flex',gap:16,alignItems:'center'}}>
-          <div style={{width:64,height:64,borderRadius:'50%',background:'rgba(255,255,255,.2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,fontWeight:900,color:'#fff',border:'3px solid rgba(255,255,255,.4)'}}>
-            {d.employee.name.split(' ').map(n=>n[0]).join('').slice(0,2)}
-          </div>
-          <div style={{flex:1}}>
-            <div style={{fontSize:18,fontWeight:900,color:'#fff'}}>{d.employee.name}</div>
-            <div style={{fontSize:12,color:'rgba(255,255,255,.8)'}}>{d.employee.position} . {d.employee.dept}</div>
-            <div style={{fontSize:10,color:'rgba(255,255,255,.6)',marginTop:2}}>{d.employee.code} . Reports to {d.employee.manager}</div>
-          </div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          👥 Digital Employee File
         </div>
-        <div style={{display:'flex',gap:2,padding:'0 24px',borderBottom:'1px solid #f1f5f9',overflowX:'auto'}}>
-          {d.sidebar_tabs.map(t=>(
-            <button key={t} onClick={()=>setTab(t)}
-              style={{padding:'12px 16px',border:'none',background:'none',cursor:'pointer',fontSize:11,fontWeight:700,whiteSpace:'nowrap',
-                color:tab===t?A:'#94a3b8',borderBottom:tab===t?`2.5px solid ${A}`:'2.5px solid transparent'}}>
-              {t}
-            </button>
-          ))}
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
         </div>
       </div>
 
-      {/* Masonry dashboard grid */}
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
-        <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'18px 20px'}}>
-          <div style={{fontSize:12,fontWeight:800,color:'#0f172a',marginBottom:12}}>📂 Recently Viewed Documents</div>
-          {d.recently_viewed.map((doc,i)=>(
-            <div key={i} style={{display:'flex',gap:10,alignItems:'center',padding:'8px 0',borderBottom:i<d.recently_viewed.length-1?'1px solid #f8fafc':'none'}}>
-              <span style={{fontSize:18}}>{doc.icon}</span>
-              <div style={{flex:1}}>
-                <div style={{fontSize:11,fontWeight:600,color:'#0f172a'}}>{doc.name}</div>
-                <div style={{fontSize:9,color:'#94a3b8'}}>{doc.type} . {doc.viewed}</div>
-              </div>
-            </div>
-          ))}
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
         </div>
+      )}
 
-        <div style={{background:'#fff',border:'1px solid #fecaca',borderRadius:16,padding:'18px 20px'}}>
-          <div style={{fontSize:12,fontWeight:800,color:'#991b1b',marginBottom:12}}>⏰ Expiring Contracts (Alerts)</div>
-          {d.expiring_contracts.length>0?d.expiring_contracts.map((c,i)=>(
-            <div key={i} style={{background:'#fef2f2',borderRadius:10,padding:'10px 12px',marginBottom:8}}>
-              <div style={{fontSize:11,fontWeight:700,color:'#0f172a'}}>{c.employee}</div>
-              <div style={{fontSize:10,color:'#64748b'}}>{c.type} . Expires {c.expires}</div>
-              <div style={{fontSize:10,fontWeight:700,color:'#dc2626',marginTop:2}}>⚠ {c.days_left} days remaining</div>
-            </div>
-          )):<div style={{fontSize:11,color:'#94a3b8'}}>No contracts expiring soon.</div>}
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
+          </div>
         </div>
+      )}
 
-        <div style={{background:'#fff',border:'1px solid #fde68a',borderRadius:16,padding:'18px 20px'}}>
-          <div style={{fontSize:12,fontWeight:800,color:'#92400e',marginBottom:12}}>✍ Pending e-Signatures</div>
-          {d.pending_signatures.map((p,i)=>(
-            <div key={i} style={{background:'#fffbeb',borderRadius:10,padding:'10px 12px',marginBottom:8,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-              <div>
-                <div style={{fontSize:11,fontWeight:700,color:'#0f172a'}}>{p.employee}</div>
-                <div style={{fontSize:10,color:'#64748b'}}>{p.document} . Sent {p.sent}</div>
-              </div>
-              <span style={{fontSize:9,fontWeight:700,color:'#b45309'}}>{p.waiting_days}d waiting</span>
-            </div>
-          ))}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
         </div>
-
-        <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'18px 20px'}}>
-          <div style={{fontSize:12,fontWeight:800,color:'#0f172a',marginBottom:12}}>🔍 Audit Trail (Who Accessed What)</div>
-          {d.audit_log.map((a,i)=>(
-            <div key={i} style={{display:'flex',gap:10,alignItems:'flex-start',padding:'8px 0',borderBottom:i<d.audit_log.length-1?'1px solid #f8fafc':'none'}}>
-              <span style={{background:a.action==='Viewed'?'#eff6ff':a.action==='Downloaded'?'#f0fdf4':'#fef9c3',color:a.action==='Viewed'?'#1d4ed8':a.action==='Downloaded'?'#15803d':'#854d0e',fontSize:8,fontWeight:700,padding:'2px 8px',borderRadius:20,flexShrink:0}}>{a.action}</span>
-              <div style={{flex:1}}>
-                <div style={{fontSize:10,color:'#0f172a'}}>{a.document}</div>
-                <div style={{fontSize:9,color:'#94a3b8'}}>by {a.by} . {a.date}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={['Document Management']} actions={[{icon:'👁',label:'View',key:'view'}]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      )}
     </div>
   )
 }

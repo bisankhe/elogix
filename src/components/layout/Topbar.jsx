@@ -7,13 +7,12 @@ import React from 'react'
 // ============================================================
 
 import { useState, useRef, useEffect } from 'react'
-import { useApp } from '../../context/AppContext.jsx'
 import { getTenantContext } from '../../data/rolePersonaMap.js'
 import { LANGUAGES } from '../../i18n/index.js'
 
 // ── User Menu Dropdown ────────────────────────────────────────
 function UserMenu({ currentPersona, t, onClose, onLogout, onProfile, onSettings, onLanguage }) {
-  const { darkMode, setDarkMode, setLanguage, language } = useApp()
+  const { darkMode, setDarkMode, setLanguage, language } = _useAppFallback()
 
   return (
     <div style={{
@@ -72,11 +71,8 @@ function UserMenu({ currentPersona, t, onClose, onLogout, onProfile, onSettings,
       {/* Logout */}
       <button
         onClick={() => {
-          // Call logout FIRST, then close the menu.
-          // Reversing this prevents React unmounting the component
-          // before onLogout() can execute its state updates.
-          if (onLogout) onLogout()
           onClose()
+          if (onLogout) onLogout()
         }}
         style={{
           width: '100%', display: 'flex', alignItems: 'center', gap: 10,
@@ -95,7 +91,7 @@ function UserMenu({ currentPersona, t, onClose, onLogout, onProfile, onSettings,
 
 // ── Search Bar ────────────────────────────────────────────────
 function SearchBar({ t, onClose }) {
-  const { navTo } = useApp()
+  const { navTo } = _useAppFallback()
   const [query, setQuery] = useState('')
   const inputRef = useRef()
 
@@ -266,7 +262,7 @@ const DEFAULT_TOPBAR_DOCK = [
 ]
 
 function InlineQuickDock() {
-  const { navTo, currentPersona, sub, darkMode, setShowNotif, setShowAI } = useApp()
+  const { navTo, currentPersona, sub, darkMode, setShowNotif, setShowAI } = _useAppFallback()
   const [hoveredIdx, setHoveredIdx] = React.useState(null)
   const personaId = currentPersona?.id || ''
   const items = TOPBAR_DOCK[personaId] || DEFAULT_TOPBAR_DOCK
@@ -333,13 +329,36 @@ function InlineQuickDock() {
   )
 }
 
+
+function _getSession() {
+  try {
+    return JSON.parse(
+      sessionStorage.getItem('elogix_session') ||
+      localStorage.getItem('elogix_session') || 'null'
+    ) || {}
+  } catch (_e) { return {} }
+}
+function _useAppFallback() {
+  const s = _getSession()
+  return {
+    sub: s?.last_page || '', persona: s?.persona || s?.user?.role || 'employee',
+    lang: s?.lang || 'en', currency: s?.currency || 'NPR',
+    company: s?.company || {}, user: s?.user || {},
+    darkMode: false, setDarkMode: () => {},
+    navTo: (p) => window.dispatchEvent(new CustomEvent('elogix:nav', { detail: { page: p } })),
+    switchPersona: () => {}, setShowNotif: () => {}, setShowAI: () => {},
+    setSidebarOpen: () => {}, sidebarOpen: true,
+    currentPersona: { id: s?.persona || 'employee', icon: '👤', color: '#7c3aed', label: '' },
+  }
+}
+
 export default function Topbar({ sidebarOpen, setSidebarOpen, onLangClick, onNotifClick, onAIClick, onLogout, onProfile, onSettings }) {
   const {
     persona, currentPersona,
     language, currency, cc,
     darkMode, setDarkMode, t,
     sub,
-  } = useApp()
+  } = _useAppFallback()
 
   const [showSearch,   setShowSearch]   = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
@@ -395,40 +414,9 @@ export default function Topbar({ sidebarOpen, setSidebarOpen, onLangClick, onNot
         <span style={{ fontSize: 18 }}>{currentPersona?.icon}</span>
         <div>
           <div style={{ fontSize: 13, fontWeight: 800, color: '#0f172a', lineHeight: 1.2 }}>
-            {(() => {
-              try {
-                // Read from new elogix_session key (written by AuthContext.jsx)
-                const sess = JSON.parse(
-                  sessionStorage.getItem('elogix_session') ||
-                  localStorage.getItem('elogix_session') || 'null'
-                )
-                if (sess?.user?.full_name) return sess.user.full_name
-                // Fallback: legacy elogix_user key
-                const u = JSON.parse(
-                  sessionStorage.getItem('elogix_user') ||
-                  localStorage.getItem('elogix_user') || '{}'
-                )
-                return u.full_name || u.name || t(currentPersona?.labelKey) || currentPersona?.label || 'User'
-              } catch(_e) { return currentPersona?.label || 'User' }
-            })()}
+            {(() => { try { const u=JSON.parse(sessionStorage.getItem('elogix_user')||localStorage.getItem('elogix_user')||'{}'); return u.full_name||u.name||t(currentPersona?.labelKey)||currentPersona?.label||'User' } catch { return currentPersona?.label||'User' } })()}
           </div>
-          <div style={{ fontSize: 10, color: '#94a3b8' }}>
-            {(() => {
-              try {
-                // Show role label from session — not hardcoded persona
-                const sess = JSON.parse(
-                  sessionStorage.getItem('elogix_session') ||
-                  localStorage.getItem('elogix_session') || 'null'
-                )
-                const role = sess?.user?.role
-                if (role) {
-                  // Convert role key to readable label: super_admin → Super Admin
-                  return role.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())
-                }
-                return 'eLogix HRMS'
-              } catch(_e) { return 'eLogix HRMS' }
-            })()}
-          </div>
+          <div style={{ fontSize: 10, color: '#94a3b8' }}>eLogix HRMS</div>
         </div>
       </div>
 
@@ -509,9 +497,9 @@ export default function Topbar({ sidebarOpen, setSidebarOpen, onLangClick, onNot
       </TBtn>
 
       {/* ── Avatar / User Menu ── */}
-      <div style={{ position: 'relative' }}>
+      <div style={{ position: 'relative' }} onClick={e => e.stopPropagation()}>
         <button
-          onClick={(e) => { e.stopPropagation(); setShowUserMenu(s => !s) }}
+          onClick={() => setShowUserMenu(s => !s)}
           style={{
             width: 34, height: 34, borderRadius: '50%',
             background: `linear-gradient(135deg,${currentPersona?.color || '#3b82f6'},#8b5cf6)`,

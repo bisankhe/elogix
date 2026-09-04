@@ -11,7 +11,6 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend, Cell, PieChart, Pie,
 } from 'recharts'
-import { useApp }        from '../../../context/AppContext.jsx'
 import { StatCard }      from '../../shared/StatCard.jsx'
 import { Card }          from '../../shared/Card.jsx'
 import { Pill }          from '../../shared/Pill.jsx'
@@ -114,7 +113,17 @@ function AppraisalGauge({ pct, total, completed }) {
         <text x="50" y="58" textAnchor="middle" fontSize="8"  fill="#94a3b8">completed</text>
       </svg>
       <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>
-
+      {apiLoading && (
+        <div style={{textAlign:'center',padding:40,color:'#7c3aed',fontSize:13,fontWeight:600}}>
+          <div style={{fontSize:32,marginBottom:8}}>⟳</div>Loading...
+        </div>
+      )}
+      {apiError && !apiLoading && (
+        <div style={{padding:'8px 14px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,fontSize:12,color:'#dc2626',marginBottom:8,fontWeight:600}}>
+          ⚠️ {apiError}
+        </div>
+      )}
         {completed} / {total} reviews completed
       </div>
       <div style={{ fontSize: 10, color: '#94a3b8' }}>
@@ -142,7 +151,7 @@ export default function PerformanceSnapshot() {
   const [apiError,setApiError]=useState(null)
   const [msg, setMsg] = useState('')
   const notify = (m) => { setMsg(m); setTimeout(()=>setMsg(''),3000) }
-  const { t, cc } = useApp()
+  const { t, cc } = _useAppFallback()
   const [activeTab, setActiveTab] = useState('overview')
   const [selectedDept, setSelectedDept] = useState('All')
 

@@ -1,77 +1,85 @@
-// FILE: WarrantyTrackingPage.jsx - Warranty Tracking
-// (Finance, Assets & Administration > Asset & Inventory)
-// Pure UI over the EXISTING asset_items.warranty_until column --
-// never a separate warranty table. Multi-tier expiry alerts (90/60/30
-// day), mirroring the proven pattern from Certificate Generation.
+// FILE: src/components/dashboard/snapshots/WarrantyTrackingPage.jsx
+// eLogix HRMS — Warranty Tracking
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#052e16 0%,#15803d 60%,#86efac 100%)'
-const A = '#15803d'
-
-const TIER_CFG = { expired:{c:'#ef4444',label:'Expired'},critical:{c:'#ef4444',label:'< 30 Days'},warning:{c:'#f59e0b',label:'< 90 Days'},healthy:{c:'#10b981',label:'Healthy'} }
-
-const WARRANTY_ITEMS = [
-  {item:'ThinkPad X1 Carbon',tag:'IT-LT-0019',vendor:'Lenovo Nepal',expires:'2025-08-20',days_left:53,tier:'critical'},
-  {item:'Dell UltraSharp 27" Monitor',tag:'IT-MN-0118',vendor:'Dell Authorized Reseller',expires:'2025-10-05',days_left:99,tier:'warning'},
-  {item:'MacBook Pro 14" M3',tag:'IT-LT-0042',vendor:'iStore Nepal',expires:'2027-03-15',days_left:624,tier:'healthy'},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function WarrantyTrackingPage() {
-  const [search, setSearch] = useState('')
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = WARRANTY_ITEMS.filter(w=>!search||w.item.toLowerCase().includes(search.toLowerCase()))
-  const atRiskCount = WARRANTY_ITEMS.filter(w=>w.tier==='critical'||w.tier==='warning').length
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Warranty Tracking...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🛡" title="Warranty Tracking"
-        breadcrumb="Finance, Assets & Administration > Asset & Inventory"
-        gradient={G}
-        stats={[
-          {icon:'🛡',label:'Tracked Warranties',  value:WARRANTY_ITEMS.length},
-          {icon:'⚠',label:'At Risk (< 90 Days)',      value:atRiskCount},
-          {icon:'🔴',label:'Critical (< 30 Days)',         value:WARRANTY_ITEMS.filter(w=>w.tier==='critical').length},
-          {icon:'✅',label:'Healthy',                          value:WARRANTY_ITEMS.filter(w=>w.tier==='healthy').length},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#065f46',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>⚖</span>
-        <div style={{flex:1,minWidth:200}}><strong>Lapsed Coverage Becomes Out-of-Pocket Cost:</strong> The Labour Act requires safe, functional equipment -- a missed warranty window means any future repair comes straight out of the budget instead of the vendor's.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Warranty Tracking
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search by item or tag..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{display:'grid',gap:14,marginTop:14}}>
-        {filtered.map((w,i)=>{
-          const tc = TIER_CFG[w.tier]
-          return (
-            <div key={i}
-              onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:w.item,...w,impact_links:['Vendor Management','IT Inventory']}})}}
-              style={{background:'#fff',border:`1.5px solid ${tc.c}33`,borderRadius:14,padding:'16px 18px',borderLeft:`4px solid ${tc.c}`,display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:10}}>
-              <div>
-                <div style={{fontSize:12,fontWeight:700,color:'#0f172a'}}>{w.item}</div>
-                <div style={{fontSize:9,color:'#94a3b8',marginTop:3}}>{w.tag} . Vendor: {w.vendor}</div>
-              </div>
-              <div style={{textAlign:'right'}}>
-                <span style={{background:`${tc.c}15`,color:tc.c,fontSize:9,fontWeight:700,padding:'3px 10px',borderRadius:20}}>{tc.label}</span>
-                <div style={{fontSize:9,color:'#94a3b8',marginTop:4}}>Expires {w.expires}</div>
-              </div>
-            </div>
-          )
-        })}
-      </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
+          </div>
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Alerts fire at 90, 60, and 30 days before expiry -- the same multi-tier pattern proven across this build\'s other compliance trackers.','AI prescribes replacement timing based on asset health and utilization, before a warranty lapse forces a reactive decision.','Renewal or replacement requests route straight to Vendor Management with full context attached.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Detail',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

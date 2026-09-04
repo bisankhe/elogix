@@ -1,109 +1,85 @@
-// FILE: TrainingNeedsAnalysisPage.jsx - Training Needs Analysis (TNA)
-// (Performance & Talent > Talent Development > Learning & Development)
-// The DIAGNOSTIC/PRIORITIZATION layer: consumes TNI's flagged needs,
-// links to performance/OKR data, prioritizes by business impact, and
-// dispatches to course assignment - the "single click" handoff.
+// FILE: src/components/dashboard/snapshots/TrainingNeedsAnalysisPage.jsx
+// eLogix HRMS — Training Needs Analysis
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#581c87 0%,#7c3aed 60%,#c4b5fd 100%)'
-const A = '#7c3aed'
-
-const ANALYZED_NEEDS = [
-  { id:'a1', source_need:'DevOps / CI-CD Practices', dept:'IT', employees_affected:6,
-    linked_okr:'Modernize Internal Engineering Tooling (40% complete)', performance_link:'3 missed sprint OKRs this quarter',
-    business_impact:'high', priority_score:88, recommended_course:'CI/CD Pipeline Mastery', recommended_provider:'Internal LMS',
-    status:'approved', impact_links:['Training Recommendation','OKR Management'] },
-  { id:'a2', source_need:'Strategic Negotiation', dept:'Sales', employees_affected:1,
-    linked_okr:'Close NPR 2M new business this quarter', performance_link:'Appraisal note: strong technical close, weak on enterprise deal structuring',
-    business_impact:'medium', priority_score:62, recommended_course:'Advanced Sales Negotiation', recommended_provider:'External - Coursera',
-    status:'under_review', impact_links:['Performance Appraisal'] },
-  { id:'a3', source_need:'Cloud Architecture', dept:'IT', employees_affected:1,
-    linked_okr:'N/A', performance_link:'Behaviour Evaluation flagged Communication; root cause traced to skill gap, not soft-skill issue',
-    business_impact:'medium', priority_score:55, recommended_course:'AWS Solutions Architect', recommended_provider:'External - AWS Training',
-    status:'under_review', impact_links:['Behaviour Evaluation'] },
-]
-
-const IMPACT_CFG = {high:{c:'#ef4444',bg:'#fef2f2'},medium:{c:'#f59e0b',bg:'#fffbeb'},low:{c:'#10b981',bg:'#f0fdf4'}}
-const STATUS_CFG = {under_review:{c:'#f59e0b',bg:'#fffbeb',label:'Under Review'},approved:{c:'#10b981',bg:'#f0fdf4',label:'Approved - Dispatching'}}
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function TrainingNeedsAnalysisPage() {
-  const [search, setSearch] = useState('')
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = ANALYZED_NEEDS.filter(a=>!search||a.source_need.toLowerCase().includes(search.toLowerCase()))
-  const totalAffected = ANALYZED_NEEDS.reduce((s,a)=>s+a.employees_affected,0)
-  const highImpactCount = ANALYZED_NEEDS.filter(a=>a.business_impact==='high').length
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/training-calendar', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Training Needs Analysis...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="📊" title="Training Needs Analysis"
-        breadcrumb="Performance & Talent Management > Talent Development > Learning & Development"
-        gradient={G}
-        stats={[
-          {icon:'📊',label:'Needs Analyzed',     value:ANALYZED_NEEDS.length},
-          {icon:'👥',label:'Employees Affected',  value:totalAffected},
-          {icon:'🚨',label:'High Business Impact', value:highImpactCount},
-          {icon:'✅',label:'Approved',              value:ANALYZED_NEEDS.filter(a=>a.status==='approved').length},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#faf5ff',border:'1px solid #e9d5ff',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#581c87',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🎯</span>
-        <div style={{flex:1,minWidth:200}}><strong>Business-Linked, Not Subjective:</strong> Every analyzed need is cross-referenced against OKR misses or Performance Appraisal evidence - never approved on employee preference alone. Priority score weighs business impact against employees affected, so HR spends budget where it moves the needle.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          🎓 Training Needs Analysis
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search by competency or department..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{display:'grid',gap:16,marginTop:14}}>
-        {filtered.map(a=>{
-          const ic = IMPACT_CFG[a.business_impact]
-          const sc = STATUS_CFG[a.status]
-          return (
-            <div key={a.id}
-              onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:a.source_need,...a}})}}
-              style={{background:'#fff',border:`1.5px solid ${sc.c}33`,borderRadius:16,overflow:'hidden',boxShadow:'0 2px 10px rgba(0,0,0,.05)',borderLeft:`5px solid ${ic.c}`}}>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',padding:'14px 18px',borderBottom:'1px solid #f1f5f9',flexWrap:'wrap',gap:10}}>
-                <div style={{flex:1,minWidth:220}}>
-                  <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',marginBottom:3}}>
-                    <span style={{fontSize:13,fontWeight:900,color:'#0f172a'}}>{a.source_need}</span>
-                    <span style={{background:ic.bg,color:ic.c,fontSize:9,fontWeight:700,padding:'2px 8px',borderRadius:20}}>{a.business_impact} impact</span>
-                    <span style={{background:sc.bg,color:sc.c,fontSize:9,fontWeight:700,padding:'2px 8px',borderRadius:20}}>{sc.label}</span>
-                  </div>
-                  <div style={{fontSize:10,color:'#64748b'}}>{a.dept} . {a.employees_affected} employee(s) affected</div>
-                </div>
-                <div style={{textAlign:'center',flexShrink:0}}>
-                  <div style={{fontSize:18,fontWeight:900,color:A}}>{a.priority_score}</div>
-                  <div style={{fontSize:8,color:'#94a3b8',fontWeight:700}}>PRIORITY SCORE</div>
-                </div>
-              </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
+          </div>
+        </div>
+      )}
 
-              <div style={{padding:'10px 18px',display:'grid',gridTemplateColumns:'1fr',gap:6,borderBottom:'1px solid #f8fafc'}}>
-                <div style={{fontSize:9,color:'#7c3aed'}}>🎯 Linked OKR: {a.linked_okr}</div>
-                <div style={{fontSize:9,color:'#64748b'}}>📝 Performance link: {a.performance_link}</div>
-              </div>
-
-              <div style={{padding:'12px 18px',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:10}}>
-                <div>
-                  <div style={{fontSize:11,fontWeight:700,color:'#0f172a'}}>📚 {a.recommended_course}</div>
-                  <div style={{fontSize:9,color:'#94a3b8'}}>{a.recommended_provider}</div>
-                </div>
-                {a.status==='under_review'&&<button style={{padding:'7px 16px',borderRadius:8,border:'none',background:A,color:'#fff',fontSize:11,fontWeight:700,cursor:'pointer'}}>✅ Approve & Dispatch</button>}
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Priority score = business impact weighting × employees affected × OKR/performance correlation strength.','One click on "Approve & Dispatch" assigns the course via Training Recommendation - no manual LMS hand-off.','Post-training, results auto-feed into Training ROI on the Performance Analytics dashboard.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Analysis',key:'view'},{icon:'✅',label:'Approve & Dispatch',key:'approve'},
-        {icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

@@ -7,7 +7,6 @@
 // ============================================================
 
 import React, { useState, useEffect } from 'react'
-import { useApp } from '../../../context/AppContext.jsx'
 
 // ── Mock saved companies (from setup) ─────────────────────────
 
@@ -33,14 +32,10 @@ function useTenantCompany() {
             return
           }
         }
-      } catch(_e) {}
-      // 2. Fallback: elogix_session (new AuthContext) or legacy elogix_auth
+      } catch {}
+      // 2. Fallback: localStorage auth
       try {
-        const sess = JSON.parse(
-          sessionStorage.getItem('elogix_session') ||
-          localStorage.getItem('elogix_session') || 'null'
-        )
-        const auth = sess || JSON.parse(localStorage.getItem('elogix_auth')||'{}')
+        const auth = JSON.parse(localStorage.getItem('elogix_auth')||'{}')
         const regCos = JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}')
         const co = auth.company || {}
         const slug = co.slug || auth.user?.company || 'demo'
@@ -63,7 +58,7 @@ function useTenantCompany() {
           phone: regData.phone || '', email: regData.admin_email || co.admin_email || '',
           province:'', district:'', municipality:'', registered_address:'', website:'',
         })
-      } catch(_e) {}
+      } catch {}
       setLoading(false)
     }
     load()
@@ -76,7 +71,7 @@ function useTenantCompany() {
       auth.company = { ...(auth.company||{}), ...updates }
       localStorage.setItem('elogix_auth', JSON.stringify(auth))
       setCompany(p => ({...p, ...updates}))
-    } catch(_e) {}
+    } catch {}
     // Try API
     try {
       const token = localStorage.getItem('elogix_token') ||
@@ -88,104 +83,38 @@ function useTenantCompany() {
           body: JSON.stringify(updates)
         })
       }
-    } catch(_e) {}
+    } catch {}
   }
 
   return { company, loading, saveTenantCompany }
 }
 
 
-// ── Pill component ────────────────────────────────────
-function Pill({ color='gray', children }) {
-  const colors = {
-    blue:   { bg:'#dbeafe', text:'#1e40af', border:'#bfdbfe' },
-    green:  { bg:'#dcfce7', text:'#166534', border:'#bbf7d0' },
-    red:    { bg:'#fee2e2', text:'#991b1b', border:'#fecaca' },
-    amber:  { bg:'#fef3c7', text:'#92400e', border:'#fde68a' },
-    purple: { bg:'#ede9fe', text:'#5b21b6', border:'#ddd6fe' },
-    gray:   { bg:'#f1f5f9', text:'#475569', border:'#e2e8f0' },
+
+function _getSession() {
+  try {
+    return JSON.parse(
+      sessionStorage.getItem('elogix_session') ||
+      localStorage.getItem('elogix_session') || 'null'
+    ) || {}
+  } catch (_e) { return {} }
+}
+function _useAppFallback() {
+  const s = _getSession()
+  return {
+    sub: s?.last_page || '', persona: s?.persona || s?.user?.role || 'employee',
+    lang: s?.lang || 'en', currency: s?.currency || 'NPR',
+    company: s?.company || {}, user: s?.user || {},
+    darkMode: false, setDarkMode: () => {},
+    navTo: (p) => window.dispatchEvent(new CustomEvent('elogix:nav', { detail: { page: p } })),
+    switchPersona: () => {}, setShowNotif: () => {}, setShowAI: () => {},
+    setSidebarOpen: () => {}, sidebarOpen: true,
+    currentPersona: { id: s?.persona || 'employee', icon: '👤', color: '#7c3aed', label: '' },
   }
-  const s = colors[color] || colors.gray
-  return (
-    <span style={{ background:s.bg, color:s.text, border:`1px solid ${s.border}`,
-      fontSize:11, fontWeight:600, padding:'2px 10px', borderRadius:20 }}>
-      {children}
-    </span>
-  )
 }
-
-// ── ProgressBar component ─────────────────────────────
-function ProgressBar({ value=0, color='#3b82f6' }) {
-  return (
-    <div style={{ height:6, background:'#f1f5f9', borderRadius:6, overflow:'hidden' }}>
-      <div style={{ height:'100%', width:`${Math.min(value,100)}%`,
-        background:color, borderRadius:6, transition:'width .3s' }}/>
-    </div>
-  )
-}
-
-// ── CompanyDetailModal ────────────────────────────────
-function CompanyDetailModal({ company, onClose, onSetup }) {
-  if (!company) return null
-  return (
-    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.55)',
-      zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}
-      onClick={onClose}>
-      <div style={{ background:'#fff', borderRadius:16, width:600, maxWidth:'96vw',
-        maxHeight:'90vh', overflowY:'auto', boxShadow:'0 20px 60px rgba(0,0,0,.25)' }}
-        onClick={e=>e.stopPropagation()}>
-        <div style={{ background:'linear-gradient(135deg,#1e40af,#3b82f6)', padding:'16px 20px',
-          borderRadius:'16px 16px 0 0', color:'#fff',
-          display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-          <div>
-            <div style={{ fontSize:16, fontWeight:900 }}>{company.name}</div>
-            <div style={{ fontSize:11, opacity:.8 }}>{company.slug}.elogix.com.np</div>
-          </div>
-          <button onClick={onClose} style={{ background:'rgba(255,255,255,.2)',
-            border:'none', borderRadius:8, color:'#fff', fontSize:18, cursor:'pointer',
-            width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center' }}>×</button>
-        </div>
-        <div style={{ padding:'20px' }}>
-          {[
-            ['Company Name',    company.name || '—'],
-            ['Portal URL',      `${company.slug || '—'}.elogix.com.np`],
-            ['Business Type',   (company.business_type||'custom').replace(/_/g,' ')],
-            ['Plan',            company.plan || '—'],
-            ['Country',         company.country || 'Nepal'],
-            ['Currency',        company.currency || 'NPR'],
-            ['Admin Email',     company.admin_email || company.email || '—'],
-            ['Status',          company.status || 'active'],
-            ['Modules',         `${(company.modules||[]).length} configured`],
-            ['Registered',      company.created_at || '—'],
-          ].map(([label, val]) => (
-            <div key={label} style={{ display:'flex', justifyContent:'space-between',
-              padding:'8px 0', borderBottom:'1px solid #f1f5f9', fontSize:12 }}>
-              <span style={{ color:'#64748b', fontWeight:500 }}>{label}</span>
-              <span style={{ color:'#0f172a', fontWeight:700, textAlign:'right', maxWidth:'65%', wordBreak:'break-all' }}>{val}</span>
-            </div>
-          ))}
-          <div style={{ marginTop:16, display:'flex', gap:10 }}>
-            <button onClick={() => { onSetup?.(company.id); onClose() }}
-              style={{ flex:1, padding:'10px', borderRadius:9, border:'none',
-                background:'linear-gradient(135deg,#3b82f6,#1d4ed8)', color:'#fff',
-                fontSize:12, fontWeight:700, cursor:'pointer' }}>
-              ✏️ Edit Company Setup
-            </button>
-            <button onClick={onClose}
-              style={{ padding:'10px 16px', borderRadius:9, border:'1px solid #e2e8f0',
-                background:'#fff', fontSize:12, cursor:'pointer' }}>
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 
 export default function CompanyProfilePage() {
-  const { navTo } = useApp()
+  const { navTo } = _useAppFallback()
   const { company: tenantCo, loading: tenantLoading, saveTenantCompany } = useTenantCompany()
   const [selectedCompany, setSelectedCompany] = useState(null)
   const [search,          setSearch]          = useState('')
@@ -199,7 +128,7 @@ export default function CompanyProfilePage() {
   )
 
   // Expiry alerts from tenant company documents
-  const allAlerts = []  // populated from API when available; const _docs = (tenantCo?.documents || [])
+  const allAlerts = (tenantCo?.documents || [])
     .filter(d => d.days_left !== null && d.days_left <= 30)
     .map(d => ({ ...d, company_name: tenantCo.name, company_id: tenantCo.id }))
     .sort((a, b) => (a.days_left ?? 999) - (b.days_left ?? 999))
@@ -301,11 +230,11 @@ export default function CompanyProfilePage() {
       {/* Company Cards */}
       <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
         {filtered.map(company => {
-          const docAlerts = (company.documents||[]).filter(d =>
+          const docAlerts = company.documents.filter(d =>
             d.days_left !== null && d.days_left <= 30
           )
-          const expiredCount = (company.documents||[]).filter(d => d.status === 'expired').length
-          const pendingCount = (company.documents||[]).filter(d => d.status === 'pending').length
+          const expiredCount = company.documents.filter(d => d.status === 'expired').length
+          const pendingCount = company.documents.filter(d => d.status === 'pending').length
 
           return (
             <div key={company.id}
@@ -322,18 +251,19 @@ export default function CompanyProfilePage() {
                 {/* Logo */}
                 <div style={{ width:50, height:50, borderRadius:12, background:'#eff6ff',
                   display:'flex', alignItems:'center', justifyContent:'center',
-                  fontSize:26, flexShrink:0 }}>🏢
+                  fontSize:26, flexShrink:0 }}>
+                  {company.logo}
                 </div>
 
                 {/* Info */}
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap', marginBottom:4 }}>
                     <span style={{ fontSize:15, fontWeight:900, color:'#0f172a' }}>{company.name}</span>
-                    {company.slug && <Pill color="blue">Primary</Pill>}
-                    <Pill color={company.status==='active'?'green':'gray'}>
-                      {company.status==='active'?'Active':company.status||'Active'}
+                    {company.is_primary && <Pill color="blue">Primary</Pill>}
+                    <Pill color={company.is_active?'green':'gray'}>
+                      {company.is_active?'Active':'Inactive'}
                     </Pill>
-                    <Pill color="gray">{company.currency||'NPR'}</Pill>
+                    <Pill color="gray">{company.base_currency}</Pill>
                   </div>
                   <div style={{ fontSize:11, color:'#64748b' }}>
                     {company.code} · PAN: <strong>{company.pan_number}</strong>
@@ -341,7 +271,10 @@ export default function CompanyProfilePage() {
                     {' · '}{company.company_type}
                   </div>
                   <div style={{ fontSize:11, color:'#94a3b8', marginTop:2 }}>
-                    📍 {company.country||'Nepal'} · 💰 {company.currency||'NPR'} · 📧 {company.admin_email||company.email||'—'}
+                    📍 {company.district}, {company.province}
+                    {' · '}👥 {company.employee_count.toLocaleString()} employees
+                    {' · '}🏢 {company.branches_count} branches
+                    {company.group_company && ` · 🏛️ ${company.group_company}`}
                   </div>
                 </div>
 
@@ -355,11 +288,11 @@ export default function CompanyProfilePage() {
                       <circle cx="18" cy="18" r="15" fill="none"
                         stroke={company.doc_compliance_pct===100?'#10b981':company.doc_compliance_pct>=70?'#f59e0b':'#ef4444'}
                         strokeWidth="4"
-                        strokeDasharray={`${(company.doc_compliance_pct||0) * 0.942} 100`}
+                        strokeDasharray={`${company.doc_compliance_pct * 0.942} 100`}
                         strokeLinecap="round"
                         transform="rotate(-90 18 18)"/>
                       <text x="18" y="21" textAnchor="middle" fontSize="8" fontWeight="700"
-                        fill="#0f172a">{company.doc_compliance_pct||0}%</text>
+                        fill="#0f172a">{company.doc_compliance_pct}%</text>
                     </svg>
                     <div style={{ fontSize:9, color:'#94a3b8', marginTop:2 }}>Docs</div>
                   </div>
@@ -419,7 +352,7 @@ export default function CompanyProfilePage() {
                   <span style={{ fontWeight:700 }}>{company.doc_compliance_pct}%</span>
                 </div>
                 <ProgressBar
-                  value={company.doc_compliance_pct||0}
+                  value={company.doc_compliance_pct}
                   color={company.doc_compliance_pct===100?'#10b981':company.doc_compliance_pct>=70?'#f59e0b':'#ef4444'}
                 />
               </div>

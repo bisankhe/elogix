@@ -1,126 +1,85 @@
-// FILE: LearningPortalPage.jsx - Learning Portal (Performance & Talent >
-// Talent Development > Learning & Development)
-// The CONSUMER-GRADE self-service front-end consuming the EXISTING
-// lms_courses catalog and lms_enrollments (built in Course Management
-// last session) - never duplicates course data. Netflix/Spotify-style
-// discovery, embedded Learning Player with notes/discussion sidebar.
+// FILE: src/components/dashboard/snapshots/LearningPortalPage.jsx
+// eLogix HRMS — Learning Portal
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#581c87 0%,#7c3aed 60%,#c4b5fd 100%)'
-const A = '#7c3aed'
-
-const HERO_STATUS = { compliance_pct:87, upcoming_deadline:'OSH Fire Safety Refresher - due in 9 days' }
-
-const MY_LEARNING_PATH = [
-  {course:'AWS Solutions Architect',progress:65,mandatory:false},
-  {course:'OSH & Fire Safety Refresher',progress:40,mandatory:true},
-]
-
-const RECOMMENDED = [
-  {course:'Strategic Planning for Managers',reason:'Based on your 360 feedback blind spot',duration:'4h',badge:'🎯'},
-  {course:'Advanced Excel for Finance',reason:'Matches your career goal: Senior Analyst',duration:'3h',badge:'📈'},
-  {course:'CI/CD Pipeline Mastery',reason:'Closes your team\'s top skill gap',duration:'6h',badge:'⚙'},
-]
-
-const PLAYER_SIDEBAR = {
-  outline:['Module 1: Foundations','Module 2: Networking','Module 3: Security','Module 4: Hands-On Lab'],
-  notes:'Remember: VPC peering does NOT support transitive routing.',
-  discussion:[{from:'Bikash Rai',message:'Anyone else stuck on the Lab 3 IAM policy?'},{from:'Instructor',message:'Check the troubleshooting doc - common typo in the resource ARN.'}],
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
 }
 
 export default function LearningPortalPage() {
-  const [search, setSearch] = useState('')
-  const [activePlayer, setActivePlayer] = useState(null)
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/learning', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Learning Portal...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🎓" title="Learning Portal"
-        breadcrumb="Performance & Talent Management > Talent Development > Learning & Development"
-        gradient={G}
-        stats={[
-          {icon:'✅',label:'Compliance Status', value:HERO_STATUS.compliance_pct+'%'},
-          {icon:'📚',label:'In Progress',          value:MY_LEARNING_PATH.length},
-          {icon:'🎯',label:'Recommended for You',   value:RECOMMENDED.length},
-          {icon:'🏆',label:'Badges Earned',          value:5},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      {/* Hero section */}
-      <div style={{background:'#faf5ff',border:'1px solid #e9d5ff',borderRadius:16,padding:'16px 20px',marginBottom:18,display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:12}}>
-        <div>
-          <div style={{fontSize:12,fontWeight:800,color:'#581c87'}}>⚠ Upcoming Deadline</div>
-          <div style={{fontSize:11,color:'#7c3aed',marginTop:2}}>{HERO_STATUS.upcoming_deadline}</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📚 Learning Portal
         </div>
-        <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-          <button style={{padding:'8px 16px',borderRadius:10,border:`1px solid ${A}33`,background:'#fff',color:A,fontSize:10,fontWeight:700,cursor:'pointer'}}>📜 My Transcript</button>
-          <button style={{padding:'8px 16px',borderRadius:10,border:`1px solid ${A}33`,background:'#fff',color:A,fontSize:10,fontWeight:700,cursor:'pointer'}}>🔖 Saved Courses</button>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
         </div>
       </div>
 
-      {/* My Learning Path */}
-      <div style={{fontSize:12,fontWeight:800,color:'#0f172a',marginBottom:10}}>📈 My Learning Path</div>
-      <div style={{display:'grid',gap:12,marginBottom:20}}>
-        {MY_LEARNING_PATH.map((c,i)=>(
-          <div key={i} onClick={()=>setActivePlayer(c)}
-            style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:14,padding:'14px 18px',cursor:'pointer'}}>
-            <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}>
-              <span style={{fontSize:11,fontWeight:700,color:'#0f172a'}}>{c.course} {c.mandatory&&<span style={{background:'#fef2f2',color:'#dc2626',fontSize:8,fontWeight:700,padding:'1px 7px',borderRadius:20,marginLeft:6}}>Mandatory</span>}</span>
-              <span style={{fontSize:11,fontWeight:800,color:A}}>{c.progress}%</span>
-            </div>
-            <div style={{height:7,background:'#f1f5f9',borderRadius:7,overflow:'hidden'}}><div style={{width:`${c.progress}%`,height:'100%',background:A,borderRadius:7}}/></div>
-          </div>
-        ))}
-      </div>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      {/* Discovery / Course Catalog */}
-      <div style={{fontSize:12,fontWeight:800,color:'#0f172a',marginBottom:10}}>🤖 Recommended for You</div>
-      <SearchBar value={search} onChange={setSearch} placeholder="Search the course catalog..."/>
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(240px,1fr))',gap:14,marginTop:14}}>
-        {RECOMMENDED.filter(r=>!search||r.course.toLowerCase().includes(search.toLowerCase())).map((r,i)=>(
-          <div key={i}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:r.course,impact_links:['Course Management']}})}}
-            style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px',cursor:'pointer'}}
-            onClick={()=>setActivePlayer({course:r.course,progress:0,mandatory:false})}>
-            <div style={{fontSize:24,marginBottom:8}}>{r.badge}</div>
-            <div style={{fontSize:12,fontWeight:800,color:'#0f172a',marginBottom:4}}>{r.course}</div>
-            <div style={{fontSize:9,color:'#7c3aed',marginBottom:8}}>{r.reason}</div>
-            <div style={{fontSize:9,color:'#94a3b8'}}>⏱ {r.duration}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Learning Player */}
-      {activePlayer&&(
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.75)',zIndex:5000,display:'flex',alignItems:'center',justifyContent:'center',padding:16}} onClick={()=>setActivePlayer(null)}>
-          <div style={{background:'#fff',borderRadius:20,width:'min(900px,100%)',maxHeight:'90vh',overflow:'auto',display:'flex',flexWrap:'wrap'}} onClick={e=>e.stopPropagation()}>
-            <div style={{flex:'2 1 400px',background:'#0f172a',minHeight:300,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontSize:13}}>
-              ▶ {activePlayer.course} - Video Player
-            </div>
-            <div style={{flex:'1 1 260px',padding:'18px',borderLeft:'1px solid #f1f5f9'}}>
-              <div style={{fontSize:11,fontWeight:800,color:'#0f172a',marginBottom:10}}>📋 Course Outline</div>
-              {PLAYER_SIDEBAR.outline.map((m,i)=>(<div key={i} style={{fontSize:10,color:'#64748b',padding:'5px 0',borderBottom:'1px solid #f8fafc'}}>{m}</div>))}
-              <div style={{fontSize:11,fontWeight:800,color:'#0f172a',marginTop:14,marginBottom:8}}>📝 My Notes</div>
-              <div style={{background:'#fffbeb',borderRadius:8,padding:'8px 10px',fontSize:9,color:'#92400e'}}>{PLAYER_SIDEBAR.notes}</div>
-              <div style={{fontSize:11,fontWeight:800,color:'#0f172a',marginTop:14,marginBottom:8}}>💬 Discussion</div>
-              {PLAYER_SIDEBAR.discussion.map((d,i)=>(
-                <div key={i} style={{fontSize:9,marginBottom:6}}><strong style={{color:'#0f172a'}}>{d.from}:</strong> <span style={{color:'#64748b'}}>{d.message}</span></div>
-              ))}
-            </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
         </div>
       )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Course completion auto-syncs to your HR profile - no separate certification step.','Recommendations refresh weekly based on performance reviews and stated career goals.','Single sign-on means you never log into a separate LMS - everything lives here.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Course Detail',key:'view'},{icon:'🔖',label:'Save for Later',key:'save'},
-        {icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

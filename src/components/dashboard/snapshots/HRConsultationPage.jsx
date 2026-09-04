@@ -1,104 +1,85 @@
-// FILE: HRConsultationPage.jsx - HR Consultation
-// (HR Services & Support > HR Helpdesk)
-// Direct scheduling for sensitive 1-on-1 conversations -- benefits
-// disputes, workplace conflicts, leave-of-absence planning. Calendar-
-// based booking, confidential by default, document upload in-thread.
+// FILE: src/components/dashboard/snapshots/HRConsultationPage.jsx
+// eLogix HRMS — H R Consultation
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { Field, PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#7c2d12 0%,#c2410c 60%,#fdba74 100%)'
-const A = '#c2410c'
-
-const CONSULTANTS = [
-  {name:'HR Director',specialty:'Workplace Conflicts, Sensitive Matters',available_slots:3},
-  {name:'Benefits Specialist',specialty:'Insurance, Leave of Absence, Compensation',available_slots:5},
-]
-
-const MY_CONSULTATIONS = [
-  { id:'cn1', topic:'Leave of absence planning for medical reasons', consultant:'Benefits Specialist', scheduled_for:'2025-06-28 2:00 PM',
-    status:'upcoming', confidential:true, impact_links:['Wellness & Support'] },
-  { id:'cn2', topic:'Clarifying my compensation structure post-promotion', consultant:'HR Director', scheduled_for:'2025-06-15 11:00 AM',
-    status:'completed', confidential:false, notes:'Walked through new salary band and equity vesting schedule.' },
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function HRConsultationPage() {
-  const [search, setSearch] = useState('')
-  const [showBook, setShowBook] = useState(false)
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = MY_CONSULTATIONS.filter(c=>!search||c.topic.toLowerCase().includes(search.toLowerCase()))
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading H R Consultation...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="📅" title="HR Consultation"
-        breadcrumb="HR Services & Support > HR Helpdesk"
-        gradient={G}
-        stats={[
-          {icon:'📅',label:'Upcoming',  value:MY_CONSULTATIONS.filter(c=>c.status==='upcoming').length},
-          {icon:'✅',label:'Completed',   value:MY_CONSULTATIONS.filter(c=>c.status==='completed').length},
-          {icon:'👤',label:'Consultants Available', value:CONSULTANTS.length},
-          {icon:'🔒',label:'Confidentiality',           value:'Default On'},
-        ]}
-        onAdd={()=>setShowBook(true)} addLabel="Schedule Consultation"/>
-
-      <div style={{background:'#fff7ed',border:'1px solid #fed7aa',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#7c2d12',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>📅</span>
-        <div style={{flex:1,minWidth:200}}><strong>No More Phone Tag:</strong> Check a consultant's real availability and book directly -- for sensitive or complex matters that deserve a real conversation, not a ticket queue.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 H R Consultation
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      {/* Available consultants */}
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:14,marginBottom:18}}>
-        {CONSULTANTS.map((c,i)=>(
-          <div key={i} style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:14,padding:'16px'}}>
-            <div style={{fontSize:12,fontWeight:800,color:'#0f172a'}}>{c.name}</div>
-            <div style={{fontSize:9,color:'#94a3b8',marginTop:4}}>{c.specialty}</div>
-            <div style={{marginTop:8,fontSize:9,fontWeight:700,color:A}}>{c.available_slots} slots open this week</div>
-          </div>
-        ))}
-      </div>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search my consultations..."/>
-
-      <div style={{display:'grid',gap:14,marginTop:14}}>
-        {filtered.map(c=>(
-          <div key={c.id}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:c.topic,...c}})}}
-            style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:14,padding:'16px 18px',borderLeft:`4px solid ${c.status==='upcoming'?A:'#10b981'}`}}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:8}}>
-              <div>
-                <div style={{fontSize:12,fontWeight:700,color:'#0f172a'}}>{c.topic} {c.confidential&&'🔒'}</div>
-                <div style={{fontSize:9,color:'#94a3b8',marginTop:3}}>With {c.consultant} . {c.scheduled_for}</div>
-              </div>
-              <span style={{background:c.status==='upcoming'?`${A}15`:'#f0fdf4',color:c.status==='upcoming'?A:'#15803d',fontSize:9,fontWeight:700,padding:'3px 10px',borderRadius:20}}>{c.status}</span>
-            </div>
-            {c.notes&&<div style={{marginTop:8,fontSize:9,color:'#374151'}}>📝 {c.notes}</div>}
-          </div>
-        ))}
-      </div>
-
-      {showBook&&(
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.65)',zIndex:5000,display:'flex',alignItems:'center',justifyContent:'center',padding:16}} onClick={()=>setShowBook(false)}>
-          <div style={{background:'#fff',borderRadius:20,width:'min(500px,100%)'}} onClick={e=>e.stopPropagation()}>
-            <div style={{background:G,padding:'20px 24px'}}><div style={{fontSize:15,fontWeight:900,color:'#fff'}}>Schedule a Consultation</div></div>
-            <div style={{padding:'22px 24px'}}>
-              <Field label="Consultant" type="select" value="" onChange={()=>{}} accent={A} options={CONSULTANTS.map(c=>c.name)}/>
-              <Field label="Topic" value="" onChange={()=>{}} accent={A} required hint="Voice input supported"/>
-              <Field label="Preferred Date/Time" type="date" value="" onChange={()=>{}} accent={A}/>
-              <button onClick={()=>setShowBook(false)} style={{width:'100%',padding:13,borderRadius:11,border:'none',background:G,color:'#fff',fontSize:13,fontWeight:700,cursor:'pointer'}}>Book Consultation</button>
-            </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
         </div>
       )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Calendar pulls real consultant availability -- never a stale, manually-updated schedule.','Documents and clarifications attach directly inside the consultation thread, not scattered email attachments.','AI suggests the right specialist based on your topic -- benefits disputes route differently than conflict mediation.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Detail',key:'view'},{icon:'📅',label:'Reschedule',key:'reschedule'},
-        {icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

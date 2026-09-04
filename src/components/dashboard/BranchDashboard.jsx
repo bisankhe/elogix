@@ -5,12 +5,11 @@
 //          team ops, daily tasks by role
 // ============================================================
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer,
 } from 'recharts'
-import { useApp }        from '../../context/AppContext.jsx'
 import { StatCard }      from '../shared/StatCard.jsx'
 import { Card }          from '../shared/Card.jsx'
 import { Pill }          from '../shared/Pill.jsx'
@@ -62,21 +61,30 @@ const aiInsights = [
 ]
 
 
-function _sess() {
-  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+function _getSession() {
+  try {
+    return JSON.parse(
+      sessionStorage.getItem('elogix_session') ||
+      localStorage.getItem('elogix_session') || 'null'
+    ) || {}
+  } catch (_e) { return {} }
 }
-function _headers() {
-  const s=_sess()
-  const token=localStorage.getItem('access_token')||s?.token||''
-  const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
-  return {token,slug,valid:!!(token&&slug),session:s}
+function _useAppFallback() {
+  const s = _getSession()
+  return {
+    sub: s?.last_page || '', persona: s?.persona || s?.user?.role || 'employee',
+    lang: s?.lang || 'en', currency: s?.currency || 'NPR',
+    company: s?.company || {}, user: s?.user || {},
+    darkMode: false, setDarkMode: () => {},
+    navTo: (p) => window.dispatchEvent(new CustomEvent('elogix:nav', { detail: { page: p } })),
+    switchPersona: () => {}, setShowNotif: () => {}, setShowAI: () => {},
+    setSidebarOpen: () => {}, sidebarOpen: true,
+    currentPersona: { id: s?.persona || 'employee', icon: '👤', color: '#7c3aed', label: '' },
+  }
 }
 
 export default function BranchDashboard() {
-  const [dashData,setDashData]=useState(null)
-  const [loading,setLoading]=useState(true)
-  const [error,setError]=useState(null)
-  const { t } = useApp()
+  const { t } = _useAppFallback()
   const [tasks, setTasks] = useState(branchTasks)
   const [activeTab, setActiveTab] = useState('overview')
   const [reportStatus, setReportStatus] = useState({ dept: 'Pending', hr: 'Sent', exec: 'Pending' })
@@ -87,49 +95,11 @@ export default function BranchDashboard() {
     setReportStatus(prev => ({ ...prev, [to]: 'Sent' }))
   }
 
-  useEffect(()=>{
-    const {token,slug,valid,session} = _headers()
-    if(!valid){setLoading(false);return}
-    setLoading(true);setError(null)
-    const empId = session?.user?.employee_id||''
-    fetch('/api/v1/dashboard/branch' + (empId?`?emp_id=${empId}`:''), {
-      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
-    })
-      .then(r=>{
-        if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));throw new Error('Session expired')}
-        if(!r.ok) throw new Error(`Server error ${r.status}`)
-        return r.json()
-      })
-      .then(d=>{ if(d.success) setDashData(d.data) })
-      .catch(err=>{setError(err.message);console.error('[eLogix dashboard] /branch:',err)})
-      .finally(()=>setLoading(false))
-  },[])
-
   return (
     <div>
       <PageTitle title="Branch / Section / Unit Dashboard" sub="Kathmandu Branch · Operations Section · Branch Manager: Sunita Rai · Can forward reports to seniors." badge="Branch" />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-      {loading && (
-        <div style={{textAlign:'center',padding:60,color:'#7c3aed'}}>
-          <div style={{fontSize:36,marginBottom:12,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
-          <div style={{fontSize:13,fontWeight:600}}>Loading your dashboard...</div>
-          <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
-        </div>
-      )}
-      {error && !loading && (
-        <div style={{padding:'12px 20px',background:'#fef2f2',border:'1px solid #fecaca',
-          borderRadius:10,marginBottom:16,fontSize:13,color:'#dc2626',fontWeight:600}}>
-          ⚠️ {error}
-        </div>
-      )}
-      {!loading && !dashData && !error && (
-        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
-          <div style={{fontSize:40,marginBottom:12}}>📊</div>
-          <div style={{fontSize:14,fontWeight:600}}>No data available</div>
-          <div style={{fontSize:12,marginTop:4}}>Data will appear once your company is set up in eLogix</div>
-        </div>
-      )}
         <StatCard icon="👥" label="Branch Headcount"   value="145"   change="+2 this month"   up  accent="#06b6d4" />
         <StatCard icon="✅" label="Branch Attendance"  value="88.3%" change="vs 87% last wk"  up  accent="#10b981" />
         <StatCard icon="📊" label="Branch Performance" value="79%"   change="+4% vs target"   up  accent="#f59e0b" />

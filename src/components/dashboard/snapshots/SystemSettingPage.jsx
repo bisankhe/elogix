@@ -1,51 +1,85 @@
-// FILE: SystemSettingPage.jsx - System Setting (System Settings)
-// Global system configuration -- timezone, locale, email/SMS defaults,
-// feature flags, API keys. The "tabbed settings panel" the brief
-// describes as the final consolidation point.
-import { useState } from 'react'
-import { Field, PageHeader, AIImpact, ContextMenu } from './DeptSetupShared.jsx'
-const G='linear-gradient(135deg,#1e293b 0%,#334155 60%,#94a3b8 100%)'
-const A='#334155'
-const TABS=['Localization','Notifications','Integrations','Feature Flags','Legal & Compliance']
-const GLOBAL_SETTINGS=[
-  {key:'Default Timezone',value:'Asia/Kathmandu (UTC+5:45)'},
-  {key:'Date Format',value:'DD-MM-YYYY'},
-  {key:'Currency',value:'NPR (Nepalese Rupee)'},
-  {key:'Default Language',value:'English (en-US)'},
-  {key:'Fiscal Year Start',value:'Shrawan 1 (mid-July)'},
-  {key:'Labour Audit Deadline',value:'End of Poush (mid-January)'},
-]
-export default function SystemSettingPage(){
-  const [tab,setTab]=useState(0)
-  const [ctx,setCtx]=useState(null)
-  return(
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="⚙" title="System Setting" breadcrumb="System Administration > System Settings" gradient={G}
-        stats={[{icon:'⚙',label:'Config Sections',value:TABS.length},{icon:'🌍',label:'Timezone',value:'UTC+5:45'},{icon:'📅',label:'Fiscal Year',value:'Nepali BS'},{icon:'🏳️',label:'Feature Flags',value:'12 Active'}]}
-        onAdd={()=>{}} addLabel=""/>
-      <div style={{background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#334155',display:'flex',gap:10}}>
-        <span style={{fontSize:18}}>⚙</span>
-        <div style={{flex:1}}><strong>Global First, Regional Override:</strong> These settings apply to all tenants by default. Individual tenants can override specific values (e.g., a branch in a different timezone) without breaking the global policy.</div>
+// FILE: src/components/dashboard/snapshots/SystemSettingPage.jsx
+// eLogix HRMS — System Setting
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
+
+import { useState, useEffect } from 'react'
+
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
+
+export default function SystemSettingPage() {
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/system', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading System Setting...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
       </div>
-      <div style={{display:'flex',gap:0,marginBottom:16,background:'#f1f5f9',borderRadius:10,padding:3,flexWrap:'wrap'}}>
-        {TABS.map((t,i)=><button key={i} onClick={()=>setTab(i)} style={{flex:1,minWidth:100,padding:'7px 4px',border:'none',borderRadius:8,cursor:'pointer',fontSize:8,fontWeight:700,background:tab===i?'#fff':'transparent',color:tab===i?A:'#94a3b8',boxShadow:tab===i?'0 1px 3px rgba(0,0,0,.08)':'none'}}>{t}</button>)}
+    </div>
+  )
+
+  return (
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 System Setting
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
-      {tab===0&&(
-        <div style={{display:'grid',gap:10}}>
-          {GLOBAL_SETTINGS.map((s,i)=>(
-            <div key={i} onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:s.key,...s}})}}
-              style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:10,padding:'12px 16px',display:'flex',justifyContent:'space-between'}}>
-              <span style={{fontSize:10,fontWeight:600,color:'#374151'}}>{s.key}</span>
-              <span style={{fontSize:9,color:'#64748b'}}>{s.value}</span>
-            </div>
-          ))}
+
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
         </div>
       )}
-      {tab!==0&&<div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:12,padding:'20px',textAlign:'center',fontSize:10,color:'#94a3b8'}}>{TABS[tab]} settings -- configure here</div>}
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Feature flags let new modules be enabled per tenant without a deployment -- a client in pilot gets the feature; others don\'t see it yet.','Nepali fiscal year (Shrawan-to-Ashadh) and Poush audit deadline are pre-configured -- never a manual calculation at year-end.','All setting changes cascade to sub-tenants immediately, with override records logged so regional exceptions are always traceable back to who approved them.']}/>
-      </div>
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={[]} actions={[{icon:'⚙',label:'Edit Setting',key:'view'}]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
+          </div>
+        </div>
+      )}
+
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

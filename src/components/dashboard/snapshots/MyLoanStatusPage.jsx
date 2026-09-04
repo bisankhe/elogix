@@ -1,96 +1,85 @@
-// FILE: MyLoanStatusPage.jsx - My Loan Status
-// (HR Services & Support > Employee Self Service)
-// Milestone tracker + EMI history, pure UI over the EXISTING
-// employee_loans + loan_installments (Payroll Processing session) --
-// the eligibility cap (3x basic salary) already computed there.
+// FILE: src/components/dashboard/snapshots/MyLoanStatusPage.jsx
+// eLogix HRMS — My Loan Status
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#1e1b4b 0%,#4338ca 60%,#818cf8 100%)'
-const A = '#4338ca'
-
-const MILESTONES = ['Application Received','Manager Approved','Finance Reviewed','Disbursed']
-
-const MY_LOAN = {
-  loan_type:'Emergency Personal Loan', principal:90000, interest_pct:5, tenure_months:12, emi:7875,
-  milestone_idx:3, basic_salary:35000, max_eligible:105000,
-  installments:[
-    {month:'Jan 2025',amount:7875,status:'paid'},{month:'Feb 2025',amount:7875,status:'paid'},
-    {month:'Mar 2025',amount:7875,status:'paid'},{month:'Apr 2025',amount:7875,status:'upcoming'},
-  ],
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
 }
 
 export default function MyLoanStatusPage() {
-  const [ctx, setCtx] = useState(null)
-  const paidCount = MY_LOAN.installments.filter(i=>i.status==='paid').length
-  const outstanding = MY_LOAN.principal - (paidCount*MY_LOAN.emi)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/finance', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading My Loan Status...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🏦" title="My Loan Status"
-        breadcrumb="HR Services & Support > Employee Self Service"
-        gradient={G}
-        stats={[
-          {icon:'🏦',label:'Outstanding Balance',  value:'NPR '+outstanding.toLocaleString()},
-          {icon:'📅',label:'EMI / Month',              value:'NPR '+MY_LOAN.emi.toLocaleString()},
-          {icon:'✅',label:'Installments Paid',           value:paidCount+'/'+MY_LOAN.tenure_months},
-          {icon:'📐',label:'Eligibility Cap',                value:'NPR '+MY_LOAN.max_eligible.toLocaleString()},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#eef2ff',border:'1px solid #c7d2fe',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#3730a3',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>📐</span>
-        <div style={{flex:1,minWidth:200}}><strong>Transparent, Always:</strong> Your eligibility cap (3x basic salary), full repayment schedule, and exact outstanding balance -- everything you'd otherwise have to ask HR for.</div>
-      </div>
-
-      {/* Milestone tracker */}
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'20px',marginBottom:18}}>
-        <div style={{fontSize:11,fontWeight:800,color:'#0f172a',marginBottom:14}}>{MY_LOAN.loan_type}</div>
-        <div style={{display:'flex',gap:4}}>
-          {MILESTONES.map((m,i)=>(
-            <div key={m} style={{flex:1,textAlign:'center'}}>
-              <div style={{height:6,borderRadius:6,background:i<=MY_LOAN.milestone_idx?A:'#f1f5f9'}}/>
-              <div style={{fontSize:7,color:i<=MY_LOAN.milestone_idx?A:'#94a3b8',fontWeight:i===MY_LOAN.milestone_idx?700:400,marginTop:4}}>{m}</div>
-            </div>
-          ))}
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          💵 My Loan Status
         </div>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10,marginTop:18}}>
-          <div style={{textAlign:'center',background:'#f8fafc',borderRadius:8,padding:'10px 6px'}}>
-            <div style={{fontSize:12,fontWeight:800,color:'#0f172a'}}>NPR {MY_LOAN.principal.toLocaleString()}</div>
-            <div style={{fontSize:8,color:'#94a3b8',marginTop:2}}>Principal</div>
-          </div>
-          <div style={{textAlign:'center',background:'#f8fafc',borderRadius:8,padding:'10px 6px'}}>
-            <div style={{fontSize:12,fontWeight:800,color:'#0f172a'}}>{MY_LOAN.interest_pct}%</div>
-            <div style={{fontSize:8,color:'#94a3b8',marginTop:2}}>Interest Rate</div>
-          </div>
-          <div style={{textAlign:'center',background:'#f8fafc',borderRadius:8,padding:'10px 6px'}}>
-            <div style={{fontSize:12,fontWeight:800,color:'#0f172a'}}>{MY_LOAN.tenure_months}mo</div>
-            <div style={{fontSize:8,color:'#94a3b8',marginTop:2}}>Tenure</div>
-          </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
         </div>
       </div>
 
-      {/* Installment history */}
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'18px'}}>
-        <div style={{fontSize:11,fontWeight:800,color:'#0f172a',marginBottom:12}}>📅 Installment History</div>
-        {MY_LOAN.installments.map((i,idx)=>(
-          <div key={idx}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:i.month,...i,impact_links:['My Payroll']}})}}
-            style={{display:'flex',justifyContent:'space-between',padding:'9px 0',borderBottom:idx<MY_LOAN.installments.length-1?'1px solid #f8fafc':'none'}}>
-            <span style={{fontSize:10,color:'#374151'}}>{i.month} -- NPR {i.amount.toLocaleString()}</span>
-            <span style={{background:i.status==='paid'?'#f0fdf4':'#fffbeb',color:i.status==='paid'?'#15803d':'#b45309',fontSize:8,fontWeight:700,padding:'2px 9px',borderRadius:20}}>{i.status}</span>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
+
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Each installment deducts automatically through payroll -- no manual repayment step required.','Eligibility cap recalculates if your basic salary changes, never a stale, outdated limit.','Loan requests exceeding the cap auto-flag before submission, saving you a guaranteed rejection.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Detail',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

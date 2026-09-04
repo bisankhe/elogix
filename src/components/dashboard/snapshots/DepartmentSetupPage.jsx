@@ -3,14 +3,13 @@
 // Tenant-scoped: only this company's data
 // eLogix Technologies · www.elogix.com.np
 import { useState, useEffect } from 'react'
-import { useApp } from '../../../context/AppContext.jsx'
 
 const A = '#0369a1'
 const G = 'linear-gradient(135deg,#0c4a6e,#0369a1)'
 
 function useCompanyCtx() {
-  const auth   = (() => { try { return JSON.parse(localStorage.getItem('elogix_auth')||'{}') } catch(_e) { return {} } })()
-  const regCos = (() => { try { return JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}') } catch(_e) { return {} } })()
+  const auth   = (() => { try { return JSON.parse(localStorage.getItem('elogix_auth')||'{}') } catch { return {} } })()
+  const regCos = (() => { try { return JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}') } catch { return {} } })()
   const slug   = auth.company?.slug || auth.user?.company || 'demo'
   return {
     company_id:   auth.company?.id || slug,
@@ -19,12 +18,36 @@ function useCompanyCtx() {
     plan:         auth.company?.plan || 'trial',
     currency:     auth.company?.currency || 'NPR',
     token:        localStorage.getItem('elogix_token') || auth.token || '',
+
+}
+}
+
+
+function _getSession() {
+  try {
+    return JSON.parse(
+      sessionStorage.getItem('elogix_session') ||
+      localStorage.getItem('elogix_session') || 'null'
+    ) || {}
+  } catch (_e) { return {} }
+}
+function _useAppFallback() {
+  const s = _getSession()
+  return {
+    sub: s?.last_page || '', persona: s?.persona || s?.user?.role || 'employee',
+    lang: s?.lang || 'en', currency: s?.currency || 'NPR',
+    company: s?.company || {}, user: s?.user || {},
+    darkMode: false, setDarkMode: () => {},
+    navTo: (p) => window.dispatchEvent(new CustomEvent('elogix:nav', { detail: { page: p } })),
+    switchPersona: () => {}, setShowNotif: () => {}, setShowAI: () => {},
+    setSidebarOpen: () => {}, sidebarOpen: true,
+    currentPersona: { id: s?.persona || 'employee', icon: '👤', color: '#7c3aed', label: '' },
   }
 }
 
 export default function DepartmentSetupPage() {
   const ctx = useCompanyCtx()
-  const { navTo } = useApp()
+  const { navTo } = _useAppFallback()
   const [items,   setItems]   = useState([])
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
@@ -48,7 +71,7 @@ export default function DepartmentSetupPage() {
             setItems(Array.isArray(data) ? data : [])
             localStorage.setItem(storageKey, JSON.stringify(data))
             setLoading(false); return
-      } catch(_e) {}
+      } catch {}
       const stored = JSON.parse(localStorage.getItem(storageKey) || '[]')
       setItems(stored)
       setLoading(false)
@@ -67,18 +90,16 @@ export default function DepartmentSetupPage() {
         headers:{'Content-Type':'application/json', Authorization:`Bearer ${ctx.token}`},
         body: JSON.stringify(item)
       })
-    } catch(_e) {}
+    } catch {}
     notify('Saved')
     setShowAdd(false)
     setForm({ name:'', description:'', status:'active' })
-  }
 
   const handleDelete = (id) => {
     const updated = items.filter(i => i.id !== id)
     setItems(updated)
     localStorage.setItem(storageKey, JSON.stringify(updated))
     notify('Deleted')
-  }
 
   return (
     <div style={{ fontFamily:'system-ui,sans-serif', minHeight:'100%',

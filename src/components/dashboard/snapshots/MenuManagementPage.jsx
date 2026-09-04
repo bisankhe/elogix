@@ -1,104 +1,85 @@
-// FILE: MenuManagementPage.jsx - Menu Management
-// (System Administration > User & Access)
-// Administers the EXISTING personas.js (7 personas, allowedPages/
-// restrictedPages arrays -- already well-designed) and sidebarMenu.js
-// (130+ entries) -- never a third navigation model invented here.
-// Confirmed before designing: Sidebar.jsx already claims "RBAC-aware
-// menu filtering" but only 7 of 130+ sidebar entries actually carry a
-// persona field. This page is where that gap gets closed by an admin,
-// not silently left as dead code.
+// FILE: src/components/dashboard/snapshots/MenuManagementPage.jsx
+// eLogix HRMS — Menu Management
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#581c87 0%,#7c3aed 60%,#c4b5fd 100%)'
-const A = '#7c3aed'
-
-const PERSONAS = [
-  {id:'super-admin',label:'Super Admin',pages_configured:178,total_pages:178},
-  {id:'employee',label:'Employee',pages_configured:24,total_pages:178},
-  {id:'department_head',label:'Department Head',pages_configured:7,total_pages:178,
-   flag_note:'Only 7 of 178 pages have explicit persona rules -- the rest default to visible, which may expose more than intended.'},
-]
-
-const MENU_ITEMS = [
-  {label:'Payroll Reports',group:'Standard Reports',configured_personas:['super-admin','hr_manager']},
-  {label:'My Payslip',group:'ESS',configured_personas:['super-admin','employee']},
-  {label:'Vendor Billing Report',group:'HR Analytics',configured_personas:[],
-   flag_note:'No persona restrictions configured -- currently visible to every role, including a standard recruiter.'},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function MenuManagementPage() {
-  const [search, setSearch] = useState('')
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = MENU_ITEMS.filter(m=>!search||m.label.toLowerCase().includes(search.toLowerCase()))
-  const unconfiguredCount = MENU_ITEMS.filter(m=>m.flag_note).length
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Menu Management...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🗂" title="Menu Management"
-        breadcrumb="System Administration > User & Access"
-        gradient={G}
-        stats={[
-          {icon:'🗂',label:'Total Menu Items',  value:'178'},
-          {icon:'👤',label:'Personas Defined',      value:PERSONAS.length},
-          {icon:'⚠',label:'Unconfigured Items',          value:unconfiguredCount},
-          {icon:'🔍',label:'Smart Search',                   value:'Enabled'},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#faf5ff',border:'1px solid #e9d5ff',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#581c87',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🗂</span>
-        <div style={{flex:1,minWidth:200}}><strong>Removed From the UI, Not Just Hidden:</strong> A menu item without permission for a role is physically absent from that user's navigation -- never a greyed-out tab inviting someone to click and get denied.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Menu Management
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:14,marginBottom:18}}>
-        {PERSONAS.map((p,i)=>{
-          const pct = Math.round(p.pages_configured/p.total_pages*100)
-          return (
-            <div key={i}
-              onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:p.label,...p,impact_links:['Role & Permission']}})}}
-              style={{background:'#fff',border:`1px solid ${p.flag_note?'#fed7aa':'#e2e8f0'}`,borderRadius:14,padding:'16px'}}>
-              <div style={{fontSize:11,fontWeight:700,color:'#0f172a'}}>{p.label}</div>
-              <div style={{height:7,background:'#f1f5f9',borderRadius:7,overflow:'hidden',marginTop:8}}><div style={{width:`${pct}%`,height:'100%',background:A,borderRadius:7}}/></div>
-              <div style={{fontSize:8,color:'#94a3b8',marginTop:6}}>{p.pages_configured}/{p.total_pages} pages configured</div>
-              {p.flag_note&&<div style={{marginTop:6,fontSize:8,color:'#b45309'}}>⚠ {p.flag_note}</div>}
-            </div>
-          )
-        })}
-      </div>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search menu items..."/>
-
-      <div style={{display:'grid',gap:12,marginTop:14}}>
-        {filtered.map((m,i)=>(
-          <div key={i}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:m.label,...m}})}}
-            style={{background:'#fff',border:`1px solid ${m.flag_note?'#fed7aa':'#e2e8f0'}`,borderRadius:12,padding:'12px 16px'}}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:8}}>
-              <div>
-                <div style={{fontSize:10,fontWeight:700,color:'#0f172a'}}>{m.label}</div>
-                <div style={{fontSize:9,color:'#94a3b8',marginTop:2}}>{m.group}</div>
-              </div>
-              <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>
-                {m.configured_personas.length>0
-                  ? m.configured_personas.map((p,j)=><span key={j} style={{background:'#faf5ff',color:'#7c3aed',fontSize:7,fontWeight:600,padding:'2px 8px',borderRadius:20}}>{p}</span>)
-                  : <span style={{background:'#fef2f2',color:'#dc2626',fontSize:7,fontWeight:700,padding:'2px 8px',borderRadius:20}}>Unrestricted</span>}
-              </div>
-            </div>
-            {m.flag_note&&<div style={{marginTop:8,fontSize:9,color:'#b45309'}}>⚠ {m.flag_note}</div>}
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Items with no persona configuration default to visible for every role -- AI flags these as the highest-priority items to review first.','Changing a persona\'s allowed pages here takes effect immediately, no redeployment required.','Smart search lets any admin type "add new user" and jump straight to the right setting, never hunting through a menu tree.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Configuration',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

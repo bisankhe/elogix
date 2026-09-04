@@ -1,91 +1,85 @@
-// FILE: MyActivityThisWeekPage.jsx - My Activity This Week
-// (HR Services & Support > Employee Self Service)
-// Day-grouped activity rollup over the SAME employee_activity_log as
-// My Activity Today -- just a wider date_trunc('week', ...) window,
-// never a separate log.
+// FILE: src/components/dashboard/snapshots/MyActivityThisWeekPage.jsx
+// eLogix HRMS — My Activity This Week
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#0c4a6e 0%,#0284c7 60%,#7dd3fc 100%)'
-const A = '#0284c7'
-
-const MODULE_ICONS = { attendance:'⏰', leave:'🏖', payroll:'💰', training:'🎓', document:'📂', signature:'✍', goal:'🎯', feedback:'💬', helpdesk:'🎫', login:'🔓' }
-
-const WEEK_ACTIVITY = [
-  { day:'Monday', date:'Jun 23', count:6, top_module:'training' },
-  { day:'Tuesday', date:'Jun 24', count:4, top_module:'attendance' },
-  { day:'Wednesday', date:'Jun 25', count:8, top_module:'goal' },
-  { day:'Thursday', date:'Jun 26', count:3, top_module:'helpdesk' },
-  { day:'Friday', date:'Jun 27', count:5, top_module:'leave' },
-]
-
-const MODULE_BREAKDOWN = [
-  {module:'training',count:9,c:'#0284c7'},{module:'attendance',count:6,c:'#10b981'},
-  {module:'goal',count:5,c:'#7c3aed'},{module:'leave',count:3,c:'#f59e0b'},{module:'helpdesk',count:3,c:'#ef4444'},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function MyActivityThisWeekPage() {
-  const [ctx, setCtx] = useState(null)
-  const totalActions = WEEK_ACTIVITY.reduce((s,d)=>s+d.count,0)
-  const mostActiveDay = WEEK_ACTIVITY.reduce((a,b)=>a.count>b.count?a:b)
-  const maxModule = Math.max(...MODULE_BREAKDOWN.map(m=>m.count))
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading My Activity This Week...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="📅" title="My Activity This Week"
-        breadcrumb="HR Services & Support > Employee Self Service"
-        gradient={G}
-        stats={[
-          {icon:'📅',label:'Total Actions',  value:totalActions},
-          {icon:'🔥',label:'Most Active Day',  value:mostActiveDay.day},
-          {icon:'🧩',label:'Modules Touched',     value:MODULE_BREAKDOWN.length},
-          {icon:'📊',label:'Daily Average',          value:(totalActions/5).toFixed(1)},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#eff6ff',border:'1px solid #bfdbfe',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#1e40af',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>📈</span>
-        <div style={{flex:1,minWidth:200}}><strong>Your Week at a Glance:</strong> Same automatic activity capture as Today -- grouped by day, with a breakdown of which modules you spent the most time in.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 My Activity This Week
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'20px',marginBottom:18}}>
-        <div style={{fontSize:11,fontWeight:800,color:'#0f172a',marginBottom:14}}>📅 Daily Breakdown</div>
-        {WEEK_ACTIVITY.map((d,i)=>(
-          <div key={i}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:d.day,...d}})}}
-            style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 0',borderBottom:i<WEEK_ACTIVITY.length-1?'1px solid #f8fafc':'none'}}>
-            <div style={{display:'flex',gap:10,alignItems:'center'}}>
-              <span style={{fontSize:16}}>{MODULE_ICONS[d.top_module]}</span>
-              <div>
-                <div style={{fontSize:10,fontWeight:700,color:'#0f172a'}}>{d.day}</div>
-                <div style={{fontSize:8,color:'#94a3b8'}}>{d.date}</div>
-              </div>
-            </div>
-            <span style={{background:`${A}15`,color:A,fontSize:10,fontWeight:700,padding:'3px 10px',borderRadius:20}}>{d.count} actions</span>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
+
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'20px'}}>
-        <div style={{fontSize:11,fontWeight:800,color:'#0f172a',marginBottom:14}}>🧩 Module Breakdown</div>
-        {MODULE_BREAKDOWN.map((m,i)=>(
-          <div key={i} style={{marginBottom:10}}>
-            <div style={{display:'flex',justifyContent:'space-between',marginBottom:3,fontSize:10}}>
-              <span style={{color:'#374151',textTransform:'capitalize'}}>{MODULE_ICONS[m.module]} {m.module}</span><span style={{fontWeight:700,color:m.c}}>{m.count}</span>
-            </div>
-            <div style={{height:7,background:'#f1f5f9',borderRadius:7,overflow:'hidden'}}><div style={{width:`${m.count/maxModule*100}%`,height:'100%',background:m.c,borderRadius:7}}/></div>
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
           </div>
-        ))}
-      </div>
-
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Week boundaries follow your company\'s fiscal calendar settings automatically.','Unusually quiet days surface gently here -- never used punitively, just for your own awareness.','Drill into any day to see the exact chronological timeline, same as My Activity Today.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Day Detail',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

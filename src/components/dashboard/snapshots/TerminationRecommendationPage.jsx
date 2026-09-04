@@ -1,105 +1,85 @@
-// FILE: TerminationRecommendationPage.jsx - Termination Recommendation (Performance & Talent > Goal & Performance)
-// HIGHLY CONFIDENTIAL, HR/Exec-only. Aggregates objective indicators
-// (3+ unsatisfactory appraisals, unaddressed PIP, attendance breaches)
-// into a flag - feeds INTO exit_management_schema, never replaces it.
+// FILE: src/components/dashboard/snapshots/TerminationRecommendationPage.jsx
+// eLogix HRMS — Termination Recommendation
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#1e293b 0%,#334155 60%,#94a3b8 100%)'
-const A = '#334155'
-
-const FLAGS = [
-  { id:'tf1', employee:'Bikash Rai', dept:'IT',
-    indicators:{consecutive_unsatisfactory_appraisals:2,unaddressed_pip_count:0,attendance_breach_count:1},
-    documented_warnings:2, due_process_status:'pip_active', explanation_period_used:true,
-    flag_note:'2 of 3 unsatisfactory appraisals reached - currently on active PIP (60-day). Termination NOT yet legally permissible per Section 142 (requires 3 consecutive cycles).',
-    recommendation:'continue_pip', impact_links:['PIP Management','Performance Appraisal'] },
-]
-
-const DUE_PROCESS_CFG = {pip_active:{c:'#f59e0b',bg:'#fffbeb',label:'PIP Active - Monitoring'},eligible:{c:'#ef4444',bg:'#fef2f2',label:'Legally Eligible for Termination'}}
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function TerminationRecommendationPage() {
-  const [search, setSearch] = useState('')
-  const [ctx, setCtx] = useState(null)
-  const [acknowledged, setAcknowledged] = useState(false)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = FLAGS.filter(f=>!search||f.employee.toLowerCase().includes(search.toLowerCase()))
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/exit', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
 
-  if (!acknowledged) {
-    return (
-      <div style={{maxWidth:560,margin:'60px auto',textAlign:'center'}}>
-        <div style={{fontSize:40,marginBottom:16}}>🔒</div>
-        <div style={{fontSize:16,fontWeight:900,color:'#0f172a',marginBottom:10}}>Highly Confidential - Restricted Access</div>
-        <div style={{fontSize:12,color:'#64748b',marginBottom:20,lineHeight:1.6}}>This page contains sensitive termination-risk analysis accessible only to authorized HR and executive personnel. All views are logged for audit purposes. Continuing confirms you are authorized to view this content under company policy.</div>
-        <button onClick={()=>setAcknowledged(true)} style={{padding:'12px 28px',borderRadius:12,border:'none',background:G,color:'#fff',fontSize:13,fontWeight:700,cursor:'pointer'}}>I Understand - Continue</button>
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Termination Recommendation...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
       </div>
-    )
-  }
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🔒" title="Termination Recommendation"
-        breadcrumb="Performance & Talent Management > Goal & Performance"
-        gradient={G}
-        stats={[
-          {icon:'🔒',label:'Confidentiality',  value:'HR/Exec Only'},
-          {icon:'⚠',label:'Flagged Cases',      value:FLAGS.length},
-          {icon:'📋',label:'Min Legal Cycles',   value:'3 Consecutive'},
-          {icon:'📝',label:'7-Day Right',        value:'Tracked'},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#f1f5f9',border:'1px solid #cbd5e1',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#334155',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>⚖</span>
-        <div style={{flex:1,minWidth:200}}><strong>Objective Evidence Only, Last Resort:</strong> This flags documented patterns - never auto-decides. Per Nepal Labour Act Section 142, lawful termination for performance requires 3 consecutive unsatisfactory formal appraisals AND a mandatory 7-day written-explanation opportunity. Approved cases route to Exit Management for the full offboarding workflow.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Termination Recommendation
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search by employee name..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{display:'grid',gap:16,marginTop:14}}>
-        {filtered.map(f=>{
-          const dc = DUE_PROCESS_CFG[f.due_process_status]
-          return (
-            <div key={f.id}
-              onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:f.employee,...f}})}}
-              style={{background:'#fff',border:`1.5px solid ${dc.c}33`,borderRadius:16,overflow:'hidden',boxShadow:'0 2px 10px rgba(0,0,0,.05)',borderLeft:`5px solid ${dc.c}`}}>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',padding:'14px 18px',borderBottom:'1px solid #f1f5f9',flexWrap:'wrap',gap:10}}>
-                <div>
-                  <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',marginBottom:3}}>
-                    <span style={{fontSize:13,fontWeight:900,color:'#0f172a'}}>{f.employee}</span>
-                    <span style={{background:dc.bg,color:dc.c,fontSize:10,fontWeight:700,padding:'2px 10px',borderRadius:20}}>{dc.label}</span>
-                  </div>
-                  <div style={{fontSize:10,color:'#64748b'}}>{f.dept}</div>
-                </div>
-              </div>
-              <div style={{padding:'12px 18px',display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8}}>
-                {[{l:'Unsatisfactory Cycles',v:f.indicators.consecutive_unsatisfactory_appraisals+'/3',c:'#ef4444'},
-                  {l:'Unaddressed PIPs',v:f.indicators.unaddressed_pip_count,c:'#f59e0b'},
-                  {l:'Attendance Breaches',v:f.indicators.attendance_breach_count,c:'#94a3b8'}].map((s,i)=>(
-                  <div key={i} style={{textAlign:'center',background:'#f8fafc',borderRadius:8,padding:'8px 4px'}}>
-                    <div style={{fontSize:12,fontWeight:800,color:s.c}}>{s.v}</div>
-                    <div style={{fontSize:7,color:'#94a3b8',marginTop:2}}>{s.l}</div>
-                  </div>
-                ))}
-              </div>
-              <div style={{padding:'10px 18px',display:'flex',gap:8,flexWrap:'wrap'}}>
-                <span style={{background:'#f0fdf4',color:'#15803d',fontSize:8,fontWeight:700,padding:'2px 8px',borderRadius:20}}>📝 {f.documented_warnings} documented warnings</span>
-                {f.explanation_period_used&&<span style={{background:'#f0fdf4',color:'#15803d',fontSize:8,fontWeight:700,padding:'2px 8px',borderRadius:20}}>✓ 7-day explanation completed</span>}
-              </div>
-              <div style={{padding:'10px 18px',fontSize:10,color:'#374151'}}>{f.flag_note}</div>
-              <div style={{padding:'10px 18px',display:'flex',gap:8}}>
-                <button style={{padding:'7px 16px',borderRadius:8,border:'none',background:'#f59e0b',color:'#fff',fontSize:11,fontWeight:700,cursor:'pointer'}}>Continue PIP Monitoring</button>
-                <button disabled style={{padding:'7px 16px',borderRadius:8,border:'none',background:'#e2e8f0',color:'#94a3b8',fontSize:11,fontWeight:700,cursor:'not-allowed'}}>🔒 Escalate to Exit Mgmt (Not Yet Eligible)</button>
-              </div>
-            </div>
-          )
-        })}
-      </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
+          </div>
+        </div>
+      )}
 
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Documentation',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

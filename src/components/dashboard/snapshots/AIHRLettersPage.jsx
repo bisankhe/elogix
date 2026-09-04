@@ -8,7 +8,6 @@
 // • Nepal Labour Act 2074 compliance citations built-in
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { useApp } from '../../../context/AppContext.jsx'
 
 const G  = 'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)'
 const P  = '#7c3aed'
@@ -180,17 +179,6 @@ function SignaturePad({ onSave, onClose, signerName }) {
       onClick={onClose}>
       <div style={{ background: '#fff', borderRadius: 20, width: 540, boxShadow: '0 40px 80px rgba(0,0,0,.3)', overflow: 'hidden' }}
         onClick={e => e.stopPropagation()}>
-      {apiLoading && (
-        <div style={{textAlign:'center',padding:40,color:'#7c3aed',fontSize:13,fontWeight:600}}>
-          <div style={{fontSize:32,marginBottom:8}}>⟳</div>Loading...
-        </div>
-      )}
-      {apiError && !apiLoading && (
-        <div style={{padding:'8px 14px',background:'#fef2f2',border:'1px solid #fecaca',
-          borderRadius:8,fontSize:12,color:'#dc2626',marginBottom:8,fontWeight:600}}>
-          ⚠️ {apiError}
-        </div>
-      )}
         {/* Header */}
         <div style={{ background: G, padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
@@ -336,20 +324,29 @@ const HISTORY_KEY = 'elogix_letters_history'
 // ── MAIN COMPONENT ────────────────────────────────────────────
 
 function _getSession() {
-  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}}
+  try {
+    return JSON.parse(
+      sessionStorage.getItem('elogix_session') ||
+      localStorage.getItem('elogix_session') || 'null'
+    ) || {}
+  } catch (_e) { return {} }
 }
-function _getTenantCtx() {
-  const s=_getSession()
-  const token=localStorage.getItem('access_token')||s?.token||''
-  const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
-  return {token,slug,valid:!!(token&&slug)}
+function _useAppFallback() {
+  const s = _getSession()
+  return {
+    sub: s?.last_page || '', persona: s?.persona || s?.user?.role || 'employee',
+    lang: s?.lang || 'en', currency: s?.currency || 'NPR',
+    company: s?.company || {}, user: s?.user || {},
+    darkMode: false, setDarkMode: () => {},
+    navTo: (p) => window.dispatchEvent(new CustomEvent('elogix:nav', { detail: { page: p } })),
+    switchPersona: () => {}, setShowNotif: () => {}, setShowAI: () => {},
+    setSidebarOpen: () => {}, sidebarOpen: true,
+    currentPersona: { id: s?.persona || 'employee', icon: '👤', color: '#7c3aed', label: '' },
+  }
 }
 
 export default function AIHRLettersPage() {
-  const [apiData,setApiData]=useState(null)
-  const [apiLoading,setApiLoading]=useState(true)
-  const [apiError,setApiError]=useState(null)
-  const { currentPersona, persona } = useApp()
+  const { currentPersona, persona } = _useAppFallback()
   const [step,          setStep]          = useState(1)   // 1=type 2=vars 3=preview 4=sign 5=done
   const [letterType,    setLetterType]    = useState(null)
   const [vars,          setVars]          = useState({})
@@ -496,17 +493,6 @@ Return ONLY valid JSON: {"english":"...","nepali":"..."}`
   }
 
   // ── RENDER ────────────────────────────────────────────────────
-  useEffect(()=>{
-    const {token,slug,valid} = _getTenantCtx()
-    if(!valid){setApiLoading(false);return}
-    setApiLoading(true);setApiError(null)
-    fetch('/api/v1/ai/hr-letters',{headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}})
-      .then(r=>{if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));throw new Error('Session expired')}if(!r.ok)throw new Error(`Error ${r.status}`);return r.json()})
-      .then(d=>{const p=d.templates||d.data||d;if(p)setApiData(p)})
-      .catch(err=>setApiError(err.message))
-      .finally(()=>setApiLoading(false))
-  },[])
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, fontFamily: 'system-ui,sans-serif' }}>
 

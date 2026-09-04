@@ -1,83 +1,85 @@
-// FILE: Feedback360Page.jsx - 360 Degree Feedback (Performance & Talent > Goal & Performance > Performance Evaluation)
-// Results/insights view over RELEASED pms_360 cycles (cycle management
-// itself lives in Goal Management > 360 Degree PMS) - strengths, blind
-// spots, development-focused summary, used for growth not formal rating.
+// FILE: src/components/dashboard/snapshots/Feedback360Page.jsx
+// eLogix HRMS — Feedback360
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#164e63 0%,#0891b2 60%,#67e8f9 100%)'
-const A = '#0891b2'
-
-const RELEASED_RESULTS = [
-  { id:'r1', employee:'Bikash Rai', cycle:'Q3 2026 Mid-Cycle', reviewer_count:5, top_strength:'Technical Skill (avg 8.5/10)',
-    biggest_blind_spot:'Strategic Thinking - self-rated 5, peers/manager averaged 6.7 (perception gap)',
-    used_for:'development_only', impact_links:['360 Degree PMS','Individual Development Plan'] },
-  { id:'r2', employee:'Anjali Sharma', cycle:'Q3 2026 Mid-Cycle', reviewer_count:6, top_strength:'Teamwork (avg 9.1/10)',
-    biggest_blind_spot:'Communication - self-rated 6, direct reports averaged 4.8 (significant gap)',
-    used_for:'development_only', impact_links:['Continuous Feedback'] },
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function Feedback360Page() {
-  const [search, setSearch] = useState('')
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = RELEASED_RESULTS.filter(r=>!search||r.employee.toLowerCase().includes(search.toLowerCase()))
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/engagement', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Feedback360...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🎯" title="360 Degree Feedback"
-        breadcrumb="Performance & Talent Management > Goal & Performance > Performance Evaluation"
-        gradient={G}
-        stats={[
-          {icon:'🎯',label:'Released Cycles', value:RELEASED_RESULTS.length},
-          {icon:'👥',label:'Avg Reviewers',     value:'5.5'},
-          {icon:'🔒',label:'Development Only',  value:'100%'},
-          {icon:'📈',label:'Linked to IDP',     value:RELEASED_RESULTS.length},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#ecfeff',border:'1px solid #a5f3fc',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#155e75',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🔒</span>
-        <div style={{flex:1,minWidth:200}}><strong>Development Only, Never Formal Rating:</strong> Per global best practice, 360 feedback results shown here are used exclusively to inform growth conversations and IDPs - never as a direct input to the Performance Appraisal score, to preserve psychological safety and honest peer input. Manage active review cycles in Goal Management {'>'} 360 Degree PMS.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Feedback360
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search by employee name..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{display:'grid',gap:16,marginTop:14}}>
-        {filtered.map(r=>(
-          <div key={r.id}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:r.employee,...r}})}}
-            style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,overflow:'hidden',boxShadow:'0 2px 10px rgba(0,0,0,.05)',borderLeft:`5px solid ${A}`}}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',padding:'14px 18px',borderBottom:'1px solid #f1f5f9',flexWrap:'wrap',gap:10}}>
-              <div>
-                <div style={{fontSize:13,fontWeight:900,color:'#0f172a'}}>{r.employee}</div>
-                <div style={{fontSize:10,color:'#64748b'}}>{r.cycle} . {r.reviewer_count} reviewers</div>
-              </div>
-              <span style={{background:'#f0fdf4',color:'#15803d',fontSize:9,fontWeight:700,padding:'3px 10px',borderRadius:20}}>🔒 Development Use Only</span>
-            </div>
-            <div style={{padding:'14px 18px',display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:12}}>
-              <div style={{background:'#f0fdf4',borderRadius:10,padding:'10px 14px'}}>
-                <div style={{fontSize:9,fontWeight:700,color:'#15803d',marginBottom:4}}>💪 TOP STRENGTH</div>
-                <div style={{fontSize:11,color:'#065f46'}}>{r.top_strength}</div>
-              </div>
-              <div style={{background:'#fffbeb',borderRadius:10,padding:'10px 14px'}}>
-                <div style={{fontSize:9,fontWeight:700,color:'#92400e',marginBottom:4}}>👁 BIGGEST BLIND SPOT</div>
-                <div style={{fontSize:11,color:'#78350f'}}>{r.biggest_blind_spot}</div>
-              </div>
-            </div>
-            <div style={{padding:'10px 18px',display:'flex',gap:8}}>
-              <button style={{padding:'6px 14px',borderRadius:8,border:`1px solid ${A}33`,background:'#ecfeff',color:A,fontSize:10,fontWeight:600,cursor:'pointer'}}>📈 View Full Radar (360 PMS)</button>
-              <button style={{padding:'6px 14px',borderRadius:8,border:'1px solid #e2e8f0',background:'#f8fafc',color:'#64748b',fontSize:10,fontWeight:600,cursor:'pointer'}}>📝 Add to IDP</button>
-            </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Radar Chart',key:'view'},{icon:'📝',label:'Add to Development Plan',key:'idp'},
-        {icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

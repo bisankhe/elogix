@@ -1,133 +1,85 @@
-// FILE: AssessmentQuizPage.jsx - Assessment & Quiz
-// (Performance & Talent > Talent Development > Learning & Development)
-// Distraction-free full-screen quiz player over the EXISTING
-// lms_course_quizzes/lms_quiz_questions (Course Management) -- never
-// duplicates the question bank. Auto-grades, writes back to
-// lms_enrollments.quiz_score_pct, shows missed-topic recommendations.
+// FILE: src/components/dashboard/snapshots/AssessmentQuizPage.jsx
+// eLogix HRMS — Assessment Quiz
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#7c2d12 0%,#c2410c 60%,#fdba74 100%)'
-const A = '#c2410c'
-
-const MY_ASSESSMENTS = [
-  { id:'a1', course:'OSH & Fire Safety Refresher', deadline:'2025-07-05', status:'not_started', question_count:5 },
-  { id:'a2', course:'AWS Solutions Architect', deadline:'2025-06-30', status:'completed', score_pct:88, missed_topics:['IAM Cross-Account Roles'] },
-]
-
-const QUIZ_QUESTIONS = [
-  { id:'q1', text:'What is the maximum legally permitted overtime per day under Nepal Labour Act 2074?', options:['2 hours','4 hours','6 hours','No limit'], correct:1 },
-  { id:'q2', text:'Which extinguisher class is used for electrical fires?', options:['Class A','Class B','Class C','Class K'], correct:2 },
-  { id:'q3', text:'How often must fire drills be conducted per OSH best practice?', options:['Monthly','Quarterly','Annually','Never required'], correct:1 },
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function AssessmentQuizPage() {
-  const [search, setSearch] = useState('')
-  const [activeQuiz, setActiveQuiz] = useState(null)
-  const [answers, setAnswers] = useState({})
-  const [submitted, setSubmitted] = useState(null)
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = MY_ASSESSMENTS.filter(a=>!search||a.course.toLowerCase().includes(search.toLowerCase()))
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
 
-  const handleSubmit = () => {
-    const correct = QUIZ_QUESTIONS.filter(q=>answers[q.id]===q.correct).length
-    setSubmitted({ scorePct: Math.round(correct/QUIZ_QUESTIONS.length*100), correct, total: QUIZ_QUESTIONS.length })
-  }
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Assessment Quiz...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="📝" title="Assessment & Quiz"
-        breadcrumb="Performance & Talent Management > Talent Development > Learning & Development"
-        gradient={G}
-        stats={[
-          {icon:'📝',label:'My Assessments',  value:MY_ASSESSMENTS.length},
-          {icon:'✅',label:'Completed',          value:MY_ASSESSMENTS.filter(a=>a.status==='completed').length},
-          {icon:'⏳',label:'Not Started',        value:MY_ASSESSMENTS.filter(a=>a.status==='not_started').length},
-          {icon:'📊',label:'Avg Score',            value:'88%'},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#fff7ed',border:'1px solid #fed7aa',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#7c2d12',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🎯</span>
-        <div style={{flex:1,minWidth:200}}><strong>Application, Not Just Recall:</strong> Auto-graded immediately on submission. Missed topics surface targeted re-learning recommendations rather than a flat pass/fail -- helping bridge the gap between passing a quiz and applying the knowledge on the job.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Assessment Quiz
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search by course name..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{display:'grid',gap:14,marginTop:14}}>
-        {filtered.map(a=>(
-          <div key={a.id}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:a.course,impact_links:['Course Management','Certification Tracking']}})}}
-            style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,overflow:'hidden',boxShadow:'0 2px 10px rgba(0,0,0,.05)',borderLeft:`5px solid ${a.status==='completed'?'#10b981':'#f59e0b'}`}}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',padding:'14px 18px',flexWrap:'wrap',gap:10}}>
-              <div>
-                <div style={{fontSize:13,fontWeight:900,color:'#0f172a'}}>{a.course}</div>
-                <div style={{fontSize:10,color:'#64748b'}}>Deadline: {a.deadline} . {a.question_count||3} questions</div>
-              </div>
-              {a.status==='completed'?(
-                <div style={{textAlign:'right'}}>
-                  <div style={{fontSize:16,fontWeight:900,color:'#10b981'}}>{a.score_pct}%</div>
-                  <div style={{fontSize:8,color:'#94a3b8'}}>SCORE</div>
-                </div>
-              ):(
-                <button onClick={()=>{setActiveQuiz(a);setAnswers({});setSubmitted(null)}} style={{padding:'8px 18px',borderRadius:10,border:'none',background:A,color:'#fff',fontSize:11,fontWeight:700,cursor:'pointer'}}>Start Assessment</button>
-              )}
-            </div>
-            {a.missed_topics&&a.missed_topics.length>0&&(
-              <div style={{padding:'10px 18px',background:'#fffbeb',display:'flex',gap:6,flexWrap:'wrap'}}>
-                <span style={{fontSize:9,color:'#92400e',fontWeight:700}}>📚 Recommended review:</span>
-                {a.missed_topics.map((t,i)=>(<span key={i} style={{background:'#fff',color:'#b45309',fontSize:9,fontWeight:600,padding:'2px 9px',borderRadius:20}}>{t}</span>))}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* Distraction-free full-screen quiz player */}
-      {activeQuiz&&(
-        <div style={{position:'fixed',inset:0,background:'#0f172a',zIndex:6000,overflow:'auto',padding:'20px'}}>
-          <div style={{maxWidth:560,margin:'0 auto'}}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:24}}>
-              <div style={{fontSize:16,fontWeight:800,color:'#fff'}}>{activeQuiz.course}</div>
-              <button onClick={()=>setActiveQuiz(null)} style={{background:'none',border:'none',color:'#94a3b8',fontSize:20,cursor:'pointer'}}>×</button>
-            </div>
-
-            {!submitted?(<>
-              {QUIZ_QUESTIONS.map((q,i)=>(
-                <div key={q.id} style={{background:'#1e293b',borderRadius:14,padding:'18px',marginBottom:14}}>
-                  <div style={{fontSize:12,fontWeight:700,color:'#fff',marginBottom:12}}>{i+1}. {q.text}</div>
-                  {q.options.map((opt,oi)=>(
-                    <label key={oi} style={{display:'flex',gap:10,alignItems:'center',padding:'8px 0',cursor:'pointer'}}>
-                      <input type="radio" name={q.id} checked={answers[q.id]===oi} onChange={()=>setAnswers({...answers,[q.id]:oi})} style={{accentColor:A}}/>
-                      <span style={{fontSize:11,color:'#cbd5e1'}}>{opt}</span>
-                    </label>
-                  ))}
-                </div>
-              ))}
-              <button onClick={handleSubmit} disabled={Object.keys(answers).length<QUIZ_QUESTIONS.length}
-                style={{width:'100%',padding:14,borderRadius:12,border:'none',background:Object.keys(answers).length<QUIZ_QUESTIONS.length?'#334155':G,color:'#fff',fontSize:13,fontWeight:700,cursor:Object.keys(answers).length<QUIZ_QUESTIONS.length?'not-allowed':'pointer'}}>
-                Submit Assessment
-              </button>
-            </>):(
-              <div style={{background:'#1e293b',borderRadius:16,padding:'30px',textAlign:'center'}}>
-                <div style={{fontSize:40,fontWeight:900,color:submitted.scorePct>=70?'#10b981':'#ef4444'}}>{submitted.scorePct}%</div>
-                <div style={{fontSize:12,color:'#cbd5e1',marginTop:6}}>{submitted.correct} of {submitted.total} correct</div>
-                <button onClick={()=>setActiveQuiz(null)} style={{marginTop:20,padding:'12px 24px',borderRadius:10,border:'none',background:A,color:'#fff',fontSize:12,fontWeight:700,cursor:'pointer'}}>Close</button>
-              </div>
-            )}
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
         </div>
       )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Score writes back automatically to your enrollment record -- no manual grading step for HR.','Missed questions map to specific skill tags, feeding directly into Skill Gap Matrix.','Adaptive difficulty adjusts future quiz questions based on your historical performance.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Result Detail',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

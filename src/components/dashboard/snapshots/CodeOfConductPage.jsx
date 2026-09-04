@@ -1,71 +1,85 @@
-// FILE: CodeOfConductPage.jsx - Code of Conduct
-// (HR Services & Support > Employee Self Service)
-// Dedicated drill-in view for the single "Code of Conduct Policy"
-// (POL-EMP-002) that already lives inside the EXISTING HRPoliciesPage
-// library -- never a second policy document store.
+// FILE: src/components/dashboard/snapshots/CodeOfConductPage.jsx
+// eLogix HRMS — Code Of Conduct
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#581c87 0%,#7c3aed 60%,#c4b5fd 100%)'
-const A = '#7c3aed'
-
-const SECTIONS = [
-  {title:'Professional Conduct',text:'Treat all colleagues, clients, and partners with respect and dignity, free from discrimination based on gender, caste, ethnicity, religion, or disability.'},
-  {title:'Conflict of Interest',text:'Disclose any personal or financial interest that could influence your professional judgment or decisions made on behalf of the company.'},
-  {title:'Confidentiality',text:'Protect proprietary, client, and employee data. Information accessed through your role must never be shared outside authorized channels.'},
-  {title:'Workplace Safety & Harassment',text:'Zero tolerance for harassment of any kind. Report concerns through Grievance Management or directly to HR without fear of retaliation.'},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function CodeOfConductPage() {
-  const [acknowledged, setAcknowledged] = useState(false)
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Code Of Conduct...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="📘" title="Code of Conduct"
-        breadcrumb="HR Services & Support > Employee Self Service"
-        gradient={G}
-        stats={[
-          {icon:'📘',label:'Policy Control',  value:'POL-EMP-002'},
-          {icon:'⏱',label:'Read Time',           value:'10 min'},
-          {icon:'✅',label:'Status',                value:acknowledged?'Acknowledged':'Pending'},
-          {icon:'🔗',label:'Linked Policies',          value:'3'},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#faf5ff',border:'1px solid #e9d5ff',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#581c87',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>📘</span>
-        <div style={{flex:1,minWidth:200}}><strong>The Standard Everyone Agrees To:</strong> This is the same Code of Conduct tracked in the HR Policy library -- read here for quick reference, full acknowledgment history lives in My HR Policies.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Code Of Conduct
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <div style={{display:'grid',gap:14}}>
-        {SECTIONS.map((s,i)=>(
-          <div key={i}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:s.title,impact_links:['HR Policies']}})}}
-            style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:14,padding:'16px 18px'}}>
-            <div style={{fontSize:12,fontWeight:800,color:'#0f172a',marginBottom:6}}>{s.title}</div>
-            <div style={{fontSize:10,color:'#374151'}}>{s.text}</div>
-          </div>
-        ))}
-      </div>
-
-      {!acknowledged&&(
-        <div style={{marginTop:18,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'18px 20px',textAlign:'center'}}>
-          <label style={{display:'flex',gap:8,alignItems:'center',justifyContent:'center',marginBottom:14,fontSize:11,color:'#374151'}}>
-            <input type="checkbox" checked={acknowledged} onChange={e=>setAcknowledged(e.target.checked)} style={{accentColor:A}}/>
-            I have read and understood the Code of Conduct
-          </label>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
         </div>
       )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['This view mirrors the full policy record -- acknowledgment here syncs directly into My HR Policies\' compliance tracker.','Related policies (Anti-Harassment, Disciplinary) are one click away, never a separate hunt.','AI summary and quiz mode are available in the full HR Policies library for deeper review.']}/>
-      </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
+          </div>
+        </div>
+      )}
 
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'Open Full Policy',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,109 +1,85 @@
-// FILE: SpeedometerCompliancePage.jsx - Speedometer: Compliance
-// (Performance & Talent > Goal & Performance > Performance Analytics > KPI)
-// Audit Pass Rate, Training Completion, Certification Expiry - sourced
-// from existing v_compliance_health_score + statutory_filing_deadlines.
+// FILE: src/components/dashboard/snapshots/SpeedometerCompliancePage.jsx
+// eLogix HRMS — Speedometer Compliance
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#581c87 0%,#7c3aed 60%,#c4b5fd 100%)'
-const A = '#7c3aed'
-
-function Gauge({ value, max, label, unit, zones }) {
-  const pct = Math.min(value / max, 1)
-  const angle = pct * 180
-  const radius = 80, cx = 100, cy = 100
-  const polarToCartesian = (r, deg) => {
-    const rad = (deg - 180) * Math.PI / 180
-    return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)]
-  }
-  let cumulativeStart = 0
-  const arcs = zones.map((z, i) => {
-    const startDeg = cumulativeStart * 180, endDeg = z.upTo * 180
-    cumulativeStart = z.upTo
-    const [x1, y1] = polarToCartesian(radius, startDeg)
-    const [x2, y2] = polarToCartesian(radius, endDeg)
-    const largeArc = (endDeg - startDeg) > 180 ? 1 : 0
-    return <path key={i} d={`M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`} stroke={z.color} strokeWidth="18" fill="none"/>
-  })
-  const [needleX, needleY] = polarToCartesian(radius - 15, angle)
-  const currentZone = zones.find(z => pct <= z.upTo) || zones[zones.length - 1]
-  return (
-    <div style={{textAlign:'center'}}>
-      <svg width="200" height="120" viewBox="0 0 200 110">
-        {arcs}
-        <line x1={cx} y1={cy} x2={needleX} y2={needleY} stroke="#1e293b" strokeWidth="3" strokeLinecap="round"/>
-        <circle cx={cx} cy={cy} r="5" fill="#1e293b"/>
-      </svg>
-      <div style={{fontSize:20,fontWeight:900,color:currentZone.color,marginTop:-10}}>{value}{unit}</div>
-      <div style={{fontSize:9,color:'#94a3b8',marginTop:2}}>{label}</div>
-    </div>
-  )
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
 }
-
-const COMPLIANCE_METRICS = {
-  audit_pass:{value:97,max:100,label:'Statutory Audit Pass Rate',unit:'%',zones:[{upTo:0.95,color:'#ef4444'},{upTo:0.99,color:'#f59e0b'},{upTo:1,color:'#10b981'}]},
-  training_completion:{value:91,max:100,label:'Mandatory Training Completion',unit:'%',zones:[{upTo:0.80,color:'#ef4444'},{upTo:0.95,color:'#f59e0b'},{upTo:1,color:'#10b981'}]},
-  policy_ack:{value:96,max:100,label:'Policy Acknowledgment Rate',unit:'%',zones:[{upTo:0.90,color:'#ef4444'},{upTo:0.95,color:'#f59e0b'},{upTo:1,color:'#10b981'}]},
-}
-
-const CERT_EXPIRY = [
-  {item:'SSF Registration',status:'current'},{item:'Annual Labour Audit FY 2024/25',status:'due_soon',due:'mid-January'},
-  {item:'OSH Committee Certification',status:'current'},
-]
 
 export default function SpeedometerCompliancePage() {
-  const [ctx, setCtx] = useState(null)
-  const breaches = CERT_EXPIRY.filter(c=>c.status!=='current').length
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/compliance', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Speedometer Compliance...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🚦" title="Speedometer - Compliance"
-        breadcrumb="Performance & Talent Management > Goal & Performance > Performance Analytics > KPI"
-        gradient={G}
-        stats={[
-          {icon:'✅',label:'Audit Pass Rate',     value:'97%'},
-          {icon:'🎓',label:'Training Completion',  value:'91%'},
-          {icon:'📝',label:'Policy Acknowledged',  value:'96%'},
-          {icon:'⚠',label:'Cert. Breaches',        value:breaches},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#faf5ff',border:'1px solid #e9d5ff',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#581c87',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>⚖</span>
-        <div style={{flex:1,minWidth:200}}><strong>Statutory Compliance Score = (Completed Tasks / Total Required Tasks) × 100.</strong> Tracks SSF contribution processing and mandatory Labour Relation Committee meetings (10+ employee enterprises). Any rate below 95% pushes the needle into the red warning zone - legal exposure, not just a metric.</div>
-      </div>
-
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'24px',display:'flex',flexWrap:'wrap',justifyContent:'space-around',gap:20}}>
-        <div onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:'Audit Pass Rate',impact_links:['Tax & Compliance']}})}}>
-          <Gauge {...COMPLIANCE_METRICS.audit_pass}/>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          ⚖️ Speedometer Compliance
         </div>
-        <div onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:'Training Completion',impact_links:['Training Recommendation']}})}}>
-          <Gauge {...COMPLIANCE_METRICS.training_completion}/>
-        </div>
-        <div onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:'Policy Acknowledgment',impact_links:[]}})}}>
-          <Gauge {...COMPLIANCE_METRICS.policy_ack}/>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
         </div>
       </div>
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <div style={{fontSize:12,fontWeight:800,color:'#0f172a',marginBottom:10}}>📅 Certification & Filing Expiry Tracker</div>
-        {CERT_EXPIRY.map((c,i)=>(
-          <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'8px 0',borderBottom:i<CERT_EXPIRY.length-1?'1px solid #f8fafc':'none'}}>
-            <span style={{fontSize:11,fontWeight:600,color:'#0f172a'}}>{c.item}</span>
-            {c.status==='current'?<span style={{background:'#f0fdf4',color:'#15803d',fontSize:9,fontWeight:700,padding:'2px 9px',borderRadius:20}}>✓ Current</span>:
-             <span style={{background:'#fffbeb',color:'#b45309',fontSize:9,fontWeight:700,padding:'2px 9px',borderRadius:20}}>⏳ Due {c.due}</span>}
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
+
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Pulls live from the existing Compliance Health Score and Statutory Filing Deadlines.','Real-time risk monitoring flags any metric crossing into the red zone before it becomes a penalty.','Auto-reminders sent as filing deadlines approach.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Detail',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

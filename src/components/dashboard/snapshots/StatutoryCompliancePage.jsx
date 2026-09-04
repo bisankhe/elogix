@@ -1,73 +1,85 @@
-// FILE: StatutoryCompliancePage.jsx - Statutory Compliance
-// (Compliance & Risk Management > Compliance Management)
-// SSF, gratuity, and the mandatory bonus fund -- reuses the EXISTING
-// bonus_fund_tracking (HR Budgeting session) directly, distinct from
-// Labor Compliance (working hours/safety) -- this is the statutory
-// FINANCIAL obligations lens.
+// FILE: src/components/dashboard/snapshots/StatutoryCompliancePage.jsx
+// eLogix HRMS — Statutory Compliance
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#052e16 0%,#15803d 60%,#86efac 100%)'
-const A = '#15803d'
-
-const STATUTORY_ITEMS = [
-  {item:'SSF Employer Contribution',status:'compliant',detail:'All active employees enrolled and contributions current'},
-  {item:'Gratuity Accrual (8.33%)',status:'compliant',detail:'Funded continuously through payroll, never a year-end surprise'},
-  {item:'Annual Bonus Fund (10% of net profit)',status:'at_risk',detail:'NPR 8.4M funded of NPR 12M required, deadline 2026-01-15',
-   flag_note:'Shortfall of NPR 3.6M -- see Payroll Budget for the full bonus fund tracker.', impact_links:['Payroll Budget']},
-  {item:'Probation Period Caps (max 6 months)',status:'compliant',detail:'No active probation exceeds the statutory cap'},
-]
-
-const STATUS_CFG = { compliant:{c:'#10b981',label:'Compliant'},at_risk:{c:'#f59e0b',label:'At Risk'} }
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function StatutoryCompliancePage() {
-  const [ctx, setCtx] = useState(null)
-  const atRiskCount = STATUTORY_ITEMS.filter(c=>c.status!=='compliant').length
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/compliance', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Statutory Compliance...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="📜" title="Statutory Compliance"
-        breadcrumb="Compliance & Risk Management > Compliance Management"
-        gradient={G}
-        stats={[
-          {icon:'📜',label:'Statutory Items',  value:STATUTORY_ITEMS.length},
-          {icon:'✅',label:'Compliant',            value:STATUTORY_ITEMS.filter(c=>c.status==='compliant').length},
-          {icon:'⚠',label:'At Risk',                  value:atRiskCount},
-          {icon:'⚖',label:'Minimum Wage',                value:'NPR 19,550/mo'},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#065f46',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>💰</span>
-        <div style={{flex:1,minWidth:200}}><strong>The Financial Obligations, Tracked Live:</strong> Every figure here pulls from the same SSF, gratuity, and bonus fund records Payroll Budget already maintains -- one number, never two competing totals.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          ⚖️ Statutory Compliance
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <div style={{display:'grid',gap:16}}>
-        {STATUTORY_ITEMS.map((c,i)=>{
-          const sc = STATUS_CFG[c.status]
-          return (
-            <div key={i}
-              onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:c.item,...c}})}}
-              style={{background:'#fff',border:`1px solid ${sc.c}33`,borderRadius:16,padding:'18px',borderLeft:`4px solid ${sc.c}`}}>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:8}}>
-                <div style={{fontSize:12,fontWeight:700,color:'#0f172a'}}>{c.item}</div>
-                <span style={{background:`${sc.c}15`,color:sc.c,fontSize:9,fontWeight:700,padding:'3px 10px',borderRadius:20}}>{sc.label}</span>
-              </div>
-              <div style={{marginTop:8,fontSize:9,color:'#374151'}}>{c.detail}</div>
-              {c.flag_note&&<div style={{marginTop:8,fontSize:9,color:'#b45309'}}>⚠ {c.flag_note}</div>}
-            </div>
-          )
-        })}
-      </div>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Bonus fund shortfall alerts fire automatically as the 6-month distribution deadline approaches.','Probation periods auto-flag if approaching the 6-month statutory cap, before a manager extends it past the legal limit.','Every figure traces to its source page -- never a number that exists only on this dashboard.']}/>
-      </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
+          </div>
+        </div>
+      )}
 
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Detail',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

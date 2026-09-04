@@ -1,7 +1,6 @@
 // FILE: src/components/dashboard/LearningDevelopmentDashboard.jsx
 // PURPOSE: L&D workspace -- training calendar, course management,
 // skill gap, certification tracking, training ROI.
-import { useApp } from '../../context/AppContext.jsx'
 import { StatCard } from '../shared/StatCard.jsx'
 import { Card } from '../shared/Card.jsx'
 const UPCOMING=[
@@ -9,24 +8,30 @@ const UPCOMING=[
   {module:'Leadership Essentials -- Cohort 3',date:'2025-07-15',enrolled:12},
 ]
 
-// ── Tenant session helper ──────────────────────────────────────────────
 function _getSession() {
-  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} }
-  catch(_e) { return {} }
+  try {
+    return JSON.parse(
+      sessionStorage.getItem('elogix_session') ||
+      localStorage.getItem('elogix_session') || 'null'
+    ) || {}
+  } catch (_e) { return {} }
 }
-function _getTenantHeaders() {
-  const sess  = _getSession()
-  const token = localStorage.getItem('access_token') || sess?.token || ''
-  const slug  = sess?.company?.slug || localStorage.getItem('elogix_tenant_slug') || ''
-  return { token, slug, valid: !!(token && slug) }
+function _useAppFallback() {
+  const s = _getSession()
+  return {
+    sub: s?.last_page || '', persona: s?.persona || s?.user?.role || 'employee',
+    lang: s?.lang || 'en', currency: s?.currency || 'NPR',
+    company: s?.company || {}, user: s?.user || {},
+    darkMode: false, setDarkMode: () => {},
+    navTo: (p) => window.dispatchEvent(new CustomEvent('elogix:nav', { detail: { page: p } })),
+    switchPersona: () => {}, setShowNotif: () => {}, setShowAI: () => {},
+    setSidebarOpen: () => {}, sidebarOpen: true,
+    currentPersona: { id: s?.persona || 'employee', icon: '👤', color: '#7c3aed', label: '' },
+  }
 }
 
 export default function LearningDevelopmentDashboard(){
-  const [apiData, setApiData] = useState(null)
-  const [apiLoading, setApiLoading] = useState(true)
-  const [apiError, setApiError] = useState(null)
-
-  const { navTo } = useApp()
+  const { navTo } = _useAppFallback()
   return(
     <div>
       <h1 style={{fontSize:20,fontWeight:900,color:'#0f172a',marginBottom:4}}>🎓 Learning &amp; Development Workspace</h1>

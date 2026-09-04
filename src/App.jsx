@@ -672,9 +672,6 @@ import ATSHRChatPage            from './components/dashboard/snapshots/ATSHRChat
 import ATSRBACPage              from './components/dashboard/snapshots/ATSRBACPage.jsx'
 import ATSRecruiterDashPage     from './components/dashboard/snapshots/ATSRecruiterDashPage.jsx'
 import HRISBulkCVSubmitPage from './components/dashboard/snapshots/HRISBulkCVSubmitPage.jsx'
-import MasterDatabasePage      from './components/dashboard/snapshots/MasterDatabasePage.jsx'
-import ApplicantStatusPage     from './components/dashboard/snapshots/ApplicantStatusPage.jsx'
-import VacancyStatusPage       from './components/dashboard/snapshots/VacancyStatusPage.jsx'
 import CandidateDatabasePage    from './components/dashboard/snapshots/CandidateDatabasePage.jsx'
 import CreateJobDescriptionPage from './components/dashboard/snapshots/CreateJobDescriptionPage.jsx'
 import JDLibraryPage            from './components/dashboard/snapshots/JDLibraryPage.jsx'
@@ -700,11 +697,17 @@ import NoLogInReportPage from './components/dashboard/snapshots/NoLogInReportPag
 import LateReportingPage from './components/dashboard/snapshots/LateReportingPage.jsx'
 import EarlyDeparturePage from './components/dashboard/snapshots/EarlyDeparturePage.jsx'
 
-export const AppContext = createContext(null)
+import { AppContext as _AppContextBase } from './context/AppContext.jsx'
+export const AppContext = _AppContextBase
 export const useApp = () => {
   const ctx = useContext(AppContext)
-  if (!ctx) throw new Error('useApp must be used inside <App />')
-  return ctx
+  return ctx || {
+    sub:'', navTo:()=>{}, persona:'employee', switchPersona:()=>{},
+    currentPersona:{id:'employee',label:'Employee',icon:'👤',color:'#64748b'},
+    lang:'en', currency:'NPR', company:null, user:null,
+    showNotif:false, setShowNotif:()=>{}, showAI:false, setShowAI:()=>{},
+    sidebarOpen:true, setSidebarOpen:()=>{}, darkMode:false, setDarkMode:()=>{},
+  }
 }
 
 // ── Route Map ─────────────────────────────────────────────────
@@ -1354,13 +1357,6 @@ const ROUTES = {
   'buddy-assignment':              BuddyAssignmentPage,
   'campus-hiring':                 CampusHiringPage,
   'candidate-database':            CandidateDatabasePage,
-  // ── Recruitment Management: Master Database & Tracking ──────────
-  'master-database':             MasterDatabasePage,
-  'mdb':                         MasterDatabasePage,     // short alias
-  'employee-master-db':          MasterDatabasePage,     // long alias
-  'applicant-status':            ApplicantStatusPage,
-  'vacancy-status':              VacancyStatusPage,
-  'recruitment-mdb':             MasterDatabasePage,     // nav alias
   'career-page':                   CareerPageBuilderPage,
   'career-portal':                 CareerPortalPage,
   'cit-letters':                   CITLettersPage,
@@ -1561,7 +1557,7 @@ export default function App({ initialPage, onLogout }) {
           sessionStorage.getItem('elogix_user') ||
           localStorage.getItem('elogix_user') || '{}'
         )
-      } catch(_e) { return {} }
+      } catch { return {} }
     })()
     const role = session?.user?.role || session?.role
     if (role) setPersonaState(ROLE_TO_PERSONA[role] || 'super-admin')
@@ -1628,7 +1624,7 @@ export default function App({ initialPage, onLogout }) {
                   )
                   const role = sess?.user?.role
                   if (role) return role.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())
-                } catch(_e) {}
+                } catch {}
                 return t(currentPersona?.labelKey) || currentPersona?.label
               })()}
             </span>

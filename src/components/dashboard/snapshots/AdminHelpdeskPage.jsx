@@ -1,102 +1,85 @@
-// FILE: AdminHelpdeskPage.jsx - Helpdesk (Administrative Operations)
-// (Finance, Assets & Administration > Administrative Operations)
-// Facility/IT/maintenance ticket Kanban -- deliberately distinct from
-// the EXISTING hr_helpdesk_tickets (HR policy/payroll/benefits
-// queries) and the ESS "Helpdesk & Ticket" page (the same HR desk,
-// employee-facing lens). This is broken-AC, leaking-pipe, IT-hardware
-// territory, with a hard safety-stop trigger.
+// FILE: src/components/dashboard/snapshots/AdminHelpdeskPage.jsx
+// eLogix HRMS — Admin Helpdesk
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { Field, PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#7c2d12 0%,#c2410c 60%,#fdba74 100%)'
-const A = '#c2410c'
-
-const PRIORITY_CFG = { high:{c:'#ef4444',label:'High'},medium:{c:'#f59e0b',label:'Medium'},low:{c:'#94a3b8',label:'Low'} }
-const STAGES = ['Open','In Progress','Resolved']
-
-const TICKETS = [
-  { id:'h1', title:'AC not cooling -- 3rd Floor East Wing', category:'Facility', priority:'medium', stage_idx:1, assigned_to:'Facilities Team' },
-  { id:'h2', title:'Exposed wiring near reception -- safety hazard', category:'Facility', priority:'high', stage_idx:0, assigned_to:'Unassigned',
-    flag_note:'Immediate operational danger -- per legal requirement, area should be cordoned and operations halted until resolved.' },
-  { id:'h3', title:'Replace office chair -- broken wheel', category:'Furniture', priority:'low', stage_idx:2, assigned_to:'Facilities Team' },
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function AdminHelpdeskPage() {
-  const [search, setSearch] = useState('')
-  const [showNew, setShowNew] = useState(false)
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = TICKETS.filter(t=>!search||t.title.toLowerCase().includes(search.toLowerCase()))
-  const byStage = STAGES.reduce((acc,s,i)=>{acc[i]=filtered.filter(t=>t.stage_idx===i); return acc},{})
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/helpdesk', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Admin Helpdesk...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🛠" title="Helpdesk"
-        breadcrumb="Finance, Assets & Administration > Administrative Operations"
-        gradient={G}
-        stats={[
-          {icon:'🛠',label:'Open Tickets',  value:TICKETS.filter(t=>t.stage_idx<2).length},
-          {icon:'🔴',label:'High Priority',     value:TICKETS.filter(t=>t.priority==='high').length},
-          {icon:'⚠',label:'Safety Triggers',        value:TICKETS.filter(t=>t.flag_note).length},
-          {icon:'✅',label:'Resolved Today',           value:TICKETS.filter(t=>t.stage_idx===2).length},
-        ]}
-        onAdd={()=>setShowNew(true)} addLabel="Report an Issue"/>
-
-      <div style={{background:'#fff7ed',border:'1px solid #fed7aa',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#7c2d12',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🛠</span>
-        <div style={{flex:1,minWidth:200}}><strong>Facility &amp; Maintenance, Not HR Queries:</strong> Broken AC, IT hardware, leaking pipes, furniture repairs -- this is the physical-workplace desk. HR policy or payroll questions still go through Helpdesk &amp; Ticket in Employee Self Service.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          🎫 Admin Helpdesk
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search tickets..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14,marginTop:14,overflowX:'auto'}}>
-        {STAGES.map((stage,i)=>(
-          <div key={i} style={{background:'#f8fafc',borderRadius:14,padding:'14px',minWidth:200}}>
-            <div style={{fontSize:10,fontWeight:800,color:'#0f172a',marginBottom:12}}>{stage} ({byStage[i].length})</div>
-            <div style={{display:'grid',gap:10}}>
-              {byStage[i].map(t=>{
-                const pc = PRIORITY_CFG[t.priority]
-                return (
-                  <div key={t.id}
-                    onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:t.title,...t,impact_links:['Facility Management']}})}}
-                    style={{background:'#fff',border:`1px solid ${t.flag_note?'#fecaca':'#e2e8f0'}`,borderRadius:10,padding:'10px 12px',boxShadow:'0 1px 3px rgba(0,0,0,.04)'}}>
-                    <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
-                      <span style={{background:`${pc.c}15`,color:pc.c,fontSize:7,fontWeight:700,padding:'2px 6px',borderRadius:20}}>{pc.label}</span>
-                    </div>
-                    <div style={{fontSize:9,color:'#374151'}}>{t.title}</div>
-                    {t.flag_note&&<div style={{marginTop:6,fontSize:8,color:'#dc2626',fontWeight:700}}>🚨 {t.flag_note}</div>}
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {showNew&&(
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.65)',zIndex:5000,display:'flex',alignItems:'center',justifyContent:'center',padding:16}} onClick={()=>setShowNew(false)}>
-          <div style={{background:'#fff',borderRadius:20,width:'min(480px,100%)'}} onClick={e=>e.stopPropagation()}>
-            <div style={{background:G,padding:'18px 24px'}}><div style={{fontSize:15,fontWeight:900,color:'#fff'}}>Report an Issue</div></div>
-            <div style={{padding:'20px 24px'}}>
-              <Field label="Category" type="select" value="" onChange={()=>{}} accent={A} options={['Facility','IT Hardware','Furniture','Cleaning']}/>
-              <Field label="Description" type="textarea" value="" onChange={()=>{}} accent={A} required hint="Voice input supported"/>
-              <label style={{display:'flex',gap:8,alignItems:'center',marginBottom:14,fontSize:10,color:'#dc2626'}}>
-                <input type="checkbox" style={{accentColor:'#dc2626'}}/> This is an immediate safety hazard
-              </label>
-              <button onClick={()=>setShowNew(false)} style={{width:'100%',padding:13,borderRadius:11,border:'none',background:G,color:'#fff',fontSize:13,fontWeight:700,cursor:'pointer'}}>Submit Ticket</button>
-            </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
         </div>
       )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Immediate-danger flags route to facilities leadership instantly -- the legal duty to halt unsafe operations is never delayed by a normal ticket queue.','Auto-routes by category and floor to the right maintenance staff, never a manual triage step.','Recurring issues at the same location flag a pattern -- 3 AC tickets on one floor signals a real maintenance need, not bad luck.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Ticket',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

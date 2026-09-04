@@ -1,133 +1,85 @@
-// FILE: MobileAttendanceTrackingPage.jsx - Mobile Attendance Tracking (Attendance Management)
-// ESS mobile check-in screen mock: biometric/facial liveness, GPS geofence, QR badge scan,
-// offline-mode caching with pending-sync indicator, device-management overview for IT/HR.
+// FILE: src/components/dashboard/snapshots/MobileAttendanceTrackingPage.jsx
+// eLogix HRMS — Mobile Attendance Tracking
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { Field, ExcelModal, PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#164e63 0%,#0891b2 60%,#67e8f9 100%)'
-const A = '#0891b2'
-
-const DEVICES = [
-  { id:'d1', employee:'Ramesh Shrestha', device_model:'Samsung Galaxy A54', os:'Android 14', app_version:'3.2.1',
-    last_sync:'2 min ago', offline_pending:0, biometric_enrolled:true, status:'online',
-    impact_links:['GPS Attendance','Biometric Attendance'] },
-  { id:'d2', employee:'Sunita Rai', device_model:'iPhone 13', os:'iOS 17.4', app_version:'3.2.1',
-    last_sync:'5 min ago', offline_pending:0, biometric_enrolled:true, status:'online',
-    impact_links:[] },
-  { id:'d3', employee:'Bikash Rai', device_model:'Xiaomi Redmi Note 12', os:'Android 13', app_version:'3.1.8',
-    last_sync:'1 hour ago', offline_pending:3, biometric_enrolled:true, status:'offline_cached',
-    impact_links:[] },
-  { id:'d4', employee:'Anjali Sharma', device_model:'Unknown', os:'Unknown', app_version:'2.9.0 (outdated)',
-    last_sync:'4 days ago', offline_pending:0, biometric_enrolled:false, status:'inactive',
-    impact_links:['IT Helpdesk'] },
-]
-
-const STATUS_CFG = {online:{c:'#10b981',bg:'#f0fdf4',icon:'🟢',label:'Synced'},offline_cached:{c:'#f59e0b',bg:'#fffbeb',icon:'📡',label:'Offline - Caching'},inactive:{c:'#ef4444',bg:'#fef2f2',icon:'⚠',label:'Inactive / Update Needed'}}
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function MobileAttendanceTrackingPage() {
-  const [devices, setDevices] = useState(DEVICES)
-  const [search, setSearch] = useState('')
-  const [showPreview, setShowPreview] = useState(false)
-  const [showExcel, setShowExcel] = useState(false)
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = devices.filter(d=>!search||d.employee.toLowerCase().includes(search.toLowerCase()))
-  const offlinePendingTotal = devices.reduce((s,d)=>s+d.offline_pending,0)
-  const enrolledCount = devices.filter(d=>d.biometric_enrolled).length
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/attendance', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Mobile Attendance Tracking...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="📱" title="Mobile Attendance Tracking"
-        breadcrumb="Workforce Operations > Attendance Management > Overtime"
-        gradient={G}
-        stats={[
-          {icon:'📱',label:'Registered Devices', value:devices.length},
-          {icon:'🟢',label:'Synced',              value:devices.filter(d=>d.status==='online').length},
-          {icon:'📡',label:'Pending Sync',        value:offlinePendingTotal},
-          {icon:'👆',label:'Biometric Enrolled',  value:enrolledCount},
-        ]}
-        onAdd={()=>setShowPreview(true)} addLabel="Preview Mobile App"
-        onExcel={()=>setShowExcel(true)}/>
-
-      <div style={{background:'#ecfeff',border:'1px solid #a5f3fc',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#155e75',display:'flex',gap:10}}>
-        <span style={{fontSize:18}}>📍</span>
-        <div><strong>GPS + Biometric Anti-Fraud:</strong> Facial recognition liveness detection prevents buddy-punching; GPS geofencing restricts check-ins to assigned locations. Offline mode caches punches locally and auto-syncs on reconnect - no lost attendance data in low-connectivity areas.</div>
-      </div>
-
-      <SearchBar value={search} onChange={setSearch} placeholder="Search by employee name..."/>
-
-      <div style={{display:'grid',gridTemplateColumns:'1fr 340px',gap:16,marginTop:14}}>
-        <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,overflow:'hidden'}}>
-          <div style={{overflowX:'auto'}}>
-            <table style={{width:'100%',borderCollapse:'collapse',fontSize:11}}>
-              <thead><tr style={{background:'#f8fafc'}}>
-                {['Employee','Device','OS','App Ver.','Last Sync','Offline Queue','Biometric','Status'].map(h=>(
-                  <th key={h} style={{padding:'10px 12px',textAlign:'left',fontSize:9,fontWeight:800,color:A,whiteSpace:'nowrap'}}>{h}</th>
-                ))}
-              </tr></thead>
-              <tbody>
-                {filtered.map(d=>{
-                  const sc = STATUS_CFG[d.status]
-                  return (
-                    <tr key={d.id} style={{borderBottom:'1px solid #f8fafc'}}
-                      onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:d.employee,...d}})}}>
-                      <td style={{padding:'9px 12px',fontWeight:700,color:'#0f172a'}}>{d.employee}</td>
-                      <td style={{padding:'9px 12px',color:'#64748b',fontSize:10}}>{d.device_model}</td>
-                      <td style={{padding:'9px 12px',color:'#94a3b8',fontSize:10}}>{d.os}</td>
-                      <td style={{padding:'9px 12px',color:d.app_version.includes('outdated')?'#ef4444':'#64748b',fontSize:10}}>{d.app_version}</td>
-                      <td style={{padding:'9px 12px',color:'#64748b',fontSize:10}}>{d.last_sync}</td>
-                      <td style={{padding:'9px 12px'}}>{d.offline_pending>0?<span style={{color:'#f59e0b',fontWeight:700}}>{d.offline_pending} pending</span>:<span style={{color:'#10b981'}}>-</span>}</td>
-                      <td style={{padding:'9px 12px'}}>{d.biometric_enrolled?<span style={{color:'#10b981'}}>✓ Enrolled</span>:<span style={{color:'#ef4444'}}>✗ Not Set</span>}</td>
-                      <td style={{padding:'9px 12px'}}><span style={{background:sc.bg,color:sc.c,fontSize:9,fontWeight:700,padding:'2px 8px',borderRadius:20}}>{sc.icon} {sc.label}</span></td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          ⏰ Mobile Attendance Tracking
         </div>
-
-        {/* Mobile app preview mock */}
-        <div style={{background:'#0f172a',borderRadius:28,padding:'18px 14px',height:'fit-content',boxShadow:'0 12px 40px rgba(0,0,0,.25)'}}>
-          <div style={{background:'#fff',borderRadius:20,padding:'18px 16px',textAlign:'center'}}>
-            <div style={{fontSize:10,color:'#94a3b8',marginBottom:4}}>09:14 AM</div>
-            <div style={{fontSize:11,fontWeight:700,color:'#0f172a',marginBottom:14}}>Ramesh Shrestha</div>
-            <div style={{width:130,height:130,margin:'0 auto 14px',borderRadius:'50%',background:'linear-gradient(135deg,#10b981,#059669)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:900,color:'#fff'}}>
-              Tap to<br/>Clock In
-            </div>
-            <div style={{background:'#f0fdf4',borderRadius:10,padding:'8px 10px',fontSize:9,color:'#065f46',marginBottom:8}}>
-              📍 Within KTM HQ geo-fence (12m)
-            </div>
-            <div style={{display:'flex',gap:6,justifyContent:'center'}}>
-              <span style={{background:'#eff6ff',color:'#1d4ed8',fontSize:8,fontWeight:700,padding:'3px 9px',borderRadius:20}}>😊 Face ID Ready</span>
-              <span style={{background:'#faf5ff',color:'#7c3aed',fontSize:8,fontWeight:700,padding:'3px 9px',borderRadius:20}}>📱 Scan QR</span>
-            </div>
-          </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
         </div>
       </div>
 
-      {showPreview&&(
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.7)',zIndex:5000,display:'flex',alignItems:'center',justifyContent:'center',padding:16}} onClick={()=>setShowPreview(false)}>
-          <div style={{background:'#fff',borderRadius:20,padding:'28px',maxWidth:420,textAlign:'center'}} onClick={e=>e.stopPropagation()}>
-            <div style={{fontSize:14,fontWeight:800,color:'#0f172a',marginBottom:14}}>📱 Mobile App Check-In Flow</div>
-            <div style={{textAlign:'left',fontSize:11,color:'#374151',lineHeight:1.8}}>
-              <div>1️⃣ Open app {'>'} biometric/Face ID unlock</div>
-              <div>2️⃣ GPS auto-detects geo-fence status</div>
-              <div>3️⃣ Tap "Clock In" or scan personal QR badge</div>
-              <div>4️⃣ If offline: cached locally, syncs on reconnect</div>
-              <div>5️⃣ Confirmation + live daily hours timer starts</div>
-            </div>
-            <button onClick={()=>setShowPreview(false)} style={{marginTop:18,padding:'10px 24px',borderRadius:10,border:'none',background:G,color:'#fff',fontSize:12,fontWeight:700,cursor:'pointer'}}>Close</button>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
+
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
         </div>
       )}
 
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Sync Log',key:'view'},{icon:'🔄',label:'Force Sync',key:'sync'},
-        {icon:'📧',label:'Send Update Reminder',key:'remind'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Mobile Attendance Devices" columns={['Employee','Device Model','OS','App Version','Last Sync','Offline Pending','Biometric Enrolled','Status']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

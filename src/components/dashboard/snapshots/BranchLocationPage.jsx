@@ -1,7 +1,6 @@
 // FILE: BranchLocationPage.jsx - Luxury Branch & Location Setup
 
 import { useState, useRef, useCallback } from 'react'
-import { useApp } from '../../../context/AppContext.jsx'
 
 const THEME = {
   gradient:'linear-gradient(135deg,#0ea5e9 0%,#6366f1 100%)',
@@ -237,6 +236,29 @@ function AddBranchModal({ onClose, onSave }) {
       </div>
     </div>
   )
+}
+
+
+function _getSession() {
+  try {
+    return JSON.parse(
+      sessionStorage.getItem('elogix_session') ||
+      localStorage.getItem('elogix_session') || 'null'
+    ) || {}
+  } catch (_e) { return {} }
+}
+function _useAppFallback() {
+  const s = _getSession()
+  return {
+    sub: s?.last_page || '', persona: s?.persona || s?.user?.role || 'employee',
+    lang: s?.lang || 'en', currency: s?.currency || 'NPR',
+    company: s?.company || {}, user: s?.user || {},
+    darkMode: false, setDarkMode: () => {},
+    navTo: (p) => window.dispatchEvent(new CustomEvent('elogix:nav', { detail: { page: p } })),
+    switchPersona: () => {}, setShowNotif: () => {}, setShowAI: () => {},
+    setSidebarOpen: () => {}, sidebarOpen: true,
+    currentPersona: { id: s?.persona || 'employee', icon: '👤', color: '#7c3aed', label: '' },
+  }
 }
 
 export default function BranchLocationPage() {

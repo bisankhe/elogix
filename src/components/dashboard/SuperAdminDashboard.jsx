@@ -3,13 +3,12 @@
 // Fixed: Removed dual-axis BarChart (yAxisId conflict)
 // ============================================================
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
 } from 'recharts'
-import { useApp }        from '../../context/AppContext.jsx'
 import { StatCard }      from '../shared/StatCard.jsx'
 import { Card }          from '../shared/Card.jsx'
 import { Pill }          from '../shared/Pill.jsx'
@@ -80,21 +79,30 @@ const aiInsights = [
 const severityColor = { critical: 'red', warning: 'yellow', info: 'blue' }
 
 
-function _sess() {
-  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+function _getSession() {
+  try {
+    return JSON.parse(
+      sessionStorage.getItem('elogix_session') ||
+      localStorage.getItem('elogix_session') || 'null'
+    ) || {}
+  } catch (_e) { return {} }
 }
-function _headers() {
-  const s=_sess()
-  const token=localStorage.getItem('access_token')||s?.token||''
-  const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
-  return {token,slug,valid:!!(token&&slug),session:s}
+function _useAppFallback() {
+  const s = _getSession()
+  return {
+    sub: s?.last_page || '', persona: s?.persona || s?.user?.role || 'employee',
+    lang: s?.lang || 'en', currency: s?.currency || 'NPR',
+    company: s?.company || {}, user: s?.user || {},
+    darkMode: false, setDarkMode: () => {},
+    navTo: (p) => window.dispatchEvent(new CustomEvent('elogix:nav', { detail: { page: p } })),
+    switchPersona: () => {}, setShowNotif: () => {}, setShowAI: () => {},
+    setSidebarOpen: () => {}, sidebarOpen: true,
+    currentPersona: { id: s?.persona || 'employee', icon: '👤', color: '#7c3aed', label: '' },
+  }
 }
 
 export default function SuperAdminDashboard() {
-  const [dashData,setDashData]=useState(null)
-  const [loading,setLoading]=useState(true)
-  const [error,setError]=useState(null)
-  const { t, cc } = useApp()
+  const { t, cc } = _useAppFallback()
   const [activeTab, setActiveTab] = useState('overview')
 
   const fmt = (val) => {
@@ -103,48 +111,10 @@ export default function SuperAdminDashboard() {
     return `${cc.symbol}${val}`
   }
 
-  useEffect(()=>{
-    const {token,slug,valid,session} = _headers()
-    if(!valid){setLoading(false);return}
-    setLoading(true);setError(null)
-    const empId = session?.user?.employee_id||''
-    fetch('/api/v1/dashboard/super-admin' + (empId?`?emp_id=${empId}`:''), {
-      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
-    })
-      .then(r=>{
-        if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));throw new Error('Session expired')}
-        if(!r.ok) throw new Error(`Server error ${r.status}`)
-        return r.json()
-      })
-      .then(d=>{ if(d.success) setDashData(d.data) })
-      .catch(err=>{setError(err.message);console.error('[eLogix dashboard] /super-admin:',err)})
-      .finally(()=>setLoading(false))
-  },[])
-
   return (
     <div>
       {/* Access Banner */}
       <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: '9px 14px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-      {loading && (
-        <div style={{textAlign:'center',padding:60,color:'#7c3aed'}}>
-          <div style={{fontSize:36,marginBottom:12,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
-          <div style={{fontSize:13,fontWeight:600}}>Loading your dashboard...</div>
-          <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
-        </div>
-      )}
-      {error && !loading && (
-        <div style={{padding:'12px 20px',background:'#fef2f2',border:'1px solid #fecaca',
-          borderRadius:10,marginBottom:16,fontSize:13,color:'#dc2626',fontWeight:600}}>
-          ⚠️ {error}
-        </div>
-      )}
-      {!loading && !dashData && !error && (
-        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
-          <div style={{fontSize:40,marginBottom:12}}>📊</div>
-          <div style={{fontSize:14,fontWeight:600}}>No data available</div>
-          <div style={{fontSize:12,marginTop:4}}>Data will appear once your company is set up in eLogix</div>
-        </div>
-      )}
         <span>🛡️</span>
         <span style={{ fontSize: 12, fontWeight: 700, color: '#991b1b' }}>
           Super Admin — Full System Visibility. All actions are logged. Nepal Privacy Act 2018 compliant.

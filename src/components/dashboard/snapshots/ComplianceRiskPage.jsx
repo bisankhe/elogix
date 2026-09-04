@@ -1,72 +1,85 @@
-// FILE: ComplianceRiskPage.jsx - Compliance Risk
-// (Compliance & Risk Management > Risk Management)
-// Risk-framed lens over EXISTING compliance data -- pure reuse of
-// v_first_salary_policy_gate_status + v_license_dashboard (Compliance
-// Management session) and training expiry data. Never a second
-// compliance tracking system; this page is "what's at risk", that
-// module's pages are "what's tracked."
+// FILE: src/components/dashboard/snapshots/ComplianceRiskPage.jsx
+// eLogix HRMS — Compliance Risk
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#0c4a6e 0%,#0284c7 60%,#7dd3fc 100%)'
-const A = '#0284c7'
-
-const RISK_ITEMS = [
-  {label:'Policy Acknowledgment Rate',value:'94%',risk:'low',detail:'12 new hires still unacknowledged on mandatory policies',target:'Policy Compliance'},
-  {label:'Licenses Expiring < 30 Days',value:2,risk:'high',detail:'Work permit renewals pending for 2 foreign-national employees',target:'License Management'},
-  {label:'Mandatory Training Expired',value:5,risk:'medium',detail:'OSH refresher overdue for 5 employees',target:'Training Budget'},
-  {label:'EEO Compliance Score',value:'91%',risk:'low',detail:'Representation tracking within target ranges'},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function ComplianceRiskPage() {
-  const [ctx, setCtx] = useState(null)
-  const highRiskCount = RISK_ITEMS.filter(r=>r.risk==='high').length
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/compliance', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Compliance Risk...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="⚖" title="Compliance Risk"
-        breadcrumb="Compliance & Risk Management > Risk Management"
-        gradient={G}
-        stats={[
-          {icon:'⚖',label:'Risk Items Tracked',  value:RISK_ITEMS.length},
-          {icon:'🔴',label:'High Risk',              value:highRiskCount},
-          {icon:'📋',label:'Pending Audit Tasks',        value:'3'},
-          {icon:'⚖',label:'Audit Cycle',                    value:'Section 80'},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#eff6ff',border:'1px solid #bfdbfe',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#1e40af',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🔗</span>
-        <div style={{flex:1,minWidth:200}}><strong>A Risk Lens, Not a Second Tracker:</strong> Every figure here pulls live from Compliance Management's own pages -- this view exists to show what's actually at risk, sorted by severity, not to duplicate the underlying tracking.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          ⚖️ Compliance Risk
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <div style={{display:'grid',gap:14}}>
-        {RISK_ITEMS.map((r,i)=>{
-          const riskColor = r.risk==='high'?'#ef4444':r.risk==='medium'?'#f59e0b':'#10b981'
-          return (
-            <div key={i}
-              onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:r.label,...r,impact_links:r.target?[r.target]:[]}})}}
-              style={{background:'#fff',border:`1px solid ${riskColor}33`,borderRadius:14,padding:'16px 18px',borderLeft:`4px solid ${riskColor}`}}>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:8}}>
-                <div>
-                  <div style={{fontSize:12,fontWeight:700,color:'#0f172a'}}>{r.label}</div>
-                  <div style={{fontSize:9,color:'#94a3b8',marginTop:3}}>{r.detail}</div>
-                </div>
-                <span style={{fontSize:16,fontWeight:900,color:riskColor}}>{r.value}</span>
-              </div>
-            </div>
-          )
-        })}
-      </div>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Right-click any item to jump straight into its source page -- License Management, Policy Compliance, or Training Budget.','High-risk items surface first, regardless of category, so the most urgent compliance gap is never buried below routine ones.','EEO and equal-pay metrics correlate against Gender Analytics to catch discrimination risk before it becomes a claim.']}/>
-      </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
+          </div>
+        </div>
+      )}
 
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Source Detail',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

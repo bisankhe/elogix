@@ -1,76 +1,85 @@
-// FILE: CostAnalysisPage.jsx - Cost Analysis
-// (Reports, Analytics & BI > HR Analytics)
-// Total comp cost, cost-per-hire, overtime cost, HCROI -- reuses the
-// EXISTING cost_per_hire_npr (Employer Branding session, already a
-// generated column) and bonus_fund_tracking (HR Budgeting session).
-// HCROI itself is the one genuinely new calculation -- no return-on-
-// human-capital metric existed anywhere in the build until now.
+// FILE: src/components/dashboard/snapshots/CostAnalysisPage.jsx
+// eLogix HRMS — Cost Analysis
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#052e16 0%,#15803d 60%,#86efac 100%)'
-const A = '#15803d'
-
-const COST_BREAKDOWN = [
-  {label:'Compensation',amount:38400000,c:'#15803d'},{label:'Benefits (SSF + Insurance)',amount:5200000,c:'#0284c7'},
-  {label:'Recruitment',amount:1680000,c:'#7c3aed'},{label:'Overtime',amount:1240000,c:'#f59e0b'},
-]
-
-const HCROI_INPUTS = { revenue_npr:185000000, total_hr_cost_npr:46520000 }
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function CostAnalysisPage() {
-  const [ctx, setCtx] = useState(null)
-  const totalCost = COST_BREAKDOWN.reduce((s,c)=>s+c.amount,0)
-  const maxCost = Math.max(...COST_BREAKDOWN.map(c=>c.amount))
-  const fmt = n => 'NPR '+(n/1000000).toFixed(1)+'M'
-  const hcroi = ((HCROI_INPUTS.revenue_npr - HCROI_INPUTS.total_hr_cost_npr) / HCROI_INPUTS.total_hr_cost_npr).toFixed(2)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Cost Analysis...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="💰" title="Cost Analysis"
-        breadcrumb="Reports, Analytics & BI > HR Analytics"
-        gradient={G}
-        stats={[
-          {icon:'💰',label:'Total HR Cost',  value:fmt(totalCost)},
-          {icon:'🎯',label:'Cost Per Hire',      value:'NPR 40K'},
-          {icon:'📐',label:'HCROI',                 value:hcroi+'x'},
-          {icon:'⚖',label:'Bonus Fund Status',        value:'70% Funded'},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#065f46',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>📐</span>
-        <div style={{flex:1,minWidth:200}}><strong>HCROI: (Revenue - HR Cost) / HR Cost</strong> -- the one genuinely new number here. Every other figure already lives in Payroll Budget, Recruitment Budget, or the Bonus Fund tracker; this view just brings them together.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Cost Analysis
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'20px',marginBottom:18}}>
-        <div style={{fontSize:11,fontWeight:800,color:'#0f172a',marginBottom:14}}>📊 Cost Breakdown</div>
-        {COST_BREAKDOWN.map((c,i)=>(
-          <div key={i}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:c.label,...c,impact_links:['Payroll Budget','Recruitment Budget']}})}}
-            style={{marginBottom:12}}>
-            <div style={{display:'flex',justifyContent:'space-between',marginBottom:3,fontSize:10}}>
-              <span style={{color:'#374151'}}>{c.label}</span><span style={{fontWeight:700,color:c.c}}>{fmt(c.amount)}</span>
-            </div>
-            <div style={{height:8,background:'#f1f5f9',borderRadius:8,overflow:'hidden'}}><div style={{width:`${c.amount/maxCost*100}%`,height:'100%',background:c.c,borderRadius:8}}/></div>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
+
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'18px',textAlign:'center'}}>
-        <div style={{fontSize:9,fontWeight:700,color:'#94a3b8',marginBottom:8}}>HUMAN CAPITAL ROI</div>
-        <div style={{fontSize:28,fontWeight:900,color:A}}>{hcroi}x</div>
-        <div style={{fontSize:9,color:'#94a3b8',marginTop:6}}>Every NPR 1 invested in people returns NPR {(1+parseFloat(hcroi)).toFixed(2)} in revenue</div>
-      </div>
-
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Cost-per-hire pulls live from Recruitment Budget -- the exact same generated column, never a separate average.','Bonus fund funding status reads directly from the existing tracker -- this view never duplicates that legal obligation\'s math.','HCROI trend over time flags whether HR investment is genuinely paying off, not just whether spend is rising.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Breakdown',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

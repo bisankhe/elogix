@@ -5,13 +5,12 @@
 //          PF/Gratuity, OT calculation, salary structure
 // ============================================================
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
 } from 'recharts'
-import { useApp }      from '../../../context/AppContext.jsx'
 import { StatCard }    from '../../shared/StatCard.jsx'
 import { Card }        from '../../shared/Card.jsx'
 import { Pill }        from '../../shared/Pill.jsx'
@@ -91,25 +90,31 @@ function PayrollAccessGuard({ persona, children }) {
 }
 
 // ── Main Component ───────────────────────────────────────────
+
+function _getSession() {
+  try {
+    return JSON.parse(
+      sessionStorage.getItem('elogix_session') ||
+      localStorage.getItem('elogix_session') || 'null'
+    ) || {}
+  } catch (_e) { return {} }
+}
+function _useAppFallback() {
+  const s = _getSession()
+  return {
+    sub: s?.last_page || '', persona: s?.persona || s?.user?.role || 'employee',
+    lang: s?.lang || 'en', currency: s?.currency || 'NPR',
+    company: s?.company || {}, user: s?.user || {},
+    darkMode: false, setDarkMode: () => {},
+    navTo: (p) => window.dispatchEvent(new CustomEvent('elogix:nav', { detail: { page: p } })),
+    switchPersona: () => {}, setShowNotif: () => {}, setShowAI: () => {},
+    setSidebarOpen: () => {}, sidebarOpen: true,
+    currentPersona: { id: s?.persona || 'employee', icon: '👤', color: '#7c3aed', label: '' },
+  }
+}
+
 export default function PayrollSnapshot() {
-
-  const [apiData,setApiData]=useState(null)
-  const [apiLoading,setApiLoading]=useState(true)
-  const [apiError,setApiError]=useState(null)
-
-  useEffect(()=>{
-    const token=localStorage.getItem('access_token')
-    const sess=(()=>{try{return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{}}catch{return{}}})()
-    const slug=sess?.company?.slug||''
-    if(!token||!slug){setApiLoading(false);return}
-    setApiLoading(true)
-    fetch('/api/v1/payroll/snapshot',{headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}})
-      .then(r=>r.ok?r.json():Promise.reject(r.status))
-      .then(d=>{if(d.snapshot||d.data)setApiData(d.snapshot||d.data)})
-      .catch(()=>{})
-      .finally(()=>setApiLoading(false))
-  },[])
-  const { t, cc, persona } = useApp()
+  const { t, cc, persona } = _useAppFallback()
   const [activeTab, setActiveTab] = useState('overview')
 
   const fmt = (val, compact = true) => {
@@ -122,9 +127,6 @@ export default function PayrollSnapshot() {
 
   return (
     <div>
-      {apiLoading && <div style={{padding:40,textAlign:"center",color:"#7c3aed",fontSize:13,fontWeight:600}}><div style={{fontSize:32}}>⟳</div>Loading...</div>}
-      {apiError && !apiLoading && <div style={{padding:"8px 14px",background:"#fef2f2",border:"1px solid #fecaca",borderRadius:8,fontSize:12,color:"#dc2626",marginBottom:8}}>⚠️ {apiError}</div>}
-
       <PageTitle
         title="Payroll Snapshot"
         sub="🔒 Restricted — HR Directors & Finance only. Total cost, OT, benefits, Nepal Rule 21 & PF compliance."

@@ -1,80 +1,85 @@
-// FILE: MyActivityThisMonthPage.jsx - My Activity This Month
-// (HR Services & Support > Employee Self Service)
-// Week-grouped rollup over the SAME employee_activity_log, just a
-// date_trunc('month', ...) window -- never a separate log table.
+// FILE: src/components/dashboard/snapshots/MyActivityThisMonthPage.jsx
+// eLogix HRMS — My Activity This Month
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#052e16 0%,#15803d 60%,#86efac 100%)'
-const A = '#15803d'
-
-const WEEKLY_TREND = [
-  {week:'Week 1',count:24},{week:'Week 2',count:31},{week:'Week 3',count:18},{week:'Week 4',count:27},
-]
-
-const TOP_ACTIVITIES = [
-  {action:'Clock-in/out',count:42,module:'attendance'},{action:'Course progress updates',count:18,module:'training'},
-  {action:'Goal/KPI updates',count:14,module:'goal'},{action:'Leave & attendance requests',count:8,module:'leave'},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function MyActivityThisMonthPage() {
-  const [ctx, setCtx] = useState(null)
-  const total = WEEKLY_TREND.reduce((s,w)=>s+w.count,0)
-  const maxWeek = Math.max(...WEEKLY_TREND.map(w=>w.count))
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading My Activity This Month...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🗓" title="My Activity This Month"
-        breadcrumb="HR Services & Support > Employee Self Service"
-        gradient={G}
-        stats={[
-          {icon:'🗓',label:'Total Actions',  value:total},
-          {icon:'📈',label:'Busiest Week',      value:WEEKLY_TREND.reduce((a,b)=>a.count>b.count?a:b).week},
-          {icon:'🎓',label:'Training Touches',     value:18},
-          {icon:'📊',label:'Weekly Average',          value:(total/4).toFixed(1)},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#065f46',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>📊</span>
-        <div style={{flex:1,minWidth:200}}><strong>The Bigger Picture:</strong> A month-long view of the same automatic trail -- useful for your own monthly check-in prep, no manual diary-keeping needed.</div>
-      </div>
-
-      {/* Weekly trend chart */}
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'20px',marginBottom:18}}>
-        <div style={{fontSize:11,fontWeight:800,color:'#0f172a',marginBottom:14}}>📈 Weekly Trend</div>
-        <div style={{display:'flex',gap:10,alignItems:'flex-end',height:90}}>
-          {WEEKLY_TREND.map((w,i)=>(
-            <div key={i}
-              onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:w.week,...w}})}}
-              style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
-              <div style={{fontSize:9,fontWeight:700,color:A}}>{w.count}</div>
-              <div style={{width:'100%',background:A,borderRadius:'4px 4px 0 0',height:`${w.count/maxWeek*70}px`}}/>
-              <div style={{fontSize:8,color:'#94a3b8'}}>{w.week}</div>
-            </div>
-          ))}
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 My Activity This Month
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
         </div>
       </div>
 
-      {/* Top activities */}
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'20px'}}>
-        <div style={{fontSize:11,fontWeight:800,color:'#0f172a',marginBottom:12}}>🏆 Top Activities This Month</div>
-        {TOP_ACTIVITIES.map((t,i)=>(
-          <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'9px 0',borderBottom:i<TOP_ACTIVITIES.length-1?'1px solid #f8fafc':'none'}}>
-            <span style={{fontSize:10,color:'#374151'}}>{t.action}</span>
-            <span style={{background:'#f0fdf4',color:'#15803d',fontSize:9,fontWeight:700,padding:'2px 9px',borderRadius:20}}>{t.count}x</span>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
+
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Monthly summary auto-generates the same way week and day views do -- nothing recalculated by hand.','Use this view ahead of any 1-on-1 to recall exactly what you worked through this month.','Switch to This Quarter or This Year for an even broader lens on the same data.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Week Detail',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

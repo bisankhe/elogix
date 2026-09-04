@@ -2,7 +2,6 @@
 // Country selection triggers auto-fill of: FY Pattern, Leave Year, Currency,
 // Language, Calendar, Timezone, Weekend, OT Rates, Number Format, Date Format
 import React, { useState, useRef, useEffect } from 'react'
-import { useApp } from '../../../context/AppContext.jsx'
 
 // ── COUNTRY MASTER CONFIG ─────────────────────────────────────────────────────
 const COUNTRY_CONFIGS = {
@@ -766,7 +765,7 @@ function CompanyProfileTab({ data, onChange, country, onCountryChange }) {
         <FI label="Founded / Incorporated Date" value={data.founded_date} onChange={v=>onChange('founded_date',v)} type="date"/>
         <FI label="Total Employees (approx)" value={data.total_employees} onChange={v=>onChange('total_employees',v)} type="number" placeholder="e.g. 250"/>
         <FI label={country==='Nepal'?'Minimum Wage (NPR/month)':'Minimum Wage (local currency)'} value={data.min_wage} onChange={v=>onChange('min_wage',v)} type="number"
-          placeholder={country==='Nepal'?'15000':'Local minimum wage'} hint={country==='Nepal'?'Nepal minimum: NPR 15,000/month (2024)':'Per local labour law'}/>
+          placeholder={country==='Nepal'?'15000':'Local minimum wage'} hint={country==='Nepal'?'Nepal minimum: NPR 15,000/month (2024)':cc=>cc}/>
         <FI label={country==='Nepal'?'Foreign Worker % (max 5%)':'Foreign Worker %'} value={data.foreign_worker_pct} onChange={v=>onChange('foreign_worker_pct',v)} type="number" placeholder="0"
           hint={country==='Nepal'?'Nepal max: 5% per Labour Act 2074 Section 6':'Per local immigration policy'}/>
       </div>
@@ -931,7 +930,7 @@ function useTenantCompany() {
             return
           }
         }
-      } catch(_e) {}
+      } catch {}
       // 2. Fallback: localStorage auth
       try {
         const auth = JSON.parse(localStorage.getItem('elogix_auth')||'{}')
@@ -957,7 +956,7 @@ function useTenantCompany() {
           phone: regData.phone || '', email: regData.admin_email || co.admin_email || '',
           province:'', district:'', municipality:'', registered_address:'', website:'',
         })
-      } catch(_e) {}
+      } catch {}
       setLoading(false)
     }
     load()
@@ -970,7 +969,7 @@ function useTenantCompany() {
       auth.company = { ...(auth.company||{}), ...updates }
       localStorage.setItem('elogix_auth', JSON.stringify(auth))
       setCompany(p => ({...p, ...updates}))
-    } catch(_e) {}
+    } catch {}
     // Try API
     try {
       const token = localStorage.getItem('elogix_token') ||
@@ -982,10 +981,33 @@ function useTenantCompany() {
           body: JSON.stringify(updates)
         })
       }
-    } catch(_e) {}
+    } catch {}
   }
 
   return { company, loading, saveTenantCompany }
+}
+
+
+function _getSession() {
+  try {
+    return JSON.parse(
+      sessionStorage.getItem('elogix_session') ||
+      localStorage.getItem('elogix_session') || 'null'
+    ) || {}
+  } catch (_e) { return {} }
+}
+function _useAppFallback() {
+  const s = _getSession()
+  return {
+    sub: s?.last_page || '', persona: s?.persona || s?.user?.role || 'employee',
+    lang: s?.lang || 'en', currency: s?.currency || 'NPR',
+    company: s?.company || {}, user: s?.user || {},
+    darkMode: false, setDarkMode: () => {},
+    navTo: (p) => window.dispatchEvent(new CustomEvent('elogix:nav', { detail: { page: p } })),
+    switchPersona: () => {}, setShowNotif: () => {}, setShowAI: () => {},
+    setSidebarOpen: () => {}, sidebarOpen: true,
+    currentPersona: { id: s?.persona || 'employee', icon: '👤', color: '#7c3aed', label: '' },
+  }
 }
 
 export default function CompanySetupPage() {

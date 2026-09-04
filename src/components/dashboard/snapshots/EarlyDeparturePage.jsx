@@ -1,76 +1,85 @@
-// FILE: EarlyDeparturePage.jsx — Early Departure Alert (Auto-system)  
-// Auto-sends alert if logout before shift end - 5 min. 3 violations = half-day deduction
-import { useState } from 'react'
-import { PageHeader, SearchBar, ExcelModal } from './DeptSetupShared.jsx'
+// FILE: src/components/dashboard/snapshots/EarlyDeparturePage.jsx
+// eLogix HRMS — Early Departure
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-const G = 'linear-gradient(135deg,#1e3a5f 0%,#1d4ed8 60%,#93c5fd 100%)'
-const A = '#1d4ed8'
+import { useState, useEffect } from 'react'
 
-const EARLY_LOGS = [
-  { id:'ed1', emp:'Sita Gurung', emp_id:'EMP-0120', dept:'HR', shift_end:'18:00', logout_time:'17:48', early_mins:12, violations_this_month:1, deduction_triggered:false },
-  { id:'ed2', emp:'Bikesh Tamang', emp_id:'EMP-0088', dept:'Operations', shift_end:'17:30', logout_time:'17:08', early_mins:22, violations_this_month:3, deduction_triggered:true },
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function EarlyDeparturePage() {
-  const [logs, setLogs] = useState(EARLY_LOGS)
-  const [search, setSearch] = useState('')
-  const [showExcel, setShowExcel] = useState(false)
-  const [msg, setMsg] = useState('')
-  const notify = m => { setMsg(m); setTimeout(()=>setMsg(''),3000) }
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = logs.filter(l=>!search||l.emp.toLowerCase().includes(search.toLowerCase()))
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Early Departure...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div style={{fontFamily:'system-ui,sans-serif'}}>
-      <PageHeader icon="🚪" title="Early Departure Alert"
-        breadcrumb="Workforce Operations > Attendance > Early Departure"
-        gradient={G}
-        stats={[
-          {icon:'🚪',label:'Early Departures Today', value:logs.length},
-          {icon:'💰',label:'Half-Day Deductions',    value:logs.filter(l=>l.deduction_triggered).length},
-          {icon:'⚠️',label:'3rd Violation Today',    value:logs.filter(l=>l.violations_this_month>=3).length},
-          {icon:'📊',label:'Avg Early By',           value:Math.round(logs.reduce((s,l)=>s+l.early_mins,0)/logs.length)+'min'},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>setShowExcel(true)}/>
-
-      {msg&&<div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:10,padding:'10px 16px',fontSize:11,color:'#065f46',position:'fixed',bottom:20,right:20,zIndex:999,boxShadow:'0 4px 16px rgba(0,0,0,.1)',maxWidth:400}}>{msg}</div>}
-
-      <div style={{background:'#eff6ff',border:'2px solid #1d4ed8',borderRadius:12,padding:'14px 18px',marginBottom:16}}>
-        <div style={{fontSize:13,fontWeight:900,color:'#1e3a5f',marginBottom:8}}>🤖 Auto Early Departure Alert — Rules</div>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:8,fontSize:11,color:'#1e40af'}}>
-          <div>⏱️ Alert if logout before Shift End - 5 min</div>
-          <div>📧 Notified via Email + WhatsApp + Viber</div>
-          <div>📋 Checks approved early-leave before alerting</div>
-          <div>💰 3 violations = Half Day salary deduction</div>
-          <div>⚠️ Hits discipline record in Performance Mgmt</div>
-          <div>🔁 Counter resets monthly</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Early Departure
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
         </div>
       </div>
 
-      <div style={{background:'#f8fafc',borderRadius:12,padding:'12px 16px',marginBottom:14,fontSize:11,color:'#374151',fontStyle:'italic',border:'1px solid #e2e8f0'}}>
-        📋 <strong>Sample message:</strong> "Dear [Name], you logged out early today. This is your [N]th early departure this month. 3 instances results in a half-day deduction to payroll and a discipline entry."
-      </div>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search by employee name..."/>
-
-      <div style={{display:'grid',gap:10,marginTop:14}}>
-        {filtered.map(l=>(
-          <div key={l.id} style={{background:'#fff',border:'1px solid #bfdbfe',borderRadius:12,padding:'14px 18px',borderLeft:`4px solid ${l.deduction_triggered?'#dc2626':A}`}}>
-            <div style={{display:'flex',gap:12,alignItems:'center',flexWrap:'wrap'}}>
-              <div style={{flex:1}}>
-                <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',marginBottom:3}}>
-                  <span style={{fontSize:12,fontWeight:800}}>{l.emp} <span style={{fontSize:10,color:'#94a3b8'}}>{l.emp_id}</span></span>
-                  {l.deduction_triggered&&<span style={{background:'#fef2f2',color:'#dc2626',fontSize:9,fontWeight:700,padding:'2px 8px',borderRadius:20}}>💰 Half Day Deducted</span>}
-                </div>
-                <div style={{fontSize:10,color:'#64748b'}}>{l.dept} · Shift End: {l.shift_end} · Logged out: {l.logout_time} · Early by: <strong style={{color:A}}>{l.early_mins} min</strong></div>
-                <div style={{fontSize:9,color:'#1e40af',marginTop:3}}>Violations this month: <strong>{l.violations_this_month}/3</strong></div>
-              </div>
-              <button onClick={()=>notify('📧 Alert resent to '+l.emp)} style={{padding:'5px 12px',borderRadius:7,border:'1px solid #e2e8f0',background:'#fff',fontSize:9,cursor:'pointer'}}>📧 Resend</button>
-            </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
-      {showExcel&&<ExcelModal title="Early Departure" columns={['Employee','Emp ID','Dept','Shift End','Logout Time','Early Minutes','Violations This Month','Deduction']} onClose={()=>setShowExcel(false)} onImport={()=>{}}/>}
+        </div>
+      )}
+
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

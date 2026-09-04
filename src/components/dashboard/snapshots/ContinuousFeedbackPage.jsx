@@ -1,101 +1,85 @@
-// FILE: ContinuousFeedbackPage.jsx - Continuous Feedback (Performance & Talent > Goal & Performance > Performance Evaluation)
-// Quick praise/check-in feed, weekly 1:1 notes, social-media-style
-// commenting - feeds directly into the annual appraisal record.
+// FILE: src/components/dashboard/snapshots/ContinuousFeedbackPage.jsx
+// eLogix HRMS — Continuous Feedback
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { Field, PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#0c4a6e 0%,#0284c7 60%,#7dd3fc 100%)'
-const A = '#0284c7'
-
-const FEEDBACK_FEED = [
-  { id:'f1', type:'praise', from:'Priya Adhikari', to:'Gita Maharjan', message:'Great job closing the Acme deal ahead of schedule!', timestamp:'2025-06-21 10:30 AM', impact_links:['Performance Appraisal'] },
-  { id:'f2', type:'checkin', from:'Dipesh Bhattarai', to:'Maya Pradhan', message:'1:1 notes: discussed Q3 budget variance, agreed on weekly sync.', timestamp:'2025-06-20 02:00 PM', impact_links:[] },
-  { id:'f3', type:'constructive', from:'Sushila Gurung', to:'Bikash Rai', message:'Sprint commitments have slipped 2x this month - let\'s identify blockers together.', timestamp:'2025-06-19 11:00 AM', impact_links:['Workload Analysis','PIP Management'] },
-]
-
-const TYPE_CFG = {
-  praise:{c:'#10b981',bg:'#f0fdf4',icon:'👏',label:'Praise'},
-  checkin:{c:'#0284c7',bg:'#eff6ff',icon:'💬',label:'1:1 Check-In'},
-  constructive:{c:'#f59e0b',bg:'#fffbeb',icon:'🛠',label:'Constructive'},
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
 }
 
 export default function ContinuousFeedbackPage() {
-  const [feed, setFeed] = useState(FEEDBACK_FEED)
-  const [search, setSearch] = useState('')
-  const [showCompose, setShowCompose] = useState(false)
-  const [composeType, setComposeType] = useState('praise')
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = feed.filter(f=>!search||f.to.toLowerCase().includes(search.toLowerCase())||f.from.toLowerCase().includes(search.toLowerCase()))
-  const praiseCount = feed.filter(f=>f.type==='praise').length
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/engagement', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Continuous Feedback...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="💬" title="Continuous Feedback"
-        breadcrumb="Performance & Talent Management > Goal & Performance > Performance Evaluation"
-        gradient={G}
-        stats={[
-          {icon:'💬',label:'Feedback This Month', value:feed.length},
-          {icon:'👏',label:'Praise Given',          value:praiseCount},
-          {icon:'🛠',label:'Constructive',          value:feed.filter(f=>f.type==='constructive').length},
-          {icon:'📥',label:'Feeds Into',            value:'Annual Appraisal'},
-        ]}
-        onAdd={()=>setShowCompose(true)} addLabel="Give Feedback"/>
-
-      <div style={{background:'#eff6ff',border:'1px solid #bfdbfe',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#1e40af',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🔄</span>
-        <div style={{flex:1,minWidth:200}}><strong>Real-Time, Not Annual:</strong> Quick praise or constructive notes logged the moment they happen - no waiting for a year-end surprise. Every entry here automatically feeds into the formal Performance Appraisal record as supporting evidence.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Continuous Feedback
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search by name..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{display:'grid',gap:12,marginTop:14}}>
-        {filtered.map(f=>{
-          const tc = TYPE_CFG[f.type]
-          return (
-            <div key={f.id}
-              onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:`${f.from} -> ${f.to}`,...f}})}}
-              style={{background:'#fff',border:`1.5px solid ${tc.c}33`,borderRadius:14,padding:'14px 18px',display:'flex',gap:12,alignItems:'flex-start'}}>
-              <span style={{fontSize:20,flexShrink:0}}>{tc.icon}</span>
-              <div style={{flex:1}}>
-                <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',marginBottom:4}}>
-                  <span style={{fontSize:11,fontWeight:800,color:'#0f172a'}}>{f.from}</span>
-                  <span style={{color:'#94a3b8',fontSize:10}}>{'>'}</span>
-                  <span style={{fontSize:11,fontWeight:800,color:'#0f172a'}}>{f.to}</span>
-                  <span style={{background:tc.bg,color:tc.c,fontSize:8,fontWeight:700,padding:'2px 7px',borderRadius:20}}>{tc.label}</span>
-                </div>
-                <div style={{fontSize:10,color:'#374151'}}>{f.message}</div>
-                <div style={{fontSize:8,color:'#94a3b8',marginTop:4}}>{f.timestamp}</div>
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
-      {showCompose&&(
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.65)',zIndex:5000,display:'flex',alignItems:'center',justifyContent:'center',padding:16}} onClick={()=>setShowCompose(false)}>
-          <div style={{background:'#fff',borderRadius:20,width:'min(480px,100%)'}} onClick={e=>e.stopPropagation()}>
-            <div style={{background:G,padding:'18px 24px'}}><div style={{fontSize:15,fontWeight:900,color:'#fff'}}>Give Feedback</div></div>
-            <div style={{padding:'20px 24px'}}>
-              <div style={{display:'flex',gap:8,marginBottom:10}}>
-                {Object.entries(TYPE_CFG).map(([k,v])=>(
-                  <button key={k} onClick={()=>setComposeType(k)} style={{flex:1,padding:'10px',borderRadius:10,border:`1.5px solid ${composeType===k?v.c:'#e2e8f0'}`,background:composeType===k?v.bg:'#fff',color:v.c,fontSize:10,fontWeight:700,cursor:'pointer'}}>{v.icon} {v.label}</button>
-                ))}
-              </div>
-              <Field label="To" type="select" value="" onChange={()=>{}} accent={A} options={['Gita Maharjan','Bikash Rai','Maya Pradhan']}/>
-              <Field label="Message" type="textarea" value="" onChange={()=>{}} accent={A} required hint="Voice input supported"/>
-              <div style={{display:'flex',gap:10,marginTop:8}}>
-                <button onClick={()=>setShowCompose(false)} style={{flex:1,padding:12,borderRadius:10,border:'none',background:G,color:'#fff',fontSize:13,fontWeight:700,cursor:'pointer'}}>Send</button>
-              </div>
-            </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
         </div>
       )}
 
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Detail',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

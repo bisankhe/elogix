@@ -1,88 +1,85 @@
-// FILE: BudgetForecastingPage.jsx - Budget Forecasting
-// (Finance, Assets & Administration > HR Budgeting)
-// Predictive scenario modeling over historical turnover and headcount
-// data -- pulls from EXISTING attrition/headcount sources, never a
-// duplicate workforce dataset. AI-assisted scenario projections.
+// FILE: src/components/dashboard/snapshots/BudgetForecastingPage.jsx
+// eLogix HRMS — Budget Forecasting
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#1e1b4b 0%,#4338ca 60%,#818cf8 100%)'
-const A = '#4338ca'
-
-const SCENARIOS = [
-  {name:'Conservative',projected_cost:52000000,assumptions:'8% attrition, no salary band changes',c:'#94a3b8'},
-  {name:'Base Case',projected_cost:55800000,assumptions:'12% attrition, 2 new senior hires, standard increment',c:A,selected:true},
-  {name:'Aggressive Growth',projected_cost:64200000,assumptions:'18% headcount growth, market-rate salary adjustments',c:'#c2410c'},
-]
-
-const HISTORICAL_TREND = [{year:'2081/82',actual:48200000},{year:'2082/83',actual:51400000},{year:'2083/84',projected:55800000}]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function BudgetForecastingPage() {
-  const [ctx, setCtx] = useState(null)
-  const maxVal = Math.max(...HISTORICAL_TREND.map(h=>h.actual||h.projected))
-  const fmt = n => 'NPR '+(n/1000000).toFixed(1)+'M'
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Budget Forecasting...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🔮" title="Budget Forecasting"
-        breadcrumb="Finance, Assets & Administration > HR Budgeting"
-        gradient={G}
-        stats={[
-          {icon:'🔮',label:'Next FY Projection',  value:fmt(55800000)},
-          {icon:'📈',label:'YoY Growth',              value:'+8.6%'},
-          {icon:'🔄',label:'Attrition Assumption',        value:'12%'},
-          {icon:'🎯',label:'Scenarios Modeled',               value:SCENARIOS.length},
-        ]}
-        onAdd={()=>{}} addLabel="Run New Scenario"/>
-
-      <div style={{background:'#eef2ff',border:'1px solid #c7d2fe',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#3730a3',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🤖</span>
-        <div style={{flex:1,minWidth:200}}><strong>AI-Assisted, Not Spreadsheet-Bound:</strong> Models pull live historical turnover and headcount data -- no manual exports, no stale assumptions baked in from last year's static file.</div>
-      </div>
-
-      {/* Historical trend */}
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'20px',marginBottom:18}}>
-        <div style={{fontSize:11,fontWeight:800,color:'#0f172a',marginBottom:14}}>📊 Historical Trend & Projection</div>
-        <div style={{display:'flex',gap:14,alignItems:'flex-end',height:90}}>
-          {HISTORICAL_TREND.map((h,i)=>{
-            const val = h.actual||h.projected
-            return (
-              <div key={i} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
-                <div style={{fontSize:9,fontWeight:700,color:h.projected?A:'#15803d'}}>{fmt(val)}</div>
-                <div style={{width:'100%',background:h.projected?A:'#15803d',borderRadius:'4px 4px 0 0',height:`${val/maxVal*70}px`,opacity:h.projected?.6:1,border:h.projected?'1px dashed '+A:'none'}}/>
-                <div style={{fontSize:8,color:'#94a3b8'}}>{h.year}{h.projected&&' (proj.)'}</div>
-              </div>
-            )
-          })}
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Budget Forecasting
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
         </div>
       </div>
 
-      {/* Scenario comparison */}
-      <div style={{display:'grid',gap:14}}>
-        {SCENARIOS.map((s,i)=>(
-          <div key={i}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:s.name,...s,impact_links:['Annual HR Budget']}})}}
-            style={{background:'#fff',border:`1.5px solid ${s.selected?s.c+'66':'#e2e8f0'}`,borderRadius:14,padding:'16px 18px'}}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:8}}>
-              <div>
-                <div style={{fontSize:12,fontWeight:800,color:'#0f172a'}}>{s.name} {s.selected&&'✓'}</div>
-                <div style={{fontSize:9,color:'#94a3b8',marginTop:3}}>{s.assumptions}</div>
-              </div>
-              <div style={{fontSize:14,fontWeight:900,color:s.c}}>{fmt(s.projected_cost)}</div>
-            </div>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
+
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Attrition assumptions pull from real historical exit data -- never an arbitrary guessed percentage.','All statutory commitments (SSF, gratuity, bonus fund) are pre-validated as fully funded in every scenario before it\'s presented.','Run a what-if scenario any time -- results compute in seconds, not a multi-day spreadsheet exercise.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Model',key:'view'},{icon:'✅',label:'Select Scenario',key:'select'},
-        {icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

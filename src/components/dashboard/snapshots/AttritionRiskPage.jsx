@@ -1,92 +1,85 @@
-// FILE: AttritionRiskPage.jsx - Attrition Risk
-// (Compliance & Risk Management > Risk Management)
-// Predictive flight-risk lens -- reuses the EXISTING
-// v_flight_risk_correlation (Exit Analytics session, manager-level
-// satisfaction-vs-exit correlation) AND incumbent_flight_risk
-// (Succession Planning session, individual-level) -- two granularities,
-// never a third parallel risk score invented here.
+// FILE: src/components/dashboard/snapshots/AttritionRiskPage.jsx
+// eLogix HRMS — Attrition Risk
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#1e1b4b 0%,#4338ca 60%,#818cf8 100%)'
-const A = '#4338ca'
-
-const RISK_CFG = { high:{c:'#ef4444',label:'High'},medium:{c:'#f59e0b',label:'Medium'},low:{c:'#10b981',label:'Low'} }
-
-const FLIGHT_RISK_EMPLOYEES = [
-  {employee:'Sunil Magar',risk:'high',signals:['Engagement -1.2 pts (90d)','No training in 6 months','2 declined promotion requests'],team:'Engineering'},
-  {employee:'Maya Pradhan',risk:'high',signals:['Salary 8% below band midpoint','Recent compensation inquiry'],team:'Finance'},
-  {employee:'Bikash Rai',risk:'medium',signals:['Attendance drift -- 3 late arrivals this month'],team:'Engineering'},
-]
-
-const MANAGER_CORRELATION = [
-  {manager:'Dipesh Bhattarai',avg_satisfaction:5.8,exits_12mo:4,flag:true},
-  {manager:'Anjali Sharma',avg_satisfaction:8.1,exits_12mo:1,flag:false},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function AttritionRiskPage() {
-  const [search, setSearch] = useState('')
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = FLIGHT_RISK_EMPLOYEES.filter(e=>!search||e.employee.toLowerCase().includes(search.toLowerCase()))
-  const highRiskCount = FLIGHT_RISK_EMPLOYEES.filter(e=>e.risk==='high').length
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Attrition Risk...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🚪" title="Attrition Risk"
-        breadcrumb="Compliance & Risk Management > Risk Management"
-        gradient={G}
-        stats={[
-          {icon:'🚪',label:'Flight-Risk Employees',  value:FLIGHT_RISK_EMPLOYEES.length},
-          {icon:'🔴',label:'High Risk',                  value:highRiskCount},
-          {icon:'👤',label:'Managers Flagged',               value:MANAGER_CORRELATION.filter(m=>m.flag).length},
-          {icon:'📐',label:'Severance Exposure',                value:'1 mo/year served'},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#eef2ff',border:'1px solid #c7d2fe',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#3730a3',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🔮</span>
-        <div style={{flex:1,minWidth:200}}><strong>Two Lenses, One Source:</strong> Individual flight-risk scores (engagement, salary, training gaps) and manager-level satisfaction-exit correlation both read from data already tracked in Succession Planning and Exit Analytics -- never a third, disconnected prediction model.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Attrition Risk
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search flight-risk employees..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{display:'grid',gap:14,marginTop:14,marginBottom:18}}>
-        {filtered.map((e,i)=>{
-          const rc = RISK_CFG[e.risk]
-          return (
-            <div key={i}
-              onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:e.employee,...e,impact_links:['HiPo Employees Dashboard','Employee Engagement']}})}}
-              style={{background:'#fff',border:`1.5px solid ${rc.c}33`,borderRadius:14,padding:'16px 18px',borderLeft:`4px solid ${rc.c}`}}>
-              <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}>
-                <div style={{fontSize:12,fontWeight:700,color:'#0f172a'}}>{e.employee}</div>
-                <span style={{background:`${rc.c}15`,color:rc.c,fontSize:9,fontWeight:700,padding:'3px 10px',borderRadius:20}}>{rc.label} Risk</span>
-              </div>
-              <div style={{fontSize:9,color:'#94a3b8',marginBottom:6}}>{e.team}</div>
-              {e.signals.map((s,j)=><div key={j} style={{fontSize:9,color:'#374151',marginTop:3}}>- {s}</div>)}
-            </div>
-          )
-        })}
-      </div>
-
-      <div style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'18px'}}>
-        <div style={{fontSize:11,fontWeight:800,color:'#0f172a',marginBottom:12}}>👥 Manager-Level Correlation</div>
-        {MANAGER_CORRELATION.map((m,i)=>(
-          <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'9px 0',borderBottom:i<MANAGER_CORRELATION.length-1?'1px solid #f8fafc':'none'}}>
-            <span style={{fontSize:10,color:'#374151'}}>{m.manager} {m.flag&&'⚠'}</span>
-            <span style={{fontSize:9,color:'#94a3b8'}}>Satisfaction {m.avg_satisfaction}/10 . {m.exits_12mo} exits (12mo)</span>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Flight-risk signals weigh recent salary disparities and engagement trends -- never a single static factor.','Manager correlation flags when low satisfaction reliably precedes exits on that specific team -- a coaching opportunity, never a blame signal.','Click any flagged employee to jump to their full profile in Succession Planning or Employee Engagement.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Profile',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,75 +1,85 @@
-// FILE: DEITrainingPage.jsx - DEI Training
-// (Employee Experience & Culture > Diversity, Equity & Inclusion)
-// Adaptive-LMS style catalog: micro-learning courses (Unconscious Bias,
-// Allyship), compliance tracking, pre/post cultural-intelligence score
-// lift. Tags into the EXISTING lms_courses -- never a parallel catalog.
+// FILE: src/components/dashboard/snapshots/DEITrainingPage.jsx
+// eLogix HRMS — D E I Training
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#1e1b4b 0%,#4338ca 60%,#818cf8 100%)'
-const A = '#4338ca'
-
-const COURSES = [
-  { id:'c1', title:'Unconscious Bias in Hiring', duration:'25 min', completion_pct:78, mandatory:true, pre_score:5.2, post_score:7.4, impact_links:['Course Management'] },
-  { id:'c2', title:'Allyship in Practice', duration:'18 min', completion_pct:54, mandatory:false, pre_score:6.0, post_score:7.8 },
-  { id:'c3', title:'Inclusive Leadership for Managers', duration:'40 min', completion_pct:42, mandatory:true, pre_score:4.8, post_score:null,
-    flag_note:'Below 50% completion with a mandatory compliance deadline in 12 days.' },
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function DEITrainingPage() {
-  const [search, setSearch] = useState('')
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = COURSES.filter(c=>!search||c.title.toLowerCase().includes(search.toLowerCase()))
-  const avgLift = COURSES.filter(c=>c.post_score).reduce((s,c)=>s+(c.post_score-c.pre_score),0)/COURSES.filter(c=>c.post_score).length
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/training-calendar', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading D E I Training...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🎓" title="DEI Training"
-        breadcrumb="Employee Experience & Culture > Diversity, Equity & Inclusion"
-        gradient={G}
-        stats={[
-          {icon:'🎓',label:'Courses Available',  value:COURSES.length},
-          {icon:'✅',label:'Avg Completion',         value:Math.round(COURSES.reduce((s,c)=>s+c.completion_pct,0)/COURSES.length)+'%'},
-          {icon:'📈',label:'Avg CQ Score Lift',        value:'+'+avgLift.toFixed(1)},
-          {icon:'⚠',label:'Behind on Mandatory',         value:COURSES.filter(c=>c.mandatory&&c.completion_pct<50).length},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#eef2ff',border:'1px solid #c7d2fe',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#3730a3',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🧠</span>
-        <div style={{flex:1,minWidth:200}}><strong>Behavior, Not Just Attendance:</strong> Every course tracks a pre/post cultural-intelligence score, not just a completion checkbox -- moving past the "performative training" trap toward measurable shift.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          🎓 D E I Training
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search courses..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{display:'grid',gap:14,marginTop:14}}>
-        {filtered.map(c=>(
-          <div key={c.id}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:c.title,...c}})}}
-            style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:14,padding:'16px 18px'}}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:8}}>
-              <div>
-                <div style={{fontSize:12,fontWeight:800,color:'#0f172a'}}>{c.title} {c.mandatory&&<span style={{fontSize:8,color:'#dc2626',fontWeight:700}}>MANDATORY</span>}</div>
-                <div style={{fontSize:9,color:'#94a3b8',marginTop:3}}>⏱ {c.duration}</div>
-              </div>
-              <span style={{fontSize:13,fontWeight:900,color:A}}>{c.completion_pct}%</span>
-            </div>
-            <div style={{height:7,background:'#f1f5f9',borderRadius:7,overflow:'hidden',marginTop:8}}><div style={{width:`${c.completion_pct}%`,height:'100%',background:A,borderRadius:7}}/></div>
-            {c.post_score&&<div style={{marginTop:8,fontSize:9,color:'#15803d'}}>📈 CQ score: {c.pre_score} {'>'} {c.post_score} (+{(c.post_score-c.pre_score).toFixed(1)})</div>}
-            {c.flag_note&&<div style={{marginTop:8,fontSize:9,color:'#b45309'}}>⚠ {c.flag_note}</div>}
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['Courses are tagged into the existing Course Management catalog -- no separate, disconnected DEI LMS.','AI recommends role-specific modules based on department-level cultural challenge signals, not one-size-fits-all assignment.','Mandatory courses behind schedule auto-escalate to the manager 14, 7, and 1 day before the compliance deadline.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Course Detail',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

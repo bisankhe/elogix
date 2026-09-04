@@ -1,78 +1,85 @@
-// FILE: MyRequestsPage.jsx - My Requests
-// (HR Services & Support > Employee Self Service)
-// Unified Kanban (Draft/Submitted/In-Review/Approved) spanning EVERY
-// request type built across the whole ESS arc -- leave, attendance,
-// resignation, letters, cash advance, accommodation -- a pure read
-// aggregation, never a duplicate workflow engine.
+// FILE: src/components/dashboard/snapshots/MyRequestsPage.jsx
+// eLogix HRMS — My Requests
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#7c2d12 0%,#c2410c 60%,#fdba74 100%)'
-const A = '#c2410c'
-
-const STAGES = ['Submitted','In Review','Approved']
-
-const MY_REQUESTS = [
-  { id:'r1', type:'Leave Request', detail:'Annual leave, July 5-7', stage:'Approved', source:'My Leave', impact_links:['Leave Request'] },
-  { id:'r2', type:'Attendance Request', detail:'Missed punch correction', stage:'In Review', source:'Attendance Request' },
-  { id:'r3', type:'Cash Advance', detail:'NPR 25,000 -- medical emergency', stage:'In Review', source:'Cash Advance', impact_links:['Cash Advance'] },
-  { id:'r4', type:'Letter Request', detail:'Salary Certificate for visa', stage:'Approved', source:'Letter Request' },
-  { id:'r5', type:'Accommodation Request', detail:'Screen reader software', stage:'Submitted', source:'Accessibility Support' },
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function MyRequestsPage() {
-  const [search, setSearch] = useState('')
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = MY_REQUESTS.filter(r=>!search||r.detail.toLowerCase().includes(search.toLowerCase())||r.type.toLowerCase().includes(search.toLowerCase()))
-  const byStage = STAGES.reduce((acc,s)=>{acc[s]=filtered.filter(r=>r.stage===s); return acc},{})
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading My Requests...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="📥" title="My Requests"
-        breadcrumb="HR Services & Support > Employee Self Service"
-        gradient={G}
-        stats={[
-          {icon:'📥',label:'Total Requests',  value:MY_REQUESTS.length},
-          {icon:'⏳',label:'In Review',           value:MY_REQUESTS.filter(r=>r.stage==='In Review').length},
-          {icon:'✅',label:'Approved',               value:MY_REQUESTS.filter(r=>r.stage==='Approved').length},
-          {icon:'🔗',label:'Request Types',             value:[...new Set(MY_REQUESTS.map(r=>r.type))].length},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#fff7ed',border:'1px solid #fed7aa',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#7c2d12',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>📥</span>
-        <div style={{flex:1,minWidth:200}}><strong>Every Request, One Inbox:</strong> Leave, attendance corrections, cash advances, letters, accommodations -- whatever you've submitted across this whole portal, tracked here in one place. Never ask "where is my request?" again.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 My Requests
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search across all my requests..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14,marginTop:14,overflowX:'auto'}}>
-        {STAGES.map(stage=>(
-          <div key={stage} style={{background:'#f8fafc',borderRadius:14,padding:'14px',minWidth:200}}>
-            <div style={{fontSize:10,fontWeight:800,color:'#0f172a',marginBottom:12}}>{stage} ({byStage[stage].length})</div>
-            <div style={{display:'grid',gap:10}}>
-              {byStage[stage].map(r=>(
-                <div key={r.id}
-                  onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:r.detail,...r}})}}
-                  style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:10,padding:'10px 12px',boxShadow:'0 1px 3px rgba(0,0,0,.04)'}}>
-                  <div style={{fontSize:8,fontWeight:700,color:A}}>{r.type}</div>
-                  <div style={{fontSize:9,color:'#374151',marginTop:4}}>{r.detail}</div>
-                </div>
-              ))}
-            </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['This view aggregates the real-time status of every module -- nothing here is a separate workflow, just a single lens.','Tap any card to jump straight into the originating page for full detail.','Requests stalled In Review for 3+ days auto-flag for follow-up.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Detail',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

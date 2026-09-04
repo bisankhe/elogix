@@ -1,161 +1,85 @@
-// FILE: KnowledgeTransferPage.jsx - Knowledge Transfer (Exit Management)
-// Manager-assigned KT checklist, SOP repository, task reassignment, peer overlap tracking
+// FILE: src/components/dashboard/snapshots/KnowledgeTransferPage.jsx
+// eLogix HRMS — Knowledge Transfer
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { Field, ExcelModal, PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#052e16 0%,#15803d 60%,#86efac 100%)'
-const A = '#15803d'
-
-const KT_PLANS = [
-  { id:'kt1', employee:'Dipendra Yadav', position:'Junior Accountant', lwd:'2025-07-10',
-    successor:'New Hire (TBD)', overlap_days:0,
-    checklist:[
-      {item:'SOP: Monthly Reconciliation Process',uploaded:true,reassigned:true},
-      {item:'Vendor Contact List & Payment Schedules',uploaded:true,reassigned:true},
-      {item:'Pending Tasks Handover',uploaded:true,reassigned:true},
-      {item:'Shared Drive Access Documentation',uploaded:false,reassigned:false},
-    ],
-    sop_count:3, tasks_reassigned:5, tasks_total:5, manager_signoff:true,
-    impact_links:['Exit Interview','Employee Timeline'] },
-  { id:'kt2', employee:'Anjali Sharma', position:'Sales Executive', lwd:'2025-06-22',
-    successor:'Sushant Lama (Peer)', overlap_days:3,
-    checklist:[
-      {item:'Active Client Pipeline Handover',uploaded:false,reassigned:false},
-      {item:'CRM Access & Deal Notes',uploaded:false,reassigned:false},
-      {item:'Pending Tasks Handover',uploaded:false,reassigned:false},
-    ],
-    sop_count:0, tasks_reassigned:0, tasks_total:8, manager_signoff:false,
-    impact_links:[] },
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function KnowledgeTransferPage() {
-  const [plans, setPlans] = useState(KT_PLANS)
-  const [search, setSearch] = useState('')
-  const [showAdd, setShowAdd] = useState(false)
-  const [showExcel, setShowExcel] = useState(false)
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = plans.filter(p=>!search||p.employee.toLowerCase().includes(search.toLowerCase()))
-  const totalSops = plans.reduce((s,p)=>s+p.sop_count,0)
-  const signoffCount = plans.filter(p=>p.manager_signoff).length
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
 
-  const toggleChecklistItem = (planId, idx, field) => {
-    setPlans(prev=>prev.map(p=>{
-      if (p.id!==planId) return p
-      const checklist = p.checklist.map((c,i)=>i===idx?{...c,[field]:!c[field]}:c)
-      return {...p, checklist}
-    }))
-  }
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Knowledge Transfer...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🧠" title="Knowledge Transfer"
-        breadcrumb="Employee Lifecycle > Offboarding > Exit Management"
-        gradient={G}
-        stats={[
-          {icon:'🧠',label:'Active KT Plans', value:plans.length},
-          {icon:'📄',label:'SOPs Captured',    value:totalSops},
-          {icon:'✅',label:'Manager Signed Off',value:signoffCount},
-          {icon:'⏰',label:'Avg Overlap Days', value:Math.round(plans.reduce((s,p)=>s+p.overlap_days,0)/plans.length)},
-        ]}
-        onAdd={()=>setShowAdd(true)} addLabel="Create KT Plan"
-        onExcel={()=>setShowExcel(true)}/>
-
-      <div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#065f46',display:'flex',gap:10}}>
-        <span style={{fontSize:18}}>💡</span>
-        <div><strong>Dedicated Overlap, Not File Dumps:</strong> Best practice requires the departing employee spend their last 1-2 weeks actively training a peer/successor - not just uploading files. Nepal's 30-day notice period for tenured staff serves as the legally recognized handover window.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Knowledge Transfer
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search by employee name..."/>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{display:'grid',gap:16,marginTop:14}}>
-        {filtered.map(p=>{
-          const doneCount = p.checklist.filter(c=>c.uploaded&&c.reassigned).length
-          const pct = Math.round(doneCount/p.checklist.length*100)
-          return (
-            <div key={p.id}
-              onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:p.employee,...p}})}}
-              style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,overflow:'hidden',boxShadow:'0 2px 10px rgba(0,0,0,.05)',borderLeft:`5px solid ${pct===100?'#10b981':'#f59e0b'}`}}>
-              <div style={{display:'flex',alignItems:'center',gap:14,padding:'16px 20px',borderBottom:'1px solid #f1f5f9',flexWrap:'wrap'}}>
-                <div style={{flex:1}}>
-                  <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',marginBottom:4}}>
-                    <span style={{fontSize:14,fontWeight:900,color:'#0f172a'}}>{p.employee}</span>
-                    <span style={{background:p.manager_signoff?'#f0fdf4':'#fffbeb',color:p.manager_signoff?'#15803d':'#b45309',fontSize:10,fontWeight:700,padding:'2px 10px',borderRadius:20}}>
-                      {p.manager_signoff?'✅ Manager Signed Off':'⏳ Awaiting Sign-off'}
-                    </span>
-                  </div>
-                  <div style={{fontSize:11,color:'#64748b'}}>{p.position} . LWD: {p.lwd}</div>
-                  <div style={{fontSize:10,color:'#94a3b8',marginTop:2}}>Successor: <strong>{p.successor}</strong> {p.overlap_days>0?`. ${p.overlap_days} days overlap`:'. No overlap scheduled'}</div>
-                </div>
-                <div style={{textAlign:'center',flexShrink:0}}>
-                  <div style={{fontSize:18,fontWeight:900,color:pct===100?'#10b981':A}}>{p.tasks_reassigned}/{p.tasks_total}</div>
-                  <div style={{fontSize:8,color:'#94a3b8',fontWeight:700}}>TASKS REASSIGNED</div>
-                </div>
-              </div>
-
-              <div style={{padding:'12px 20px',borderBottom:'1px solid #f8fafc'}}>
-                <div style={{display:'flex',justifyContent:'space-between',marginBottom:6,fontSize:10}}>
-                  <span style={{color:'#64748b'}}>KT Checklist Progress</span>
-                  <span style={{fontWeight:700,color:pct===100?'#10b981':A}}>{pct}%</span>
-                </div>
-                <div style={{height:7,background:'#f1f5f9',borderRadius:7,overflow:'hidden',marginBottom:10}}>
-                  <div style={{width:`${pct}%`,height:'100%',background:pct===100?'#10b981':A,borderRadius:7,transition:'width .5s'}}/>
-                </div>
-                {p.checklist.map((c,i)=>(
-                  <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'6px 0',borderBottom:i<p.checklist.length-1?'1px solid #f8fafc':'none'}}>
-                    <span style={{fontSize:11,color:'#374151'}}>{c.item}</span>
-                    <div style={{display:'flex',gap:6}}>
-                      <button onClick={()=>toggleChecklistItem(p.id,i,'uploaded')}
-                        style={{padding:'3px 10px',borderRadius:6,border:'none',background:c.uploaded?'#f0fdf4':'#f8fafc',color:c.uploaded?'#10b981':'#94a3b8',fontSize:9,fontWeight:700,cursor:'pointer'}}>
-                        {c.uploaded?'✓ Doc Uploaded':'Upload Doc'}
-                      </button>
-                      <button onClick={()=>toggleChecklistItem(p.id,i,'reassigned')}
-                        style={{padding:'3px 10px',borderRadius:6,border:'none',background:c.reassigned?'#f0fdf4':'#f8fafc',color:c.reassigned?'#10b981':'#94a3b8',fontSize:9,fontWeight:700,cursor:'pointer'}}>
-                        {c.reassigned?'✓ Reassigned':'Reassign'}
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {!p.manager_signoff&&(
-                <div style={{padding:'10px 20px',display:'flex',justifyContent:'flex-end'}}>
-                  <button style={{padding:'7px 16px',borderRadius:8,border:'none',background:G,color:'#fff',fontSize:11,fontWeight:700,cursor:'pointer'}}>Manager Sign-off</button>
-                </div>
-              )}
-            </div>
-          )
-        })}
-      </div>
-
-      {showAdd&&(
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.65)',zIndex:5000,display:'flex',alignItems:'center',justifyContent:'center',padding:16}} onClick={()=>setShowAdd(false)}>
-          <div style={{background:'#fff',borderRadius:20,width:620,maxHeight:'90vh',overflow:'auto'}} onClick={e=>e.stopPropagation()}>
-            <div style={{background:G,padding:'20px 28px'}}><div style={{fontSize:18,fontWeight:900,color:'#fff'}}>Create Knowledge Transfer Plan</div></div>
-            <div style={{padding:'22px 28px'}}>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 20px'}}>
-                <Field label="Departing Employee" type="select" value="" onChange={()=>{}} accent={A} options={['Anjali Sharma']}/>
-                <Field label="Successor / Peer" value="" onChange={()=>{}} accent={A} hint="Name or 'TBD' if not yet hired"/>
-                <Field label="Overlap Period (days)" type="number" value="" onChange={()=>{}} accent={A}/>
-                <Field label="Manager" value="" onChange={()=>{}} accent={A}/>
-              </div>
-              <Field label="Key Handover Items (one per line)" type="textarea" value="" onChange={()=>{}} accent={A} hint="Voice input - e.g. SOPs, client lists, passwords, pending tasks"/>
-              <AIImpact color={A} lines={['AI suggests checklist items based on role and department.','Manager prompted to reassign each subordinate/task individually.','SOP documents auto-archived to searchable Document Management Module.','Sign-off required before final exit clearance can complete.']}/>
-              <div style={{display:'flex',gap:10}}>
-                <button onClick={()=>setShowAdd(false)} style={{flex:1,padding:14,borderRadius:12,border:'none',background:G,color:'#fff',fontSize:14,fontWeight:700,cursor:'pointer'}}>Create KT Plan</button>
-                <button onClick={()=>setShowAdd(false)} style={{padding:'14px 24px',borderRadius:12,border:'1px solid #e2e8f0',background:'#fff',color:'#475569',fontSize:13,cursor:'pointer'}}>Cancel</button>
-              </div>
-            </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
         </div>
       )}
 
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Plan',key:'view'},{icon:'📄',label:'View SOP Documents',key:'sop'},
-        {icon:'✅',label:'Manager Sign-off',key:'signoff'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
-      {showExcel&&<ExcelModal title="Knowledge Transfer" columns={['Employee','Position','LWD','Successor','Overlap Days','Tasks Reassigned','SOPs Captured','Manager Signoff']} onClose={()=>setShowExcel(false)} onImport={(f,result)=>{ console.log("[eLogix Import]", f.name, result); }}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

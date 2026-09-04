@@ -1,73 +1,67 @@
-// ============================================================
 // FILE: src/i18n/index.js
-// PURPOSE: i18n engine — loads all language JSON files,
-//          exposes translate(), LANGUAGES list, RTL support
-// ============================================================
+// eLogix HRMS — Internationalization (i18n)
+// Supports: English (en), Nepali (ne)
+// eLogix Technologies · www.elogix.com.np
 
-import en from './locales/en.json'
-import ne from './locales/ne.json'
-import hi from './locales/hi.json'
-import ar from './locales/ar.json'
-import zh from './locales/zh.json'
-import ja from './locales/ja.json'
-import ko from './locales/ko.json'
-import es from './locales/es.json'
-import fr from './locales/fr.json'
-import de from './locales/de.json'
-import pt from './locales/pt.json'
-import ru from './locales/ru.json'
-import id from './locales/id.json'
-import ms from './locales/ms.json'
-import th from './locales/th.json'
-import tr from './locales/tr.json'
-import vi from './locales/vi.json'
-import bn from './locales/bn.json'
-import ur from './locales/ur.json'
-import sw from './locales/sw.json'
-
-// ── All language metadata ────────────────────────────────────
 export const LANGUAGES = [
-  { code: 'en', label: 'English',           native: 'English',          flag: '🇬🇧', dir: 'ltr' },
-  { code: 'ne', label: 'Nepali',            native: 'नेपाली',            flag: '🇳🇵', dir: 'ltr' },
-  { code: 'hi', label: 'Hindi',             native: 'हिन्दी',             flag: '🇮🇳', dir: 'ltr' },
-  { code: 'ar', label: 'Arabic',            native: 'العربية',           flag: '🇸🇦', dir: 'rtl' },
-  { code: 'zh', label: 'Chinese',           native: '中文',               flag: '🇨🇳', dir: 'ltr' },
-  { code: 'ja', label: 'Japanese',          native: '日本語',             flag: '🇯🇵', dir: 'ltr' },
-  { code: 'ko', label: 'Korean',            native: '한국어',             flag: '🇰🇷', dir: 'ltr' },
-  { code: 'es', label: 'Spanish',           native: 'Español',           flag: '🇪🇸', dir: 'ltr' },
-  { code: 'fr', label: 'French',            native: 'Français',          flag: '🇫🇷', dir: 'ltr' },
-  { code: 'de', label: 'German',            native: 'Deutsch',           flag: '🇩🇪', dir: 'ltr' },
-  { code: 'pt', label: 'Portuguese',        native: 'Português',         flag: '🇵🇹', dir: 'ltr' },
-  { code: 'ru', label: 'Russian',           native: 'Русский',           flag: '🇷🇺', dir: 'ltr' },
-  { code: 'id', label: 'Indonesian',        native: 'Bahasa Indonesia',  flag: '🇮🇩', dir: 'ltr' },
-  { code: 'ms', label: 'Malay',             native: 'Bahasa Melayu',     flag: '🇲🇾', dir: 'ltr' },
-  { code: 'th', label: 'Thai',              native: 'ภาษาไทย',           flag: '🇹🇭', dir: 'ltr' },
-  { code: 'tr', label: 'Turkish',           native: 'Türkçe',            flag: '🇹🇷', dir: 'ltr' },
-  { code: 'vi', label: 'Vietnamese',        native: 'Tiếng Việt',        flag: '🇻🇳', dir: 'ltr' },
-  { code: 'bn', label: 'Bengali',           native: 'বাংলা',             flag: '🇧🇩', dir: 'ltr' },
-  { code: 'ur', label: 'Urdu',              native: 'اردو',              flag: '🇵🇰', dir: 'rtl' },
-  { code: 'sw', label: 'Swahili',           native: 'Kiswahili',         flag: '🇰🇪', dir: 'ltr' },
+  { code: 'en', name: 'English',  nativeName: 'English',  dir: 'ltr', flag: '🇺🇸' },
+  { code: 'ne', name: 'Nepali',   nativeName: 'नेपाली',   dir: 'ltr', flag: '🇳🇵' },
 ]
 
-// ── All translations map ─────────────────────────────────────
-const translations = {
-  en, ne, hi, ar, zh, ja, ko, es,
-  fr, de, pt, ru, id, ms, th, tr,
-  vi, bn, ur, sw,
+const TRANSLATIONS = {
+  en: {
+    'persona.superAdmin'    : 'Super Admin',
+    'persona.executive'     : 'Executive',
+    'persona.hrManager'     : 'HR Manager',
+    'persona.hrOfficer'     : 'HR Officer',
+    'persona.deptHead'      : 'Department Head',
+    'persona.branchManager' : 'Branch Manager',
+    'persona.finance'       : 'Finance',
+    'persona.recruitment'   : 'Recruitment',
+    'persona.itAdmin'       : 'IT Admin',
+    'persona.employee'      : 'Employee',
+    'persona.elogixAdmin'   : 'eLogix Admin',
+    'nav.dashboard'         : 'Dashboard',
+    'nav.employees'         : 'Employees',
+    'nav.attendance'        : 'Attendance',
+    'nav.leave'             : 'Leave',
+    'nav.payroll'           : 'Payroll',
+    'nav.recruitment'       : 'Recruitment',
+    'nav.performance'       : 'Performance',
+    'nav.settings'          : 'Settings',
+    'common.save'           : 'Save',
+    'common.cancel'         : 'Cancel',
+    'common.delete'         : 'Delete',
+    'common.edit'           : 'Edit',
+    'common.loading'        : 'Loading...',
+    'common.noData'         : 'No data available',
+    'common.search'         : 'Search',
+    'common.filter'         : 'Filter',
+    'common.export'         : 'Export',
+  },
+  ne: {
+    'persona.superAdmin'    : 'सुपर एडमिन',
+    'persona.executive'     : 'कार्यकारी',
+    'persona.hrManager'     : 'मानव संसाधन प्रबन्धक',
+    'persona.employee'      : 'कर्मचारी',
+    'nav.dashboard'         : 'ड्यासबोर्ड',
+    'nav.employees'         : 'कर्मचारीहरू',
+    'nav.attendance'        : 'उपस्थिति',
+    'nav.leave'             : 'बिदा',
+    'nav.payroll'           : 'तलब',
+    'common.save'           : 'सुरक्षित गर्नुहोस्',
+    'common.cancel'         : 'रद्द गर्नुहोस्',
+    'common.loading'        : 'लोड हुँदैछ...',
+    'common.noData'         : 'कुनै डेटा छैन',
+    'common.search'         : 'खोज्नुहोस्',
+  },
 }
 
-// ── Translate function ───────────────────────────────────────
-export const translate = (lang, key) => {
-  const dict = translations[lang] || translations['en']
-  return dict[key] ?? translations['en'][key] ?? key
+export function translate(lang = 'en', key) {
+  const dict = TRANSLATIONS[lang] || TRANSLATIONS.en
+  return dict[key] || TRANSLATIONS.en[key] || key
 }
 
-// ── Get language metadata ────────────────────────────────────
-export const getLanguage = (code) =>
-  LANGUAGES.find(l => l.code === code) || LANGUAGES[0]
-
-// ── Get text direction ───────────────────────────────────────
-export const getDir = (code) =>
-  LANGUAGES.find(l => l.code === code)?.dir || 'ltr'
-
-export default translations
+export function getDir(lang = 'en') {
+  return LANGUAGES.find(l => l.code === lang)?.dir || 'ltr'
+}

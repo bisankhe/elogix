@@ -1,45 +1,92 @@
-// ============================================
 // FILE: src/data/currencies.js
-// PURPOSE: 26 world currencies with symbols
-// ============================================
+// eLogix HRMS — Supported Currencies
+// Primary: NPR (Nepal Rupee) — required for Nepal Labour Act 2074 compliance
+// eLogix Technologies · www.elogix.com.np
 
 export const CURRENCIES = [
-  { code: 'NPR', symbol: 'Rs',     name: 'Nepali Rupee',         flag: '🇳🇵' },
-  { code: 'USD', symbol: '$',      name: 'US Dollar',            flag: '🇺🇸' },
-  { code: 'EUR', symbol: '€',      name: 'Euro',                 flag: '🇪🇺' },
-  { code: 'GBP', symbol: '£',      name: 'British Pound',        flag: '🇬🇧' },
-  { code: 'INR', symbol: '₹',      name: 'Indian Rupee',         flag: '🇮🇳' },
-  { code: 'AED', symbol: 'د.إ',    name: 'UAE Dirham',           flag: '🇦🇪' },
-  { code: 'SAR', symbol: '﷼',      name: 'Saudi Riyal',          flag: '🇸🇦' },
-  { code: 'QAR', symbol: 'QR',     name: 'Qatari Riyal',         flag: '🇶🇦' },
-  { code: 'KWD', symbol: 'KD',     name: 'Kuwaiti Dinar',        flag: '🇰🇼' },
-  { code: 'JPY', symbol: '¥',      name: 'Japanese Yen',         flag: '🇯🇵' },
-  { code: 'CNY', symbol: '¥',      name: 'Chinese Yuan',         flag: '🇨🇳' },
-  { code: 'KRW', symbol: '₩',      name: 'South Korean Won',     flag: '🇰🇷' },
-  { code: 'SGD', symbol: 'S$',     name: 'Singapore Dollar',     flag: '🇸🇬' },
-  { code: 'MYR', symbol: 'RM',     name: 'Malaysian Ringgit',    flag: '🇲🇾' },
-  { code: 'THB', symbol: '฿',      name: 'Thai Baht',            flag: '🇹🇭' },
-  { code: 'IDR', symbol: 'Rp',     name: 'Indonesian Rupiah',    flag: '🇮🇩' },
-  { code: 'BDT', symbol: '৳',      name: 'Bangladeshi Taka',     flag: '🇧🇩' },
-  { code: 'PKR', symbol: '₨',      name: 'Pakistani Rupee',      flag: '🇵🇰' },
-  { code: 'LKR', symbol: 'Rs',     name: 'Sri Lankan Rupee',     flag: '🇱🇰' },
-  { code: 'AUD', symbol: 'A$',     name: 'Australian Dollar',    flag: '🇦🇺' },
-  { code: 'CAD', symbol: 'C$',     name: 'Canadian Dollar',      flag: '🇨🇦' },
-  { code: 'CHF', symbol: 'Fr',     name: 'Swiss Franc',          flag: '🇨🇭' },
-  { code: 'BRL', symbol: 'R$',     name: 'Brazilian Real',       flag: '🇧🇷' },
-  { code: 'ZAR', symbol: 'R',      name: 'South African Rand',   flag: '🇿🇦' },
-  { code: 'NGN', symbol: '₦',      name: 'Nigerian Naira',       flag: '🇳🇬' },
-  { code: 'KES', symbol: 'KSh',    name: 'Kenyan Shilling',      flag: '🇰🇪' },
+  {
+    code    : 'NPR',
+    name    : 'Nepali Rupee',
+    symbol  : 'रु',
+    symbolEn: 'NPR',
+    locale  : 'ne-NP',
+    flag    : '🇳🇵',
+    default : true,
+  },
+  {
+    code    : 'USD',
+    name    : 'US Dollar',
+    symbol  : '$',
+    symbolEn: 'USD',
+    locale  : 'en-US',
+    flag    : '🇺🇸',
+  },
+  {
+    code    : 'INR',
+    name    : 'Indian Rupee',
+    symbol  : '₹',
+    symbolEn: 'INR',
+    locale  : 'en-IN',
+    flag    : '🇮🇳',
+  },
+  {
+    code    : 'EUR',
+    name    : 'Euro',
+    symbol  : '€',
+    symbolEn: 'EUR',
+    locale  : 'en-EU',
+    flag    : '🇪🇺',
+  },
+  {
+    code    : 'GBP',
+    name    : 'British Pound',
+    symbol  : '£',
+    symbolEn: 'GBP',
+    locale  : 'en-GB',
+    flag    : '🇬🇧',
+  },
+  {
+    code    : 'AED',
+    name    : 'UAE Dirham',
+    symbol  : 'د.إ',
+    symbolEn: 'AED',
+    locale  : 'ar-AE',
+    flag    : '🇦🇪',
+  },
+  {
+    code    : 'SGD',
+    name    : 'Singapore Dollar',
+    symbol  : 'S$',
+    symbolEn: 'SGD',
+    locale  : 'en-SG',
+    flag    : '🇸🇬',
+  },
+  {
+    code    : 'AUD',
+    name    : 'Australian Dollar',
+    symbol  : 'A$',
+    symbolEn: 'AUD',
+    locale  : 'en-AU',
+    flag    : '🇦🇺',
+  },
 ]
 
-export const getCurrency = (code) =>
-  CURRENCIES.find(c => c.code === code) || CURRENCIES[0]
+// Format an amount in a given currency
+export function formatCurrency(amount, code = 'NPR', options = {}) {
+  const currency = CURRENCIES.find(c => c.code === code) || CURRENCIES[0]
+  const num = parseFloat(amount || 0)
+  if (isNaN(num)) return `${currency.symbolEn} 0`
 
-export const formatAmount = (amount, currencyCode = 'NPR', compact = false) => {
-  const curr = getCurrency(currencyCode)
+  const { decimals = 0, compact = false } = options
+
   if (compact) {
-    if (amount >= 1000000) return `${curr.symbol}${(amount / 1000000).toFixed(1)}M`
-    if (amount >= 1000)    return `${curr.symbol}${(amount / 1000).toFixed(0)}K`
+    if (Math.abs(num) >= 10_000_000) return `${currency.symbolEn} ${(num / 10_000_000).toFixed(2)} Cr`
+    if (Math.abs(num) >= 100_000)    return `${currency.symbolEn} ${(num / 100_000).toFixed(2)} L`
+    if (Math.abs(num) >= 1_000)      return `${currency.symbolEn} ${(num / 1_000).toFixed(1)} K`
   }
-  return `${curr.symbol}${amount.toLocaleString()}`
+
+  return `${currency.symbol} ${num.toLocaleString('en-IN', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  })}`
 }

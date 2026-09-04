@@ -1,87 +1,85 @@
-// FILE: InsourceOutsourceCostReportPage.jsx - Insource vs Outsource Cost Report
-// (Reports, Analytics & BI > HR Analytics)
-// Pure aggregation comparing EXISTING payslips/recruitment_budget_lines
-// (in-house cost) against vendor_master/vendor_employees_extended
-// (outsourced cost) -- never a third calculation engine. The brief's
-// explicit legal framing: this report is also the audit trail proving
-// outsourced workers aren't quietly performing core functions.
+// FILE: src/components/dashboard/snapshots/InsourceOutsourceCostReportPage.jsx
+// eLogix HRMS — Insource Outsource Cost Report
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { PageHeader, AIImpact, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#052e16 0%,#15803d 60%,#86efac 100%)'
-const A = '#15803d'
-
-const COST_BREAKDOWN = [
-  {function:'Payroll Processing',insource_cost_npr:420000,outsource_cost_npr:380000,winner:'outsource'},
-  {function:'Recruitment',insource_cost_npr:680000,outsource_cost_npr:910000,winner:'insource'},
-  {function:'Facilities & Security',insource_cost_npr:0,outsource_cost_npr:660000,winner:'outsource',
-   note:'No insourced baseline -- always outsourced (non-core, appropriately so).'},
-  {function:'Software Development',insource_cost_npr:9600000,outsource_cost_npr:5904000,winner:'outsource',
-   flag_note:'Outsourced dev cost appears lower, but this function is core to the business -- the savings comparison itself is a compliance red flag, not a win.'},
-]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function InsourceOutsourceCostReportPage() {
-  const [ctx, setCtx] = useState(null)
-  const totalInsource = COST_BREAKDOWN.reduce((s,c)=>s+c.insource_cost_npr,0)
-  const totalOutsource = COST_BREAKDOWN.reduce((s,c)=>s+c.outsource_cost_npr,0)
-  const totalHeadcount = 312
-  const costPerEmployee = Math.round((totalInsource+totalOutsource)/totalHeadcount)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/reports', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Insource Outsource Cost Report...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="⚖" title="Insource vs Outsource Cost Report"
-        breadcrumb="Reports, Analytics & BI > HR Analytics"
-        gradient={G}
-        stats={[
-          {icon:'👤',label:'Total HR Cost / Employee',  value:'NPR '+costPerEmployee.toLocaleString()},
-          {icon:'🏢',label:'Total In-House Cost',           value:'NPR '+(totalInsource/1000000).toFixed(1)+'M'},
-          {icon:'🏭',label:'Total Outsourced Cost',             value:'NPR '+(totalOutsource/1000000).toFixed(1)+'M'},
-          {icon:'⚠',label:'Compliance Flags',                      value:COST_BREAKDOWN.filter(c=>c.flag_note).length},
-        ]}
-        onAdd={()=>{}} addLabel="" onExcel={()=>{}}/>
-
-      <div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#065f46',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>⚖</span>
-        <div style={{flex:1,minWidth:200}}><strong>Not Just a Savings Calculator:</strong> A function costing less outsourced isn't automatically a win -- if that function is core to the business, the comparison itself is the evidence a labour audit would look for. This report is the liability check as much as the cost check.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Insource Outsource Cost Report
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      <div style={{display:'grid',gap:16}}>
-        {COST_BREAKDOWN.map((c,i)=>{
-          const maxCost = Math.max(c.insource_cost_npr,c.outsource_cost_npr,1)
-          return (
-            <div key={i}
-              onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:c.function,...c,impact_links:['Vendor Billing Report']}})}}
-              style={{background:'#fff',border:`1px solid ${c.flag_note?'#fed7aa':'#e2e8f0'}`,borderRadius:16,padding:'18px'}}>
-              <div style={{fontSize:12,fontWeight:700,color:'#0f172a',marginBottom:10}}>{c.function}</div>
-              <div style={{display:'grid',gap:8}}>
-                <div>
-                  <div style={{display:'flex',justifyContent:'space-between',fontSize:9,marginBottom:3}}>
-                    <span style={{color:'#374151'}}>In-House</span><span style={{fontWeight:700,color:'#0284c7'}}>NPR {c.insource_cost_npr.toLocaleString()}</span>
-                  </div>
-                  <div style={{height:8,background:'#f1f5f9',borderRadius:8,overflow:'hidden'}}><div style={{width:`${c.insource_cost_npr/maxCost*100}%`,height:'100%',background:'#0284c7',borderRadius:8}}/></div>
-                </div>
-                <div>
-                  <div style={{display:'flex',justifyContent:'space-between',fontSize:9,marginBottom:3}}>
-                    <span style={{color:'#374151'}}>Outsourced</span><span style={{fontWeight:700,color:A}}>NPR {c.outsource_cost_npr.toLocaleString()}</span>
-                  </div>
-                  <div style={{height:8,background:'#f1f5f9',borderRadius:8,overflow:'hidden'}}><div style={{width:`${c.outsource_cost_npr/maxCost*100}%`,height:'100%',background:A,borderRadius:8}}/></div>
-                </div>
-              </div>
-              {c.note&&<div style={{marginTop:8,fontSize:8,color:'#94a3b8'}}>ℹ {c.note}</div>}
-              {c.flag_note&&<div style={{marginTop:8,fontSize:9,color:'#dc2626',fontWeight:600}}>🚨 {c.flag_note}</div>}
-            </div>
-          )
-        })}
-      </div>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
+        </div>
+      )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['In-house cost includes the true loaded total -- salary, recruitment, training, and system overhead -- never just a bare baseline salary comparison.','A core-business function showing as outsourced here cross-checks directly against the core-work flag in Vendor-wise Headcount.','This report is the documentation a Labour Office audit would request first -- kept current here, never assembled retroactively under pressure.']}/>
-      </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
+          </div>
+        </div>
+      )}
 
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Breakdown',key:'view'},{icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }

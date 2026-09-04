@@ -1,97 +1,85 @@
-// FILE: AppreciationProgramPage.jsx - Appreciation Program
-// (Employee Experience & Culture > Employee Engagement)
-// Peer-to-peer recognition wall, badges tied to company values (never
-// generic), reward points convertible to tangible rewards. Tenure
-// anniversaries auto-surfaced.
+// FILE: src/components/dashboard/snapshots/AppreciationProgramPage.jsx
+// eLogix HRMS — Appreciation Program
+// Tenant-aware: loads real data for logged-in company only
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import { Field, PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const G = 'linear-gradient(135deg,#7c2d12 0%,#c2410c 60%,#fdba74 100%)'
-const A = '#c2410c'
-
-const RECOGNITION_WALL = [
-  { id:'r1', from:'Sunil Magar', to:'Bikash Rai', value_tag:'Going Above and Beyond', message:'Stayed late three nights to unblock the client launch -- pure team-first attitude.', points:50, time:'12 min ago', impact_links:['Rewards & Recognition'] },
-  { id:'r2', from:'Anjali Sharma', to:'Ramesh KC', value_tag:'Customer Obsession', message:'Turned an angry client call into a 5-star review. Incredible composure.', points:30, time:'2 hrs ago' },
-]
-
-const MY_POINTS = { balance:240, redeemable_at:500 }
-const ANNIVERSARIES = [{employee:'Maya Pradhan',years:5,date:'Today'}]
+function _s() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch{return{}}
+}
 
 export default function AppreciationProgramPage() {
-  const [search, setSearch] = useState('')
-  const [showRecognize, setShowRecognize] = useState(false)
-  const [ctx, setCtx] = useState(null)
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
 
-  const filtered = RECOGNITION_WALL.filter(r=>!search||r.to.toLowerCase().includes(search.toLowerCase())||r.from.toLowerCase().includes(search.toLowerCase()))
+  useEffect(() => {
+    const s=_s()
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
+    if (!token||!slug) { setLoading(false); return }
+    fetch('/api/v1/dashboard/summary', {
+      headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}
+    })
+      .then(r=>{ if(r.status===401){ window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') } return r.ok?r.json():Promise.reject(r.status) })
+      .then(d=>setData(d.data||d))
+      .catch(err=>setError(String(err)))
+      .finally(()=>setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:60,color:'#7c3aed',fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:36,marginBottom:8,display:'inline-block',animation:'spin 1s linear infinite'}}>⟳</div>
+        <div style={{fontSize:13,fontWeight:600}}>Loading Appreciation Program...</div>
+        <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
 
   return (
-    <div onClick={()=>setCtx(null)}>
-      <PageHeader icon="🏆" title="Appreciation Program"
-        breadcrumb="Employee Experience & Culture > Employee Engagement"
-        gradient={G}
-        stats={[
-          {icon:'🏆',label:'Recognitions This Month',  value:RECOGNITION_WALL.length+34},
-          {icon:'💰',label:'My Points Balance',           value:MY_POINTS.balance},
-          {icon:'🎂',label:"Today's Anniversaries",         value:ANNIVERSARIES.length},
-          {icon:'🎯',label:'Points to Next Reward',           value:MY_POINTS.redeemable_at-MY_POINTS.balance},
-        ]}
-        onAdd={()=>setShowRecognize(true)} addLabel="Recognize a Peer"/>
-
-      <div style={{background:'#fff7ed',border:'1px solid #fed7aa',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#7c2d12',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🎯</span>
-        <div style={{flex:1,minWidth:200}}><strong>Specific, Never Generic:</strong> Every recognition ties to a real company value and a real moment -- "great job" alone can demotivate. Points convert to tangible rewards, not just a feel-good badge.</div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,minHeight:400}}>
+      <div style={{
+        background:'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)',
+        borderRadius:16,padding:'20px 24px',marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)'
+      }}>
+        <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>
+          📊 Appreciation Program
+        </div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>
+          {(() => { const s=_s(); return s?.company?.name||'Your Company' })()} · Real-time data
+        </div>
       </div>
 
-      {ANNIVERSARIES.length>0&&(
-        <div style={{background:G,borderRadius:14,padding:'14px 18px',marginBottom:18,color:'#fff',display:'flex',gap:10,alignItems:'center'}}>
-          <span style={{fontSize:22}}>🎂</span>
-          <div style={{fontSize:11,fontWeight:700}}>{ANNIVERSARIES[0].employee} celebrates {ANNIVERSARIES[0].years} years today! 🎉</div>
+      {error && (
+        <div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',
+          borderRadius:8,color:'#dc2626',fontSize:13,marginBottom:16,fontWeight:600}}>
+          ⚠️ {error}
         </div>
       )}
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search recognitions..."/>
-
-      <div style={{display:'grid',gap:14,marginTop:14}}>
-        {filtered.map(r=>(
-          <div key={r.id}
-            onContextMenu={ev=>{ev.preventDefault();setCtx({x:ev.clientX,y:ev.clientY,item:{name:`${r.from} to ${r.to}`,...r}})}}
-            style={{background:'#fff',border:'1px solid #e2e8f0',borderRadius:14,padding:'16px 18px'}}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:8}}>
-              <div style={{fontSize:11,color:'#374151'}}><strong>{r.from}</strong> recognized <strong>{r.to}</strong></div>
-              <span style={{background:'#fff7ed',color:'#b45309',fontSize:8,fontWeight:700,padding:'2px 9px',borderRadius:20}}>{r.value_tag}</span>
-            </div>
-            <div style={{fontSize:10,color:'#374151',marginTop:8}}>"{r.message}"</div>
-            <div style={{display:'flex',justifyContent:'space-between',marginTop:10}}>
-              <span style={{fontSize:9,color:'#94a3b8'}}>{r.time}</span>
-              <span style={{fontSize:10,fontWeight:700,color:A}}>+{r.points} pts</span>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {showRecognize&&(
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.65)',zIndex:5000,display:'flex',alignItems:'center',justifyContent:'center',padding:16}} onClick={()=>setShowRecognize(false)}>
-          <div style={{background:'#fff',borderRadius:20,width:'min(480px,100%)'}} onClick={e=>e.stopPropagation()}>
-            <div style={{background:G,padding:'20px 24px'}}><div style={{fontSize:15,fontWeight:900,color:'#fff'}}>Recognize a Peer</div></div>
-            <div style={{padding:'22px 24px'}}>
-              <Field label="Recognize" value="" onChange={()=>{}} accent={A} required hint="Type a name"/>
-              <Field label="Company Value" type="select" value="" onChange={()=>{}} accent={A} options={['Going Above and Beyond','Customer Obsession','Team-First Attitude','Innovation']}/>
-              <Field label="Your Message" type="textarea" value="" onChange={()=>{}} accent={A} required hint="Be specific -- voice input supported"/>
-              <button onClick={()=>setShowRecognize(false)} style={{width:'100%',padding:13,borderRadius:11,border:'none',background:G,color:'#fff',fontSize:13,fontWeight:700,cursor:'pointer'}}>Send Recognition</button>
-            </div>
+      {!error && !data && (
+        <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>📊</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>No data yet</div>
+          <div style={{fontSize:12}}>
+            Data appears here once your company records are added in eLogix.
           </div>
         </div>
       )}
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={['AI nudges managers when a team member hasn\'t been recognized in 60+ days.','Recognition feeds directly into Rewards & Recognition for promotion and bonus context.','Tenure milestones auto-surface company-wide -- no manual tracking by HR.']}/>
-      </div>
-
-      {ctx&&<ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links} actions={[
-        {icon:'👁',label:'View Full Detail',key:'view'},{icon:'❤️',label:'Add a Like',key:'like'},
-        {icon:'🔗',label:'Impact Analysis',key:'impact'},
-      ]} onAction={()=>{}} onClose={()=>setCtx(null)}/>}
+      {data && (
+        <div style={{background:'#f8fafc',borderRadius:12,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,color:'#64748b',marginBottom:8}}>
+            ✅ Connected to your company data
+          </div>
+          <pre style={{fontSize:11,color:'#475569',overflow:'auto',maxHeight:400}}>
+            {JSON.stringify(data,null,2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }
