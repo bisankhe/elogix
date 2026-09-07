@@ -1,167 +1,81 @@
-// FILE: AgeGroupPage.jsx — Age Group Distribution (Bar, Pie, Table)
+
 import { useState, useEffect } from 'react'
-const G = 'linear-gradient(135deg,#065f46 0%,#059669 60%,#6ee7b7 100%)'
-const A = '#059669'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 
-const DATA = [
-  { range:'18–25',  count:14, color:'#f59e0b', gender:{m:8,f:6}  },
-  { range:'26–30',  count:28, color:'#3b82f6', gender:{m:15,f:13} },
-  { range:'31–35',  count:32, color:'#8b5cf6', gender:{m:18,f:14} },
-  { range:'36–40',  count:22, color:'#10b981', gender:{m:14,f:8}  },
-  { range:'41–50',  count:16, color:'#f97316', gender:{m:11,f:5}  },
-  { range:'51+',    count:8,  color:'#ef4444', gender:{m:6,f:2}   },
-]
-const TOTAL = DATA.reduce((s,d)=>s+d.count,0)
-
-
-function _getSession() {
-  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}}
-}
-function _getTenantCtx() {
-  const s=_getSession()
-  const token=localStorage.getItem('access_token')||s?.token||''
-  const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
-  return {token,slug,valid:!!(token&&slug)}
-}
+function _s(){try{return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{}}catch(_e){return{}}}
+const G='linear-gradient(135deg,#065f46 0%,#059669 60%,#6ee7b7 100%)'
+const A='#059669'
 
 export default function AgeGroupPage() {
-  const [apiData,setApiData]=useState(null)
-  const [apiLoading,setApiLoading]=useState(true)
-  const [apiError,setApiError]=useState(null)
-  const [chart, setChart] = useState('bar')
-  const [sel, setSel] = useState(null)
-  const avgAge = 33.4
-
-  const PieChart = () => {
-    let start = 0
-    const cx=100,cy=100,r=80,ir=38
-    const deg = a=>(a-90)*Math.PI/180
-    return (
-      <svg viewBox="0 0 200 200" style={{width:180,height:180}}>
-        {DATA.map((d,i)=>{
-          const angle=(d.count/TOTAL)*360; const s=start; start+=angle
-          const [x1,y1]=[cx+r*Math.cos(deg(s)),cy+r*Math.sin(deg(s))]
-          const [x2,y2]=[cx+r*Math.cos(deg(s+angle)),cy+r*Math.sin(deg(s+angle))]
-          const [xi1,yi1]=[cx+ir*Math.cos(deg(s)),cy+ir*Math.sin(deg(s))]
-          const [xi2,yi2]=[cx+ir*Math.cos(deg(s+angle)),cy+ir*Math.sin(deg(s+angle))]
-          const lg=angle>180?1:0
-          return <path key={i} onClick={()=>setSel(sel===d.range?null:d.range)}
-            d={`M${xi1} ${yi1}L${x1} ${y1}A${r} ${r} 0 ${lg} 1 ${x2} ${y2}L${xi2} ${yi2}A${ir} ${ir} 0 ${lg} 0 ${xi1} ${yi1}Z`}
-            fill={d.color} stroke="#fff" strokeWidth={1.5} style={{cursor:'pointer'}} opacity={sel&&sel!==d.range?.5:1}/>
-        })}
-        <text x={cx} y={cy-6} textAnchor="middle" fontSize={18} fontWeight={900} fill="#0f172a">{TOTAL}</text>
-        <text x={cx} y={cy+10} textAnchor="middle" fontSize={8} fill="#64748b">employees</text>
-      </svg>
-    )
-  }
+  const [data,setData]=useState(null); const [loading,setLoading]=useState(true); const [error,setError]=useState(null)
+  const s=_s(); const company=s?.company||{}
 
   useEffect(()=>{
-    const {token,slug,valid} = _getTenantCtx()
-    if(!valid){setApiLoading(false);return}
-    setApiLoading(true);setApiError(null)
-    fetch('/api/v1/hr-analytics/age-groups',{headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}})
-      .then(r=>{if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));throw new Error('Session expired')}if(!r.ok)throw new Error(`Error ${r.status}`);return r.json()})
-      .then(d=>{const p=d.data||d.data||d;if(p)setApiData(p)})
-      .catch(err=>setApiError(err.message))
-      .finally(()=>setApiLoading(false))
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||''
+    if(!token||!slug){setLoading(false);return}
+    fetch('/api/v1/employees/age-groups',{headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}})
+      .then(r=>{if(!r.ok)throw new Error(`Error ${r.status}`);return r.json()})
+      .then(d=>setData(d.data||d)).catch(e=>setError(e.message)).finally(()=>setLoading(false))
   },[])
 
+  const groups  = data?.groups  || []
+  const avgAge  = data?.avg_age || 0
+  const total   = groups.reduce((s,g)=>s+(g.value||g.count||0),0)
+  const COLORS  = ['#f59e0b','#3b82f6','#8b5cf6','#10b981','#f97316','#ef4444','#0ea5e9']
+
+  if(loading) return <div style={{textAlign:'center',padding:60,color:A,fontSize:13,fontWeight:600}}>⟳ Loading age group data...</div>
+  if(error)   return <div style={{padding:20,background:'#fef2f2',borderRadius:12,color:'#dc2626',fontSize:13,margin:20}}>⚠️ {error}</div>
+  if(!data)   return <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}><div style={{fontSize:40,marginBottom:12}}>📊</div><div>No age data yet for {company?.name}</div></div>
+
+  const chartData = groups.map((g,i)=>({...g, range: g.group||g.range, count: g.value||g.count, color: COLORS[i%COLORS.length]}))
+
   return (
-    <div style={{fontFamily:'system-ui,sans-serif'}}>
-      <div style={{background:G,borderRadius:14,padding:'16px 22px',marginBottom:14,color:'#fff'}}>
-      {apiLoading && (
-        <div style={{textAlign:'center',padding:40,color:'#7c3aed',fontSize:13,fontWeight:600}}>
-          <div style={{fontSize:32,marginBottom:8}}>⟳</div>Loading...
-        </div>
-      )}
-      {apiError && !apiLoading && (
-        <div style={{padding:'8px 14px',background:'#fef2f2',border:'1px solid #fecaca',
-          borderRadius:8,fontSize:12,color:'#dc2626',marginBottom:8,fontWeight:600}}>
-          ⚠️ {apiError}
-        </div>
-      )}
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:10}}>
-          <div><h2 style={{margin:0,fontSize:20,fontWeight:900}}>👥 Age Group Distribution</h2>
-            <p style={{margin:'3px 0 0',fontSize:10,opacity:.8}}>Total: {TOTAL} employees · Average Age: {avgAge} years · Gender breakdown included</p>
-          </div>
-          <div style={{display:'flex',gap:6}}>
-            {['bar','pie','table'].map(c=><button key={c} onClick={()=>setChart(c)} style={{padding:'6px 14px',borderRadius:8,border:'none',cursor:'pointer',fontSize:9,fontWeight:700,background:chart===c?'rgba(255,255,255,.9)':'rgba(255,255,255,.15)',color:chart===c?A:'#fff'}}>{c==='bar'?'📊 Bar':c==='pie'?'🥧 Pie':'📋 Table'}</button>)}
-          </div>
-        </div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24}}>
+      <div style={{background:G,borderRadius:16,padding:'20px 24px',marginBottom:20,boxShadow:'0 4px 24px rgba(5,150,105,.25)'}}>
+        <div style={{fontSize:18,fontWeight:900,color:'#fff'}}>📊 Age Group Distribution</div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>{company?.name} · Total: {total} · Avg Age: {avgAge} yrs</div>
       </div>
 
-      {chart==='bar'&&(
-        <div style={{background:'#fff',borderRadius:14,border:'1px solid #e2e8f0',padding:'20px'}}>
-          <div style={{display:'grid',gap:12}}>
-            {DATA.map(d=>(
-              <div key={d.range} style={{cursor:'pointer'}} onClick={()=>setSel(sel===d.range?null:d.range)}>
-                <div style={{display:'flex',justifyContent:'space-between',fontSize:10,marginBottom:4}}>
-                  <span style={{fontWeight:700,color:'#374151'}}>Age {d.range}</span>
-                  <div style={{display:'flex',gap:10}}>
-                    <span style={{color:'#3b82f6',fontSize:9}}>👨 {d.gender.m}</span>
-                    <span style={{color:'#ec4899',fontSize:9}}>👩 {d.gender.f}</span>
-                    <span style={{fontWeight:900,color:d.color}}>{d.count} ({Math.round(d.count/TOTAL*100)}%)</span>
-                  </div>
-                </div>
-                <div style={{height:28,background:'#f1f5f9',borderRadius:8,overflow:'hidden',display:'flex'}}>
-                  <div style={{height:'100%',background:'#3b82f6',width:(d.gender.m/TOTAL*100)+'%',transition:'width .4s'}}/>
-                  <div style={{height:'100%',background:'#ec4899',width:(d.gender.f/TOTAL*100)+'%',transition:'width .4s'}}/>
-                </div>
-              </div>
-            ))}
-            <div style={{display:'flex',gap:16,fontSize:9,marginTop:4}}>
-              <span style={{display:'flex',gap:4,alignItems:'center'}}><div style={{width:10,height:10,borderRadius:2,background:'#3b82f6'}}/> Male: {DATA.reduce((s,d)=>s+d.gender.m,0)}</span>
-              <span style={{display:'flex',gap:4,alignItems:'center'}}><div style={{width:10,height:10,borderRadius:2,background:'#ec4899'}}/> Female: {DATA.reduce((s,d)=>s+d.gender.f,0)}</span>
-            </div>
-          </div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+        {/* Bar chart */}
+        <div style={{background:'#fff',borderRadius:14,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,fontWeight:800,marginBottom:14,color:'#0f172a'}}>Distribution by Age Group</div>
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={chartData} margin={{top:4,right:8,bottom:8,left:0}}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9"/>
+              <XAxis dataKey="range" tick={{fontSize:10}}/><YAxis tick={{fontSize:10}}/>
+              <Tooltip formatter={(v)=>[v,'Employees']}/>
+              <Bar dataKey="count" radius={[4,4,0,0]}>
+                {chartData.map((_,i)=><Cell key={i} fill={COLORS[i%COLORS.length]}/>)}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
         </div>
-      )}
 
-      {chart==='pie'&&(
-        <div style={{background:'#fff',borderRadius:14,border:'1px solid #e2e8f0',padding:'20px',display:'flex',gap:24,alignItems:'center',flexWrap:'wrap'}}>
-          <div><PieChart/></div>
-          <div style={{display:'grid',gap:8,flex:1}}>
-            {DATA.map(d=>(
-              <div key={d.range} onClick={()=>setSel(sel===d.range?null:d.range)} style={{display:'flex',gap:10,alignItems:'center',cursor:'pointer',padding:'7px 12px',borderRadius:10,background:sel===d.range?`${d.color}12`:'#f8fafc'}}>
-                <div style={{width:12,height:12,borderRadius:2,background:d.color,flexShrink:0}}/>
-                <span style={{fontSize:11,fontWeight:600,flex:1}}>Age {d.range}</span>
-                <span style={{fontWeight:900,color:d.color}}>{d.count}</span>
-                <span style={{fontSize:9,color:'#94a3b8'}}>{Math.round(d.count/TOTAL*100)}%</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {chart==='table'&&(
+        {/* Table */}
         <div style={{background:'#fff',borderRadius:14,border:'1px solid #e2e8f0',overflow:'hidden'}}>
-          <table style={{width:'100%',borderCollapse:'collapse',fontSize:10}}>
+          <table style={{width:'100%',borderCollapse:'collapse'}}>
             <thead><tr style={{background:'#f8fafc'}}>
-              {['Age Group','Total','Male','Female','% of Workforce','Category'].map(h=><th key={h} style={{padding:'11px 14px',textAlign:'left',fontSize:9,fontWeight:700,color:'#64748b'}}>{h}</th>)}
+              <th style={{padding:'10px 14px',textAlign:'left',fontSize:10,fontWeight:700,color:'#64748b',textTransform:'uppercase'}}>Age Group</th>
+              <th style={{padding:'10px 14px',textAlign:'right',fontSize:10,fontWeight:700,color:'#64748b',textTransform:'uppercase'}}>Count</th>
+              <th style={{padding:'10px 14px',textAlign:'right',fontSize:10,fontWeight:700,color:'#64748b',textTransform:'uppercase'}}>%</th>
             </tr></thead>
             <tbody>
-              {DATA.map((d,i)=>(
-                <tr key={d.range} style={{borderBottom:'1px solid #f1f5f9',background:i%2?'#fafafa':'#fff'}}>
-                  <td style={{padding:'11px 14px',fontWeight:700}}>Age {d.range}</td>
-                  <td style={{padding:'11px 14px',fontWeight:900,color:d.color,fontSize:14}}>{d.count}</td>
-                  <td style={{padding:'11px 14px',color:'#3b82f6',fontWeight:700}}>👨 {d.gender.m}</td>
-                  <td style={{padding:'11px 14px',color:'#ec4899',fontWeight:700}}>👩 {d.gender.f}</td>
-                  <td style={{padding:'11px 14px'}}><div style={{display:'flex',gap:6,alignItems:'center'}}><div style={{height:6,width:60,background:'#f1f5f9',borderRadius:3}}><div style={{height:'100%',width:Math.round(d.count/TOTAL*100)+'%',background:d.color,borderRadius:3}}/></div><span style={{fontWeight:700,color:d.color}}>{Math.round(d.count/TOTAL*100)}%</span></div></td>
-                  <td style={{padding:'11px 14px'}}><span style={{fontSize:8,fontWeight:700,padding:'3px 9px',borderRadius:20,background:d.color+'18',color:d.color}}>{['Gen Z','Millennial','Millennial','Gen X','Gen X','Boomer'][i]}</span></td>
+              {chartData.map((g,i)=>(
+                <tr key={i} style={{borderBottom:'1px solid #f1f5f9'}}>
+                  <td style={{padding:'10px 14px',fontSize:13}}>
+                    <span style={{display:'inline-block',width:10,height:10,borderRadius:'50%',background:g.color,marginRight:8}}/>
+                    {g.range}
+                  </td>
+                  <td style={{padding:'10px 14px',fontSize:13,fontWeight:700,textAlign:'right',color:g.color}}>{g.count}</td>
+                  <td style={{padding:'10px 14px',fontSize:12,textAlign:'right',color:'#64748b'}}>{total?((g.count/total)*100).toFixed(1):0}%</td>
                 </tr>
               ))}
-              <tr style={{background:'#f8fafc'}}>
-                <td style={{padding:'11px 14px',fontWeight:900}}>TOTAL</td>
-                <td style={{padding:'11px 14px',fontWeight:900,color:A,fontSize:14}}>{TOTAL}</td>
-                <td style={{padding:'11px 14px',fontWeight:900,color:'#3b82f6'}}>{DATA.reduce((s,d)=>s+d.gender.m,0)}</td>
-                <td style={{padding:'11px 14px',fontWeight:900,color:'#ec4899'}}>{DATA.reduce((s,d)=>s+d.gender.f,0)}</td>
-                <td style={{padding:'11px 14px',fontWeight:900,color:A}}>100%</td>
-                <td style={{padding:'11px 14px',fontSize:10,color:'#64748b'}}>Avg age: {avgAge}</td>
-              </tr>
             </tbody>
           </table>
         </div>
-      )}
+      </div>
     </div>
   )
 }

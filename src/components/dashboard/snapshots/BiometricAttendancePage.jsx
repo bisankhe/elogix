@@ -7,6 +7,7 @@
 // eLogix Technologies · www.elogix.com.np
 
 import { useState, useEffect, useCallback } from 'react'
+import { tenantCanAccess } from '../../../utils/tenantPermissions.js'
 import { resolveTenantAccess, getSessionSlug } from '../../../utils/tenantPermissions.js'
 import AccessDenied from '../../shared/AccessDenied.jsx'
 
@@ -77,11 +78,10 @@ async function apiFetch(url, options = {}, slug = '') {
 
 export default function BiometricAttendancePage() {
   const slug    = getSessionSlug()
-  const access  = resolveTenantAccess(slug)
   const sess    = getSession()
   const company = sess.company || {}
 
-  if (!access.hasAccess('attendance')) {
+  if (!tenantCanAccess('biometric-attendance')) {
     return <AccessDenied moduleName="Biometric Attendance" />
   }
 
@@ -217,7 +217,7 @@ export default function BiometricAttendancePage() {
   const totalPunches = devices.reduce((s, d) => s+(d.punches_today||0), 0)
 
   return (
-    <div style={{position:'relative', width:'100%', minHeight:'100vh', fontFamily:"'Segoe UI',system-ui,sans-serif",
+    <div style={{position:'fixed', inset:0, fontFamily:"'Segoe UI',system-ui,sans-serif",
       background:'#f0f9ff', display:'flex', flexDirection:'column', overflow:'hidden'}}>
 
       <style>{`

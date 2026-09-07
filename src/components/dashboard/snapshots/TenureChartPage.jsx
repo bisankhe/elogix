@@ -1,177 +1,93 @@
-// FILE: TenureChartPage.jsx — Tenure Chart with Pie, Bar, Table
+
 import { useState, useEffect } from 'react'
-const G = 'linear-gradient(135deg,#1e3a5f 0%,#1e40af 60%,#60a5fa 100%)'
-const A = '#1e40af'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 
-const DATA = [
-  { range:'< 1 Year',   count:18, color:'#f59e0b', pct:18 },
-  { range:'1–2 Years',  count:24, color:'#3b82f6', pct:24 },
-  { range:'2–5 Years',  count:32, color:'#8b5cf6', pct:32 },
-  { range:'5–10 Years', count:16, color:'#10b981', pct:16 },
-  { range:'10+ Years',  count:10, color:'#ef4444', pct:10 },
-]
-const TOTAL = DATA.reduce((s,d)=>s+d.count,0)
-const EMPLOYEES = [
-  {name:'Rajesh Sharma',   dept:'IT',      tenure:'12y 3m', range:'10+ Years'},
-  {name:'Maya Pradhan',    dept:'Finance', tenure:'8y 7m',  range:'5–10 Years'},
-  {name:'Sunita Rai',      dept:'HR',      tenure:'5y 1m',  range:'5–10 Years'},
-  {name:'Bikash KC',       dept:'Sales',   tenure:'3y 4m',  range:'2–5 Years'},
-  {name:'Anita Gurung',    dept:'IT',      tenure:'1y 8m',  range:'1–2 Years'},
-  {name:'Ram Thapa',       dept:'Ops',     tenure:'0y 8m',  range:'< 1 Year'},
-]
-
-
-function _getSession() {
-  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}}
-}
-function _getTenantCtx() {
-  const s=_getSession()
-  const token=localStorage.getItem('access_token')||s?.token||''
-  const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
-  return {token,slug,valid:!!(token&&slug)}
-}
+function _s(){try{return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{}}catch(_e){return{}}}
+const G='linear-gradient(135deg,#1e3a5f 0%,#1e40af 60%,#60a5fa 100%)'
+const COLORS=['#f59e0b','#3b82f6','#8b5cf6','#10b981','#ef4444']
 
 export default function TenureChartPage() {
-  const [apiData,setApiData]=useState(null)
-  const [apiLoading,setApiLoading]=useState(true)
-  const [apiError,setApiError]=useState(null)
-  const [chart, setChart] = useState('bar')
-  const [sel, setSel] = useState(null)
-
-  const PieChart = () => {
-    let startAngle = 0
-    const cx=100,cy=100,r=80,ir=40
-    const slices = DATA.map(d=>{
-      const angle = (d.count/TOTAL)*360
-      const start = startAngle; startAngle += angle
-      const r2a = (a)=>(a-90)*Math.PI/180
-      const x1=cx+r*Math.cos(r2a(start)),y1=cy+r*Math.sin(r2a(start))
-      const x2=cx+r*Math.cos(r2a(start+angle)),y2=cy+r*Math.sin(r2a(start+angle))
-      const xi1=cx+ir*Math.cos(r2a(start)),yi1=cy+ir*Math.sin(r2a(start))
-      const xi2=cx+ir*Math.cos(r2a(start+angle)),yi2=cy+ir*Math.sin(r2a(start+angle))
-      const lg = angle>180?1:0
-      return {d:`M ${xi1} ${yi1} L ${x1} ${y1} A ${r} ${r} 0 ${lg} 1 ${x2} ${y2} L ${xi2} ${yi2} A ${ir} ${ir} 0 ${lg} 0 ${xi1} ${yi1} Z`,...d}
-    })
-    return (
-      <svg viewBox="0 0 200 200" style={{width:180,height:180}}>
-        {slices.map((s,i)=><path key={i} d={s.d} fill={s.color} stroke="#fff" strokeWidth={1.5} opacity={sel===s.range?.8:1} style={{cursor:'pointer'}} onClick={()=>setSel(sel===s.range?null:s.range)}/>)}
-        <text x={cx} y={cy-6} textAnchor="middle" fontSize={18} fontWeight={900} fill="#0f172a">{TOTAL}</text>
-        <text x={cx} y={cy+12} textAnchor="middle" fontSize={8} fill="#64748b">Total Staff</text>
-      </svg>
-    )
-  }
-
-  const filtered = sel ? EMPLOYEES.filter(e=>e.range===sel) : EMPLOYEES
+  const [data,setData]=useState(null);const [loading,setLoading]=useState(true);const [error,setError]=useState(null)
+  const s=_s();const company=s?.company||{}
 
   useEffect(()=>{
-    const {token,slug,valid} = _getTenantCtx()
-    if(!valid){setApiLoading(false);return}
-    setApiLoading(true);setApiError(null)
-    fetch('/api/v1/hr-analytics/tenure',{headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}})
-      .then(r=>{if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));throw new Error('Session expired')}if(!r.ok)throw new Error(`Error ${r.status}`);return r.json()})
-      .then(d=>{const p=d.data||d.data||d;if(p)setApiData(p)})
-      .catch(err=>setApiError(err.message))
-      .finally(()=>setApiLoading(false))
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||''
+    if(!token||!slug){setLoading(false);return}
+    fetch('/api/v1/employees/tenure',{headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}})
+      .then(r=>{if(!r.ok)throw new Error(`Error ${r.status}`);return r.json()})
+      .then(d=>setData(d.data||d)).catch(e=>setError(e.message)).finally(()=>setLoading(false))
   },[])
 
+  const buckets   = data?.buckets   || []
+  const employees = data?.employees || []
+  const avgTenure = data?.avg_tenure || 0
+  const total     = buckets.reduce((s,b)=>s+(b.count||0),0)
+
+  if(loading) return <div style={{textAlign:'center',padding:60,color:'#1e40af',fontSize:13,fontWeight:600}}>⟳ Loading tenure data...</div>
+  if(error)   return <div style={{padding:20,background:'#fef2f2',borderRadius:12,color:'#dc2626',fontSize:13,margin:20}}>⚠️ {error}</div>
+  if(!data)   return <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}><div style={{fontSize:40,marginBottom:12}}>📈</div><div>No tenure data yet for {company?.name}</div></div>
+
+  const chartData = buckets.map((b,i)=>({...b,color:COLORS[i%COLORS.length]}))
+
   return (
-    <div style={{fontFamily:'system-ui,sans-serif'}}>
-      <div style={{background:G,borderRadius:14,padding:'16px 22px',marginBottom:14,color:'#fff'}}>
-      {apiLoading && (
-        <div style={{textAlign:'center',padding:40,color:'#7c3aed',fontSize:13,fontWeight:600}}>
-          <div style={{fontSize:32,marginBottom:8}}>⟳</div>Loading...
-        </div>
-      )}
-      {apiError && !apiLoading && (
-        <div style={{padding:'8px 14px',background:'#fef2f2',border:'1px solid #fecaca',
-          borderRadius:8,fontSize:12,color:'#dc2626',marginBottom:8,fontWeight:600}}>
-          ⚠️ {apiError}
-        </div>
-      )}
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:10}}>
-          <div><h2 style={{margin:0,fontSize:20,fontWeight:900}}>📊 Tenure Distribution</h2>
-            <p style={{margin:'3px 0 0',fontSize:10,opacity:.8}}>Employee tenure breakdown · Average: {(DATA.reduce((s,d,i)=>s+d.count*([0.5,1.5,3.5,7.5,12][i]),0)/TOTAL).toFixed(1)} years</p>
-          </div>
-          <div style={{display:'flex',gap:6}}>
-            {['bar','pie','table'].map(c=><button key={c} onClick={()=>setChart(c)} style={{padding:'6px 14px',borderRadius:8,border:'none',cursor:'pointer',fontSize:9,fontWeight:700,background:chart===c?'rgba(255,255,255,.9)':'rgba(255,255,255,.15)',color:chart===c?A:'#fff'}}>{c==='bar'?'📊 Bar':c==='pie'?'🥧 Pie':'📋 Table'}</button>)}
-          </div>
-        </div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24}}>
+      <div style={{background:G,borderRadius:16,padding:'20px 24px',marginBottom:20,boxShadow:'0 4px 24px rgba(30,64,175,.25)'}}>
+        <div style={{fontSize:18,fontWeight:900,color:'#fff'}}>📈 Tenure Analysis</div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>{company?.name} · {total} employees · Avg tenure: {avgTenure} yrs</div>
       </div>
 
-      {chart==='bar'&&(
-        <div style={{background:'#fff',borderRadius:14,border:'1px solid #e2e8f0',padding:'20px'}}>
-          <div style={{display:'grid',gap:14}}>
-            {DATA.map(d=>(
-              <div key={d.range} style={{cursor:'pointer'}} onClick={()=>setSel(sel===d.range?null:d.range)}>
-                <div style={{display:'flex',justifyContent:'space-between',fontSize:10,marginBottom:5}}>
-                  <span style={{fontWeight:700,color:sel===d.range?d.color:'#374151'}}>{d.range}</span>
-                  <span style={{fontWeight:800,color:d.color}}>{d.count} staff ({(d.pct||0)}%)</span>
-                </div>
-                <div style={{height:32,background:'#f1f5f9',borderRadius:8,overflow:'hidden',position:'relative'}}>
-                  <div style={{height:'100%',background:d.color,width:(d.pct||0)+'%',borderRadius:8,transition:'width .4s',display:'flex',alignItems:'center',paddingLeft:8}}>
-                    {d.pct>10&&<span style={{fontSize:9,color:'#fff',fontWeight:700}}>{d.count} employees</span>}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
+        <div style={{background:'#fff',borderRadius:14,padding:20,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:13,fontWeight:800,marginBottom:14}}>Tenure Distribution</div>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={chartData} margin={{top:4,right:8,bottom:8,left:0}}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9"/>
+              <XAxis dataKey="bucket" tick={{fontSize:10}}/><YAxis tick={{fontSize:10}}/>
+              <Tooltip/>
+              <Bar dataKey="count" radius={[4,4,0,0]}>
+                {chartData.map((_,i)=><Cell key={i} fill={COLORS[i%COLORS.length]}/>)}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
         </div>
-      )}
-
-      {chart==='pie'&&(
-        <div style={{background:'#fff',borderRadius:14,border:'1px solid #e2e8f0',padding:'20px',display:'flex',gap:24,alignItems:'center',flexWrap:'wrap'}}>
-          <div style={{display:'flex',justifyContent:'center'}}><PieChart/></div>
-          <div style={{display:'grid',gap:8,flex:1}}>
-            {DATA.map(d=>(
-              <div key={d.range} onClick={()=>setSel(sel===d.range?null:d.range)} style={{display:'flex',gap:10,alignItems:'center',cursor:'pointer',padding:'8px 12px',borderRadius:10,background:sel===d.range?`${d.color}12`:'transparent'}}>
-                <div style={{width:14,height:14,borderRadius:3,background:d.color,flexShrink:0}}/>
-                <span style={{fontSize:11,fontWeight:600,color:'#374151',flex:1}}>{d.range}</span>
-                <span style={{fontSize:11,fontWeight:900,color:d.color}}>{d.count}</span>
-                <span style={{fontSize:9,color:'#94a3b8'}}>{(d.pct||0)}%</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {chart==='table'&&(
         <div style={{background:'#fff',borderRadius:14,border:'1px solid #e2e8f0',overflow:'hidden'}}>
-          <table style={{width:'100%',borderCollapse:'collapse',fontSize:10}}>
+          <table style={{width:'100%',borderCollapse:'collapse'}}>
             <thead><tr style={{background:'#f8fafc'}}>
-              {['Tenure Range','Employee Count','% of Total','Avg Tenure','Status'].map(h=><th key={h} style={{padding:'11px 14px',textAlign:'left',fontSize:9,fontWeight:700,color:'#64748b'}}>{h}</th>)}
+              {['Bucket','Count','%'].map(h=><th key={h} style={{padding:'10px 14px',textAlign:'left',fontSize:10,fontWeight:700,color:'#64748b',textTransform:'uppercase'}}>{h}</th>)}
             </tr></thead>
             <tbody>
-              {DATA.map((d,i)=>(
-                <tr key={d.range} style={{borderBottom:'1px solid #f1f5f9',background:i%2?'#fafafa':'#fff'}}>
-                  <td style={{padding:'11px 14px'}}><div style={{display:'flex',gap:8,alignItems:'center'}}><div style={{width:10,height:10,borderRadius:2,background:d.color}}/><span style={{fontWeight:700}}>{d.range}</span></div></td>
-                  <td style={{padding:'11px 14px',fontWeight:900,color:d.color,fontSize:14}}>{d.count}</td>
-                  <td style={{padding:'11px 14px'}}><div style={{display:'flex',gap:6,alignItems:'center'}}><div style={{height:6,width:60,background:'#f1f5f9',borderRadius:3}}><div style={{height:'100%',width:(d.pct||0)+'%',background:d.color,borderRadius:3}}/></div><span style={{fontWeight:700,color:d.color}}>{(d.pct||0)}%</span></div></td>
-                  <td style={{padding:'11px 14px',color:'#475569'}}>{['6 months','1.5 years','3.5 years','7.5 years','12+ years'][i]}</td>
-                  <td style={{padding:'11px 14px'}}><span style={{fontSize:8,fontWeight:700,padding:'3px 9px',borderRadius:20,background:d.color+'18',color:d.color}}>{['New','Growing','Core','Senior','Expert'][i]}</span></td>
+              {chartData.map((b,i)=>(
+                <tr key={i} style={{borderBottom:'1px solid #f1f5f9'}}>
+                  <td style={{padding:'10px 14px',fontSize:13}}><span style={{display:'inline-block',width:10,height:10,borderRadius:'50%',background:b.color,marginRight:8}}/>{b.bucket}</td>
+                  <td style={{padding:'10px 14px',fontSize:13,fontWeight:700,color:b.color}}>{b.count}</td>
+                  <td style={{padding:'10px 14px',fontSize:12,color:'#64748b'}}>{total?((b.count/total)*100).toFixed(1):0}%</td>
                 </tr>
               ))}
-              <tr style={{background:'#f8fafc',fontWeight:900}}>
-                <td style={{padding:'11px 14px',fontWeight:900}}>TOTAL</td>
-                <td style={{padding:'11px 14px',fontWeight:900,color:A,fontSize:14}}>{TOTAL}</td>
-                <td style={{padding:'11px 14px',fontWeight:900,color:A}}>100%</td>
-                <td colSpan={2} style={{padding:'11px 14px',color:'#64748b',fontSize:10}}>Avg tenure: {(DATA.reduce((s,d,i)=>s+d.count*([0.5,1.5,3.5,7.5,12][i]),0)/TOTAL).toFixed(1)} years</td>
-              </tr>
             </tbody>
           </table>
         </div>
-      )}
+      </div>
 
-      {sel&&(
-        <div style={{marginTop:14,background:'#fff',borderRadius:12,border:'1px solid #e2e8f0',padding:'14px 18px'}}>
-          <div style={{fontSize:11,fontWeight:700,marginBottom:10}}>Employees in "{sel}"</div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:8}}>
-            {filtered.map(e=>(
-              <div key={e.name} style={{padding:'8px 12px',background:'#f8fafc',borderRadius:9,fontSize:10}}>
-                <div style={{fontWeight:700}}>{e.name}</div>
-                <div style={{color:'#64748b',fontSize:9}}>{e.dept} · {e.tenure}</div>
-              </div>
-            ))}
-          </div>
+      {employees.length > 0 && (
+        <div style={{background:'#fff',borderRadius:14,border:'1px solid #e2e8f0',overflow:'hidden'}}>
+          <div style={{padding:'12px 16px',fontWeight:800,fontSize:13,borderBottom:'1px solid #f1f5f9'}}>Longest Serving Employees</div>
+          <table style={{width:'100%',borderCollapse:'collapse'}}>
+            <thead><tr style={{background:'#f8fafc'}}>
+              {['Name','Department','Designation','Years','Joined'].map(h=><th key={h} style={{padding:'8px 14px',textAlign:'left',fontSize:10,fontWeight:700,color:'#64748b',textTransform:'uppercase'}}>{h}</th>)}
+            </tr></thead>
+            <tbody>
+              {employees.slice(0,10).map((e,i)=>(
+                <tr key={i} style={{borderBottom:'1px solid #f1f5f9',background:i%2?'#fafafa':'#fff'}}>
+                  <td style={{padding:'9px 14px',fontSize:13,fontWeight:600}}>{e.name}</td>
+                  <td style={{padding:'9px 14px',fontSize:12,color:'#64748b'}}>{e.dept}</td>
+                  <td style={{padding:'9px 14px',fontSize:12,color:'#64748b'}}>{e.designation}</td>
+                  <td style={{padding:'9px 14px',fontSize:13,fontWeight:700,color:'#1e40af'}}>{e.years} yrs</td>
+                  <td style={{padding:'9px 14px',fontSize:11,color:'#94a3b8'}}>{e.joined}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

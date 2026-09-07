@@ -1,57 +1,40 @@
 # FILE: backend/Dockerfile
-# eLogix HRMS — Backend Docker Image
-# FIX: alembic.ini is at project root (/opt/elogix/), not in /backend/
-# So alembic must run from /opt/elogix/, not /opt/elogix/backend/
+# eLogix HRMS — Flask Backend + Celery Worker
+# Multi-stage build: slim production image
 # eLogix Technologies · www.elogix.com.np
 
-FROM python:3.11-slim-bookworm
+FROM python:3.12-slim AS base
 
-# ── System packages ───────────────────────────────────────────────────
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONFAULTHANDLER=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+WORKDIR /opt/elogix/backend
+
+# System dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    postgresql-client \
-    libpq-dev \
-    gcc \
-    curl \
-    netcat-openbsd \
+    libpq-dev gcc curl \
     && rm -rf /var/lib/apt/lists/*
 
-# ── Create non-root user ──────────────────────────────────────────────
-RUN groupadd -r elogix && useradd -r -g elogix -d /opt/elogix elogix
+# Install Python dependencies
+COPY backend/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# ── Working directory ─────────────────────────────────────────────────
-# Set WORKDIR to PROJECT ROOT (not /backend/) so alembic.ini is found
-WORKDIR /opt/elogix
+# Copy backend source
+COPY backend/ .
+COPY alembic.ini ../alembic.ini
+COPY alembic/    ../alembic/
 
-# ── Python dependencies ───────────────────────────────────────────────
-# Copy requirements first (Docker layer caching)
-COPY backend/requirements.txt ./backend/requirements.txt
-RUN pip install --no-cache-dir --upgrade pip \
- && pip install --no-cache-dir -r backend/requirements.txt
-
-# ── Copy project files ────────────────────────────────────────────────
-# Copy the ENTIRE project so alembic.ini, alembic/ folder, and backend/ are all present
-COPY . .
-
-# ── Ensure alembic.ini exists at the correct location ─────────────────
-# alembic.ini must be at /opt/elogix/alembic.ini
-RUN ls -la alembic.ini 2>/dev/null || (echo "ERROR: alembic.ini missing from project root!" && exit 1)
-RUN ls -la alembic/env.py 2>/dev/null || (echo "ERROR: alembic/env.py missing!" && exit 1)
-
-# ── Permissions ───────────────────────────────────────────────────────
-RUN mkdir -p uploads logs \
- && chown -R elogix:elogix /opt/elogix
-
-# ── Entrypoint ────────────────────────────────────────────────────────
-COPY backend/docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh \
- && chown elogix:elogix /docker-entrypoint.sh
-
+# Create non-root user
+RUN addgroup --system elogix && adduser --system --ingroup elogix elogix \
+    && chown -R elogix:elogix /opt/elogix
 USER elogix
 
 EXPOSE 5000
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:5000/api/health || exit 1
-
-ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["gunicorn"]
+# Default: run gunicorn (overridden in docker-compose for celery)
+CMD ["gunicorn", "app:app", "--bind", "0.0.0.0:5000", \
+     "--workers", "4", "--worker-class", "gthread", "--threads", "2", \
+     "--timeout", "120", "--preload"]

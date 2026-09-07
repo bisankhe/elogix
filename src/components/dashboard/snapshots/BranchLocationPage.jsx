@@ -238,29 +238,6 @@ function AddBranchModal({ onClose, onSave }) {
   )
 }
 
-
-function _getSession() {
-  try {
-    return JSON.parse(
-      sessionStorage.getItem('elogix_session') ||
-      localStorage.getItem('elogix_session') || 'null'
-    ) || {}
-  } catch (_e) { return {} }
-}
-function _useAppFallback() {
-  const s = _getSession()
-  return {
-    sub: s?.last_page || '', persona: s?.persona || s?.user?.role || 'employee',
-    lang: s?.lang || 'en', currency: s?.currency || 'NPR',
-    company: s?.company || {}, user: s?.user || {},
-    darkMode: false, setDarkMode: () => {},
-    navTo: (p) => window.dispatchEvent(new CustomEvent('elogix:nav', { detail: { page: p } })),
-    switchPersona: () => {}, setShowNotif: () => {}, setShowAI: () => {},
-    setSidebarOpen: () => {}, sidebarOpen: true,
-    currentPersona: { id: s?.persona || 'employee', icon: '👤', color: '#7c3aed', label: '' },
-  }
-}
-
 export default function BranchLocationPage() {
   const [branches,    setBranches]    = useState(MOCK_BRANCHES)
   const [contextMenu, setContextMenu] = useState(null)

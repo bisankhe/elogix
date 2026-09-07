@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { tenantCanAccess } from '../../../utils/tenantPermissions.js'
 // FILE: src/components/dashboard/snapshots/LeaveBalancePage.jsx
 // eLogix HRMS — Leave Balance Report
 // FIXED: Missing key prop on React.Fragment in map (line 211 & 237)
@@ -79,11 +80,10 @@ const LeaveCell = ({ code, value, type }) => {
 
 export default function LeaveBalancePage() {
   const slug    = getSessionSlug()
-  const access  = resolveTenantAccess(slug)
   const sess    = getSession()
   const company = sess.company || {}
 
-  if (!access.hasAccess('leave')) {
+  if (!tenantCanAccess('leave-request')) {
     return <AccessDenied moduleName="Leave Balance" />
   }
 
@@ -174,7 +174,7 @@ export default function LeaveBalancePage() {
 
   return (
     // ── Fixed layout with right + bottom scrollbar ─────────────────
-    <div style={{position:'relative', width:'100%', minHeight:'100vh', fontFamily:"'Segoe UI',system-ui,sans-serif",
+    <div style={{position:'fixed', inset:0, fontFamily:"'Segoe UI',system-ui,sans-serif",
       background:'#fdf4ff', display:'flex', flexDirection:'column', overflow:'hidden'}}>
 
       <style>{`
@@ -385,7 +385,7 @@ export default function LeaveBalancePage() {
 
       {/* SIGNATURE MODAL */}
       {showSig && (
-        <div style={{position:'relative',width:'100%',minHeight:'100vh',background:'rgba(0,0,0,.6)',zIndex:1000,
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.6)',zIndex:1000,
           display:'flex',alignItems:'center',justifyContent:'center',padding:16}}
           onClick={() => setShowSig(false)}>
           <div style={{background:'#fff',borderRadius:18,width:620,maxWidth:'96vw',

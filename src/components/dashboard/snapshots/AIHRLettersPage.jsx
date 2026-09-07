@@ -334,23 +334,18 @@ function _getSession() {
 function _useAppFallback() {
   const s = _getSession()
   return {
-    sub: s?.last_page || '', persona: s?.persona || s?.user?.role || 'employee',
-    lang: s?.lang || 'en', currency: s?.currency || 'NPR',
-    company: s?.company || {}, user: s?.user || {},
-    darkMode: false, setDarkMode: () => {},
-    navTo: (p) => window.dispatchEvent(new CustomEvent('elogix:nav', { detail: { page: p } })),
-    switchPersona: () => {}, setShowNotif: () => {}, setShowAI: () => {},
-    setSidebarOpen: () => {}, sidebarOpen: true,
-    currentPersona: { id: s?.persona || 'employee', icon: '👤', color: '#7c3aed', label: '' },
+    persona: s?.user?.role || 'employee',
+    company: s?.company || {},
+    user:    s?.user    || {},
   }
 }
 
 export default function AIHRLettersPage() {
-  const { currentPersona, persona } = _useAppFallback()
+  const { persona } = _useAppFallback()
   const [step,          setStep]          = useState(1)   // 1=type 2=vars 3=preview 4=sign 5=done
   const [letterType,    setLetterType]    = useState(null)
   const [vars,          setVars]          = useState({})
-  const [lang,          setLang]          = useState('both')  // both | english | nepali
+  const [letterLang,    setLetterLang]    = useState('both')  // both | english | nepali
   const [letter,        setLetter]        = useState(null)    // {english, nepali}
   const [generating,    setGenerating]    = useState(false)
   const [editEn,        setEditEn]        = useState('')
@@ -441,13 +436,13 @@ Return ONLY valid JSON: {"english":"...","nepali":"..."}`
         <div style="font-size:11px;color:#555;margin-top:4px;">${s.name} — ${new Date(s.timestamp).toLocaleString()} — ${s.method}</div>
       </div>`).join('') : '<div style="margin-top:20px;border-top:1px solid #ccc;padding-top:12px;font-style:italic;color:#999">[Signature Pending]</div>'
 
-    const enHtml = lang !== 'nepali' ? `
+    const enHtml = letterLang !== 'nepali' ? `
       <div style="margin-bottom:32px;">
         <h3 style="color:#1e1b4b;border-bottom:1px solid #7c3aed;padding-bottom:6px;">English</h3>
         <pre style="font-family:'Times New Roman',serif;font-size:12px;line-height:1.8;white-space:pre-wrap;">${editEn}</pre>
       </div>` : ''
 
-    const neHtml = lang !== 'english' ? `
+    const neHtml = letterLang !== 'english' ? `
       <div>
         <h3 style="color:#1e1b4b;border-bottom:1px solid #7c3aed;padding-bottom:6px;">Nepali (नेपाली)</h3>
         <pre style="font-family:'Noto Sans Devanagari','Arial Unicode MS',serif;font-size:12px;line-height:1.9;white-space:pre-wrap;">${editNe}</pre>
@@ -580,7 +575,7 @@ Return ONLY valid JSON: {"english":"...","nepali":"..."}`
                 {/* Language selector */}
                 <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
                   {[['both', '🌐 Both'], ['english', '🇬🇧 English'], ['nepali', '🇳🇵 Nepali']].map(([v, l]) => (
-                    <button key={v} onClick={() => setLang(v)}
+                    <button key={v} onClick={() => setLetterLang(v)}
                       style={{ padding: '5px 12px', borderRadius: 20, border: `1px solid ${lang === v ? P : '#e2e8f0'}`, background: lang === v ? `${P}10` : '#fff', color: lang === v ? P : '#64748b', fontSize: 9, fontWeight: 700, cursor: 'pointer' }}>
                       {l}
                     </button>

@@ -2,7 +2,8 @@
 // eLogix HRMS — Company User & Role Management
 // HR Admins create users, assign roles, set department/branch hierarchy
 // eLogix Technologies · www.elogix.com.np
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { tenantCanAccess } from '../../../utils/tenantPermissions.js'
 import { resolveTenantAccess, getSessionSlug, getTenantPermissionRecord } from '../../../utils/tenantPermissions.js'
 import AccessDenied from '../../shared/AccessDenied.jsx'
 
@@ -43,9 +44,9 @@ const MODULES = ['employees','attendance','leave','payroll','recruitment','perfo
 
 export default function UserManagementPage() {
   const slug   = getSessionSlug()
-  const access = resolveTenantAccess(slug)
-  if (!access.hasAccess('permissions')) {
-    return <AccessDenied moduleName="User Management" />
+  // Tenant access check
+  if (!tenantCanAccess('user-management')) {
+    return <AccessDenied moduleName="UserManagement" />
   }
   // Read current user level from session (no useAuth hook needed outside App context)
   const myLevel = (() => {
@@ -73,6 +74,7 @@ export default function UserManagementPage() {
   const planRoles = PLAN_ROLE_KEYS[plan] || SYSTEM_ROLES.map(r=>r.slug)
   const availableRoles = SYSTEM_ROLES.filter(r => planRoles.includes(r.slug) || !PLAN_ROLE_KEYS[plan])
 
+  const [_apiLoading, _setApiLoading] = useState(false)
   const [tab, setTab]         = useState('users')
   const [users, setUsers]     = useState(MOCK_USERS)
   const [search, setSearch]   = useState('')
@@ -163,6 +165,29 @@ export default function UserManagementPage() {
       </div>
     )
   }
+
+
+  // SaaS DB — load real tenant data (fallback to mock if no token/API down)
+  useEffect(() => {
+    const _token = localStorage.getItem('access_token')
+    const _slug  = getSessionSlug()
+    if (!_token) return
+    _setApiLoading(true)
+    fetch('/api/v1/company-users', {
+      headers: {
+        'Authorization': `Bearer ${_token}`,
+        'X-Tenant-Slug': _slug,
+        'Content-Type': 'application/json',
+      }
+    })
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(d => {
+        const items = d.users || d.data || d.items || []
+        if (items.length > 0) setTab(items)
+      })
+      .catch(() => {/* keep mock */})
+      .finally(() => _setApiLoading(false))
+  }, [])
 
   return (
     <div style={{fontFamily:'system-ui,sans-serif',minHeight:'100vh',background:'#f0f7ff'}}>

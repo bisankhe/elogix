@@ -26,8 +26,17 @@ import { useAuth }    from '../../context/AuthContext.jsx'
 import { tenantGet, tenantSet } from '../../utils/tenantRouting.js'
 import {
   resolveTenantAccess, getTenantPermissionRecord,
-  PLAN_DEFAULT_MODULES,
-} from '../../utils/tenantPermissions.js'
+} from '../../../utils/tenantPermissions.js'
+
+// ── Plan modules defined locally (no dependency on tenantPermissions export) ──
+const PLAN_DEFAULT_MODULES = {
+  trial     : ['employee-directory','live-attendance','leave-request','payslip-generation','announcement-board','employee-profile'],
+  starter   : ['employee-directory','live-attendance','leave-request','leave-approval','payslip-generation','payroll-processing','announcement-board','employee-profile','user-management','department-setup','shift-setup','standard-reports','ats-dashboard'],
+  growth    : ['employee-directory','live-attendance','leave-request','leave-approval','payslip-generation','payroll-processing','announcement-board','employee-profile','user-management','department-setup','shift-setup','standard-reports','ats-dashboard','performance-dashboard','goal-assignment','kpi-management','training-calendar','biometric-attendance','roster-management','hr-analytics','employee-engagement','ai-insights','automated-payroll','salary-tax','ssf-compliance'],
+  business  : ['all-growth-modules','bi-dashboard','predictive-analytics','okr-management','succession-planning','lms-portal','vendor-management','advanced-analytics','api-integration','workflow-automation','ai-hr-analytics','ai-attrition','ai-performance-insights'],
+  enterprise: ['all'],
+  unlimited : ['all'],
+}
 
 // ── Inline style tokens (mirrors CDS variables) ───────────────────────
 const S = {

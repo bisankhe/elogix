@@ -697,17 +697,11 @@ import NoLogInReportPage from './components/dashboard/snapshots/NoLogInReportPag
 import LateReportingPage from './components/dashboard/snapshots/LateReportingPage.jsx'
 import EarlyDeparturePage from './components/dashboard/snapshots/EarlyDeparturePage.jsx'
 
-import { AppContext as _AppContextBase } from './context/AppContext.jsx'
-export const AppContext = _AppContextBase
+export const AppContext = createContext(null)
 export const useApp = () => {
   const ctx = useContext(AppContext)
-  return ctx || {
-    sub:'', navTo:()=>{}, persona:'employee', switchPersona:()=>{},
-    currentPersona:{id:'employee',label:'Employee',icon:'👤',color:'#64748b'},
-    lang:'en', currency:'NPR', company:null, user:null,
-    showNotif:false, setShowNotif:()=>{}, showAI:false, setShowAI:()=>{},
-    sidebarOpen:true, setSidebarOpen:()=>{}, darkMode:false, setDarkMode:()=>{},
-  }
+  if (!ctx) throw new Error('useApp must be used inside <App />')
+  return ctx
 }
 
 // ── Route Map ─────────────────────────────────────────────────
@@ -1520,6 +1514,22 @@ export default function App({ initialPage, onLogout }) {
 
   const navTo          = useCallback((id) => setSub(id), [])
 
+  // ── Global navigation event listener ─────────────────────────────
+  // QuickDock, Sidebar, HRCopilot dispatch 'elogix:nav' instead of calling navTo directly
+  useEffect(() => {
+    const onNav   = (e) => { if (e.detail?.page) setSub(e.detail.page) }
+    const onNotif = ()  => setShowNotif(v => !v)
+    const onAI    = ()  => setShowAI(v => !v)
+    window.addEventListener('elogix:nav',          onNav)
+    window.addEventListener('elogix:notif-toggle', onNotif)
+    window.addEventListener('elogix:ai-toggle',    onAI)
+    return () => {
+      window.removeEventListener('elogix:nav',          onNav)
+      window.removeEventListener('elogix:notif-toggle', onNotif)
+      window.removeEventListener('elogix:ai-toggle',    onAI)
+    }
+  }, [])
+
   // Profile & Settings panel state
   const [showProfile,  setShowProfile]  = useState(false)
   const [showSettings, setShowSettings] = useState(false)
@@ -1600,6 +1610,8 @@ export default function App({ initialPage, onLogout }) {
             onLogout={handleLogout}
             onProfile={() => setShowProfile(true)}
             onSettings={() => setShowSettings(true)}
+            navTo={navTo}
+            sub={sub}
           />
 
           {/* Breadcrumb */}

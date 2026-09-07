@@ -298,17 +298,20 @@ function _getSession() {
     ) || {}
   } catch (_e) { return {} }
 }
-function _useAppFallback() {
+function _getCurrency() {
   const s = _getSession()
+  const code = s?.company?.currency || 'NPR'
+  return { code, symbol: {NPR:'रु',USD:'$',INR:'₹',EUR:'€',GBP:'£'}[code] || code }
+}
+function _useAppFallback() {
+  const s = _getSession(); const cc = _getCurrency()
   return {
-    sub: s?.last_page || '', persona: s?.persona || s?.user?.role || 'employee',
-    lang: s?.lang || 'en', currency: s?.currency || 'NPR',
-    company: s?.company || {}, user: s?.user || {},
-    darkMode: false, setDarkMode: () => {},
-    navTo: (p) => window.dispatchEvent(new CustomEvent('elogix:nav', { detail: { page: p } })),
-    switchPersona: () => {}, setShowNotif: () => {}, setShowAI: () => {},
-    setSidebarOpen: () => {}, sidebarOpen: true,
-    currentPersona: { id: s?.persona || 'employee', icon: '👤', color: '#7c3aed', label: '' },
+    sub:'', persona:s?.user?.role||'employee', lang:'en', currency:cc.code, cc,
+    company:s?.company||{}, user:s?.user||{}, t:()=>'',
+    navTo:(p)=>window.dispatchEvent(new CustomEvent('elogix:nav',{detail:{page:p}})),
+    switchPersona:()=>{}, setShowNotif:()=>{}, setShowAI:()=>{},
+    setSidebarOpen:()=>{}, sidebarOpen:true, darkMode:false, setDarkMode:()=>{},
+    currentPersona:{id:'employee',icon:'👤',color:'#7c3aed',label:''},
   }
 }
 

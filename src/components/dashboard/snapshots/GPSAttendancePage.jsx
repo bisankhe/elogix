@@ -6,6 +6,7 @@
 // eLogix Technologies · www.elogix.com.np
 
 import { useState, useEffect } from 'react'
+import { tenantCanAccess } from '../../../utils/tenantPermissions.js'
 import { PageHeader, SearchBar, ContextMenu, ExcelModal } from './DeptSetupShared.jsx'
 import { resolveTenantAccess, getSessionSlug } from '../../../utils/tenantPermissions.js'
 import AccessDenied from '../../shared/AccessDenied.jsx'
@@ -40,11 +41,10 @@ const STATUS_CFG = {
 
 export default function GPSAttendancePage() {
   const slug   = getSessionSlug()
-  const access = resolveTenantAccess(slug)
   const sess   = getSession()
   const company = sess.company || {}
 
-  if (!access.hasAccess('attendance')) {
+  if (!tenantCanAccess('live-attendance')) {
     return <AccessDenied moduleName="GPS Attendance" />
   }
 
@@ -98,16 +98,10 @@ export default function GPSAttendancePage() {
 
   return (
     // ── Outer wrapper with fixed height + scroll ───────────────────
-    <div style={{position:'relative', width:'100%', minHeight:'100vh', fontFamily:"'Segoe UI',system-ui,sans-serif",
+    <div style={{position:'fixed', inset:0, fontFamily:"'Segoe UI',system-ui,sans-serif",
       background:'#f0f9ff', display:'flex', flexDirection:'column', overflow:'hidden'}}
       onClick={() => setCtx(null)}>
 
-      <style>{`
-        ::-webkit-scrollbar{width:8px;height:8px}
-        ::-webkit-scrollbar-track{background:#f1f5f9;border-radius:4px}
-        ::-webkit-scrollbar-thumb{background:#94a3b8;border-radius:4px}
-        ::-webkit-scrollbar-thumb:hover{background:#475569}
-      `}</style>
       {/* Toast */}
       {msg && <div style={{position:'fixed', bottom:20, right:20, zIndex:9999,
         background:msg.startsWith('❌')?'#fef2f2':'#f0fdf4',
@@ -240,7 +234,7 @@ export default function GPSAttendancePage() {
               🗺 Live Punch Map
             </div>
             <div style={{height:200, background:'linear-gradient(135deg,#e0f2fe,#cffafe)',
-              borderRadius:12, position:'relative', overflow:'visible'}}>
+              borderRadius:12, position:'relative', overflow:'hidden'}}>
               <div style={{position:'absolute', top:'40%', left:'30%', width:60, height:60,
                 borderRadius:'50%', border:`2px dashed ${A}`, background:`${A}10`}}/>
               {punches.map((p, i) => (

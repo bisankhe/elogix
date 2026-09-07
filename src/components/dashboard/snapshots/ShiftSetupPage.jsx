@@ -1,7 +1,7 @@
 // FILE: ShiftSetupPage.jsx - Shift Setup (Luxury HRIS)
 // Drag-and-drop shift planner, templates, conflict detection, Nepal Labour Act 2074
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Field, ExcelModal, PageHeader, AIImpact, Drawer, SearchBar, Badge, LuxCard, ContextMenu } from './DeptSetupShared.jsx'
 
 const G = 'linear-gradient(135deg,#0369a1 0%,#0ea5e9 60%,#06b6d4 100%)'
@@ -65,17 +65,6 @@ function AddShiftModal({onClose,onSave}) {
   return (
     <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.65)',zIndex:5000,display:'flex',alignItems:'center',justifyContent:'center',padding:16}} onClick={onClose}>
       <div style={{background:'#fff',borderRadius:20,width:720,maxHeight:'92vh',overflow:'auto'}} onClick={e=>e.stopPropagation()}>
-      {apiLoading && (
-        <div style={{textAlign:'center',padding:40,color:'#7c3aed',fontSize:13,fontWeight:600}}>
-          <div style={{fontSize:32,marginBottom:8}}>⟳</div>Loading...
-        </div>
-      )}
-      {apiError && !apiLoading && (
-        <div style={{padding:'8px 14px',background:'#fef2f2',border:'1px solid #fecaca',
-          borderRadius:8,fontSize:12,color:'#dc2626',marginBottom:8,fontWeight:600}}>
-          ⚠️ {apiError}
-        </div>
-      )}
         <div style={{background:G,padding:'20px 28px',position:'sticky',top:0,zIndex:10}}>
           <div style={{fontSize:20,fontWeight:900,color:'#fff'}}>+ Create New Shift</div>
           <div style={{fontSize:11,color:'rgba(255,255,255,.75)',marginTop:3}}>Voice input enabled. Nepal Labour Act 2074 rules auto-applied.</div>
@@ -111,21 +100,7 @@ function AddShiftModal({onClose,onSave}) {
   )
 }
 
-
-function _getSession() {
-  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}}
-}
-function _getTenantCtx() {
-  const s=_getSession()
-  const token=localStorage.getItem('access_token')||s?.token||''
-  const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
-  return {token,slug,valid:!!(token&&slug)}
-}
-
 export default function ShiftSetupPage() {
-  const [apiData,setApiData]=useState(null)
-  const [apiLoading,setApiLoading]=useState(true)
-  const [apiError,setApiError]=useState(null)
   const [shifts, setShifts] = useState(SHIFT_TYPES)
   const [view, setView] = useState('cards')
   const [selected, setSelected] = useState(null)
@@ -136,17 +111,6 @@ export default function ShiftSetupPage() {
 
   const filtered = shifts.filter(s=>!search||s.name.toLowerCase().includes(search.toLowerCase())||s.code.toLowerCase().includes(search.toLowerCase()))
   const totalEmp = shifts.reduce((s,sh)=>s+sh.emp_count,0)
-
-  useEffect(()=>{
-    const {token,slug,valid} = _getTenantCtx()
-    if(!valid){setApiLoading(false);return}
-    setApiLoading(true);setApiError(null)
-    fetch('/api/v1/attendance-setup/shifts',{headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}})
-      .then(r=>{if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));throw new Error('Session expired')}if(!r.ok)throw new Error(`Error ${r.status}`);return r.json()})
-      .then(d=>{const p=d.shifts||d.data||d;if(p)setApiData(p)})
-      .catch(err=>setApiError(err.message))
-      .finally(()=>setApiLoading(false))
-  },[])
 
   return (
     <div onClick={()=>setCtx(null)}>

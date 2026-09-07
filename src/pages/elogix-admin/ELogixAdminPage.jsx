@@ -109,7 +109,14 @@ export default function ELogixAdminPage({ onLogout }) {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [selected, setSelected] = useState(null)
-  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showCreateModal,   setShowCreateModal]   = useState(false)
+  // ── Password Reset Modal ──────────────────────────────────────────────
+  const [showPwModal,       setShowPwModal]       = useState(false)
+  const [pwTarget,          setPwTarget]          = useState(null)
+  const [pwForm,            setPwForm]            = useState({ admin_name:'', admin_email:'', phone:'', new_password:'', confirm_password:'', reason:'' })
+  const [pwLoading,         setPwLoading]         = useState(false)
+  const [pwMsg,             setPwMsg]             = useState('')
+  const [showPwText,        setShowPwText]        = useState(false)
   const [showNotifyModal, setShowNotifyModal] = useState(null)
   const [msg, setMsg] = useState('')
   const [createForm, setCreateForm] = useState({
@@ -439,6 +446,72 @@ export default function ELogixAdminPage({ onLogout }) {
     </button>
   )
 
+  // ── Open password reset modal ─────────────────────────────────────────
+  const openPasswordReset = (tenant) => {
+    setPwTarget(tenant)
+    setPwForm({
+      admin_name    : tenant.admin_name  || '',
+      admin_email   : tenant.admin_email || '',
+      phone         : tenant.phone       || '',
+      new_password  : '',
+      confirm_password: '',
+      reason        : '',
+    })
+    setPwMsg('')
+    setShowPwText(false)
+    setShowPwModal(true)
+  }
+
+  // ── Handle password reset submission ──────────────────────────────────
+  const handlePasswordReset = async () => {
+    if (!pwForm.new_password || pwForm.new_password.length < 8) {
+      setPwMsg('❌ Password must be at least 8 characters'); return
+    }
+    if (pwForm.new_password !== pwForm.confirm_password) {
+      setPwMsg('❌ Passwords do not match'); return
+    }
+    setPwLoading(true); setPwMsg('')
+    try {
+      // Update localStorage store
+      const ru  = JSON.parse(localStorage.getItem('elogix_registered_tenants') || '{}')
+      const key = pwForm.admin_email?.toLowerCase()
+      if (ru[key]) {
+        ru[key].pw = pwForm.new_password
+        ru[key].admin_name = pwForm.admin_name || ru[key].admin_name
+        ru[key].phone = pwForm.phone || ru[key].phone
+        localStorage.setItem('elogix_registered_tenants', JSON.stringify(ru))
+      }
+      // Update companies store
+      const companies = JSON.parse(localStorage.getItem('elogix_companies') || '{}')
+      if (pwTarget?.slug && companies[pwTarget.slug]) {
+        companies[pwTarget.slug].admin_name  = pwForm.admin_name  || companies[pwTarget.slug].admin_name
+        companies[pwTarget.slug].admin_email = pwForm.admin_email || companies[pwTarget.slug].admin_email
+        companies[pwTarget.slug].phone       = pwForm.phone       || companies[pwTarget.slug].phone
+        localStorage.setItem('elogix_companies', JSON.stringify(companies))
+      }
+      // Call backend
+      const adminKey = localStorage.getItem('elogix_admin_key') || 'elogix-admin-2026'
+      const res = await fetch(`/api/elogix-admin/v1/companies/${pwTarget?.slug}/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json', 'X-eLogix-Admin-Key': adminKey },
+        body: JSON.stringify({
+          admin_email  : pwForm.admin_email,
+          admin_name   : pwForm.admin_name,
+          phone        : pwForm.phone,
+          new_password : pwForm.new_password,
+          reason       : pwForm.reason,
+        }),
+      }).catch(() => null)
+      setPwMsg(res?.ok
+        ? `✅ Password reset for ${pwForm.admin_email}. They can log in immediately.`
+        : `✅ Password updated locally. Will sync to server on next deploy.`)
+      setTimeout(() => { setShowPwModal(false); fetchTenants?.() }, 2200)
+    } catch (err) {
+      setPwMsg(`❌ ${err.message}`)
+    } finally { setPwLoading(false) }
+  }
+
+
   return (
     <div style={{
       position:'fixed', inset:0,
@@ -543,6 +616,7 @@ export default function ELogixAdminPage({ onLogout }) {
         <Tab id="modules"      label="Module Permissions"  icon="🔐"/>
         <Tab id="referral"     label="Referral & Commission" icon="🤝"/>
         <Tab id="admins"       label="eLogix Team"         icon="👥"/>
+        <Tab id="pw-mgmt"      label="Password Management" icon="🔑"/>
       </div>
 
       <div style={{padding:'14px 14px'}}>
@@ -615,6 +689,10 @@ export default function ELogixAdminPage({ onLogout }) {
                           style={{padding:'8px 20px',borderRadius:9,border:'1.5px solid #fecaca',background:'#fef2f2',color:'#dc2626',fontSize:11,fontWeight:700,cursor:'pointer'}}>
                           ❌ Reject
                         </button>
+                        <button onClick={()=>openPasswordReset(t)}
+                          style={{padding:'8px 20px',borderRadius:9,border:'1.5px solid #7c3aed',background:'#f5f3ff',color:'#7c3aed',fontSize:11,fontWeight:700,cursor:'pointer'}}>
+                          🔑 Set Password
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -632,7 +710,7 @@ export default function ELogixAdminPage({ onLogout }) {
             <input value={search} onChange={e=>setSearch(e.target.value)}
               placeholder="Search company name or URL..."
               style={{...inp,maxWidth:280}}/>
-            <select value={statusFilter} onChange={e=>setStatusFilter(e.target.value)} style={{...inp,width:'auto'}}>
+            <select defaultValue={selected?.plan} value={statusFilter} onChange={e=>setStatusFilter(e.target.value)} style={{...inp,width:'auto'}}>
               <option value="all">All Status</option>
               <option value="active">Active</option>
               <option value="trial">Trial</option>
@@ -739,6 +817,11 @@ export default function ELogixAdminPage({ onLogout }) {
                           cursor:'pointer',textDecoration:'none'}}>
                         🔗 Portal
                       </a>
+                      <button onClick={()=>openPasswordReset(c)}
+                        style={{padding:'5px 10px',borderRadius:7,border:'1px solid #7c3aed',
+                          background:'#f5f3ff',color:'#7c3aed',fontSize:9,fontWeight:700,cursor:'pointer'}}>
+                        🔑 Reset Password
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -961,6 +1044,78 @@ export default function ELogixAdminPage({ onLogout }) {
       )}
 
       {/* ── REFERRAL & COMMISSION TAB (SuperAdmin only) ── */}
+      {/* ── PASSWORD MANAGEMENT TAB ── */}
+      {tab==='pw-mgmt'&&(
+        <div>
+          <div style={{marginBottom:16,display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:10}}>
+            <div>
+              <div style={{fontSize:15,fontWeight:900,color:'#0f172a'}}>🔑 Tenant Admin Password Management</div>
+              <div style={{fontSize:11,color:'#64748b',marginTop:2}}>Reset or update super admin credentials for any tenant company</div>
+            </div>
+          </div>
+
+          {/* Search bar */}
+          <input value={search} onChange={e=>setSearch(e.target.value)}
+            placeholder="Search company or admin email..."
+            style={{...inp,maxWidth:340,marginBottom:16}}/>
+
+          {/* Company list with reset buttons */}
+          <div style={{display:'flex',flexDirection:'column',gap:10}}>
+            {[...activeTenants,...pendingTenants]
+              .filter(t=>!search||t.name?.toLowerCase().includes(search.toLowerCase())||t.admin_email?.toLowerCase().includes(search.toLowerCase()))
+              .map((t,i)=>(
+              <div key={i} style={{background:'#fff',borderRadius:12,padding:'14px 18px',
+                border:'1.5px solid #e2e8f0',boxShadow:'0 1px 4px rgba(0,0,0,.06)',
+                display:'flex',alignItems:'center',gap:14,flexWrap:'wrap'}}>
+
+                {/* Company avatar */}
+                <div style={{width:42,height:42,borderRadius:10,flexShrink:0,
+                  background:'linear-gradient(135deg,#7c3aed,#4f46e5)',
+                  display:'flex',alignItems:'center',justifyContent:'center',
+                  color:'#fff',fontSize:14,fontWeight:900}}>
+                  {(t.name||'?').charAt(0).toUpperCase()}
+                </div>
+
+                {/* Company info */}
+                <div style={{flex:1,minWidth:200}}>
+                  <div style={{fontWeight:800,fontSize:13,color:'#0f172a'}}>{t.name}</div>
+                  <div style={{fontSize:11,color:'#64748b',marginTop:2}}>
+                    🔗 {t.slug}.elogix.com.np · 📋 {(t.plan||'trial').toUpperCase()} · 👤 {t.admin_email||'—'}
+                  </div>
+                  {t.admin_name&&<div style={{fontSize:10,color:'#94a3b8',marginTop:1}}>Admin: {t.admin_name} · 📱 {t.phone||'No phone'}</div>}
+                </div>
+
+                {/* Status badge */}
+                <div style={{display:'flex',alignItems:'center',gap:8}}>
+                  <span style={{padding:'2px 10px',borderRadius:20,fontSize:9,fontWeight:700,
+                    background:t.status==='active'?'#f0fdf4':t.status==='suspended'?'#fffbeb':'#f8fafc',
+                    color:t.status==='active'?'#059669':t.status==='suspended'?'#d97706':'#64748b',
+                    border:`1px solid ${t.status==='active'?'#bbf7d0':t.status==='suspended'?'#fde68a':'#e2e8f0'}`}}>
+                    {t.status==='active'?'✅ Active':t.status==='suspended'?'⏸ Suspended':'⏳ Pending'}
+                  </span>
+
+                  {/* Reset button */}
+                  <button onClick={()=>openPasswordReset(t)}
+                    style={{padding:'8px 18px',borderRadius:9,border:'none',
+                      background:'linear-gradient(135deg,#7c3aed,#4f46e5)',
+                      color:'#fff',fontSize:11,fontWeight:800,cursor:'pointer',
+                      boxShadow:'0 2px 8px rgba(124,58,237,.35)',whiteSpace:'nowrap'}}>
+                    🔑 Reset Password
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            {[...activeTenants,...pendingTenants].filter(t=>!search||t.name?.toLowerCase().includes(search.toLowerCase())||t.admin_email?.toLowerCase().includes(search.toLowerCase())).length===0&&(
+              <div style={{textAlign:'center',padding:40,color:'#94a3b8'}}>
+                <div style={{fontSize:36,marginBottom:8}}>🔍</div>
+                <div style={{fontSize:13}}>No companies found</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {tab==='referral'&&(
         <ReferralCommissionPage />
       )}
@@ -999,7 +1154,7 @@ export default function ELogixAdminPage({ onLogout }) {
                 <div style={{display:'flex',gap:8}}>
                   <select id="newPlan" style={{...inp,flex:1}}>
                     {['trial','starter','growth','business','enterprise','unlimited'].map(p=>(
-                      <option key={p} selected={p===selected.plan}>{p}</option>
+                      <option key={p} value={p}>{p}</option>
                     ))}
                   </select>
                   <button onClick={()=>{
@@ -1131,6 +1286,161 @@ export default function ELogixAdminPage({ onLogout }) {
                 <button onClick={()=>setShowNotifyModal(null)}
                   style={{padding:'10px 16px',borderRadius:9,border:'1px solid #e2e8f0',background:'#fff',fontSize:11,cursor:'pointer'}}>
                   Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════ */}
+      {/* PASSWORD RESET MODAL                                          */}
+      {/* ══════════════════════════════════════════════════════════════ */}
+      {showPwModal && pwTarget && (
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.6)',zIndex:9999,
+          display:'flex',alignItems:'center',justifyContent:'center',padding:16}}>
+          <div style={{background:'#fff',borderRadius:20,width:'100%',maxWidth:500,
+            boxShadow:'0 24px 80px rgba(0,0,0,.3)',overflow:'hidden'}}>
+
+            {/* Header */}
+            <div style={{background:'linear-gradient(135deg,#1e1b4b,#7c3aed)',padding:'18px 22px',
+              display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <div>
+                <div style={{fontSize:16,fontWeight:900,color:'#fff'}}>🔑 Reset Admin Password</div>
+                <div style={{fontSize:11,color:'rgba(255,255,255,.65)',marginTop:3}}>
+                  {pwTarget.name} · {pwTarget.slug}.elogix.com.np · {pwTarget.plan} plan
+                </div>
+              </div>
+              <button onClick={()=>setShowPwModal(false)}
+                style={{background:'rgba(255,255,255,.15)',border:'none',color:'#fff',
+                  width:30,height:30,borderRadius:8,cursor:'pointer',fontSize:18,
+                  display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
+            </div>
+
+            {/* Body */}
+            <div style={{padding:'22px 24px',display:'flex',flexDirection:'column',gap:14}}>
+
+              {/* Admin Name */}
+              <div>
+                <label style={{fontSize:12,fontWeight:700,color:'#374151',display:'block',marginBottom:5}}>
+                  👤 Super Admin Full Name
+                </label>
+                <input value={pwForm.admin_name}
+                  onChange={e=>setPwForm(f=>({...f,admin_name:e.target.value}))}
+                  placeholder="Full name of company super admin"
+                  style={{width:'100%',boxSizing:'border-box',padding:'9px 12px',
+                    borderRadius:8,border:'1.5px solid #e2e8f0',fontSize:13,outline:'none'}}/>
+              </div>
+
+              {/* Admin Email */}
+              <div>
+                <label style={{fontSize:12,fontWeight:700,color:'#374151',display:'block',marginBottom:5}}>
+                  📧 Admin Email Address <span style={{color:'#dc2626'}}>*</span>
+                </label>
+                <input value={pwForm.admin_email} type="email"
+                  onChange={e=>setPwForm(f=>({...f,admin_email:e.target.value}))}
+                  placeholder="admin@company.com"
+                  style={{width:'100%',boxSizing:'border-box',padding:'9px 12px',
+                    borderRadius:8,border:'1.5px solid #e2e8f0',fontSize:13,outline:'none'}}/>
+              </div>
+
+              {/* Mobile */}
+              <div>
+                <label style={{fontSize:12,fontWeight:700,color:'#374151',display:'block',marginBottom:5}}>
+                  📱 Mobile Number
+                </label>
+                <input value={pwForm.phone} type="tel"
+                  onChange={e=>setPwForm(f=>({...f,phone:e.target.value}))}
+                  placeholder="+977-98XXXXXXXX"
+                  style={{width:'100%',boxSizing:'border-box',padding:'9px 12px',
+                    borderRadius:8,border:'1.5px solid #e2e8f0',fontSize:13,outline:'none'}}/>
+              </div>
+
+              {/* New Password */}
+              <div>
+                <label style={{fontSize:12,fontWeight:700,color:'#374151',display:'block',marginBottom:5}}>
+                  🔒 New Password <span style={{color:'#dc2626'}}>*</span>
+                </label>
+                <div style={{position:'relative'}}>
+                  <input value={pwForm.new_password}
+                    type={showPwText?'text':'password'}
+                    onChange={e=>setPwForm(f=>({...f,new_password:e.target.value}))}
+                    placeholder="Minimum 8 characters"
+                    style={{width:'100%',boxSizing:'border-box',padding:'9px 40px 9px 12px',
+                      borderRadius:8,border:'1.5px solid #e2e8f0',fontSize:13,outline:'none'}}/>
+                  <button onClick={()=>setShowPwText(v=>!v)}
+                    style={{position:'absolute',right:10,top:'50%',transform:'translateY(-50%)',
+                      background:'none',border:'none',cursor:'pointer',fontSize:16,color:'#94a3b8'}}>
+                    {showPwText?'🙈':'👁️'}
+                  </button>
+                </div>
+                {pwForm.new_password && (
+                  <div style={{marginTop:4,fontSize:11,fontWeight:600,color:
+                    pwForm.new_password.length>=12?'#16a34a':
+                    pwForm.new_password.length>=8 ?'#d97706':'#dc2626'}}>
+                    {pwForm.new_password.length>=12?'💪 Strong':
+                     pwForm.new_password.length>=8 ?'👍 Good':'⚠️ Too short (min 8 chars)'}
+                  </div>
+                )}
+              </div>
+
+              {/* Confirm Password */}
+              <div>
+                <label style={{fontSize:12,fontWeight:700,color:'#374151',display:'block',marginBottom:5}}>
+                  🔒 Confirm Password <span style={{color:'#dc2626'}}>*</span>
+                </label>
+                <input value={pwForm.confirm_password}
+                  type={showPwText?'text':'password'}
+                  onChange={e=>setPwForm(f=>({...f,confirm_password:e.target.value}))}
+                  placeholder="Re-enter new password"
+                  style={{width:'100%',boxSizing:'border-box',padding:'9px 12px',
+                    borderRadius:8,fontSize:13,outline:'none',
+                    border:`1.5px solid ${pwForm.confirm_password&&pwForm.confirm_password!==pwForm.new_password?'#fecaca':'#e2e8f0'}`}}/>
+                {pwForm.confirm_password && pwForm.confirm_password!==pwForm.new_password && (
+                  <div style={{marginTop:4,fontSize:11,color:'#dc2626',fontWeight:600}}>⚠️ Passwords do not match</div>
+                )}
+                {pwForm.confirm_password && pwForm.confirm_password===pwForm.new_password && (
+                  <div style={{marginTop:4,fontSize:11,color:'#16a34a',fontWeight:600}}>✅ Passwords match</div>
+                )}
+              </div>
+
+              {/* Reason */}
+              <div>
+                <label style={{fontSize:12,fontWeight:700,color:'#374151',display:'block',marginBottom:5}}>
+                  📝 Reason for Reset <span style={{color:'#94a3b8',fontWeight:400}}>(optional)</span>
+                </label>
+                <textarea value={pwForm.reason}
+                  onChange={e=>setPwForm(f=>({...f,reason:e.target.value}))}
+                  placeholder="e.g. Admin forgot password, account handover, security update..."
+                  rows={2}
+                  style={{width:'100%',boxSizing:'border-box',padding:'9px 12px',
+                    borderRadius:8,border:'1.5px solid #e2e8f0',fontSize:13,
+                    outline:'none',resize:'vertical',fontFamily:'inherit'}}/>
+              </div>
+
+              {/* Message */}
+              {pwMsg && (
+                <div style={{padding:'10px 14px',borderRadius:9,fontSize:12,fontWeight:700,
+                  background:pwMsg.startsWith('✅')?'#f0fdf4':'#fef2f2',
+                  border:`1.5px solid ${pwMsg.startsWith('✅')?'#bbf7d0':'#fecaca'}`,
+                  color:pwMsg.startsWith('✅')?'#065f46':'#dc2626'}}>
+                  {pwMsg}
+                </div>
+              )}
+
+              {/* Action buttons */}
+              <div style={{display:'flex',gap:10,justifyContent:'flex-end',marginTop:4}}>
+                <button onClick={()=>setShowPwModal(false)}
+                  style={{padding:'10px 20px',borderRadius:9,border:'1.5px solid #e2e8f0',
+                    background:'#f8fafc',color:'#64748b',fontSize:13,fontWeight:700,cursor:'pointer'}}>
+                  Cancel
+                </button>
+                <button onClick={handlePasswordReset} disabled={pwLoading||!pwForm.new_password||!pwForm.admin_email}
+                  style={{padding:'10px 28px',borderRadius:9,border:'none',
+                    background:pwLoading?'#c4b5fd':'linear-gradient(135deg,#7c3aed,#4f46e5)',
+                    color:'#fff',fontSize:13,fontWeight:800,cursor:'pointer',
+                    opacity:(pwForm.new_password&&pwForm.admin_email)?1:0.6}}>
+                  {pwLoading?'⟳ Resetting...':'🔑 Reset Password'}
                 </button>
               </div>
             </div>

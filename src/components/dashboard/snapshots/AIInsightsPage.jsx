@@ -1,127 +1,15 @@
-// ============================================================
 // FILE: src/components/dashboard/snapshots/AIInsightsPage.jsx
-// PURPOSE: AI Insights Center — attrition prediction,
-//          salary optimization, seasonal forecasting,
-//          ML model accuracy metrics
-// ============================================================
+// eLogix HRMS — AI Insights Centre
+// COMPLETE REWRITE — Zero mock data. 100% real tenant AI API.
+// API: GET /api/v1/ai/insights
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   LineChart, Line, BarChart, Bar, RadarChart, Radar,
   PolarGrid, PolarAngleAxis, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, Legend, Cell, PieChart, Pie,
+  Tooltip, ResponsiveContainer, Legend, Cell,
 } from 'recharts'
-import { StatCard }      from '../../shared/StatCard.jsx'
-import { Card }          from '../../shared/Card.jsx'
-import { Pill }          from '../../shared/Pill.jsx'
-import { ProgressBar }   from '../../shared/ProgressBar.jsx'
-import { PageTitle }     from '../../shared/PageTitle.jsx'
-import { AIInsightCard } from '../../shared/AIInsightCard.jsx'
-
-// ── Mock Data ───────────────────────────────────────────────
-const turnoverPrediction = [
-  { month: 'Jul', predicted: 7.8,  actual: 7.9  },
-  { month: 'Aug', predicted: 8.1,  actual: 8.0  },
-  { month: 'Sep', predicted: 8.4,  actual: 8.5  },
-  { month: 'Oct', predicted: 10.2, actual: 10.4 },
-  { month: 'Nov', predicted: 9.8,  actual: 9.6  },
-  { month: 'Dec', predicted: 8.6,  actual: 8.7  },
-  { month: 'Jan', predicted: 8.2,  actual: 8.3  },
-  { month: 'Feb', predicted: 8.0,  actual: 7.9  },
-  { month: 'Mar', predicted: 7.9,  actual: 8.0  },
-  { month: 'Apr', predicted: 8.1,  actual: 8.1  },
-  { month: 'May', predicted: 8.2,  actual: 8.2  },
-  { month: 'Jun', predicted: 8.4,  actual: null  },
-]
-
-const attritionByDept = [
-  { dept: 'IT',         risk: 14, color: '#ef4444' },
-  { dept: 'Sales',      risk: 8,  color: '#f59e0b' },
-  { dept: 'Finance',    risk: 5,  color: '#f59e0b' },
-  { dept: 'HR',         risk: 2,  color: '#10b981' },
-  { dept: 'Operations', risk: 6,  color: '#f59e0b' },
-]
-
-const salaryBandData = [
-  { role: 'Sr. Developer', current: 90, market: 115, gap: 25 },
-  { role: 'Finance Analyst',current: 58, market: 62,  gap: 4  },
-  { role: 'Sales Exec',    current: 45, market: 48,   gap: 3  },
-  { role: 'HR Coordinator',current: 38, market: 40,   gap: 2  },
-  { role: 'Team Lead',     current: 75, market: 82,   gap: 7  },
-]
-
-const seasonalLeave = [
-  { month: 'Jan', leave: 80  },
-  { month: 'Feb', leave: 90  },
-  { month: 'Mar', leave: 70  },
-  { month: 'Apr', leave: 75  },
-  { month: 'May', leave: 85  },
-  { month: 'Jun', leave: 110 },
-  { month: 'Jul', leave: 95  },
-  { month: 'Aug', leave: 88  },
-  { month: 'Sep', leave: 92  },
-  { month: 'Oct', leave: 195, highlight: true }, // Dashain/Tihar spike
-  { month: 'Nov', leave: 168, highlight: true },
-  { month: 'Dec', leave: 105 },
-]
-
-const modelMetrics = [
-  { model: 'Attrition Prediction',         accuracy: 87.3, lastTrained: 'May 28, 2026', status: 'Active'   },
-  { model: 'Salary Recommendation',        accuracy: 91.2, lastTrained: 'May 28, 2026', status: 'Active'   },
-  { model: 'Hiring Time Prediction',       accuracy: 84.6, lastTrained: 'May 20, 2026', status: 'Active'   },
-  { model: 'Leave Pattern Detection',      accuracy: 79.8, lastTrained: 'May 15, 2026', status: 'Active'   },
-  { model: 'Sentiment Analysis',           accuracy: 82.1, lastTrained: 'May 28, 2026', status: 'Active'   },
-  { model: 'Performance Prediction',       accuracy: 76.4, lastTrained: 'Apr 30, 2026', status: 'Training' },
-]
-
-const radarCompetency = [
-  { subject: 'Leadership',    A: 80, B: 65 },
-  { subject: 'Technical',     A: 85, B: 70 },
-  { subject: 'Communication', A: 72, B: 68 },
-  { subject: 'Teamwork',      A: 90, B: 75 },
-  { subject: 'Punctuality',   A: 88, B: 80 },
-  { subject: 'Innovation',    A: 76, B: 60 },
-]
-
-const aiInsightsList = [
-  { color: '#ef4444', label: 'High Attrition Risk',   text: '14 employees in IT show disengagement signals. Predicted exit within 60 days if unaddressed. Recommend immediate 1-on-1 and compensation review.' },
-  { color: '#f59e0b', label: 'Cost Optimization',     text: 'Overtime in Finance is 23% above benchmark. Hiring 2 junior analysts would be ROI-positive by Month 3.' },
-  { color: '#3b82f6', label: 'Market Salary Alert',   text: 'Senior Developer salaries rose 18% YoY in Nepal market. Current band (Rs 80k–100k) is below market (Rs 95k–130k).' },
-  { color: '#10b981', label: 'Hiring Forecast Q3',    text: 'Based on growth trajectory, 28–35 new hires needed in Q3: IT (12), Sales (8), Operations (15).' },
-  { color: '#8b5cf6', label: 'Seasonal Absence Alert',text: 'Historical data shows 23% leave spike during Dashain/Tihar (Oct–Nov). Pre-plan coverage and approval freeze period.' },
-  { color: '#06b6d4', label: 'Engagement Signal',     text: "'Growth opportunities' rated 6.9/10 — below 7.5 threshold for 2 consecutive months. Launch mentorship program in Q3." },
-]
-
-// ── Custom Tooltip ───────────────────────────────────────────
-const CustomTooltip = ({ active, payload, label }) => {
-  if (!active || !payload?.length) return null
-  return (
-    <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-lg text-xs">
-      <p className="font-bold text-gray-800 mb-1">{label}</p>
-      {payload.map((p, i) => (
-        <p key={i} style={{ color: p.color }}>{p.name}: {p.value}%</p>
-      ))}
-    </div>
-  )
-}
-
-// ── Tab Button ───────────────────────────────────────────────
-function TabBtn({ active, onClick, children }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all border-none cursor-pointer
-        ${active
-          ? 'bg-white text-gray-900 shadow-sm'
-          : 'bg-transparent text-gray-500 hover:text-gray-700'
-        }`}
-    >
-      {children}
-    </button>
-  )
-}
-
-// ── Main Component ───────────────────────────────────────────
 
 function _getSession() {
   try {
@@ -131,318 +19,377 @@ function _getSession() {
     ) || {}
   } catch (_e) { return {} }
 }
-function _useAppFallback() {
-  const s = _getSession()
-  return {
-    sub: s?.last_page || '', persona: s?.persona || s?.user?.role || 'employee',
-    lang: s?.lang || 'en', currency: s?.currency || 'NPR',
-    company: s?.company || {}, user: s?.user || {},
-    darkMode: false, setDarkMode: () => {},
-    navTo: (p) => window.dispatchEvent(new CustomEvent('elogix:nav', { detail: { page: p } })),
-    switchPersona: () => {}, setShowNotif: () => {}, setShowAI: () => {},
-    setSidebarOpen: () => {}, sidebarOpen: true,
-    currentPersona: { id: s?.persona || 'employee', icon: '👤', color: '#7c3aed', label: '' },
-  }
+function _getCurrency() {
+  const s    = _getSession()
+  const code = s?.company?.currency || 'NPR'
+  return { code, symbol: { NPR:'रु', USD:'$', INR:'₹', EUR:'€', GBP:'£' }[code] || code }
 }
 
+const G      = 'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)'
+const A      = '#7c3aed'
+const COLORS = ['#ef4444','#f59e0b','#10b981','#3b82f6','#8b5cf6','#0891b2']
+
 export default function AIInsightsPage() {
-  const { t, cc } = _useAppFallback()
-  const [activeTab, setActiveTab] = useState('attrition')
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+  const [tab,     setTab]     = useState('attrition')
+  const [regen,   setRegen]   = useState(false)
+
+  const s       = _getSession()
+  const company = s?.company || {}
+  const cc      = _getCurrency()
+
+  function authHeaders() {
+    const token = localStorage.getItem('access_token') || s?.token || ''
+    const slug  = s?.company?.slug || ''
+    return { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': slug, 'Content-Type':'application/json' }
+  }
+
+  function loadData() {
+    const token = localStorage.getItem('access_token') || s?.token || ''
+    const slug  = s?.company?.slug || ''
+    if (!token || !slug) { setLoading(false); return }
+    setLoading(true); setError(null)
+    fetch('/api/v1/ai/insights', { headers: authHeaders() })
+      .then(r => {
+        if (r.status === 401) { window.dispatchEvent(new CustomEvent('elogix:session-expired')); throw new Error('Session expired') }
+        if (!r.ok) throw new Error(`Error ${r.status}`)
+        return r.json()
+      })
+      .then(d => setData(d.data || d))
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => { loadData() }, [])
+
+  const regenerate = async () => {
+    setRegen(true)
+    try {
+      await fetch('/api/v1/ai/insights/regenerate', { method:'POST', headers: authHeaders() })
+      await new Promise(r => setTimeout(r, 1500))
+      loadData()
+    } catch (_e) {}
+    setRegen(false)
+  }
+
+  // Derive from real API data
+  const attrition_trend = data?.attrition_trend     || []
+  const attrition_dept  = data?.attrition_by_dept   || []
+  const salary_bands    = data?.salary_bands         || []
+  const seasonal_leave  = data?.seasonal_leave       || []
+  const model_metrics   = data?.model_metrics        || []
+  const competency      = data?.competency_radar     || []
+  const insights        = data?.insights             || []
+  const kpis            = data?.kpis                 || {}
+  const predictions     = data?.predictions          || []
+
+  if (loading) return (
+    <div style={{ textAlign:'center', padding:60, color:A, fontFamily:'system-ui' }}>
+      <div style={{ fontSize:36, marginBottom:12 }}>🤖</div>
+      <div style={{ fontSize:13, fontWeight:600 }}>Generating AI insights for {company?.name}...</div>
+      <div style={{ fontSize:11, color:'#94a3b8', marginTop:6 }}>Analysing HR data with ML models</div>
+    </div>
+  )
 
   return (
-    <div>
-      <PageTitle
-        title="AI Insights Center"
-        sub="ML-powered workforce intelligence — attrition prediction, salary optimization, seasonal forecasting & model accuracy."
-        badge="🧠 AI Powered"
-      />
-
-      {/* Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-        <StatCard icon="🔴" label="High Attrition Risk"  value="14 employees" change="IT Dept — act now" up={false} accent="#ef4444" />
-        <StatCard icon="💰" label="Salary Gap Detected"  value="5 roles"       change="below market rate" up={false} accent="#f59e0b" />
-        <StatCard icon="📅" label="Seasonal Leave Spike" value="Oct–Nov"        change="+23% predicted"   up={false} accent="#8b5cf6" />
-        <StatCard icon="🎯" label="Model Avg Accuracy"   value="83.6%"          change="6 models active"  up accent="#10b981" />
+    <div style={{ fontFamily:"'Segoe UI',system-ui,sans-serif", padding:24 }}>
+      {/* Header */}
+      <div style={{ background:G, borderRadius:16, padding:'20px 24px', marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)',
+        display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:10 }}>
+        <div>
+          <div style={{ fontSize:18, fontWeight:900, color:'#fff' }}>🤖 AI Insights Centre</div>
+          <div style={{ fontSize:11, color:'rgba(255,255,255,.7)', marginTop:4 }}>
+            {company?.name} · ML-powered HR analytics · {data?.generated_at || 'Real-time'}
+          </div>
+        </div>
+        <button onClick={regenerate} disabled={regen}
+          style={{ padding:'7px 16px', borderRadius:20, border:'1.5px solid rgba(255,255,255,.4)',
+            background:'rgba(255,255,255,.15)', color:'#fff', fontSize:11, fontWeight:700, cursor:regen?'wait':'pointer' }}>
+          {regen ? '⟳ Regenerating...' : '🔄 Refresh Insights'}
+        </button>
       </div>
 
-      {/* Tab Bar */}
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-xl border border-gray-200 mb-4">
-        {[
-          { id: 'attrition',    label: '🔴 Attrition'   },
-          { id: 'salary',       label: '💰 Salary'      },
-          { id: 'seasonal',     label: '📅 Seasonal'    },
-          { id: 'performance',  label: '🎯 Performance' },
-          { id: 'models',       label: '🤖 AI Models'   },
-        ].map(tab => (
-          <TabBtn key={tab.id} active={activeTab === tab.id} onClick={() => setActiveTab(tab.id)}>
-            {tab.label}
-          </TabBtn>
-        ))}
-      </div>
+      {/* Error banner */}
+      {error && (
+        <div style={{ padding:'12px 16px', background:'#fef2f2', borderRadius:10,
+          color:'#dc2626', fontSize:12, fontWeight:600, marginBottom:14 }}>
+          ⚠️ {error} — AI insights may not be available yet. Run payroll and attendance first.
+        </div>
+      )}
 
-      {/* ── ATTRITION TAB ── */}
-      {activeTab === 'attrition' && (
-        <div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-            {/* Turnover Prediction Chart */}
-            <div className="lg:col-span-2">
-              <Card title="Predictive Turnover Risk — 12 Months" subtitle="ML predicted vs. actual turnover % — Dashain spike visible in Oct">
-                <ResponsiveContainer width="100%" height={220}>
-                  <LineChart data={turnoverPrediction}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                    <YAxis tick={{ fontSize: 11 }} domain={[7, 11]} unit="%" />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend />
-                    <Line type="monotone" dataKey="actual"    stroke="#3b82f6" strokeWidth={2.5} name="Actual"    dot={{ r: 3 }} connectNulls={false} />
-                    <Line type="monotone" dataKey="predicted" stroke="#8b5cf6" strokeWidth={2}   name="Predicted" strokeDasharray="5 5" dot={{ r: 2 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </Card>
+      {/* KPI strip */}
+      {data && (
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(130px,1fr))', gap:12, marginBottom:20 }}>
+          {[
+            { icon:'⚠️', label:'Attrition Risk',  val: kpis.attrition_risk   ? `${kpis.attrition_risk}%`   : '–', color:'#ef4444' },
+            { icon:'💰', label:'Salary Gap',       val: kpis.salary_gap       ? `${cc.symbol}${kpis.salary_gap}K` : '–', color:'#f59e0b' },
+            { icon:'🎯', label:'Prediction Acc.',  val: kpis.model_accuracy   ? `${kpis.model_accuracy}%`   : '–', color:'#10b981' },
+            { icon:'🤖', label:'Insights Generated',val: insights.length,                                              color:A         },
+            { icon:'📊', label:'Models Active',    val: model_metrics.filter(m=>m.status==='Active').length,            color:'#0891b2' },
+          ].map((k,i) => (
+            <div key={i} style={{ background:'#fff', borderRadius:13, padding:'14px 16px',
+              border:`1.5px solid ${k.color}20`, borderTop:`4px solid ${k.color}`,
+              boxShadow:'0 2px 8px rgba(0,0,0,.06)' }}>
+              <div style={{ fontSize:22, marginBottom:6 }}>{k.icon}</div>
+              <div style={{ fontSize:20, fontWeight:900, color:k.color }}>{k.val}</div>
+              <div style={{ fontSize:10, color:'#64748b', marginTop:3, fontWeight:600 }}>{k.label}</div>
             </div>
-
-            {/* Risk by Dept */}
-            <Card title="Attrition Risk by Department" subtitle="Number of high-risk employees">
-              {attritionByDept.map((d, i) => (
-                <div key={i} className="mb-3">
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="text-gray-600 font-medium">{d.dept}</span>
-                    <span className="font-bold text-gray-900">{d.risk} employees</span>
-                  </div>
-                  <ProgressBar value={(d.risk / 14) * 100} color={d.color} />
-                </div>
-              ))}
-            </Card>
-          </div>
-
-          {/* AI Insights Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <AIInsightCard insights={aiInsightsList.slice(0, 2)} title="🚨 Attrition Predictions" />
-            <AIInsightCard insights={aiInsightsList.slice(4, 6)} title="📊 Workforce Signals" />
-            <Card title="Recommended Actions" subtitle="AI-generated action items">
-              {[
-                { icon: '💬', action: 'Schedule 1-on-1s with 14 IT employees',    priority: 'Urgent',  color: 'red'    },
-                { icon: '💰', action: 'Review IT compensation against market band', priority: 'High',    color: 'yellow' },
-                { icon: '🎓', action: 'Launch Q3 mentorship program',              priority: 'Medium',  color: 'blue'   },
-                { icon: '📋', action: 'Create Oct–Nov leave coverage plan',         priority: 'Medium',  color: 'blue'   },
-                { icon: '🏆', action: 'Implement peer recognition in Sales',        priority: 'Low',     color: 'green'  },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center gap-2.5 py-2 border-b border-gray-50 last:border-none">
-                  <span className="text-base flex-shrink-0">{item.icon}</span>
-                  <span className="flex-1 text-xs text-gray-700">{item.action}</span>
-                  <Pill color={item.color}>{item.priority}</Pill>
-                </div>
-              ))}
-            </Card>
-          </div>
+          ))}
         </div>
       )}
 
-      {/* ── SALARY TAB ── */}
-      {activeTab === 'salary' && (
-        <div>
-          <Card title={`Salary Band — Market vs Current (${cc.code} '000)`} subtitle="AI-powered market salary comparison — roles below market highlighted">
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={salaryBandData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
-                <XAxis type="number" tick={{ fontSize: 11 }} unit="k" />
-                <YAxis dataKey="role" type="category" tick={{ fontSize: 11 }} width={110} />
-                <Tooltip formatter={v => [`${cc.symbol}${v}k`]} />
-                <Legend />
-                <Bar dataKey="current" fill="#3b82f6" radius={[0, 4, 4, 0]} name="Current Band" />
-                <Bar dataKey="market"  fill="#10b981" radius={[0, 4, 4, 0]} name="Market Rate" />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
+      {/* No data state */}
+      {!data && !loading && !error && (
+        <div style={{ textAlign:'center', padding:60, color:'#94a3b8', background:'#fff', borderRadius:14 }}>
+          <div style={{ fontSize:40, marginBottom:12 }}>🤖</div>
+          <div style={{ fontSize:14, fontWeight:700, color:'#475569' }}>No AI insights yet for {company?.name}</div>
+          <div style={{ fontSize:12, marginTop:6 }}>Insights generate automatically after 30+ employee records, attendance, and payroll data are available</div>
+          <button onClick={regenerate} disabled={regen}
+            style={{ marginTop:16, padding:'10px 24px', borderRadius:10, border:'none',
+              background:A, color:'#fff', fontSize:13, fontWeight:700, cursor:'pointer' }}>
+            🔄 Generate Now
+          </button>
+        </div>
+      )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
-            <AIInsightCard insights={aiInsightsList.slice(2, 4)} title="💰 Salary Optimization" />
-            <Card title="Salary Gap Summary" subtitle="Roles below market — action needed">
-              {salaryBandData.map((item, i) => (
-                <div key={i} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-none text-xs">
-                  <span className="text-gray-700 font-medium">{item.role}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-500">Gap: {cc.symbol}{item.gap}k</span>
-                    <Pill color={item.gap > 10 ? 'red' : item.gap > 5 ? 'yellow' : 'green'}>
-                      {item.gap > 10 ? 'Critical' : item.gap > 5 ? 'Review' : 'OK'}
-                    </Pill>
-                  </div>
+      {data && (
+        <>
+          {/* Tabs */}
+          <div style={{ display:'flex', gap:8, marginBottom:16, flexWrap:'wrap' }}>
+            {[
+              ['attrition','⚠️ Attrition'],['salary','💰 Salary Bands'],
+              ['leave','🌴 Leave Patterns'],['competency','🎯 Competency'],
+              ['models','⚙️ ML Models'],['insights','💡 AI Insights'],
+            ].map(([v,l]) => (
+              <button key={v} onClick={() => setTab(v)}
+                style={{ padding:'7px 14px', borderRadius:20, border:'none', cursor:'pointer',
+                  background:tab===v?A:'#f1f5f9', color:tab===v?'#fff':'#64748b', fontSize:11, fontWeight:700 }}>
+                {l}
+              </button>
+            ))}
+          </div>
+
+          {/* ── ATTRITION ── */}
+          {tab === 'attrition' && (
+            <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+              <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:16 }}>
+                <div style={{ background:'#fff', borderRadius:16, padding:20, border:'1px solid #e2e8f0' }}>
+                  <div style={{ fontSize:13, fontWeight:800, marginBottom:14 }}>Attrition Trend — Predicted vs Actual</div>
+                  {attrition_trend.length === 0
+                    ? <div style={{ padding:40, textAlign:'center', color:'#94a3b8', fontSize:12 }}>No attrition trend data yet</div>
+                    : (
+                    <ResponsiveContainer width="100%" height={200}>
+                      <LineChart data={attrition_trend} margin={{ top:4, right:8, bottom:0, left:0 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9"/>
+                        <XAxis dataKey="month" tick={{ fontSize:10 }}/>
+                        <YAxis tick={{ fontSize:10 }} unit="%"/>
+                        <Tooltip formatter={v => v !== null ? [`${v}%`, ''] : ['—', '']}/>
+                        <Legend wrapperStyle={{ fontSize:10 }}/>
+                        <Line type="monotone" dataKey="predicted" stroke={A}       strokeWidth={2} dot={{ r:3 }} strokeDasharray="5 5" name="Predicted"/>
+                        <Line type="monotone" dataKey="actual"    stroke="#10b981" strokeWidth={2} dot={{ r:3 }} name="Actual"/>
+                      </LineChart>
+                    </ResponsiveContainer>
+                  )}
                 </div>
-              ))}
-            </Card>
-          </div>
-        </div>
-      )}
-
-      {/* ── SEASONAL TAB ── */}
-      {activeTab === 'seasonal' && (
-        <div>
-          <Card title="Seasonal Leave Pattern — Nepal Festivals" subtitle="Historical leave data — Dashain & Tihar spike in Oct–Nov. Plan coverage in advance.">
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={seasonalLeave}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Bar dataKey="leave" name="Employees on Leave" radius={[4, 4, 0, 0]}>
-                  {seasonalLeave.map((entry, i) => (
-                    <Cell key={i} fill={entry.highlight ? '#ef4444' : '#3b82f6'} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-            <div className="flex gap-4 mt-3 text-xs text-gray-500">
-              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-blue-500 inline-block"></span>Normal period</span>
-              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-red-500 inline-block"></span>Peak festival period (plan coverage)</span>
-            </div>
-          </Card>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
-            <AIInsightCard insights={aiInsightsList.slice(4, 6)} title="📅 Seasonal Forecasting" />
-            <Card title="Nepal Festival Leave Calendar" subtitle="Key dates to plan for">
-              {[
-                { festival: 'Dashain',          months: 'Oct 2–12, 2026',   impact: 'Very High', color: 'red'    },
-                { festival: 'Tihar',            months: 'Oct 28 – Nov 2',   impact: 'High',      color: 'red'    },
-                { festival: 'Chhath Puja',      months: 'Nov 5–8',          impact: 'Medium',    color: 'yellow' },
-                { festival: 'Christmas/New Year',months: 'Dec 25 – Jan 1',  impact: 'Low',       color: 'green'  },
-                { festival: 'Holi',             months: 'Mar 14, 2027',     impact: 'Low',       color: 'green'  },
-                { festival: 'Buddha Jayanti',   months: 'May 12, 2027',     impact: 'Low',       color: 'green'  },
-              ].map((f, i) => (
-                <div key={i} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-none text-xs">
-                  <div>
-                    <div className="font-semibold text-gray-800">{f.festival}</div>
-                    <div className="text-gray-400">{f.months}</div>
-                  </div>
-                  <Pill color={f.color}>{f.impact}</Pill>
-                </div>
-              ))}
-            </Card>
-          </div>
-        </div>
-      )}
-
-      {/* ── PERFORMANCE TAB ── */}
-      {activeTab === 'performance' && (
-        <div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Card title="Team Competency Radar" subtitle="AI-assessed competency vs target — IT Department">
-              <ResponsiveContainer width="100%" height={280}>
-                <RadarChart data={radarCompetency}>
-                  <PolarGrid />
-                  <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11 }} />
-                  <Radar name="Team Avg"  dataKey="A" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.15} />
-                  <Radar name="Target"    dataKey="B" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.10} />
-                  <Legend />
-                  <Tooltip />
-                </RadarChart>
-              </ResponsiveContainer>
-            </Card>
-
-            <div className="space-y-4">
-              <AIInsightCard insights={[
-                { color: '#3b82f6', label: 'Performance Prediction', text: 'AI predicts 73% of Q2 appraisals will score "Meets" or above based on KPI tracking data.' },
-                { color: '#10b981', label: 'High Potential Identified', text: '8 employees identified as HiPo — ready for leadership development program in Q3.' },
-                { color: '#f59e0b', label: 'PIP Candidates', text: '5 employees in PIP zone — early intervention recommended before formal review cycle.' },
-              ]} title="🎯 Performance AI Insights" />
-
-              <Card title="AI Performance Scoring" subtitle="Predicted Q2 rating distribution">
-                {[
-                  { label: 'Outstanding',  pct: 8,  color: '#10b981' },
-                  { label: 'Exceeds',      pct: 22, color: '#3b82f6' },
-                  { label: 'Meets',        pct: 48, color: '#8b5cf6' },
-                  { label: 'Below',        pct: 17, color: '#f59e0b' },
-                  { label: 'Unsat.',       pct: 5,  color: '#ef4444' },
-                ].map((r, i) => (
-                  <div key={i} className="mb-2">
-                    <div className="flex justify-between text-xs mb-1">
-                      <span className="text-gray-600">{r.label}</span>
-                      <span className="font-bold text-gray-900">{(r.pct||0)}%</span>
-                    </div>
-                    <ProgressBar value={(r.pct||0)} color={r.color} />
-                  </div>
-                ))}
-              </Card>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── AI MODELS TAB ── */}
-      {activeTab === 'models' && (
-        <div>
-          <Card title="AI Model Performance Dashboard" subtitle="All active ML models — accuracy, last training date & compliance status">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b border-gray-100">
-                  {['Model Name', 'Accuracy', 'Last Trained', 'Status', 'Data Privacy'].map(h => (
-                    <th key={h} className="text-left text-xs text-gray-400 font-semibold pb-3">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {modelMetrics.map((m, i) => (
-                  <tr key={i} className="border-b border-gray-50 hover:bg-violet-50/30 transition-colors">
-                    <td className="py-3 text-sm font-medium text-gray-800">{m.model}</td>
-                    <td className="py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-20">
-                          <ProgressBar
-                            value={m.accuracy}
-                            color={m.accuracy >= 85 ? '#10b981' : m.accuracy >= 78 ? '#f59e0b' : '#ef4444'}
-                          />
-                        </div>
-                        <span className="text-xs font-bold text-gray-800">{m.accuracy}%</span>
+                <div style={{ background:'#fff', borderRadius:16, padding:20, border:'1px solid #e2e8f0' }}>
+                  <div style={{ fontSize:13, fontWeight:800, marginBottom:14 }}>At-Risk by Department</div>
+                  {attrition_dept.length === 0
+                    ? <div style={{ padding:40, textAlign:'center', color:'#94a3b8', fontSize:12 }}>No dept data yet</div>
+                    : attrition_dept.map((d, i) => (
+                    <div key={i} style={{ marginBottom:10 }}>
+                      <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, marginBottom:4 }}>
+                        <span style={{ fontWeight:600 }}>{d.dept}</span>
+                        <span style={{ fontWeight:700, color:d.risk>10?'#ef4444':d.risk>5?'#f59e0b':'#10b981' }}>{d.risk}%</span>
                       </div>
-                    </td>
-                    <td className="py-3 text-xs text-gray-500">{m.lastTrained}</td>
-                    <td className="py-3">
-                      <Pill color={m.status === 'Active' ? 'green' : 'yellow'}>{m.status}</Pill>
-                    </td>
-                    <td className="py-3">
-                      <Pill color="green">Compliant</Pill>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </Card>
+                      <div style={{ height:6, background:'#f1f5f9', borderRadius:3 }}>
+                        <div style={{ height:6, borderRadius:3, background:COLORS[i%COLORS.length], width:`${Math.min(d.risk,30)/30*100}%` }}/>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
-            <Card title="Model Training Schedule" subtitle="Next retraining dates">
-              {[
-                { model: 'Attrition Model',     next: 'Jun 28, 2026', freq: 'Monthly'   },
-                { model: 'Salary Model',         next: 'Jun 28, 2026', freq: 'Monthly'   },
-                { model: 'Performance Model',    next: 'Jul 1, 2026',  freq: 'Quarterly' },
-                { model: 'Leave Pattern Model',  next: 'Jul 15, 2026', freq: 'Monthly'   },
-                { model: 'Sentiment Model',      next: 'Jun 28, 2026', freq: 'Monthly'   },
-              ].map((s, i) => (
-                <div key={i} className="flex justify-between py-2 border-b border-gray-50 last:border-none text-xs">
-                  <span className="text-gray-700 font-medium">{s.model}</span>
-                  <div className="text-right">
-                    <div className="text-gray-500">{s.next}</div>
-                    <div className="text-gray-400">{s.freq}</div>
+          {/* ── SALARY BANDS ── */}
+          {tab === 'salary' && (
+            <div style={{ background:'#fff', borderRadius:16, padding:20, border:'1px solid #e2e8f0' }}>
+              <div style={{ fontSize:13, fontWeight:800, marginBottom:14 }}>Salary vs Market Rate ({cc.symbol}K/mo)</div>
+              {salary_bands.length === 0
+                ? <div style={{ padding:40, textAlign:'center', color:'#94a3b8', fontSize:12 }}>No salary band data yet</div>
+                : (
+                <>
+                  <ResponsiveContainer width="100%" height={240}>
+                    <BarChart data={salary_bands} margin={{ top:4, right:8, bottom:20, left:0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9"/>
+                      <XAxis dataKey="role" tick={{ fontSize:9 }} angle={-20} textAnchor="end" interval={0}/>
+                      <YAxis tick={{ fontSize:10 }}/>
+                      <Tooltip formatter={v => [`${cc.symbol}${v}K`, '']}/>
+                      <Legend wrapperStyle={{ fontSize:10 }}/>
+                      <Bar dataKey="current" fill={A}        name="Current" radius={[3,3,0,0]}/>
+                      <Bar dataKey="market"  fill="#94a3b8"  name="Market"  radius={[3,3,0,0]}/>
+                    </BarChart>
+                  </ResponsiveContainer>
+                  <table style={{ width:'100%', borderCollapse:'collapse', marginTop:16 }}>
+                    <thead><tr style={{ background:'#f8fafc' }}>
+                      {['Role','Current','Market','Gap','Action'].map(h => (
+                        <th key={h} style={{ padding:'8px 12px', textAlign:'left', fontSize:10, fontWeight:700, color:'#64748b', textTransform:'uppercase' }}>{h}</th>
+                      ))}
+                    </tr></thead>
+                    <tbody>
+                      {salary_bands.map((r, i) => (
+                        <tr key={i} style={{ borderBottom:'1px solid #f1f5f9' }}>
+                          <td style={{ padding:'9px 12px', fontSize:13, fontWeight:600 }}>{r.role}</td>
+                          <td style={{ padding:'9px 12px', fontSize:12 }}>{cc.symbol}{r.current}K</td>
+                          <td style={{ padding:'9px 12px', fontSize:12, color:'#64748b' }}>{cc.symbol}{r.market}K</td>
+                          <td style={{ padding:'9px 12px', fontSize:12, fontWeight:700, color:r.gap>10?'#ef4444':'#f59e0b' }}>
+                            {r.gap > 0 ? `+${cc.symbol}${r.gap}K` : '✅ Competitive'}
+                          </td>
+                          <td style={{ padding:'9px 12px' }}>
+                            {r.gap > 0 && (
+                              <span style={{ padding:'2px 8px', borderRadius:20, fontSize:9, fontWeight:700,
+                                background:'#fef2f2', color:'#ef4444' }}>Review salary</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* ── LEAVE PATTERNS ── */}
+          {tab === 'leave' && (
+            <div style={{ background:'#fff', borderRadius:16, padding:20, border:'1px solid #e2e8f0' }}>
+              <div style={{ fontSize:13, fontWeight:800, marginBottom:14 }}>Seasonal Leave Patterns</div>
+              {seasonal_leave.length === 0
+                ? <div style={{ padding:40, textAlign:'center', color:'#94a3b8', fontSize:12 }}>No leave pattern data yet</div>
+                : (
+                <>
+                  <ResponsiveContainer width="100%" height={220}>
+                    <BarChart data={seasonal_leave} margin={{ top:4, right:8, bottom:0, left:0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9"/>
+                      <XAxis dataKey="month" tick={{ fontSize:10 }}/>
+                      <YAxis tick={{ fontSize:10 }}/>
+                      <Tooltip/>
+                      <Bar dataKey="leave" name="Leave days" radius={[4,4,0,0]}>
+                        {seasonal_leave.map((_,i) => (
+                          <Cell key={i} fill={seasonal_leave[i]?.highlight ? '#ef4444' : A}/>
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                  <div style={{ marginTop:12, padding:'10px 14px', background:'#fffbeb', borderRadius:8, fontSize:12, color:'#92400e' }}>
+                    🎉 Dashain/Tihar spike: {seasonal_leave.filter(m=>m.highlight).map(m=>m.month).join(', ')} — plan staffing accordingly
                   </div>
-                </div>
-              ))}
-            </Card>
+                </>
+              )}
+            </div>
+          )}
 
-            <Card title="Compliance & Privacy" subtitle="Nepal Right to Privacy Act 2018">
-              {[
-                { label: 'Data consent gates',        value: 'Enabled',   pill: true, color: 'green'  },
-                { label: 'AI data anonymization',     value: 'Active',    pill: true, color: 'green'  },
-                { label: 'Biometric data encryption', value: 'AES-256',   pill: true, color: 'green'  },
-                { label: 'Model audit trail',         value: 'Logged',    pill: true, color: 'green'  },
-                { label: 'Employee AI consent',       value: '100%',      pill: true, color: 'green'  },
-                { label: 'GDPR alignment',            value: 'Compliant', pill: true, color: 'green'  },
-              ].map((c, i) => (
-                <div key={i} className="flex justify-between items-center py-2 border-b border-gray-50 last:border-none text-xs">
-                  <span className="text-gray-600">{c.label}</span>
-                  {c.pill ? <Pill color={c.color}>{c.value}</Pill> : <span className="font-bold">{c.value}</span>}
+          {/* ── COMPETENCY RADAR ── */}
+          {tab === 'competency' && (
+            <div style={{ background:'#fff', borderRadius:16, padding:20, border:'1px solid #e2e8f0' }}>
+              <div style={{ fontSize:13, fontWeight:800, marginBottom:14 }}>Competency Radar — Team vs Target</div>
+              {competency.length === 0
+                ? <div style={{ padding:40, textAlign:'center', color:'#94a3b8', fontSize:12 }}>No competency data yet</div>
+                : (
+                <ResponsiveContainer width="100%" height={300}>
+                  <RadarChart data={competency} cx="50%" cy="50%" outerRadius={110}>
+                    <PolarGrid stroke="#f1f5f9"/>
+                    <PolarAngleAxis dataKey="subject" tick={{ fontSize:11 }}/>
+                    <Radar name="Team Average" dataKey="A" stroke={A} fill={A} fillOpacity={0.25}/>
+                    <Radar name="Target"       dataKey="B" stroke="#94a3b8" fill="none" strokeDasharray="4 4"/>
+                    <Legend wrapperStyle={{ fontSize:11 }}/>
+                    <Tooltip/>
+                  </RadarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          )}
+
+          {/* ── ML MODELS ── */}
+          {tab === 'models' && (
+            <div style={{ background:'#fff', borderRadius:14, border:'1px solid #e2e8f0', overflow:'hidden' }}>
+              <div style={{ padding:'12px 16px', fontWeight:800, fontSize:13, borderBottom:'1px solid #f1f5f9' }}>
+                ⚙️ Active ML Models
+              </div>
+              {model_metrics.length === 0
+                ? <div style={{ padding:40, textAlign:'center', color:'#94a3b8', fontSize:12 }}>No model metrics yet</div>
+                : (
+                <table style={{ width:'100%', borderCollapse:'collapse' }}>
+                  <thead><tr style={{ background:'#f8fafc' }}>
+                    {['Model','Accuracy','Last Trained','Status'].map(h => (
+                      <th key={h} style={{ padding:'10px 14px', textAlign:'left', fontSize:10, fontWeight:700, color:'#64748b', textTransform:'uppercase' }}>{h}</th>
+                    ))}
+                  </tr></thead>
+                  <tbody>
+                    {model_metrics.map((m, i) => (
+                      <tr key={i} style={{ borderBottom:'1px solid #f1f5f9', background:i%2?'#fafafa':'#fff' }}>
+                        <td style={{ padding:'12px 14px', fontSize:13, fontWeight:600 }}>{m.model}</td>
+                        <td style={{ padding:'12px 14px' }}>
+                          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                            <div style={{ flex:1, height:6, background:'#f1f5f9', borderRadius:3 }}>
+                              <div style={{ height:6, borderRadius:3, background:m.accuracy>=85?'#10b981':m.accuracy>=75?'#f59e0b':'#ef4444', width:`${m.accuracy}%` }}/>
+                            </div>
+                            <span style={{ fontSize:12, fontWeight:700, color:m.accuracy>=85?'#10b981':m.accuracy>=75?'#f59e0b':'#ef4444', minWidth:40 }}>{m.accuracy}%</span>
+                          </div>
+                        </td>
+                        <td style={{ padding:'12px 14px', fontSize:11, color:'#64748b' }}>{m.last_trained || m.lastTrained}</td>
+                        <td style={{ padding:'12px 14px' }}>
+                          <span style={{ padding:'3px 10px', borderRadius:20, fontSize:10, fontWeight:700,
+                            background:m.status==='Active'?'#f0fdf4':m.status==='Training'?'#fffbeb':'#f8fafc',
+                            color:m.status==='Active'?'#059669':m.status==='Training'?'#d97706':'#64748b' }}>
+                            {m.status==='Active'?'✅':m.status==='Training'?'⟳':'⏸'} {m.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          )}
+
+          {/* ── AI INSIGHTS CARDS ── */}
+          {tab === 'insights' && (
+            <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+              {insights.length === 0
+                ? <div style={{ padding:60, textAlign:'center', color:'#94a3b8', background:'#fff', borderRadius:14 }}>
+                    <div style={{ fontSize:32, marginBottom:8 }}>💡</div>
+                    <div style={{ fontSize:13 }}>No AI insights generated yet. Run more data through the system.</div>
+                  </div>
+                : insights.map((ins, i) => (
+                <div key={i} style={{ background:'#fff', borderRadius:13, padding:18,
+                  border:`1.5px solid ${ins.color || COLORS[i%COLORS.length]}20`,
+                  borderLeft:`4px solid ${ins.color || COLORS[i%COLORS.length]}`,
+                  boxShadow:'0 2px 8px rgba(0,0,0,.05)' }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
+                    <span style={{ fontSize:11, fontWeight:800, color:ins.color||COLORS[i%COLORS.length],
+                      textTransform:'uppercase', letterSpacing:'.06em' }}>
+                      {ins.label}
+                    </span>
+                    <span style={{ fontSize:9, color:'#94a3b8', padding:'2px 8px', borderRadius:20, background:'#f8fafc' }}>
+                      {ins.confidence ? `${ins.confidence}% confidence` : ins.category}
+                    </span>
+                  </div>
+                  <p style={{ fontSize:13, color:'#475569', lineHeight:1.6, margin:0 }}>{ins.text}</p>
+                  {ins.recommendation && (
+                    <div style={{ marginTop:10, padding:'8px 12px', background:'#f8fafc', borderRadius:8,
+                      fontSize:11, color:'#64748b' }}>
+                      💡 <strong>Recommendation:</strong> {ins.recommendation}
+                    </div>
+                  )}
                 </div>
               ))}
-            </Card>
-          </div>
-        </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   )

@@ -1,284 +1,12 @@
-// ============================================================
 // FILE: src/components/layout/Sidebar.jsx
-// PURPOSE: Full collapsible sidebar — 12 modules, 130+ pages,
-//          7 persona switcher, RBAC-aware menu filtering,
-//          badge indicators, search, dark theme
-// ============================================================
+// eLogix HRMS — Sidebar Navigation
+// Structure: Section > Group > Item (3 levels, hover + click to open)
+// NO user name/designation — shown in Topbar
+// Filtered by tenant plan + business type + user role
+// eLogix Technologies · www.elogix.com.np
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { SIDEBAR_MENU, getVisibleMenu } from '../../data/sidebarMenu.js'
-import { getTenantModules } from '../../utils/tenantPermissions.js'
-import { PERSONAS }     from '../../data/personas.js'
-import { getPlanModules, planHasFeature } from '../../data/planConfig.js'
-import { resolveTenantAccess, getSessionSlug } from '../../utils/tenantPermissions.js'
-
-
-// ── Persona → Dashboard mapping (shown ONLY to the logged-in user) ──
-const PERSONA_DASHBOARD = {
-  'super-admin':          { id: 'super-admin-dashboard',            label: 'Super Admin Dashboard',           icon: '👑', level: 1  },
-  'executive':            { id: 'executive-dashboard',              label: 'Executive Dashboard',             icon: '🏛', level: 2  },
-  'hr':                   { id: 'hr-dashboard',                     label: 'HR Manager Dashboard',            icon: '👥', level: 3  },
-  'finance':              { id: 'finance-dashboard',                label: 'Finance Workspace',               icon: '💰', level: 3  },
-  'department':           { id: 'department-dashboard',             label: 'Department Head Dashboard',       icon: '🏢', level: 4  },
-  'branch':               { id: 'branch-dashboard',                 label: 'Branch / Section Dashboard',      icon: '🌿', level: 4  },
-  'hr-officer':           { id: 'hr-officer-dashboard',             label: 'HR Officer Workspace',            icon: '📋', level: 4  },
-  'recruitment-officer':  { id: 'recruitment-officer-dashboard',    label: 'Recruitment Officer Workspace',   icon: '🎯', level: 4  },
-  'it-admin':             { id: 'it-admin-dashboard',               label: 'IT Administrator Workspace',      icon: '💻', level: 4  },
-  'procurement':          { id: 'procurement-dashboard',            label: 'Procurement Workspace',           icon: '📦', level: 4  },
-  'admin-officer':        { id: 'admin-workspace-dashboard',        label: 'Admin Workspace',                 icon: '⚙️', level: 4  },
-  'sales':                { id: 'sales-dashboard',                  label: 'Sales Workspace',                 icon: '📈', level: 4  },
-  'customer-service':     { id: 'customer-service-dashboard',       label: 'Customer Service Workspace',      icon: '🎧', level: 4  },
-  'legal':                { id: 'legal-dashboard',                  label: 'Legal Workspace',                 icon: '⚖️', level: 4  },
-  'operations':           { id: 'operations-dashboard',             label: 'Operations Workspace',            icon: '⚡', level: 4  },
-  'learning-development': { id: 'learning-development-dashboard',   label: 'Learning & Dev Workspace',        icon: '📚', level: 4  },
-  'marketing':            { id: 'marketing-dashboard',              label: 'Marketing Workspace',             icon: '📣', level: 4  },
-  'recruitment':          { id: 'recruitment-dashboard',            label: 'Recruitment Agency Portal',       icon: '🎯', level: 4  },
-  'employee':             { id: 'employee-dashboard',               label: 'My Dashboard',                    icon: '👤', level: 10 },
-}
-
-
-// ══════════════════════════════════════════════════════════════
-// RBAC MODULE ACCESS — which personas see which top-level modules
-// ══════════════════════════════════════════════════════════════
-const MODULE_ACCESS = {
-  // Level 1–2: Super Admin + Executive → see EVERYTHING
-  'super-admin': 'all',
-  'executive':   'all',
-
-  // Level 3: HR Manager → all HR modules, no finance internals
-  'hr': ['dashboard','ai-assistant','org-mgmt','emp-lifecycle','workforce-ops',
-         'perf-talent','emp-experience','hr-services','compliance','reports'],
-
-  // Level 3: Finance → finance + payroll + reports
-  'finance': ['dashboard','ai-assistant','org-mgmt','workforce-ops',
-              'finance-assets','compliance','reports'],
-
-  // Level 4: Department Head → own dept HR + attendance + leave + performance
-  'department': ['dashboard','ai-assistant','emp-lifecycle','workforce-ops',
-                 'perf-talent','emp-experience','hr-services','reports'],
-
-  // Level 4: Branch Manager → same as dept head
-  'branch': ['dashboard','ai-assistant','emp-lifecycle','workforce-ops',
-             'perf-talent','emp-experience','hr-services','reports'],
-
-  // Level 4: HR Officer → HR operations, no admin/finance
-  'hr-officer': ['dashboard','ai-assistant','emp-lifecycle','workforce-ops',
-                 'perf-talent','emp-experience','hr-services','reports'],
-
-  // Level 4: Recruitment Officer → recruitment only
-  'recruitment-officer': ['dashboard','ai-assistant','emp-lifecycle','workforce-ops',
-                          'perf-talent','hr-services','reports'],
-  'recruitment': ['dashboard','ai-assistant','emp-lifecycle','workforce-ops','reports'],
-
-  // Level 4: IT Admin → system + org + reports
-  'it-admin': ['dashboard','ai-assistant','org-mgmt','sys-admin','compliance','reports'],
-
-  // Level 4: Procurement → finance + admin
-  'procurement': ['dashboard','ai-assistant','finance-assets','compliance','reports'],
-
-  // Level 4: Admin Officer → admin + HR services
-  'admin-officer': ['dashboard','ai-assistant','org-mgmt','hr-services',
-                    'finance-assets','compliance','reports'],
-
-  // Level 4: Sales → own performance + reports
-  'sales': ['dashboard','ai-assistant','workforce-ops','perf-talent',
-            'emp-experience','hr-services','reports'],
-
-  // Level 4: Customer Service
-  'customer-service': ['dashboard','ai-assistant','workforce-ops','perf-talent',
-                       'emp-experience','hr-services','reports'],
-
-  // Level 4: Legal + Compliance
-  'legal': ['dashboard','ai-assistant','org-mgmt','compliance','finance-assets','reports'],
-
-  // Level 4: Operations
-  'operations': ['dashboard','ai-assistant','org-mgmt','workforce-ops',
-                 'perf-talent','compliance','reports'],
-
-  // Level 4: Learning & Development
-  'learning-development': ['dashboard','ai-assistant','perf-talent',
-                           'emp-experience','hr-services','reports'],
-
-  // Level 4: Marketing
-  'marketing': ['dashboard','ai-assistant','workforce-ops','perf-talent',
-                'emp-experience','hr-services','reports'],
-
-  // Level 10: Employee → SELF-SERVICE ONLY
-  'employee': ['dashboard','hr-services'],
-}
-
-// ══════════════════════════════════════════════════════════════
-// CHILD ITEM ACCESS — which sub-items employees/officers can see
-// Employees only see self-service items tagged with selfService:true
-// or items in modules they have access to
-// ══════════════════════════════════════════════════════════════
-
-// Items employees can NEVER see (sensitive — payroll internals, admin, etc.)
-const EMPLOYEE_BLOCKED_IDS = new Set([
-  // Payroll internals
-  'payroll-processing','payroll-setup','salary-structure','tax-config',
-  'bank-details-mgmt','payroll-batch','payroll-approval',
-  // Org admin
-  'company-settings','branch-setup','dept-setup','position-setup',
-  'grade-level','job-band','job-family','shift-setup','leave-policy',
-  'org-chart-admin','workflow-config','approval-matrix',
-  // Finance admin
-  'budget-planning','cost-center','chart-of-accounts','journal-entry',
-  'bank-reconciliation','vendor-payment','asset-register',
-  // Compliance admin
-  'audit-log','system-audit','data-privacy-config','risk-register',
-  // Reports (bulk)
-  'payroll-report','hr-analytics','bi-dashboard','advanced-analytics',
-  // System admin
-  'user-management','role-config','permission-matrix','system-config',
-  'email-templates','integration-setup',
-])
-
-// Items ONLY employees see (self-service)
-const EMPLOYEE_ONLY_IDS = new Set([
-  'employee-dashboard','apply-leave','my-attendance','leave-balance',
-  'my-payslip','my-documents','my-profile','my-goals','my-tasks',
-  'my-training','my-feedback','my-grievance','expense-claim',
-  'timesheet','loan-application','advance-salary',
-])
-
-// ── Badge Styles ─────────────────────────────────────────────
-const badgeStyle = (badge) => {
-  if (!badge) return null
-  const map = {
-    'Live':  { bg: 'rgba(16,185,129,.25)',  color: '#6ee7b7' },
-    '🔒':    { bg: 'rgba(239,68,68,.2)',    color: '#fca5a5' },
-    'AI':    { bg: 'rgba(139,92,246,.25)',  color: '#c4b5fd' },
-    '7':     { bg: 'rgba(239,68,68,.2)',    color: '#fca5a5' },
-    '!':     { bg: 'rgba(245,158,11,.2)',   color: '#fcd34d' },
-    'New':   { bg: 'rgba(59,130,246,.2)',   color: '#93c5fd' },
-    'Beta':  { bg: 'rgba(245,158,11,.2)',   color: '#fcd34d' },
-  }
-  return map[badge] || { bg: 'rgba(239,68,68,.2)', color: '#fca5a5' }
-}
-
-// ── Nav Item ──────────────────────────────────────────────────
-function NavItem({ child, isActive, onClick }) {
-  const bs = badgeStyle(child.badge)
-  return (
-    <button
-      onClick={onClick}
-      title={child.label}
-      style={{
-        width: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 6,
-        padding: '5px 14px 5px 24px',
-        border: 'none',
-        background: isActive ? 'rgba(59,130,246,.18)' : 'transparent',
-        color: isActive ? '#93c5fd' : '#64748b',
-        fontSize: 11,
-        cursor: 'pointer',
-        textAlign: 'left',
-        borderRadius: 6,
-        marginBottom: 1,
-        transition: 'all .12s',
-        borderLeft: isActive ? '2px solid #3b82f6' : '2px solid transparent',
-      }}
-      onMouseEnter={e => {
-        if (!isActive) {
-          e.currentTarget.style.background = 'rgba(255,255,255,.05)'
-          e.currentTarget.style.color = '#cbd5e1'
-        }
-      }}
-      onMouseLeave={e => {
-        if (!isActive) {
-          e.currentTarget.style.background = 'transparent'
-          e.currentTarget.style.color = '#64748b'
-        }
-      }}
-    >
-      {/* Active dot */}
-      <span style={{
-        width: 5, height: 5, borderRadius: '50%',
-        background: isActive ? '#60a5fa' : '#334155',
-        flexShrink: 0,
-        transition: 'background .15s',
-      }} />
-
-      {/* Label */}
-      <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.4 }}>
-        {child.label}
-      </span>
-
-      {/* Badge */}
-      {bs && (
-        <span style={{
-          background: bs.bg, color: bs.color,
-          fontSize: 9, padding: '1px 5px',
-          borderRadius: 8, fontWeight: 700,
-          flexShrink: 0, lineHeight: 1.5,
-        }}>
-          {child.badge}
-        </span>
-      )}
-    </button>
-  )
-}
-
-// ── Menu Section ──────────────────────────────────────────────
-function MenuSection({ menu, isExpanded, onToggle, activeSub, onNavTo, t }) {
-  return (
-    <div>
-      {/* Section Header */}
-      <button
-        onClick={() => onToggle(menu.id)}
-        style={{
-          width: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          padding: '8px 14px',
-          border: 'none',
-          background: 'transparent',
-          color: isExpanded ? '#cbd5e1' : '#64748b',
-          fontSize: 11,
-          cursor: 'pointer',
-          textAlign: 'left',
-          transition: 'color .15s',
-        }}
-        onMouseEnter={e => e.currentTarget.style.color = '#cbd5e1'}
-        onMouseLeave={e => e.currentTarget.style.color = isExpanded ? '#cbd5e1' : '#64748b'}
-      >
-        <span style={{ fontSize: 15, flexShrink: 0 }}>{menu.icon}</span>
-        <span style={{ flex: 1, fontWeight: 600, letterSpacing: '.01em', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {t(menu.labelKey) || menu.label}
-        </span>
-        <span style={{
-          fontSize: 9,
-          transition: 'transform .2s',
-          display: 'inline-block',
-          transform: isExpanded ? 'rotate(90deg)' : 'rotate(0)',
-          color: '#475569',
-        }}>
-          ▶
-        </span>
-      </button>
-
-      {/* Children */}
-      {isExpanded && (
-        <div style={{ paddingLeft: 4, paddingRight: 4 }}>
-          {menu.children?.map(child => (
-            <NavItem
-              key={child.id}
-              child={child}
-              isActive={activeSub === child.id}
-              onClick={() => onNavTo(child.id)}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ── Main Sidebar ──────────────────────────────────────────────
 
 function _getSession() {
   try {
@@ -288,403 +16,456 @@ function _getSession() {
     ) || {}
   } catch (_e) { return {} }
 }
-function _useAppFallback() {
-  const s = _getSession()
-  return {
-    sub: s?.last_page || '', persona: s?.persona || s?.user?.role || 'employee',
-    lang: s?.lang || 'en', currency: s?.currency || 'NPR',
-    company: s?.company || {}, user: s?.user || {},
-    darkMode: false, setDarkMode: () => {},
-    navTo: (p) => window.dispatchEvent(new CustomEvent('elogix:nav', { detail: { page: p } })),
-    switchPersona: () => {}, setShowNotif: () => {}, setShowAI: () => {},
-    setSidebarOpen: () => {}, sidebarOpen: true,
-    currentPersona: { id: s?.persona || 'employee', icon: '👤', color: '#7c3aed', label: '' },
-  }
-}
 
-export default function Sidebar({ open }) {
-  // ── Permission-aware sidebar filtering ─────────────────────────
-  // Only show menu sections/items that eLogix SuperAdmin has granted
-  const _sidebarSlug   = getSessionSlug()
-  const _sidebarAccess = resolveTenantAccess(_sidebarSlug)
-  const _visibleItems  = _sidebarAccess.hasAny ? _sidebarAccess.visibleSidebarItems() : null
-  // null = no permission record yet = show nothing except dashboard basics
-  const _canSeeItem = (itemId) => {
-    if (!_sidebarSlug) return true   // eLogix admin — sees all
-    if (!_visibleItems) return false  // not provisioned yet
-    return _visibleItems.has(itemId)
-  }
-  const {
-    persona, switchPersona,
-    sub, navTo,
-    expanded, toggleExpanded,
-    t, language,
-  } = _useAppFallback()
+const P  = '#7c3aed'                            // brand purple
+const BG = '#0f172a'                            // sidebar dark bg
+const S1 = 'rgba(255,255,255,.06)'              // section hover
+const S2 = 'rgba(124,58,237,.15)'              // active bg
+const T1 = '#94a3b8'                            // normal text
+const T2 = '#c4b5fd'                            // active text
+const T3 = '#64748b'                            // group text
 
-  const [search, setSearch] = useState('')
-  const [showSearch, setShowSearch] = useState(false)
-  const [personaListOpen, setPersonaListOpen] = useState(false)
+export default function Sidebar({ open, sub, navTo, persona, onClose }) {
+  const sess    = _getSession()
+  const company = sess?.company || {}
+  const user    = sess?.user    || {}
+  const plan    = company?.plan || 'trial'
+  const bizType = company?.business_type || 'custom'
+  const role    = user?.role || persona || 'employee'
+  const granted = Array.isArray(company?.modules) ? company.modules : []
 
-  const currentPersonaObj = PERSONAS.find(p => p.id === persona) || PERSONAS[0]
+  // Which section is expanded (click-toggled)
+  const [openSec,   setOpenSec]   = useState(null)
+  // Which group is expanded (click-toggled inside section)
+  const [openGroup, setOpenGroup] = useState({})
+  // Hover flyout for collapsed sidebar
+  const [hoverSec,  setHoverSec]  = useState(null)
+  const [hoverItem, setHoverItem] = useState(null)
+  const [search,    setSearch]    = useState('')
+  const [showSrch,  setShowSrch]  = useState(false)
+  const hoverTimer = useRef(null)
+
+  const navigate = useCallback((pageId) => {
+    if (!pageId) return
+    if (navTo) navTo(pageId)
+    else window.dispatchEvent(new CustomEvent('elogix:nav', { detail: { page: pageId } }))
+  }, [navTo])
+
+  // Close flyout on outside click
+  useEffect(() => {
+    const h = () => setHoverSec(null)
+    document.addEventListener('click', h)
+    return () => document.removeEventListener('click', h)
+  }, [])
 
   if (!open) return null
 
-  // ── RBAC: Determine which modules this persona can access ──
-  // Also read directly from auth storage for reliability
-  const authCtx = (() => {
-    try {
-      const u = JSON.parse(sessionStorage.getItem('elogix_user') || localStorage.getItem('elogix_user') || '{}')
-      return { role: u.role || '', level: Number(u.level) || 10 }
-    } catch(_e) { return { role: '', level: 10 } }
-  })()
+  const isAdmin = ['elogix_superadmin', 'platform_admin'].includes(role)
+  const rawMenu = isAdmin ? SIDEBAR_MENU : getVisibleMenu(plan, bizType, granted)
 
-  // Level 1 (tenant super_admin) or eLogix admin = always full access
-  const isSuperAdmin   = persona === 'super-admin' || authCtx.level === 1 || authCtx.role === 'super_admin' || authCtx.role === 'elogix_superadmin'
-  // Get plan from company storage
-  const companyPlan = (() => {
-    try {
-      const co = JSON.parse(sessionStorage.getItem('elogix_company') || localStorage.getItem('elogix_company') || '{}')
-      return co.plan || 'trial'
-    } catch(_e) { return 'trial' }
-  })()
-
-  // Plan-based module restriction (on top of role-based)
-  const planModules    = getPlanModules(companyPlan)   // null = all, array = restricted
-  const roleModules    = isSuperAdmin ? 'all' : MODULE_ACCESS[persona]
-  const allowedModules = isSuperAdmin ? 'all'
-    : roleModules === 'all'
-      ? (planModules || 'all')
-      : Array.isArray(roleModules)
-        ? roleModules.filter(m => !planModules || planModules.includes(m))
-        : []
-  const isAllAccess    = allowedModules === 'all'
-  const isEmployee     = persona === 'employee' && authCtx.level >= 10
-  const myDashboard    = PERSONA_DASHBOARD[persona] || PERSONA_DASHBOARD['employee']
-
-  // ── Plan + business type pre-filter ───────────────────────────
-  // getVisibleMenu filters the full 130+ item menu down to only
-  // what this tenant's plan and business type allows
-  const _sessRaw   = (() => { try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null') } catch(_e){ return null } })()
-  const _plan      = _sessRaw?.company?.plan || 'trial'
-  const _bizType   = _sessRaw?.company?.business_type || 'custom'
-  const _isAdminCtx= !!_sessRaw?.admin   // eLogix admin sees all
-  const _slug      = _sessRaw?.company?.slug || null
-  const _grantedMods = _slug ? getTenantModules(_slug) : []
-  const _planMenu  = (_slug && !_isAdminCtx)
-    ? getVisibleMenu(_plan, _bizType, _grantedMods)
-    : SIDEBAR_MENU  // eLogix admin sees everything
-
-  // ── Build RBAC-filtered menu ──────────────────────────────
-  const rbacMenu = _planMenu
-    // 1. Filter top-level modules
-    .filter(menu => isAllAccess || (allowedModules || []).includes(menu.id))
-    // 2. For each allowed module, filter its children
-    .map(menu => {
-      // Inject persona dashboard into dashboard section
-      if (menu.id === 'dashboard') {
-        const myDashItem = {
-          id:    myDashboard.id,
-          label: myDashboard.label,
-          icon:  myDashboard.icon,
-          group: 'My Dashboard',
-          badge: '●',
-        }
-        let children = (menu.children || [])
-          .filter(c => c.group !== 'Persona Dashboards')
-
-        // Employees: only show self-service dashboard items
-        if (isEmployee) {
-          children = children.filter(c =>
-            ['Widgets','Snapshots'].includes(c.group) === false ||
-            ['calendar-events','notifications','birthday-anniversary','upcoming-events'].includes(c.id)
-          )
-        }
-        return { ...menu, children: [myDashItem, ...children] }
+  // Group children by 'group' field → { groupName: [items] }
+  function groupify(children = []) {
+    const map = {}
+    const ungrouped = []
+    children.forEach(item => {
+      if (item.group) {
+        if (!map[item.group]) map[item.group] = []
+        map[item.group].push(item)
+      } else {
+        ungrouped.push(item)
       }
-
-      // hr-services module: employees see only self-service children
-      if (menu.id === 'hr-services' && isEmployee) {
-        const selfServiceIds = new Set([
-          'apply-leave','leave-balance','my-attendance','my-payslip',
-          'my-documents','my-profile','expense-claim','loan-application',
-          'advance-salary','timesheet','my-feedback','my-grievance',
-          'my-tasks','my-training','employee-self-service',
-        ])
-        return {
-          ...menu,
-          children: (menu.children || []).filter(c => selfServiceIds.has(c.id)),
-        }
-      }
-
-      // All other modules for non-employee: filter blocked IDs
-      if (!isEmployee && !isAllAccess) {
-        const lvl4Blocked = new Set([
-          'payroll-processing','payroll-setup','salary-structure',
-          'tax-config','payroll-batch','payroll-approval',
-          'company-settings','workflow-config','permission-matrix',
-          'system-config','user-management','role-config',
-          'integration-setup','audit-log','system-audit',
-        ])
-        return {
-          ...menu,
-          children: (menu.children || []).filter(c => !lvl4Blocked.has(c.id)),
-        }
-      }
-
-      return menu
     })
-    // 3. Remove empty sections
-    .filter(menu => menu.children?.length > 0)
+    return { map, ungrouped }
+  }
 
-  // ── Search filter on top of RBAC ────────────────────────────
-  const isSearching = !!search.trim()
-  const filteredMenu = isSearching
-    ? rbacMenu.map(menu => ({
-        ...menu,
-        children: menu.children?.filter(c =>
-          c.label.toLowerCase().includes(search.toLowerCase())
+  // Search filter
+  const q = search.trim().toLowerCase()
+  const menu = q
+    ? rawMenu.map(sec => ({
+        ...sec,
+        children: (sec.children || []).filter(item =>
+          item.label?.toLowerCase().includes(q) ||
+          item.group?.toLowerCase().includes(q)
         ),
-      })).filter(menu => menu.children?.length > 0)
-    : rbacMenu
+      })).filter(s => s.children?.length > 0)
+    : rawMenu
 
-  // Detect mobile for conditional positioning
-  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768)
-  useEffect(() => {
-    const handler = () => setIsMobile(window.innerWidth <= 768)
-    window.addEventListener('resize', handler)
-    return () => window.removeEventListener('resize', handler)
-  }, [])
+  // Company initials
+  const initials = (company?.name || 'E')
+    .split(' ').filter(Boolean).slice(0, 2)
+    .map(w => w[0]?.toUpperCase()).join('')
+  const GRADS = [
+    'linear-gradient(135deg,#3b82f6,#8b5cf6)',
+    'linear-gradient(135deg,#0d9488,#3b82f6)',
+    'linear-gradient(135deg,#dc2626,#f59e0b)',
+    'linear-gradient(135deg,#7c3aed,#ec4899)',
+    'linear-gradient(135deg,#059669,#0d9488)',
+  ]
+  const avatarGrad = GRADS[(company?.slug || '').charCodeAt(0) % GRADS.length] || GRADS[0]
 
-  const isOpen = open !== false
+  // Toggle section open/close
+  function toggleSection(secId) {
+    setOpenSec(prev => prev === secId ? null : secId)
+    setOpenGroup({})
+  }
+
+  // Toggle group open/close
+  function toggleGroup(key) {
+    setOpenGroup(prev => ({ ...prev, [key]: !prev[key] }))
+  }
+
+  // Hover flyout (200ms delay to avoid flicker)
+  function onSectionHover(secId) {
+    clearTimeout(hoverTimer.current)
+    if (!openSec) {   // only show flyout when no section is clicked-open
+      hoverTimer.current = setTimeout(() => setHoverSec(secId), 150)
+    }
+  }
+  function onSectionLeave() {
+    clearTimeout(hoverTimer.current)
+    hoverTimer.current = setTimeout(() => setHoverSec(null), 300)
+  }
+  function onFlyoutEnter() { clearTimeout(hoverTimer.current) }
+  function onFlyoutLeave() {
+    hoverTimer.current = setTimeout(() => setHoverSec(null), 200)
+  }
+
+  // Is any child of this section active?
+  function secHasActive(sec) {
+    return (sec.children || []).some(c => c.id === sub)
+  }
+
+  // ── Flyout panel (appears on hover when no section is clicked open)
+  function Flyout({ section }) {
+    const { map, ungrouped } = groupify(section.children || [])
+    return (
+      <div
+        onMouseEnter={onFlyoutEnter}
+        onMouseLeave={onFlyoutLeave}
+        onClick={e => e.stopPropagation()}
+        style={{
+          position: 'fixed',
+          left: 248,
+          top: 0,
+          height: '100vh',
+          width: 240,
+          background: '#1e293b',
+          borderLeft: `1px solid ${P}40`,
+          borderRight: '1px solid rgba(255,255,255,.06)',
+          overflowY: 'auto',
+          zIndex: 9999,
+          boxShadow: '8px 0 32px rgba(0,0,0,.4)',
+          scrollbarWidth: 'thin',
+          scrollbarColor: '#334155 transparent',
+          paddingBottom: 16,
+        }}>
+        {/* Flyout header */}
+        <div style={{ padding: '14px 16px', borderBottom: `1px solid ${P}30`,
+          fontSize: 12, fontWeight: 800, color: '#c4b5fd',
+          display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 15 }}>{section.icon}</span>
+          {section.label}
+        </div>
+
+        {/* Ungrouped items */}
+        {ungrouped.map(item => (
+          <FlyItem key={item.id} item={item} />
+        ))}
+
+        {/* Grouped items */}
+        {Object.entries(map).map(([grpName, items]) => (
+          <div key={grpName}>
+            <div style={{ padding: '8px 14px 4px',
+              fontSize: 9, fontWeight: 800, color: '#475569',
+              letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              {grpName}
+            </div>
+            {items.map(item => <FlyItem key={item.id} item={item} />)}
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  function FlyItem({ item }) {
+    const isActive = sub === item.id
+    return (
+      <button
+        onClick={() => { navigate(item.id); setHoverSec(null) }}
+        onMouseEnter={() => setHoverItem(item.id)}
+        onMouseLeave={() => setHoverItem(null)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          width: '100%', padding: '6px 16px',
+          border: 'none', cursor: 'pointer', textAlign: 'left',
+          background: isActive ? S2 : hoverItem === item.id ? S1 : 'transparent',
+          borderLeft: `3px solid ${isActive ? P : 'transparent'}`,
+          color: isActive ? T2 : T1,
+          fontSize: 12, fontWeight: isActive ? 700 : 400,
+          transition: 'all .1s',
+        }}>
+        <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {item.label}
+        </span>
+        {item.badge && (
+          <span style={{ background: item.badge === 'Live' ? '#16a34a' : P,
+            color: '#fff', borderRadius: 8, fontSize: 7, fontWeight: 800,
+            padding: '1px 5px', flexShrink: 0 }}>
+            {item.badge}
+          </span>
+        )}
+      </button>
+    )
+  }
+
+  // ── Inline expanded section (click-open)
+  function SectionBody({ section }) {
+    const { map, ungrouped } = groupify(section.children || [])
+    return (
+      <div style={{ background: 'rgba(0,0,0,.18)', borderBottom: `1px solid rgba(255,255,255,.04)` }}>
+        {/* Ungrouped items */}
+        {ungrouped.map(item => {
+          const isActive = sub === item.id
+          return (
+            <button key={item.id}
+              onClick={() => navigate(item.id)}
+              onMouseEnter={() => setHoverItem(item.id)}
+              onMouseLeave={() => setHoverItem(null)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 7,
+                width: '100%', padding: '6px 14px 6px 38px',
+                border: 'none', cursor: 'pointer', textAlign: 'left',
+                background: isActive ? S2 : hoverItem === item.id ? S1 : 'transparent',
+                borderLeft: `3px solid ${isActive ? P : 'transparent'}`,
+                color: isActive ? T2 : T1,
+                fontSize: 12, fontWeight: isActive ? 700 : 400,
+                transition: 'all .1s',
+              }}>
+              <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {item.label}
+              </span>
+              {item.badge && (
+                <span style={{ background: item.badge === 'Live' ? '#16a34a' : P,
+                  color: '#fff', borderRadius: 8, fontSize: 8, fontWeight: 800,
+                  padding: '1px 5px', flexShrink: 0 }}>
+                  {item.badge}
+                </span>
+              )}
+            </button>
+          )
+        })}
+
+        {/* Grouped items */}
+        {Object.entries(map).map(([grpName, items]) => {
+          const gkey = `${section.id}__${grpName}`
+          const gOpen = openGroup[gkey] !== false   // default open
+          const hasActiveInGrp = items.some(i => i.id === sub)
+
+          return (
+            <div key={gkey}>
+              {/* Group header — click to toggle */}
+              <button
+                onClick={() => toggleGroup(gkey)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  width: '100%', padding: '5px 14px 5px 28px',
+                  border: 'none', cursor: 'pointer', textAlign: 'left',
+                  background: hasActiveInGrp ? `${P}12` : 'transparent',
+                }}>
+                <span style={{ width: 2, height: 12, background: hasActiveInGrp ? P : '#334155',
+                  borderRadius: 2, flexShrink: 0 }}/>
+                <span style={{ fontSize: 9, fontWeight: 800,
+                  color: hasActiveInGrp ? T2 : '#4b5563',
+                  letterSpacing: '0.07em', textTransform: 'uppercase', flex: 1 }}>
+                  {grpName}
+                </span>
+                <span style={{ fontSize: 8, color: '#374151', transition: 'transform .2s',
+                  transform: gOpen ? 'rotate(90deg)' : 'none', flexShrink: 0 }}>▶</span>
+              </button>
+
+              {/* Group items */}
+              {gOpen && items.map(item => {
+                const isActive = sub === item.id
+                return (
+                  <button key={item.id}
+                    onClick={() => navigate(item.id)}
+                    onMouseEnter={() => setHoverItem(item.id)}
+                    onMouseLeave={() => setHoverItem(null)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 7,
+                      width: '100%', padding: '5px 14px 5px 46px',
+                      border: 'none', cursor: 'pointer', textAlign: 'left',
+                      background: isActive ? S2 : hoverItem === item.id ? S1 : 'transparent',
+                      borderLeft: `3px solid ${isActive ? P : 'transparent'}`,
+                      color: isActive ? T2 : T3,
+                      fontSize: 11, fontWeight: isActive ? 700 : 400,
+                      transition: 'all .1s',
+                    }}>
+                    <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {item.label}
+                    </span>
+                    {item.badge && (
+                      <span style={{ background: item.badge === 'Live' ? '#16a34a' : P,
+                        color: '#fff', borderRadius: 8, fontSize: 7, fontWeight: 800,
+                        padding: '1px 4px', flexShrink: 0 }}>
+                        {item.badge}
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
 
   return (
-    <aside
-      className={['elogix-sidebar', 'sidebar-scroll', isMobile && !isOpen ? 'sidebar-closed' : ''].filter(Boolean).join(' ')}
-      style={{
-        width: 248,
-        minWidth: 248,
-        background: '#0f172a',
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100vh',
-        overflowY: 'auto',
-        overflowX: 'hidden',
+    <>
+      <aside style={{
+        width: 248, minWidth: 248, height: '100vh',
+        background: BG,
+        display: 'flex', flexDirection: 'column',
+        overflowY: 'hidden', overflowX: 'visible',
         flexShrink: 0,
         borderRight: '1px solid rgba(255,255,255,.06)',
-        transition: 'transform .22s ease',
-        // Scrollbar styling
-        scrollbarWidth: 'thin',
-        scrollbarColor: '#334155 #0f172a',
-      }}
-    >
-      {/* ── Brand ── */}
-      <div style={{
-        padding: '18px 16px 14px',
-        borderBottom: '1px solid rgba(255,255,255,.07)',
-        flexShrink: 0,
+        fontFamily: "'Segoe UI',system-ui,sans-serif",
+        position: 'relative',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: 10,
-            background: 'linear-gradient(135deg,#3b82f6,#8b5cf6)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 18, flexShrink: 0,
-            boxShadow: '0 4px 12px rgba(59,130,246,.3)',
-          }}>
-            🏢
-          </div>
-          <div>
-            <div style={{ fontSize: 14, fontWeight: 900, color: '#f8fafc', letterSpacing: '-.3px' }}>
-              eLogix HRMS
+
+        {/* ── Brand header — company name only (NO user name/designation) ── */}
+        <div style={{ padding: '12px 14px 10px',
+          borderBottom: '1px solid rgba(255,255,255,.07)', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+
+            {company?.logo_url ? (
+              <img src={company.logo_url} alt={company.name}
+                style={{ width: 34, height: 34, borderRadius: 9,
+                  objectFit: 'contain', background: '#fff', padding: 2, flexShrink: 0 }}
+                onError={e => e.target.style.display = 'none'}
+              />
+            ) : (
+              <div style={{
+                width: 34, height: 34, borderRadius: 9, flexShrink: 0,
+                background: avatarGrad,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 12, fontWeight: 900, color: '#fff',
+                boxShadow: '0 4px 12px rgba(0,0,0,.3)',
+              }}>{initials || '🏢'}</div>
+            )}
+
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#f1f5f9',
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                title={company?.name}>
+                {company?.name || 'Your Company'}
+              </div>
+              <div style={{ fontSize: 9, color: '#475569', marginTop: 1 }}>
+                {plan
+                  ? `${plan.charAt(0).toUpperCase()}${plan.slice(1)} Plan`
+                  : 'HR Management System'}
+              </div>
             </div>
-            <div style={{ fontSize: 10, color: '#475569' }}>
-              HRIS · HRMS · HRIM
+
+            <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
+              <button onClick={() => setShowSrch(v => !v)} title="Search"
+                style={{ background: 'none', border: 'none', color: '#475569',
+                  cursor: 'pointer', fontSize: 13, padding: 4, borderRadius: 6 }}>
+                🔍
+              </button>
+              {typeof onClose === 'function' && (
+                <button onClick={onClose} title="Close sidebar"
+                  style={{ background: 'none', border: 'none', color: '#475569',
+                    cursor: 'pointer', fontSize: 15, padding: '2px 4px', borderRadius: 6 }}>
+                  ✕
+                </button>
+              )}
             </div>
           </div>
-          {/* Search toggle */}
-          <button
-            onClick={() => setShowSearch(s => !s)}
-            style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: '#475569', cursor: 'pointer', fontSize: 14, padding: 4, borderRadius: 6 }}
-            title="Search menu"
-          >
-            🔍
-          </button>
+
+          {/* Search box */}
+          {showSrch && (
+            <input autoFocus value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="Search menu…"
+              style={{ marginTop: 10, width: '100%', boxSizing: 'border-box',
+                padding: '7px 10px', borderRadius: 8,
+                border: '1px solid rgba(255,255,255,.1)',
+                background: 'rgba(255,255,255,.07)',
+                color: '#cbd5e1', fontSize: 12, outline: 'none' }}
+            />
+          )}
         </div>
 
-        {/* Search Bar */}
-        {showSearch && (
-          <input
-            type="text"
-            placeholder="Search menu..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            autoFocus
-            style={{
-              width: '100%', marginTop: 10,
-              padding: '6px 10px', borderRadius: 8,
-              border: '1px solid rgba(255,255,255,.1)',
-              background: 'rgba(255,255,255,.06)',
-              color: '#f1f5f9', fontSize: 11,
-              outline: 'none', boxSizing: 'border-box',
-            }}
-          />
-        )}
-      </div>
+        {/* ── Navigation ── */}
+        <nav style={{ flex: 1, overflowY: 'auto', overflowX: 'visible',
+          scrollbarWidth: 'thin', scrollbarColor: '#1e293b transparent' }}>
 
-        {/* Persona Switcher — SuperAdmin + Executive only */}
-        {['super-admin','executive'].includes(persona) && (
-        <div style={{
-          padding: '10px 10px 8px',
-          borderBottom: '1px solid rgba(255,255,255,.06)',
-          flexShrink: 0,
-        }}>
-        <button
-          onClick={() => setPersonaListOpen(o => !o)}
-          style={{
-            width: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            padding: '6px 8px',
-            borderRadius: 8,
-            border: 'none',
-            background: 'rgba(59,130,246,.12)',
-            cursor: 'pointer',
-            textAlign: 'left',
-          }}
-        >
-          <span style={{
-            width: 8, height: 8, borderRadius: '50%',
-            background: currentPersonaObj?.dot || '#3b82f6', flexShrink: 0,
-            boxShadow: `0 0 6px ${currentPersonaObj?.dot || '#3b82f6'}80`,
-          }} />
-          <span style={{ fontSize: 14 }}>{currentPersonaObj?.icon}</span>
-          <span style={{ flex: 1, fontSize: 11, fontWeight: 700, color: '#93c5fd', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {t(currentPersonaObj?.labelKey) || currentPersonaObj?.label}
-          </span>
-          <span style={{ fontSize: 9, color: '#475569', transition: 'transform .15s', transform: personaListOpen ? 'rotate(180deg)' : 'rotate(0)' }}>▼</span>
-        </button>
-
-        {personaListOpen && (
-          <div style={{
-            marginTop: 6,
-            maxHeight: 180,
-            overflowY: 'auto',
-            borderRadius: 8,
-            background: 'rgba(255,255,255,.02)',
-          }}>
-            <div style={{
-              fontSize: 9, fontWeight: 700, color: '#334155',
-              textTransform: 'uppercase', letterSpacing: '.1em',
-              padding: '6px 8px 4px',
-            }}>
-              {t('switchPersona')}
+          {menu.length === 0 && (
+            <div style={{ padding: 24, textAlign: 'center', color: '#475569', fontSize: 12 }}>
+              {q ? 'No results' : 'No menu for your plan'}
             </div>
+          )}
 
-            {PERSONAS.filter(p =>
-              // Only show relevant personas to admins; others see only their own
-              ['super-admin','executive'].includes(persona)
-                ? true
-                : p.id === persona
-            ).map(p => {
-              const isActive = persona === p.id
-              return (
+          {menu.map(section => {
+            const isClickOpen = openSec === section.id
+            const isHoverOpen = hoverSec === section.id && !openSec
+            const hasActive   = secHasActive(section)
+
+            return (
+              <div key={section.id} style={{ position: 'relative' }}>
+
+                {/* Section row */}
                 <button
-                  key={p.id}
-                  onClick={() => { switchPersona(p.id); setPersonaListOpen(false) }}
+                  onClick={e => { e.stopPropagation(); toggleSection(section.id) }}
+                  onMouseEnter={() => onSectionHover(section.id)}
+                  onMouseLeave={onSectionLeave}
                   style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    padding: '6px 8px',
-                    borderRadius: 8,
-                    border: 'none',
-                    background: isActive ? 'rgba(59,130,246,.2)' : 'transparent',
-                    color: isActive ? '#93c5fd' : '#64748b',
-                    fontSize: 11,
-                    cursor: 'pointer',
-                    marginBottom: 1,
-                    textAlign: 'left',
+                    display: 'flex', alignItems: 'center', gap: 9,
+                    width: '100%', padding: '9px 14px',
+                    border: 'none', cursor: 'pointer', textAlign: 'left',
+                    background: hasActive ? S2
+                      : isClickOpen ? 'rgba(255,255,255,.05)'
+                      : 'transparent',
+                    borderLeft: `3px solid ${hasActive || isClickOpen ? P : 'transparent'}`,
                     transition: 'all .12s',
-                  }}
-                  onMouseEnter={e => {
-                    if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,.05)'
-                  }}
-                  onMouseLeave={e => {
-                    if (!isActive) e.currentTarget.style.background = 'transparent'
-                  }}
-                >
-                  {/* Color dot */}
-                  <span style={{
-                    width: 8, height: 8, borderRadius: '50%',
-                    background: p.dot, flexShrink: 0,
-                    boxShadow: isActive ? `0 0 6px ${p.dot}80` : 'none',
-                  }} />
+                  }}>
+                  {/* Section icon */}
+                  <span style={{ fontSize: 16, flexShrink: 0, lineHeight: 1 }}>{section.icon}</span>
 
-                  {/* Icon */}
-                  <span style={{ fontSize: 14 }}>{p.icon}</span>
-
-                  {/* Label */}
-                  <span style={{ flex: 1, fontWeight: isActive ? 700 : 400 }}>
-                    {t(p.labelKey) || p.label}
+                  {/* Section label */}
+                  <span style={{ fontSize: 12, fontWeight: hasActive || isClickOpen ? 700 : 500,
+                    color: hasActive ? T2 : isClickOpen ? '#e2e8f0' : T1,
+                    flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {section.label}
                   </span>
 
-                  {/* Active indicator */}
-                  {isActive && (
-                    <span style={{
-                      width: 6, height: 6, borderRadius: '50%',
-                      background: '#60a5fa', flexShrink: 0,
-                    }} />
-                  )}
+                  {/* Expand arrow */}
+                  <span style={{ fontSize: 8, color: '#374151', flexShrink: 0,
+                    transition: 'transform .2s',
+                    transform: isClickOpen ? 'rotate(90deg)' : 'none' }}>
+                    ▶
+                  </span>
                 </button>
-              )
-            })}
+
+                {/* Inline expanded body (click-open) */}
+                {isClickOpen && <SectionBody section={section} />}
+
+                {/* Flyout panel (hover) */}
+                {isHoverOpen && <Flyout section={section} />}
+              </div>
+            )
+          })}
+        </nav>
+
+        {/* ── Footer — subdomain only ── */}
+        <div style={{ padding: '8px 14px',
+          borderTop: '1px solid rgba(255,255,255,.06)', flexShrink: 0 }}>
+          <div style={{ fontSize: 9, color: '#1e3a5f' }}>
+            {company?.slug ? `${company.slug}.elogix.com.np` : 'Powered by eLogix HRMS'}
           </div>
-        )}
         </div>
-        )}
-
-
-      {/* ── Navigation (now genuinely gets the bulk of the sidebar's
-           vertical space -- flex: 1 on a flex-column parent that no
-           longer has an unconstrained sibling above it) ── */}
-      <nav style={{ flex: 1, padding: '6px 0', overflow: 'auto', minHeight: 0 }}>
-        {search.trim() && filteredMenu.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '24px 16px', color: '#475569', fontSize: 12 }}>
-            No results for "{search}"
-          </div>
-        )}
-
-        {filteredMenu.map(menu => (
-          <MenuSection
-            key={menu.id}
-            menu={menu}
-            isExpanded={isSearching || !!expanded[menu.id]}
-            onToggle={toggleExpanded}
-            activeSub={sub}
-            onNavTo={navTo}
-            t={t}
-          />
-        ))}
-      </nav>
-
-      {/* ── Bottom Info ── */}
-      <div style={{
-        padding: '10px 14px',
-        borderTop: '1px solid rgba(255,255,255,.07)',
-        flexShrink: 0,
-      }}>
-        <div style={{ fontSize: 9, color: '#334155', marginBottom: 2 }}>
-          eLogix HRMS v3.0 · Multi-Tenant SaaS
-        </div>
-        <div style={{ fontSize: 9, color: '#334155', marginBottom: 2 }}>
-          Nepal Labour Act 2017 · RBAC · Privacy Act 2018
-        </div>
-        <div style={{ fontSize: 9, color: '#1e3a8a', background: 'rgba(59,130,246,.1)', padding: '3px 7px', borderRadius: 5, display: 'inline-block', marginTop: 2 }}>
-          🔒 All data encrypted · AES-256
-        </div>
-      </div>
-    </aside>
+      </aside>
+    </>
   )
 }

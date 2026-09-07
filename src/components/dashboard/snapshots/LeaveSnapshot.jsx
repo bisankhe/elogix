@@ -1,128 +1,8 @@
-// ============================================================
 // FILE: src/components/dashboard/snapshots/LeaveSnapshot.jsx
-// PURPOSE: Leave management snapshot — accrued vs used,
-//          Nepal Labour Act entitlements, calendar heatmap,
-//          peak periods, pending approvals
-// ============================================================
+// eLogix HRMS — Leave Snapshot — Real tenant data
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
-import {
-  BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
-  XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Legend,
-} from 'recharts'
-import { StatCard }    from '../../shared/StatCard.jsx'
-import { Card }        from '../../shared/Card.jsx'
-import { Pill }        from '../../shared/Pill.jsx'
-import { ProgressBar } from '../../shared/ProgressBar.jsx'
-import { PageTitle }   from '../../shared/PageTitle.jsx'
-
-// ── Mock Data ────────────────────────────────────────────────
-const leaveEntitlements = [
-  { type: 'Annual (Home) Leave',   entitled: 20,  used: 12, remaining: 8,  color: '#3b82f6', law: 'Section 55 — 1 day per 20 days worked' },
-  { type: 'Sick Leave',            entitled: 12,  used: 4,  remaining: 8,  color: '#8b5cf6', law: 'Section 56 — 12 days paid'             },
-  { type: 'Maternity Leave',       entitled: 98,  used: 0,  remaining: 98, color: '#10b981', law: 'Section 57 — 98 days paid'             },
-  { type: 'Paternity Leave',       entitled: 15,  used: 5,  remaining: 10, color: '#f59e0b', law: 'Section 58 — 15 days paid'             },
-  { type: 'Mourning Leave',        entitled: 13,  used: 0,  remaining: 13, color: '#ef4444', law: 'Section 59'                            },
-  { type: 'Compensatory Leave',    entitled: 5,   used: 3,  remaining: 2,  color: '#06b6d4', law: 'Earned via OT or holiday work'         },
-]
-
-const leaveByDept = [
-  { dept: 'IT',         annual: 18, sick: 7,  maternity: 0, paternity: 2 },
-  { dept: 'HR',         annual: 12, sick: 4,  maternity: 3, paternity: 1 },
-  { dept: 'Finance',    annual: 15, sick: 9,  maternity: 0, paternity: 3 },
-  { dept: 'Operations', annual: 22, sick: 11, maternity: 2, paternity: 4 },
-  { dept: 'Sales',      annual: 19, sick: 8,  maternity: 1, paternity: 2 },
-]
-
-const monthlyLeaveData = [
-  { month: 'Jan', leave: 80,  forecast: 78  },
-  { month: 'Feb', leave: 90,  forecast: 88  },
-  { month: 'Mar', leave: 70,  forecast: 74  },
-  { month: 'Apr', leave: 75,  forecast: 77  },
-  { month: 'May', leave: 85,  forecast: 84  },
-  { month: 'Jun', leave: 110, forecast: 108 },
-  { month: 'Jul', leave: 95,  forecast: 98  },
-  { month: 'Aug', leave: 88,  forecast: 90  },
-  { month: 'Sep', leave: 92,  forecast: 95  },
-  { month: 'Oct', leave: null, forecast: 195 }, // Dashain spike forecast
-  { month: 'Nov', leave: null, forecast: 168 },
-  { month: 'Dec', leave: null, forecast: 105 },
-]
-
-const pendingLeaves = [
-  { name: 'Bikram Rai',     dept: 'IT',      type: 'Annual',  from: 'Jun 10', to: 'Jun 14', days: 5, pending: '3 days' },
-  { name: 'Sunita KC',      dept: 'Finance', type: 'Sick',    from: 'Jun 5',  to: 'Jun 7',  days: 3, pending: '1 day'  },
-  { name: 'Rajan Shrestha', dept: 'Sales',   type: 'Annual',  from: 'Jun 20', to: 'Jun 25', days: 6, pending: '5 days' },
-  { name: 'Mina Tamang',    dept: 'Ops',     type: 'Paternity',from:'Jun 8',  to: 'Jun 22', days: 15,pending: '2 days' },
-  { name: 'Nabin Gurung',   dept: 'IT',      type: 'Comp',    from: 'Jun 12', to: 'Jun 12', days: 1, pending: '4 days' },
-]
-
-const leaveTypeDistribution = [
-  { name: 'Annual',    value: 45, color: '#3b82f6' },
-  { name: 'Sick',      value: 30, color: '#8b5cf6' },
-  { name: 'Maternity', value: 15, color: '#10b981' },
-  { name: 'Paternity', value: 10, color: '#f59e0b' },
-]
-
-const typeColor = {
-  Annual:    'blue',
-  Sick:      'purple',
-  Maternity: 'green',
-  Paternity: 'yellow',
-  Comp:      'cyan',
-}
-
-// ── Calendar Heatmap ─────────────────────────────────────────
-function LeaveCalendarHeatmap({ month = 'June 2026' }) {
-  const highDays = [5, 15, 20, 25, 27, 28]
-  const medDays  = [8, 9, 10, 11, 12]
-  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-
-  return (
-    <div>
-      <div className="grid grid-cols-7 gap-1 mb-1">
-        {dayNames.map(d => (
-          <div key={d} className="text-center text-xs text-gray-400 font-medium pb-1">{d}</div>
-        ))}
-      </div>
-      {/* First row — June 2026 starts on Monday, so 2 empty cells */}
-      <div className="grid grid-cols-7 gap-1">
-        <div />
-        {Array.from({ length: 30 }, (_, i) => {
-          const day = i + 1
-          const isHigh = highDays.includes(day)
-          const isMed  = medDays.includes(day)
-          const isToday = day === 4
-          let bg    = '#f8fafc'
-          let tc    = '#94a3b8'
-          if (isHigh) { bg = '#ef4444'; tc = '#fff' }
-          else if (isMed) { bg = '#f59e0b'; tc = '#fff' }
-          else if (isToday) { bg = '#3b82f6'; tc = '#fff' }
-
-          return (
-            <div
-              key={i}
-              title={`June ${day} — ${isHigh ? 'High leave' : isMed ? 'Medium leave' : 'Normal'}`}
-              style={{ height: 28, borderRadius: 6, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: tc, fontWeight: isToday ? 800 : 500, cursor: 'pointer', transition: 'transform .1s' }}
-              onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.15)'}
-              onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-            >
-              {day}
-            </div>
-          )
-        })}
-      </div>
-      <div className="flex gap-4 mt-3 justify-center">
-        <span className="flex items-center gap-1.5 text-xs text-gray-500"><span className="w-3 h-3 rounded" style={{ background: '#3b82f6', display: 'inline-block' }}></span>Today</span>
-        <span className="flex items-center gap-1.5 text-xs text-gray-500"><span className="w-3 h-3 rounded" style={{ background: '#f59e0b', display: 'inline-block' }}></span>Medium leave</span>
-        <span className="flex items-center gap-1.5 text-xs text-gray-500"><span className="w-3 h-3 rounded" style={{ background: '#ef4444', display: 'inline-block' }}></span>High leave</span>
-      </div>
-    </div>
-  )
-}
-
-// ── Main Component ───────────────────────────────────────────
+import { useState, useEffect } from 'react'
 
 function _getSession() {
   try {
@@ -132,265 +12,177 @@ function _getSession() {
     ) || {}
   } catch (_e) { return {} }
 }
-function _useAppFallback() {
-  const s = _getSession()
-  return {
-    sub: s?.last_page || '', persona: s?.persona || s?.user?.role || 'employee',
-    lang: s?.lang || 'en', currency: s?.currency || 'NPR',
-    company: s?.company || {}, user: s?.user || {},
-    darkMode: false, setDarkMode: () => {},
-    navTo: (p) => window.dispatchEvent(new CustomEvent('elogix:nav', { detail: { page: p } })),
-    switchPersona: () => {}, setShowNotif: () => {}, setShowAI: () => {},
-    setSidebarOpen: () => {}, sidebarOpen: true,
-    currentPersona: { id: s?.persona || 'employee', icon: '👤', color: '#7c3aed', label: '' },
-  }
+function _getCurrency() {
+  const s    = _getSession()
+  const code = s?.company?.currency || 'NPR'
+  return { code, symbol: { NPR:'रु', USD:'$', INR:'₹', EUR:'€', GBP:'£' }[code] || code }
 }
 
+const G = 'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)'
+const STATUS_C = { approved:'#059669', pending:'#f59e0b', rejected:'#dc2626', cancelled:'#94a3b8' }
+const STATUS_BG = { approved:'#f0fdf4', pending:'#fffbeb', rejected:'#fef2f2', cancelled:'#f8fafc' }
+
 export default function LeaveSnapshot() {
-  const { t, cc } = _useAppFallback()
-  const [activeTab, setActiveTab] = useState('overview')
+  const [data,      setData]      = useState(null)
+  const [loading,   setLoading]   = useState(true)
+  const [error,     setError]     = useState(null)
+  const [activeTab, setActiveTab] = useState('summary')
+
+  const s       = _getSession()
+  const company = s?.company || {}
+  const cc      = _getCurrency()
+
+  useEffect(() => {
+    const token = localStorage.getItem('access_token') || s?.token || ''
+    const slug  = s?.company?.slug || ''
+    if (!token || !slug) { setLoading(false); return }
+    fetch('/api/v1/leave/snapshot', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'X-Tenant-Slug': slug,
+        'Content-Type' : 'application/json',
+      }
+    })
+      .then(r => {
+        if (r.status === 401) {
+          window.dispatchEvent(new CustomEvent('elogix:session-expired'))
+          throw new Error('Session expired')
+        }
+        if (!r.ok) throw new Error(`Error ${r.status}`)
+        return r.json()
+      })
+      .then(d => setData(d.data || d))
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const kpis     = data?.kpis     || {}
+  const requests = data?.requests || []
+  const balance  = data?.balance  || []
+  const byType   = data?.by_type  || []
+  const TABS     = ['summary', 'requests', 'balance']
 
   return (
-    <div>
-      <PageTitle
-        title="Leave Snapshot"
-        sub="Accrued vs. used time-off, Nepal Labour Act entitlements, peak periods & pending manager approvals."
-      />
-
-      {/* Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-        <StatCard icon="📅" label="Total On Leave Today" value="163"      change="13% of staff"    up={false} accent="#f59e0b" />
-        <StatCard icon="⏳" label="Pending Approvals"    value="12"       change="Oldest: 3 days"  up={false} accent="#ef4444" />
-        <StatCard icon="💰" label="Leave Encashment"     value={`${cc.symbol}480k`} change="24 employees" up accent="#10b981" />
-        <StatCard icon="📊" label="Leave Utilization"    value="67%"      change="of annual quota" up accent="#3b82f6" />
+    <div style={{ fontFamily:"'Segoe UI',system-ui,sans-serif", padding:24 }}>
+      <div style={{ background:G, borderRadius:16, padding:'20px 24px', marginBottom:20,
+        boxShadow:'0 4px 24px rgba(124,58,237,.25)' }}>
+        <div style={{ fontSize:18, fontWeight:900, color:'#fff' }}>🌴 Leave Snapshot</div>
+        <div style={{ fontSize:11, color:'rgba(255,255,255,.7)', marginTop:4 }}>
+          {company?.name || 'Your Company'} · Real-time leave data
+        </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-xl border border-gray-200 mb-4">
-        {[
-          { id: 'overview',    label: '📊 Overview'    },
-          { id: 'entitlements',label: '📋 Entitlements'},
-          { id: 'calendar',    label: '📅 Calendar'    },
-          { id: 'pending',     label: '⏳ Pending'     },
-          { id: 'forecast',    label: '🔮 Forecast'    },
-        ].map(tab => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all border-none cursor-pointer
-              ${activeTab === tab.id ? 'bg-white text-gray-900 shadow-sm' : 'bg-transparent text-gray-500 hover:text-gray-700'}`}>
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {loading && <div style={{ textAlign:'center', padding:60, color:'#7c3aed', fontSize:13, fontWeight:600 }}>⟳ Loading leave data...</div>}
+      {error && !loading && <div style={{ padding:'12px 20px', background:'#fef2f2', borderRadius:10, color:'#dc2626', fontSize:13, fontWeight:600, marginBottom:16 }}>⚠️ {error}</div>}
+      {!loading && !error && !data && (
+        <div style={{ textAlign:'center', padding:60, color:'#94a3b8' }}>
+          <div style={{ fontSize:40, marginBottom:12 }}>🌴</div>
+          <div style={{ fontSize:14, fontWeight:700 }}>No leave data yet for {company?.name}</div>
+        </div>
+      )}
 
-      {/* ── OVERVIEW ── */}
-      {activeTab === 'overview' && (
-        <div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-            <Card title="Leave Type Distribution" subtitle="Nepal Labour Act entitlements vs used this month">
-              <ResponsiveContainer width="100%" height={210}>
-                <BarChart data={[
-                  { type: 'Annual', entitled: 20, used: 12 },
-                  { type: 'Sick',   entitled: 12, used: 4  },
-                  { type: 'Mat.',   entitled: 98, used: 0  },
-                  { type: 'Pat.',   entitled: 15, used: 5  },
-                  { type: 'Comp.',  entitled: 5,  used: 3  },
-                ]}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="type" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="entitled" fill="#e2e8f0" radius={[4, 4, 0, 0]} name="Entitled (days)" />
-                  <Bar dataKey="used"     fill="#3b82f6" radius={[4, 4, 0, 0]} name="Used (days)"     />
-                </BarChart>
-              </ResponsiveContainer>
-            </Card>
-
-            <Card title="Leave Distribution — Current Month">
-              <ResponsiveContainer width="100%" height={170}>
-                <PieChart>
-                  <Pie data={leaveTypeDistribution} cx="50%" cy="50%" innerRadius={45} outerRadius={72} dataKey="value">
-                    {leaveTypeDistribution.map((e, i) => <Cell key={i} fill={e.color} />)}
-                  </Pie>
-                  <Tooltip formatter={(v, n) => [`${v}%`, n]} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="grid grid-cols-2 gap-x-4 mt-2">
-                {leaveTypeDistribution.map((d, i) => (
-                  <div key={i} className="flex items-center justify-between text-xs py-1 border-b border-gray-50 last:border-none">
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-sm" style={{ background: d.color, display: 'inline-block' }} />
-                      <span className="text-gray-600">{d.name}</span>
-                    </div>
-                    <span className="font-bold text-gray-900">{d.value}%</span>
-                  </div>
-                ))}
+      {!loading && !error && data && (
+        <>
+          {/* KPI cards */}
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:14, marginBottom:20 }}>
+            {[
+              { label:'Total Requests',  value: kpis.total,           icon:'📋', color:'#7c3aed' },
+              { label:'Approved',         value: kpis.approved,        icon:'✅', color:'#059669' },
+              { label:'Pending',          value: kpis.pending,         icon:'⏳', color:'#f59e0b' },
+              { label:'On Leave Today',   value: kpis.on_leave_today,  icon:'🌴', color:'#0284c7' },
+              { label:'Rejected',         value: kpis.rejected,        icon:'❌', color:'#dc2626' },
+              { label:'Avg Days',         value: kpis.avg_days ? `${kpis.avg_days}d` : '–', icon:'📅', color:'#0891b2' },
+            ].map((k, i) => (
+              <div key={i} style={{ background:'#fff', borderRadius:13, padding:18,
+                border:`1.5px solid ${k.color}20`, borderTop:`4px solid ${k.color}`,
+                boxShadow:'0 2px 8px rgba(0,0,0,.06)' }}>
+                <div style={{ fontSize:22, marginBottom:8 }}>{k.icon}</div>
+                <div style={{ fontSize:24, fontWeight:900, color:k.color }}>{k.value ?? '–'}</div>
+                <div style={{ fontSize:11, color:'#64748b', marginTop:4, fontWeight:600 }}>{k.label}</div>
               </div>
-            </Card>
+            ))}
           </div>
 
-          {/* Dept Breakdown */}
-          <Card title="Department-wise Leave Breakdown" subtitle="Leave taken by type per department — current month">
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={leaveByDept}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="dept" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="annual"    stackId="a" fill="#3b82f6" name="Annual"    />
-                <Bar dataKey="sick"      stackId="a" fill="#8b5cf6" name="Sick"      />
-                <Bar dataKey="maternity" stackId="a" fill="#10b981" name="Maternity" />
-                <Bar dataKey="paternity" stackId="a" fill="#f59e0b" name="Paternity" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
-        </div>
-      )}
+          {/* Tabs */}
+          <div style={{ display:'flex', gap:8, marginBottom:16 }}>
+            {TABS.map(tab => (
+              <button key={tab} onClick={() => setActiveTab(tab)}
+                style={{ padding:'7px 18px', borderRadius:20, border:'none', cursor:'pointer',
+                  background: activeTab===tab ? '#7c3aed' : '#f1f5f9',
+                  color: activeTab===tab ? '#fff' : '#64748b',
+                  fontSize:12, fontWeight:700 }}>
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </button>
+            ))}
+          </div>
 
-      {/* ── ENTITLEMENTS ── */}
-      {activeTab === 'entitlements' && (
-        <Card title="Nepal Labour Act 2017 — Leave Entitlements" subtitle="Legal leave rights for all employees — compliant tracking">
-          {leaveEntitlements.map((l, i) => (
-            <div key={i} className="py-4 border-b border-gray-50 last:border-none">
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <div className="text-sm font-bold text-gray-800">{l.type}</div>
-                  <div className="text-xs text-gray-400 mt-0.5">{l.law}</div>
+          {/* Summary */}
+          {activeTab === 'summary' && byType.length > 0 && (
+            <div style={{ background:'#fff', borderRadius:13, padding:20, boxShadow:'0 2px 8px rgba(0,0,0,.06)' }}>
+              <div style={{ fontWeight:700, marginBottom:14, color:'#1e293b', fontSize:15 }}>By Leave Type</div>
+              {byType.map((t, i) => (
+                <div key={i} style={{ display:'flex', justifyContent:'space-between',
+                  padding:'10px 0', borderBottom:'1px solid #f1f5f9', fontSize:13 }}>
+                  <span style={{ color:'#475569', fontWeight:600 }}>{t.type}</span>
+                  <span style={{ fontWeight:700, color:'#7c3aed' }}>{t.count} requests · {t.days} days</span>
                 </div>
-                <div className="text-right">
-                  <div className="text-xs text-gray-500">
-                    <span className="font-bold text-gray-800">{l.used}</span> used · <span className="font-bold" style={{ color: l.color }}>{l.remaining}</span> remaining
-                  </div>
-                  <div className="text-xs text-gray-400">of {l.entitled} days entitled</div>
-                </div>
-              </div>
-              <ProgressBar value={(l.used / l.entitled) * 100} color={l.color} />
+              ))}
             </div>
-          ))}
-          <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-lg">
-            <div className="text-xs font-bold text-blue-700 mb-1">🔒 Confidentiality Notice</div>
-            <div className="text-xs text-blue-600">All leave data is encrypted and accessible only to authorized HR personnel and the employee themselves. Nepal Right to Privacy Act 2018 compliant.</div>
-          </div>
-        </Card>
-      )}
+          )}
 
-      {/* ── CALENDAR ── */}
-      {activeTab === 'calendar' && (
-        <div>
-          <Card title="Leave Calendar — June 2026" subtitle="Click any date to see who is on leave. High dates = team coverage risk.">
-            <LeaveCalendarHeatmap />
-          </Card>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
-            <Card title="High Leave Days This Month" subtitle="Dates requiring coverage planning">
-              {[
-                { date: 'Jun 5',  count: 22, reason: 'Multiple annual leaves approved'   },
-                { date: 'Jun 15', count: 18, reason: 'Post-payday long weekend'           },
-                { date: 'Jun 20', count: 31, reason: 'Pre-town-hall leave requests'       },
-                { date: 'Jun 25', count: 19, reason: 'Month-end approvals pending'        },
-              ].map((d, i) => (
-                <div key={i} className="flex justify-between py-2.5 border-b border-gray-50 last:border-none">
-                  <div>
-                    <div className="text-sm font-bold text-gray-800">{d.date}</div>
-                    <div className="text-xs text-gray-400">{d.reason}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-bold text-red-600">{d.count} absent</div>
-                    <Pill color={d.count > 25 ? 'red' : 'yellow'}>
-                      {d.count > 25 ? 'High Risk' : 'Moderate'}
-                    </Pill>
-                  </div>
-                </div>
-              ))}
-            </Card>
-
-            <Card title="Nepal Compliance Checklist">
-              {[
-                { label: 'Annual leave approval within 7 days',  status: 'green',  value: '100%'     },
-                { label: 'Maternity leave notification given',   status: 'green',  value: 'OK'       },
-                { label: 'Paternity leave processed',            status: 'green',  value: 'OK'       },
-                { label: 'Leave without pay documented',         status: 'green',  value: 'Recorded' },
-                { label: 'Festival leave (Dashain) planned',     status: 'yellow', value: 'Oct plan needed' },
-                { label: 'Leave encashment calculated',          status: 'green',  value: `${cc.symbol}480k` },
-              ].map((c, i) => (
-                <div key={i} className="flex justify-between items-center py-2 border-b border-gray-50 last:border-none text-xs">
-                  <span className="text-gray-600">{c.label}</span>
-                  <Pill color={c.status}>{c.value}</Pill>
-                </div>
-              ))}
-            </Card>
-          </div>
-        </div>
-      )}
-
-      {/* ── PENDING ── */}
-      {activeTab === 'pending' && (
-        <Card title="Pending Leave Approvals" subtitle="12 requests awaiting manager action — oldest is 3 days pending">
-          <div className="flex items-center justify-between mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-            <div className="text-xs text-amber-800 font-semibold">⚠️ SLA Warning: 3 requests pending beyond 48-hour approval policy</div>
-            <button className="px-3 py-1 bg-amber-600 text-white text-xs rounded-lg cursor-pointer hover:bg-amber-700 transition-colors border-none">
-              Approve All
-            </button>
-          </div>
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="border-b border-gray-100">
-                {['Employee', 'Department', 'Type', 'Period', 'Days', 'Pending', 'Action'].map(h => (
-                  <th key={h} className="text-left text-xs text-gray-400 font-semibold pb-3">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {pendingLeaves.map((l, i) => (
-                <tr key={i} className="border-b border-gray-50 hover:bg-amber-50/30 transition-colors">
-                  <td className="py-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                        {l.name[0]}
-                      </div>
-                      <span className="text-xs font-semibold text-gray-800">{l.name}</span>
-                    </div>
-                  </td>
-                  <td className="py-3 text-xs text-gray-500">{l.dept}</td>
-                  <td className="py-3"><Pill color={typeColor[l.type] || 'gray'}>{l.type}</Pill></td>
-                  <td className="py-3 text-xs text-gray-500">{l.from} – {l.to}</td>
-                  <td className="py-3 text-xs font-bold text-gray-800">{l.days}d</td>
-                  <td className="py-3">
-                    <Pill color={parseInt(l.pending) > 3 ? 'red' : 'yellow'}>{l.pending}</Pill>
-                  </td>
-                  <td className="py-3">
-                    <div className="flex gap-1.5">
-                      <button className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded cursor-pointer hover:bg-green-200 transition-colors border-none font-semibold">✓</button>
-                      <button className="px-2 py-1 bg-red-100 text-red-600 text-xs rounded cursor-pointer hover:bg-red-200 transition-colors border-none font-semibold">✗</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </Card>
-      )}
-
-      {/* ── FORECAST ── */}
-      {activeTab === 'forecast' && (
-        <div>
-          <Card title="12-Month Leave Forecast" subtitle="AI-predicted leave pattern — Dashain/Tihar spike in Oct–Nov (Nepal festival season)">
-            <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={monthlyLeaveData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="leave"    stroke="#3b82f6" strokeWidth={2.5} name="Actual"   dot={{ r: 4 }} connectNulls={false} />
-                <Line type="monotone" dataKey="forecast" stroke="#8b5cf6" strokeWidth={2}   name="Forecast" strokeDasharray="5 5" dot={{ r: 3 }} />
-              </LineChart>
-            </ResponsiveContainer>
-            <div className="mt-3 p-3 bg-violet-50 border border-violet-100 rounded-lg text-xs text-violet-700">
-              🧠 <strong>AI Prediction:</strong> October will see a 23% spike in leave requests due to Dashain festival (Oct 2–12, 2026). Plan coverage and approve leave freeze for critical roles 2 weeks prior.
+          {/* Requests */}
+          {activeTab === 'requests' && (
+            <div style={{ background:'#fff', borderRadius:13, overflow:'hidden', boxShadow:'0 2px 8px rgba(0,0,0,.06)' }}>
+              <table style={{ width:'100%', borderCollapse:'collapse' }}>
+                <thead><tr style={{ background:'#f8fafc' }}>
+                  {['Employee','Type','From','To','Days','Status'].map(h => (
+                    <th key={h} style={{ padding:'10px 14px', textAlign:'left', fontSize:10, fontWeight:700, color:'#64748b', textTransform:'uppercase' }}>{h}</th>
+                  ))}
+                </tr></thead>
+                <tbody>
+                  {requests.length === 0 && <tr><td colSpan={6} style={{ padding:32, textAlign:'center', color:'#94a3b8' }}>No requests</td></tr>}
+                  {requests.map((r, i) => (
+                    <tr key={i} style={{ borderBottom:'1px solid #f1f5f9', background:i%2?'#fafafa':'#fff' }}>
+                      <td style={{ padding:'10px 14px', fontSize:13, fontWeight:600 }}>{r.employee_name}</td>
+                      <td style={{ padding:'10px 14px', fontSize:12, color:'#64748b' }}>{r.leave_type}</td>
+                      <td style={{ padding:'10px 14px', fontSize:12 }}>{r.from_date}</td>
+                      <td style={{ padding:'10px 14px', fontSize:12 }}>{r.to_date}</td>
+                      <td style={{ padding:'10px 14px', fontSize:13, fontWeight:700 }}>{r.days}</td>
+                      <td style={{ padding:'10px 14px' }}>
+                        <span style={{ padding:'2px 10px', borderRadius:20, fontSize:9, fontWeight:700,
+                          background:STATUS_BG[r.status]||'#f8fafc', color:STATUS_C[r.status]||'#64748b',
+                          border:`1px solid ${STATUS_C[r.status]||'#e2e8f0'}30` }}>
+                          {r.status?.toUpperCase()}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          </Card>
-        </div>
+          )}
+
+          {/* Balance */}
+          {activeTab === 'balance' && balance.length > 0 && (
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))', gap:12 }}>
+              {balance.map((b, i) => (
+                <div key={i} style={{ background:'#fff', borderRadius:13, padding:18,
+                  border:'1.5px solid #e2e8f0', boxShadow:'0 2px 8px rgba(0,0,0,.06)' }}>
+                  <div style={{ fontSize:13, fontWeight:700, color:'#1e293b', marginBottom:8 }}>{b.type}</div>
+                  <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, color:'#64748b' }}>
+                    <span>Entitled: <strong style={{ color:'#0284c7' }}>{b.entitled}</strong></span>
+                    <span>Used: <strong style={{ color:'#f59e0b' }}>{b.used}</strong></span>
+                  </div>
+                  <div style={{ marginTop:8, height:6, background:'#f1f5f9', borderRadius:3 }}>
+                    <div style={{ height:6, borderRadius:3, background:'#7c3aed',
+                      width:`${b.entitled ? Math.min((b.used/b.entitled)*100,100) : 0}%` }}/>
+                  </div>
+                  <div style={{ fontSize:11, color:'#7c3aed', fontWeight:700, marginTop:6 }}>{b.remaining || (b.entitled - b.used)} days remaining</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   )

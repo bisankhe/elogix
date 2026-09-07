@@ -1,171 +1,103 @@
-// FILE: ContractExpiryPage.jsx — Contract Expiry Tracker
-// Full list: name, position, dept, expiry date | Renew Now / Schedule Later
+
 import { useState, useEffect } from 'react'
-const G = 'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)'
-const A = '#7c3aed'
-const CONTRACTS = [
-  { id:'C001', name:'Ramesh Koirala',   pos:'Sales Executive',     dept:'Sales',      type:'Contract',  start:'2025-07-15',expiry:'2026-07-15',days:15,risk:'critical',salary:'NPR 55,000' },
-  { id:'C002', name:'Anita Shrestha',   pos:'Marketing Officer',   dept:'Marketing',  type:'Contract',  start:'2025-01-28',expiry:'2026-07-28',days:28,risk:'critical',salary:'NPR 48,000' },
-  { id:'C003', name:'Dilip Tamang',     pos:'IT Support',          dept:'IT',         type:'Probation', start:'2026-02-05',expiry:'2026-08-05',days:36,risk:'warning', salary:'NPR 42,000' },
-  { id:'C004', name:'Sushma Khadka',    pos:'Accountant',          dept:'Finance',    type:'Contract',  start:'2025-02-20',expiry:'2026-08-20',days:51,risk:'warning', salary:'NPR 60,000' },
-  { id:'C005', name:'Nabin Regmi',      pos:'HR Officer',          dept:'HR',         type:'Contract',  start:'2025-03-01',expiry:'2026-09-01',days:63,risk:'normal',  salary:'NPR 52,000' },
-  { id:'C006', name:'Bina Magar',       pos:'Receptionist',        dept:'Admin',      type:'Contract',  start:'2025-03-15',expiry:'2026-09-15',days:77,risk:'normal',  salary:'NPR 38,000' },
-  { id:'C007', name:'Suraj Basnet',     pos:'Driver',              dept:'Operations', type:'Outsource', start:'2025-04-01',expiry:'2026-10-01',days:93,risk:'normal',  salary:'NPR 32,000' },
-  { id:'C008', name:'Puja Karmacharya', pos:'Security Supervisor',  dept:'Operations', type:'Contract',  start:'2025-04-20',expiry:'2026-10-20',days:112,risk:'normal', salary:'NPR 44,000' },
-]
-const RISK_C = { critical:'#ef4444', warning:'#f59e0b', normal:'#10b981' }
-const RISK_BG = { critical:'#fef2f2', warning:'#fffbeb', normal:'#f0fdf4' }
 
-
-function _getSession() {
-  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}}
-}
-function _getTenantCtx() {
-  const s=_getSession()
-  const token=localStorage.getItem('access_token')||s?.token||''
-  const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
-  return {token,slug,valid:!!(token&&slug)}
-}
+function _s(){try{return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{}}catch(_e){return{}}}
+const G='linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)'
+const RISK_C={critical:'#ef4444',warning:'#f59e0b',normal:'#10b981'}
+const RISK_BG={critical:'#fef2f2',warning:'#fffbeb',normal:'#f0fdf4'}
 
 export default function ContractExpiryPage() {
-  const [apiData,setApiData]=useState(null)
-  const [apiLoading,setApiLoading]=useState(true)
-  const [apiError,setApiError]=useState(null)
-  const [contracts, setContracts] = useState(CONTRACTS)
-  const [filter, setFilter] = useState('all')
-  const [search, setSearch] = useState('')
-  const [modal, setModal] = useState(null) // {type:'renew'|'schedule', contract}
-  const [msg, setMsg] = useState('')
-  const notify = m => { setMsg(m); setTimeout(()=>setMsg(''),3000) }
-
-  const filtered = contracts.filter(c =>
-    (filter==='all'||c.risk===filter) &&
-    (!search||c.name.toLowerCase().includes(search.toLowerCase())||c.dept.toLowerCase().includes(search.toLowerCase()))
-  )
-
-  const renew = (id) => {
-    setContracts(prev=>prev.map(c=>c.id!==id?c:{...c,renewed:true}))
-    notify('✅ Contract renewal initiated! HR will send paperwork.'); setModal(null)
-  }
+  const [data,setData]=useState(null);const [loading,setLoading]=useState(true);const [error,setError]=useState(null)
+  const [search,setSearch]=useState('');const [filter,setFilter]=useState('all')
+  const s=_s();const company=s?.company||{}
 
   useEffect(()=>{
-    const {token,slug,valid} = _getTenantCtx()
-    if(!valid){setApiLoading(false);return}
-    setApiLoading(true);setApiError(null)
-    fetch('/api/v1/employees/contracts/expiring',{headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}})
-      .then(r=>{if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));throw new Error('Session expired')}if(!r.ok)throw new Error(`Error ${r.status}`);return r.json()})
-      .then(d=>{const p=d.contracts||d.data||d;if(p)setApiData(p)})
-      .catch(err=>setApiError(err.message))
-      .finally(()=>setApiLoading(false))
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||''
+    if(!token||!slug){setLoading(false);return}
+    fetch('/api/v1/employees/contract-expiry',{headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}})
+      .then(r=>{if(!r.ok)throw new Error(`Error ${r.status}`);return r.json()})
+      .then(d=>setData(d.data||d)).catch(e=>setError(e.message)).finally(()=>setLoading(false))
   },[])
 
+  const contracts = data?.contracts || []
+  const summary   = data?.summary   || {}
+  const filtered  = contracts.filter(c=>{
+    if(filter!=='all'&&c.risk!==filter) return false
+    if(search&&!c.name?.toLowerCase().includes(search.toLowerCase())&&!c.dept?.toLowerCase().includes(search.toLowerCase())) return false
+    return true
+  })
+
+  if(loading) return <div style={{textAlign:'center',padding:60,color:'#7c3aed',fontSize:13,fontWeight:600}}>⟳ Loading contract data...</div>
+  if(error)   return <div style={{padding:20,background:'#fef2f2',borderRadius:12,color:'#dc2626',fontSize:13,margin:20}}>⚠️ {error}</div>
+  if(!data)   return <div style={{textAlign:'center',padding:60,color:'#94a3b8'}}><div style={{fontSize:40,marginBottom:12}}>📄</div><div>No contract data yet for {company?.name}</div></div>
+
   return (
-    <div style={{fontFamily:'system-ui,sans-serif'}}>
-      <div style={{background:G,borderRadius:14,padding:'16px 22px',marginBottom:14,color:'#fff'}}>
-      {apiLoading && (
-        <div style={{textAlign:'center',padding:40,color:'#7c3aed',fontSize:13,fontWeight:600}}>
-          <div style={{fontSize:32,marginBottom:8}}>⟳</div>Loading...
-        </div>
-      )}
-      {apiError && !apiLoading && (
-        <div style={{padding:'8px 14px',background:'#fef2f2',border:'1px solid #fecaca',
-          borderRadius:8,fontSize:12,color:'#dc2626',marginBottom:8,fontWeight:600}}>
-          ⚠️ {apiError}
-        </div>
-      )}
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:10}}>
-          <div><h2 style={{margin:0,fontSize:20,fontWeight:900}}>📄 Contract Expiry Tracker</h2>
-            <p style={{margin:'3px 0 0',fontSize:10,opacity:.8}}>Upcoming renewals · Name · Position · Department · Expiry Date · Action</p>
-          </div>
-          <div style={{display:'flex',gap:12}}>
-            <div style={{textAlign:'center'}}><div style={{fontSize:20,fontWeight:900,color:'#fca5a5'}}>{contracts.filter(c=>c.risk==='critical').length}</div><div style={{fontSize:8,opacity:.8}}>Critical</div></div>
-            <div style={{textAlign:'center'}}><div style={{fontSize:20,fontWeight:900,color:'#fcd34d'}}>{contracts.filter(c=>c.risk==='warning').length}</div><div style={{fontSize:8,opacity:.8}}>Warning</div></div>
-            <div style={{textAlign:'center'}}><div style={{fontSize:20,fontWeight:900}}>{contracts.length}</div><div style={{fontSize:8,opacity:.8}}>Total</div></div>
-          </div>
-        </div>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24}}>
+      <div style={{background:G,borderRadius:16,padding:'20px 24px',marginBottom:20,boxShadow:'0 4px 24px rgba(124,58,237,.25)'}}>
+        <div style={{fontSize:18,fontWeight:900,color:'#fff'}}>📄 Contract Expiry Tracker</div>
+        <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginTop:4}}>{company?.name} · {contracts.length} contracts expiring</div>
       </div>
 
-      {msg&&<div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:10,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#065f46'}}>{msg}</div>}
-
-      <div style={{display:'flex',gap:8,marginBottom:14,flexWrap:'wrap'}}>
-        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 Search name or department..."
-          style={{flex:1,minWidth:160,padding:'8px 12px',borderRadius:9,border:'1px solid #e2e8f0',fontSize:10,outline:'none'}}/>
-        {['all','critical','warning','normal'].map(f=>(
-          <button key={f} onClick={()=>setFilter(f)} style={{padding:'7px 16px',borderRadius:20,border:filter!==f?'1px solid #e2e8f0':'none',background:filter===f?(f==='all'?A:RISK_C[f]):'#fff',color:filter===f?'#fff':(f==='all'?'#475569':RISK_C[f]),fontSize:9,fontWeight:700,cursor:'pointer',textTransform:'capitalize'}}>{f}</button>
+      {/* Summary cards */}
+      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:16}}>
+        {[['critical','🔴','Critical (≤7 days)'],['warning','🟡','Warning (≤30 days)'],['normal','🟢','Normal (≤90 days)']].map(([k,icon,label])=>(
+          <div key={k} style={{background:RISK_BG[k],borderRadius:12,padding:16,border:`1.5px solid ${RISK_C[k]}30`,cursor:'pointer'}}
+            onClick={()=>setFilter(filter===k?'all':k)}>
+            <div style={{fontSize:28,fontWeight:900,color:RISK_C[k]}}>{icon} {summary[k]||0}</div>
+            <div style={{fontSize:11,color:'#64748b',marginTop:4}}>{label}</div>
+          </div>
         ))}
       </div>
 
+      {/* Filters */}
+      <div style={{display:'flex',gap:8,marginBottom:14,flexWrap:'wrap'}}>
+        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search name or dept..."
+          style={{padding:'7px 12px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:12,outline:'none',flex:1,maxWidth:260}}/>
+        {['all','critical','warning','normal'].map(f=>(
+          <button key={f} onClick={()=>setFilter(f)}
+            style={{padding:'6px 14px',borderRadius:20,border:`1.5px solid ${filter===f?RISK_C[f]||'#7c3aed':'#e2e8f0'}`,
+              background:filter===f?(RISK_C[f]||'#7c3aed')+'15':'#fff',
+              color:filter===f?(RISK_C[f]||'#7c3aed'):'#64748b',fontSize:11,fontWeight:700,cursor:'pointer'}}>
+            {f.charAt(0).toUpperCase()+f.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {/* Table */}
       <div style={{background:'#fff',borderRadius:14,border:'1px solid #e2e8f0',overflow:'hidden'}}>
-        <table style={{width:'100%',borderCollapse:'collapse',fontSize:10}}>
-          <thead><tr style={{background:'#f8fafc',borderBottom:'2px solid #e2e8f0'}}>
-            {['','Name','Position','Department','Type','Contract Period','Expiry Date','Days Left','Status','Action'].map(h=><th key={h} style={{padding:'11px 13px',textAlign:'left',fontSize:9,fontWeight:800,color:'#475569',whiteSpace:'nowrap'}}>{h}</th>)}
+        <table style={{width:'100%',borderCollapse:'collapse'}}>
+          <thead><tr style={{background:'#f8fafc'}}>
+            {['Name','Department','Role','Expiry Date','Days Left','Risk','Action'].map(h=>(
+              <th key={h} style={{padding:'10px 14px',textAlign:'left',fontSize:10,fontWeight:700,color:'#64748b',textTransform:'uppercase',whiteSpace:'nowrap'}}>{h}</th>
+            ))}
           </tr></thead>
           <tbody>
+            {filtered.length===0&&<tr><td colSpan={7} style={{padding:32,textAlign:'center',color:'#94a3b8'}}>No contracts found</td></tr>}
             {filtered.map((c,i)=>(
-              <tr key={c.id} style={{borderBottom:'1px solid #f1f5f9',background:c.renewed?'#f0fdf4':i%2?'#fafafa':'#fff'}}>
-                <td style={{padding:'11px 13px'}}><span style={{fontSize:16}}>{c.risk==='critical'?'🔴':c.risk==='warning'?'🟡':'🟢'}</span></td>
-                <td style={{padding:'11px 13px',fontWeight:700,color:'#0f172a'}}>{c.name}</td>
-                <td style={{padding:'11px 13px',color:'#374151'}}>{c.pos}</td>
-                <td style={{padding:'11px 13px',color:'#475569'}}>{c.dept}</td>
-                <td style={{padding:'11px 13px'}}><span style={{fontSize:8,fontWeight:700,padding:'3px 8px',borderRadius:20,background:'#f1f5f9',color:'#475569'}}>{c.type}</span></td>
-                <td style={{padding:'11px 13px',fontSize:9,color:'#64748b'}}>{c.start} → {c.expiry}</td>
-                <td style={{padding:'11px 13px',fontWeight:700,color:RISK_C[c.risk]}}>{c.expiry}</td>
-                <td style={{padding:'11px 13px'}}>
-                  <div style={{background:RISK_BG[c.risk],borderRadius:8,padding:'4px 10px',textAlign:'center',fontWeight:900,color:RISK_C[c.risk],fontSize:11,whiteSpace:'nowrap'}}>{c.days} days</div>
+              <tr key={c.id||i} style={{borderBottom:'1px solid #f1f5f9',background:i%2?'#fafafa':'#fff'}}>
+                <td style={{padding:'10px 14px',fontSize:13,fontWeight:600}}>{c.name}</td>
+                <td style={{padding:'10px 14px',fontSize:12,color:'#64748b'}}>{c.dept}</td>
+                <td style={{padding:'10px 14px',fontSize:12,color:'#64748b'}}>{c.role||c.position}</td>
+                <td style={{padding:'10px 14px',fontSize:12}}>{c.end_date}</td>
+                <td style={{padding:'10px 14px',fontSize:13,fontWeight:700,color:RISK_C[c.risk]||'#10b981'}}>{c.days_left}d</td>
+                <td style={{padding:'10px 14px'}}>
+                  <span style={{padding:'2px 10px',borderRadius:20,fontSize:9,fontWeight:700,
+                    background:RISK_BG[c.risk],color:RISK_C[c.risk],border:`1px solid ${RISK_C[c.risk]}30`}}>
+                    {c.risk?.toUpperCase()}
+                  </span>
                 </td>
-                <td style={{padding:'11px 13px'}}>
-                  {c.renewed?<span style={{fontSize:8,fontWeight:700,padding:'3px 9px',borderRadius:20,background:'#d1fae5',color:'#059669'}}>✅ Renewal Initiated</span>
-                  :<span style={{fontSize:8,fontWeight:700,padding:'3px 9px',borderRadius:20,background:RISK_BG[c.risk],color:RISK_C[c.risk]}}>{c.risk==='critical'?'⚡ Urgent':c.risk==='warning'?'⏳ Review':'✓ On Track'}</span>}
-                </td>
-                <td style={{padding:'11px 13px'}}>
-                  {!c.renewed&&<div style={{display:'flex',gap:4}}>
-                    <button onClick={()=>setModal({type:'renew',contract:c})} style={{padding:'5px 10px',borderRadius:7,border:'none',background:c.risk==='critical'?'#ef4444':A,color:'#fff',fontSize:8,fontWeight:700,cursor:'pointer'}}>Renew Now</button>
-                    <button onClick={()=>setModal({type:'schedule',contract:c})} style={{padding:'5px 10px',borderRadius:7,border:'1px solid #e2e8f0',background:'#fff',fontSize:8,cursor:'pointer'}}>Schedule</button>
-                  </div>}
+                <td style={{padding:'10px 14px'}}>
+                  <button style={{padding:'4px 12px',borderRadius:7,border:'none',background:'#7c3aed',
+                    color:'#fff',fontSize:10,fontWeight:700,cursor:'pointer'}}>
+                    Renew
+                  </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-
-      {modal&&(
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center'}} onClick={()=>setModal(null)}>
-          <div style={{background:'#fff',borderRadius:16,padding:26,width:420,maxWidth:'92vw'}} onClick={e=>e.stopPropagation()}>
-            <div style={{fontSize:14,fontWeight:900,marginBottom:4}}>{modal.type==='renew'?'🔄 Renew Contract':'📅 Schedule Renewal'}</div>
-            <div style={{fontSize:10,color:'#64748b',marginBottom:16}}>{modal.contract.name} · {modal.contract.pos} · {modal.contract.dept}</div>
-            <div style={{background:'#f8fafc',borderRadius:10,padding:'12px',marginBottom:16,fontSize:10}}>
-              <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}><span style={{color:'#64748b'}}>Current expiry</span><span style={{fontWeight:700,color:RISK_C[modal.contract.risk]}}>{modal.contract.expiry}</span></div>
-              <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}><span style={{color:'#64748b'}}>Days remaining</span><span style={{fontWeight:700}}>{modal.contract.days} days</span></div>
-              <div style={{display:'flex',justifyContent:'space-between'}}><span style={{color:'#64748b'}}>Current salary</span><span style={{fontWeight:700,color:'#059669'}}>{modal.contract.salary}</span></div>
-            </div>
-            {modal.type==='renew'&&(
-              <>
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:16}}>
-                  {[['New Period','1 Year'],['New Salary',modal.contract.salary],['Start Date',modal.contract.expiry],['End Date','']].map(([l,v])=>(
-                    <div key={l}><label style={{fontSize:9,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>{l}</label>
-                    <input defaultValue={v} style={{width:'100%',padding:'8px 10px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:10,outline:'none',boxSizing:'border-box'}}/></div>
-                  ))}
-                </div>
-                <button onClick={()=>renew(modal.contract.id)} style={{width:'100%',padding:'11px',borderRadius:10,border:'none',background:G,color:'#fff',fontSize:11,fontWeight:800,cursor:'pointer'}}>✅ Initiate Renewal</button>
-              </>
-            )}
-            {modal.type==='schedule'&&(
-              <>
-                <div style={{marginBottom:16}}>
-                  <label style={{fontSize:9,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>Schedule Review Date</label>
-                  <input type="date" style={{width:'100%',padding:'8px 10px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:10,outline:'none',boxSizing:'border-box'}}/>
-                </div>
-                <div style={{marginBottom:16}}>
-                  <label style={{fontSize:9,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>Note</label>
-                  <textarea rows={3} placeholder="Reason for scheduling later..." style={{width:'100%',padding:'8px 10px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:10,outline:'none',resize:'none',boxSizing:'border-box'}}/>
-                </div>
-                <button onClick={()=>{notify('📅 Review scheduled!');setModal(null)}} style={{width:'100%',padding:'11px',borderRadius:10,border:'none',background:G,color:'#fff',fontSize:11,fontWeight:800,cursor:'pointer'}}>📅 Schedule for Later</button>
-              </>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   )
 }

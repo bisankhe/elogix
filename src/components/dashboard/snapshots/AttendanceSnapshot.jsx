@@ -1,79 +1,15 @@
-// ============================================================
 // FILE: src/components/dashboard/snapshots/AttendanceSnapshot.jsx
-// PURPOSE: Real-time attendance — GPS, biometric, tardiness,
-//          absenteeism, remote vs on-site, Nepal Labour Act
-// ============================================================
+// eLogix HRMS — Attendance Snapshot — REAL tenant data only
+// Replaces all hardcoded mock arrays with live API data
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  Legend,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
-import { StatCard }    from '../../shared/StatCard.jsx'
-import { Card }        from '../../shared/Card.jsx'
-import { Pill }        from '../../shared/Pill.jsx'
-import { ProgressBar } from '../../shared/ProgressBar.jsx'
-import { PageTitle }   from '../../shared/PageTitle.jsx'
 
-// ── Mock Data ───────────────────────────────────────────────
-const monthlyAttendance = [
-  { month: 'Jan', present: 1100, leave: 80,  absent: 20, wfh: 180 },
-  { month: 'Feb', present: 1080, leave: 90,  absent: 30, wfh: 200 },
-  { month: 'Mar', present: 1150, leave: 70,  absent: 30, wfh: 210 },
-  { month: 'Apr', present: 1090, leave: 85,  absent: 25, wfh: 190 },
-  { month: 'May', present: 1087, leave: 163, absent: 0,  wfh: 218 },
-  { month: 'Jun', present: 1120, leave: 110, absent: 20, wfh: 205 },
-]
-
-const todayDistribution = [
-  { name: 'In-Office', value: 869, color: '#3b82f6' },
-  { name: 'WFH',       value: 218, color: '#10b981' },
-  { name: 'On Leave',  value: 163, color: '#f59e0b' },
-]
-
-const departmentAttendance = [
-  { dept: 'IT',         present: 298, total: 320, pct: 93.1 },
-  { dept: 'HR',         present: 162, total: 180, pct: 90.0 },
-  { dept: 'Finance',    present: 185, total: 210, pct: 88.1 },
-  { dept: 'Operations', present: 241, total: 280, pct: 86.1 },
-  { dept: 'Sales',      present: 201, total: 260, pct: 77.3 },
-]
-
-const weeklyTrend = [
-  { day: 'Mon', present: 1102, late: 24 },
-  { day: 'Tue', present: 1089, late: 18 },
-  { day: 'Wed', present: 1095, late: 21 },
-  { day: 'Thu', present: 1087, late: 31 },
-  { day: 'Fri', present: 1063, late: 42 },
-]
-
-const liveAttendance = [
-  { name: 'Ram Bahadur Thapa',  dept: 'IT',      in: '09:02', type: 'Biometric', status: 'Present'  },
-  { name: 'Sita Sharma',        dept: 'HR',      in: '08:58', type: 'Web',       status: 'Present'  },
-  { name: 'Hari Prasad KC',     dept: 'Finance', in: '09:15', type: 'GPS',       status: 'Late'     },
-  { name: 'Gita Rai',           dept: 'Ops',     in: '--',    type: 'WFH',       status: 'WFH'      },
-  { name: 'Bikram Limbu',       dept: 'Sales',   in: '--',    type: '--',        status: 'Absent'   },
-  { name: 'Anita Gurung',       dept: 'HR',      in: '08:45', type: 'Biometric', status: 'Present'  },
-  { name: 'Suresh Bista',       dept: 'Finance', in: '09:30', type: 'Web',       status: 'Late'     },
-  { name: 'Priya Thapa',        dept: 'Sales',   in: '--',    type: 'GPS',       status: 'Field'    },
-]
-
-const statusColor = {
-  Present: 'green',
-  Late:    'yellow',
-  WFH:     'blue',
-  Absent:  'red',
-  Field:   'cyan',
-}
-
-const OVERTIME_LABEL_MAP = {
-  allowed:  { label: 'OT allowed',  color: '#10b981' },
-  exceeded: { label: 'OT exceeded', color: '#ef4444' },
-  none:     { label: 'No OT',       color: '#94a3b8' },
-}
-
-
+// ── Session helpers (ONE definition) ─────────────────────────
 function _getSession() {
   try {
     return JSON.parse(
@@ -82,259 +18,292 @@ function _getSession() {
     ) || {}
   } catch (_e) { return {} }
 }
-function _useAppFallback() {
-  const s = _getSession()
-  return {
-    sub: s?.last_page || '', persona: s?.persona || s?.user?.role || 'employee',
-    lang: s?.lang || 'en', currency: s?.currency || 'NPR',
-    company: s?.company || {}, user: s?.user || {},
-    darkMode: false, setDarkMode: () => {},
-    navTo: (p) => window.dispatchEvent(new CustomEvent('elogix:nav', { detail: { page: p } })),
-    switchPersona: () => {}, setShowNotif: () => {}, setShowAI: () => {},
-    setSidebarOpen: () => {}, sidebarOpen: true,
-    currentPersona: { id: s?.persona || 'employee', icon: '👤', color: '#7c3aed', label: '' },
-  }
-}
 
+const STATUS_COLOR = {
+  Present: '#16a34a', Late: '#f59e0b',
+  WFH: '#3b82f6', Absent: '#ef4444', Field: '#0891b2',
+}
+const COLORS = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ef4444','#0ea5e9']
+const G = 'linear-gradient(135deg,#1e1b4b 0%,#0891b2 60%,#38bdf8 100%)'
+
+// ── Main component ────────────────────────────────────────────
 export default function AttendanceSnapshot() {
-  const { t } = _useAppFallback()
-  const [view, setView] = useState('overview') // 'overview' | 'live' | 'department'
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+  const [view,    setView]    = useState('overview')
+  const [search,  setSearch]  = useState('')
+
+  const s       = _getSession()
+  const company = s?.company || {}
+  const navTo   = (p) => window.dispatchEvent(new CustomEvent('elogix:nav', { detail: { page: p } }))
+
+  useEffect(() => {
+    const token = localStorage.getItem('access_token') || s?.token || ''
+    const slug  = s?.company?.slug || ''
+    if (!token || !slug) { setLoading(false); return }
+    fetch('/api/v1/attendance/snapshot', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'X-Tenant-Slug': slug,
+        'Content-Type' : 'application/json',
+      }
+    })
+      .then(r => {
+        if (r.status === 401) {
+          window.dispatchEvent(new CustomEvent('elogix:session-expired'))
+          throw new Error('Session expired')
+        }
+        if (!r.ok) throw new Error(`Error ${r.status}`)
+        return r.json()
+      })
+      .then(d => setData(d.data || d))
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false))
+  }, [])
+
+  // ── Derived from real API data ────────────────────────────
+  const kpis       = data?.kpis              || {}
+  const monthly    = data?.monthly_trend     || []
+  const today_dist = data?.today_distribution|| []
+  const by_dept    = data?.by_dept           || []
+  const weekly     = data?.weekly_trend      || []
+  const live_feed  = data?.live_feed         || []
+
+  const filteredFeed = search
+    ? live_feed.filter(e =>
+        e.name?.toLowerCase().includes(search.toLowerCase()) ||
+        e.dept?.toLowerCase().includes(search.toLowerCase())
+      )
+    : live_feed
+
+  // ── Loading / Error / Empty ───────────────────────────────
+  if (loading) return (
+    <div style={{ textAlign:'center', padding:60, color:'#0891b2' }}>
+      <div style={{ fontSize:36, marginBottom:12 }}>⟳</div>
+      <div style={{ fontSize:13, fontWeight:600 }}>Loading attendance data for {company?.name}...</div>
+    </div>
+  )
+  if (error) return (
+    <div style={{ padding:'16px 20px', background:'#fef2f2', borderRadius:12,
+      color:'#dc2626', fontSize:13, fontWeight:600, margin:20 }}>
+      ⚠️ {error}
+      <button onClick={() => window.location.reload()}
+        style={{ marginLeft:12, color:'#0891b2', background:'none', border:'none', cursor:'pointer', fontWeight:700 }}>
+        Retry
+      </button>
+    </div>
+  )
+  if (!data) return (
+    <div style={{ textAlign:'center', padding:60, color:'#94a3b8' }}>
+      <div style={{ fontSize:40, marginBottom:12 }}>📊</div>
+      <div style={{ fontSize:14, fontWeight:700, color:'#475569' }}>No attendance data yet for {company?.name}</div>
+      <div style={{ fontSize:12, marginTop:6, color:'#94a3b8' }}>
+        Data appears once employees clock in via biometric, GPS, or web
+      </div>
+    </div>
+  )
 
   return (
-    <div>
-      <PageTitle
-        title="Attendance Snapshot"
-        sub="Real-time attendance analytics — GPS, biometric, tardiness, absenteeism & remote vs on-site ratio."
-        badge="🟢 Live"
-      />
+    <div style={{ fontFamily:"'Segoe UI',system-ui,sans-serif", padding:24 }}>
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-        <StatCard icon="✅" label="Present Today"       value="1,087"  change="86.9% rate"      up accent="#10b981" />
-        <StatCard icon="🏠" label="Work From Home"      value="218"    change="17.4% of staff"  up accent="#3b82f6" />
-        <StatCard icon="❌" label="Absent (Unexcused)"  value="24"     change="Needs attention"  up={false} accent="#ef4444" />
-        <StatCard icon="⏰" label="Late Arrivals"       value="31"     change="2.5% tardiness"  up={false} accent="#f59e0b" />
+      {/* Header */}
+      <div style={{ background:G, borderRadius:16, padding:'20px 24px', marginBottom:20,
+        boxShadow:'0 4px 24px rgba(8,145,178,.25)',
+        display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+        <div>
+          <div style={{ fontSize:18, fontWeight:900, color:'#fff' }}>⏰ Attendance Snapshot</div>
+          <div style={{ fontSize:11, color:'rgba(255,255,255,.7)', marginTop:4 }}>
+            {company?.name} · Real-time attendance analytics
+          </div>
+        </div>
+        <div style={{ display:'flex', gap:8 }}>
+          <span style={{ background:'#16a34a', color:'#fff', padding:'3px 10px',
+            borderRadius:20, fontSize:9, fontWeight:800 }}>🟢 Live</span>
+          <button onClick={() => navTo('live-attendance')}
+            style={{ padding:'6px 14px', borderRadius:8, border:'1.5px solid rgba(255,255,255,.5)',
+              background:'transparent', color:'#fff', fontSize:11, fontWeight:700, cursor:'pointer' }}>
+            📍 Mark Attendance
+          </button>
+        </div>
       </div>
 
-      {/* View Tabs */}
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-xl border border-gray-200 mb-4">
+      {/* KPI strip */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(130px,1fr))', gap:12, marginBottom:20 }}>
         {[
-          { id: 'overview',   label: '📊 Overview'    },
-          { id: 'live',       label: '🟢 Live Feed'   },
-          { id: 'department', label: '🏢 By Department' },
-        ].map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setView(tab.id)}
-            className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all border-none cursor-pointer
-              ${view === tab.id ? 'bg-white text-gray-900 shadow-sm' : 'bg-transparent text-gray-500 hover:text-gray-700'}`}
-          >
-            {tab.label}
+          { icon:'✅', label:'Present',     val: kpis.present,         color:'#16a34a' },
+          { icon:'🌴', label:'On Leave',    val: kpis.on_leave,        color:'#f59e0b' },
+          { icon:'❌', label:'Absent',      val: kpis.absent,          color:'#ef4444' },
+          { icon:'🏠', label:'WFH',         val: kpis.wfh,             color:'#3b82f6' },
+          { icon:'⏰', label:'Late',        val: kpis.late,            color:'#d97706' },
+          { icon:'📊', label:'Rate',        val: kpis.attendance_rate ? `${kpis.attendance_rate}%` : '–', color:'#0891b2' },
+        ].map((k, i) => (
+          <div key={i} style={{ background:'#fff', borderRadius:14, padding:'14px 16px',
+            border:`1.5px solid ${k.color}20`, borderTop:`4px solid ${k.color}`,
+            boxShadow:'0 2px 8px rgba(0,0,0,.06)' }}>
+            <div style={{ fontSize:22, marginBottom:6 }}>{k.icon}</div>
+            <div style={{ fontSize:26, fontWeight:900, color:k.color, lineHeight:1 }}>{k.val ?? '–'}</div>
+            <div style={{ fontSize:10, color:'#64748b', marginTop:4, fontWeight:600 }}>{k.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* View tabs */}
+      <div style={{ display:'flex', gap:8, marginBottom:16 }}>
+        {[['overview','📊 Overview'],['live','🔴 Live Feed'],['department','🏢 By Department']].map(([v,l]) => (
+          <button key={v} onClick={() => setView(v)}
+            style={{ padding:'7px 18px', borderRadius:20, border:'none', cursor:'pointer',
+              background: view===v ? '#0891b2' : '#f1f5f9',
+              color: view===v ? '#fff' : '#64748b',
+              fontSize:12, fontWeight:700 }}>
+            {l}
           </button>
         ))}
       </div>
 
       {/* ── OVERVIEW ── */}
       {view === 'overview' && (
-        <div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-            {/* Monthly Stacked Bar */}
-            <div className="lg:col-span-2">
-              <Card title="Monthly Attendance Trend" subtitle="Present, leave, absent — stacked view">
-                <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={monthlyAttendance}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                    <YAxis tick={{ fontSize: 11 }} />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="present" stackId="a" fill="#3b82f6" name="Present" />
-                    <Bar dataKey="wfh"     stackId="a" fill="#10b981" name="WFH" />
-                    <Bar dataKey="leave"   stackId="a" fill="#f59e0b" name="Leave" />
-                    <Bar dataKey="absent"  stackId="a" fill="#ef4444" name="Absent" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </Card>
-            </div>
-
-            {/* Today's Donut */}
-            <div className="flex flex-col gap-4">
-              <Card title="Today's Distribution" subtitle="Real-time workforce location">
-                <ResponsiveContainer width="100%" height={150}>
-                  <PieChart>
-                    <Pie data={todayDistribution} cx="50%" cy="50%" innerRadius={45} outerRadius={68} dataKey="value">
-                      {todayDistribution.map((e, i) => <Cell key={i} fill={e.color} />)}
-                    </Pie>
-                    <Tooltip formatter={(v, n) => [v, n]} />
-                  </PieChart>
-                </ResponsiveContainer>
-                {todayDistribution.map((d, i) => (
-                  <div key={i} className="flex justify-between text-xs mt-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: d.color }} />
-                      <span className="text-gray-600">{d.name}</span>
-                    </div>
-                    <span className="font-bold text-gray-900">{d.value}</span>
-                  </div>
-                ))}
-              </Card>
-
-              {/* Nepal Compliance */}
-              <Card title="Nepal Compliance" subtitle="Labour Act 2017">
-                <div className="flex justify-between py-2 border-b border-gray-50 text-xs">
-                  <span className="text-gray-600">8hr/day · 48hr/week max</span>
-                  <Pill color="green">Compliant</Pill>
-                </div>
-                <div className="flex justify-between py-2 border-b border-gray-50 text-xs">
-                  <span className="text-gray-600">30-min break tracked</span>
-                  <Pill color="green">Enabled</Pill>
-                </div>
-                <div className="flex justify-between py-2 border-b border-gray-50 text-xs">
-                  <span className="text-gray-600">OT ≤ 24hrs/week @ 1.5x</span>
-                  <Pill color="yellow">3 cases</Pill>
-                </div>
-                <div className="flex justify-between py-2 text-xs">
-                  <span className="text-gray-600">Salary via banking (Rule 21)</span>
-                  <Pill color="green">OK</Pill>
-                </div>
-              </Card>
-            </div>
+        <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:16 }}>
+          {/* Monthly trend */}
+          <div style={{ background:'#fff', borderRadius:16, padding:20, border:'1px solid #e2e8f0' }}>
+            <div style={{ fontSize:13, fontWeight:800, marginBottom:14 }}>Monthly Attendance Trend</div>
+            {monthly.length > 0 ? (
+              <ResponsiveContainer width="100%" height={200}>
+                <AreaChart data={monthly} margin={{ top:4, right:8, bottom:0, left:0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9"/>
+                  <XAxis dataKey="month" tick={{ fontSize:10 }}/>
+                  <YAxis tick={{ fontSize:10 }}/>
+                  <Tooltip/>
+                  <Legend wrapperStyle={{ fontSize:10 }}/>
+                  <Area type="monotone" dataKey="present" stroke="#16a34a" fill="#16a34a20" strokeWidth={2}/>
+                  <Area type="monotone" dataKey="leave"   stroke="#f59e0b" fill="#f59e0b20" strokeWidth={2}/>
+                  <Area type="monotone" dataKey="absent"  stroke="#ef4444" fill="#ef444420" strokeWidth={2}/>
+                  <Area type="monotone" dataKey="wfh"     stroke="#3b82f6" fill="#3b82f620" strokeWidth={2}/>
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{ padding:40, textAlign:'center', color:'#94a3b8', fontSize:12 }}>No monthly data yet</div>
+            )}
           </div>
 
-          {/* Weekly Trend */}
-          <Card title="This Week — Daily Attendance Trend" subtitle="Present employees and late arrivals per day">
-            <ResponsiveContainer width="100%" height={180}>
-              <AreaChart data={weeklyTrend}>
-                <defs>
-                  <linearGradient id="gPresent" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="#3b82f6" stopOpacity={0.15} />
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="day" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Legend />
-                <Area type="monotone" dataKey="present" stroke="#3b82f6" fill="url(#gPresent)" strokeWidth={2} name="Present" />
-                <Area type="monotone" dataKey="late" stroke="#f59e0b" fill="none" strokeWidth={2} name="Late Arrivals" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </Card>
+          {/* Today distribution pie */}
+          <div style={{ background:'#fff', borderRadius:16, padding:20, border:'1px solid #e2e8f0' }}>
+            <div style={{ fontSize:13, fontWeight:800, marginBottom:14 }}>Today's Distribution</div>
+            {today_dist.length > 0 ? (
+              <>
+                <ResponsiveContainer width="100%" height={160}>
+                  <PieChart>
+                    <Pie data={today_dist} dataKey="value" cx="50%" cy="50%" outerRadius={65} label={false}>
+                      {today_dist.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]}/>)}
+                    </Pie>
+                    <Tooltip/>
+                  </PieChart>
+                </ResponsiveContainer>
+                {today_dist.map((d, i) => (
+                  <div key={i} style={{ display:'flex', justifyContent:'space-between',
+                    fontSize:11, padding:'4px 0', borderBottom:'1px solid #f8fafc' }}>
+                    <span style={{ color:'#64748b' }}>
+                      <span style={{ display:'inline-block', width:8, height:8, borderRadius:'50%',
+                        background:COLORS[i%COLORS.length], marginRight:6 }}/>
+                      {d.name}
+                    </span>
+                    <strong style={{ color:COLORS[i%COLORS.length] }}>{d.value}</strong>
+                  </div>
+                ))}
+              </>
+            ) : (
+              <div style={{ padding:40, textAlign:'center', color:'#94a3b8', fontSize:12 }}>No data today</div>
+            )}
+          </div>
         </div>
       )}
 
       {/* ── LIVE FEED ── */}
       {view === 'live' && (
-        <Card title="🟢 Live Attendance Feed" subtitle="Real-time employee check-in data — updates every 60 seconds">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex gap-2">
-              {['All', 'Present', 'Late', 'WFH', 'Absent'].map(f => (
-                <button key={f} className="px-3 py-1 rounded-full text-xs border border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 cursor-pointer transition-colors">
-                  {f}
-                </button>
-              ))}
-            </div>
-            <div className="flex items-center gap-1.5 text-xs text-gray-400">
-              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse inline-block"></span>
-              Live — Last updated: just now
-            </div>
-          </div>
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="border-b border-gray-100">
-                {['Employee', 'Department', 'Check-In', 'Method', 'Status'].map(h => (
-                  <th key={h} className="text-left text-xs text-gray-400 font-semibold pb-3">{h}</th>
+        <div>
+          <input value={search} onChange={e => setSearch(e.target.value)}
+            placeholder="Search employee or department..."
+            style={{ padding:'8px 14px', borderRadius:8, border:'1px solid #e2e8f0',
+              fontSize:12, outline:'none', marginBottom:14, width:'100%', maxWidth:320, boxSizing:'border-box' }}
+          />
+          <div style={{ background:'#fff', borderRadius:14, border:'1px solid #e2e8f0', overflow:'hidden' }}>
+            <table style={{ width:'100%', borderCollapse:'collapse' }}>
+              <thead><tr style={{ background:'#f8fafc' }}>
+                {['Employee','Department','Check-In','Method','Status','OT'].map(h => (
+                  <th key={h} style={{ padding:'10px 14px', textAlign:'left', fontSize:10,
+                    fontWeight:700, color:'#64748b', textTransform:'uppercase', whiteSpace:'nowrap' }}>{h}</th>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
-              {liveAttendance.map((emp, i) => (
-                <tr key={i} className="border-b border-gray-50 hover:bg-blue-50/30 transition-colors">
-                  <td className="py-2.5">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-                        style={{ background: `hsl(${i * 40}, 60%, 50%)` }}
-                      >
-                        {emp.name[0]}
-                      </div>
-                      <span className="text-xs font-semibold text-gray-800">{emp.name}</span>
-                    </div>
-                  </td>
-                  <td className="py-2.5 text-xs text-gray-500">{emp.dept}</td>
-                  <td className="py-2.5 text-xs text-gray-700 font-mono">{emp.in}</td>
-                  <td className="py-2.5">
-                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{emp.type}</span>
-                  </td>
-                  <td className="py-2.5">
-                    <Pill color={statusColor[emp.status] || 'gray'}>{emp.status}</Pill>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </Card>
+              </tr></thead>
+              <tbody>
+                {filteredFeed.length === 0 && (
+                  <tr><td colSpan={6} style={{ padding:32, textAlign:'center', color:'#94a3b8' }}>
+                    {live_feed.length === 0 ? 'No attendance logged today' : 'No results found'}
+                  </td></tr>
+                )}
+                {filteredFeed.map((e, i) => (
+                  <tr key={i} style={{ borderBottom:'1px solid #f1f5f9', background:i%2?'#fafafa':'#fff' }}>
+                    <td style={{ padding:'10px 14px', fontSize:13, fontWeight:600 }}>{e.name}</td>
+                    <td style={{ padding:'10px 14px', fontSize:12, color:'#64748b' }}>{e.dept}</td>
+                    <td style={{ padding:'10px 14px', fontSize:12, fontFamily:'monospace' }}>{e.check_in || e.in || '--'}</td>
+                    <td style={{ padding:'10px 14px', fontSize:11, color:'#475569' }}>{e.method || e.type || '--'}</td>
+                    <td style={{ padding:'10px 14px' }}>
+                      <span style={{ padding:'2px 10px', borderRadius:20, fontSize:9, fontWeight:700,
+                        background:(STATUS_COLOR[e.status]||'#94a3b8')+'15',
+                        color: STATUS_COLOR[e.status]||'#94a3b8' }}>
+                        {e.status}
+                      </span>
+                    </td>
+                    <td style={{ padding:'10px 14px', fontSize:11, color:'#64748b' }}>{e.overtime || '–'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
 
-      {/* ── DEPARTMENT VIEW ── */}
+      {/* ── BY DEPARTMENT ── */}
       {view === 'department' && (
-        <div>
-          <Card title="Department-wise Attendance" subtitle="Today's attendance rate by department">
-            <div className="space-y-4">
-              {departmentAttendance.map((d, i) => (
-                <div key={i}>
-                  <div className="flex justify-between text-xs mb-1.5">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-gray-800 w-20">{d.dept}</span>
-                      <span className="text-gray-400">{d.present} / {d.total} present</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-gray-900">{(d.pct||0)}%</span>
-                      <Pill color={d.pct >= 90 ? 'green' : d.pct >= 80 ? 'yellow' : 'red'}>
-                        {d.pct >= 90 ? 'Excellent' : d.pct >= 80 ? 'Good' : 'Low'}
-                      </Pill>
-                    </div>
-                  </div>
-                  <ProgressBar value={(d.pct||0)} color={d.pct >= 90 ? '#10b981' : d.pct >= 80 ? '#f59e0b' : '#ef4444'} />
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
-            <Card title="Department Bar Chart" subtitle="Visual attendance comparison">
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={departmentAttendance} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
-                  <XAxis type="number" tick={{ fontSize: 11 }} domain={[0, 100]} unit="%" />
-                  <YAxis dataKey="dept" type="category" tick={{ fontSize: 11 }} width={70} />
-                  <Tooltip formatter={v => [`${v}%`, 'Attendance']} />
-                  <Bar dataKey="pct" radius={[0, 6, 6, 0]} name="Attendance %">
-                    {departmentAttendance.map((d, i) => (
-                      <Cell key={i} fill={d.pct >= 90 ? '#10b981' : d.pct >= 80 ? '#f59e0b' : '#ef4444'} />
-                    ))}
-                  </Bar>
+        <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:16 }}>
+          <div style={{ background:'#fff', borderRadius:16, padding:20, border:'1px solid #e2e8f0' }}>
+            <div style={{ fontSize:13, fontWeight:800, marginBottom:14 }}>Attendance by Department</div>
+            {by_dept.length > 0 ? (
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={by_dept} margin={{ top:4, right:8, bottom:24, left:0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9"/>
+                  <XAxis dataKey="dept" tick={{ fontSize:10 }} angle={-35} textAnchor="end" interval={0}/>
+                  <YAxis tick={{ fontSize:10 }}/>
+                  <Tooltip/>
+                  <Bar dataKey="present" fill="#0891b2" radius={[4,4,0,0]}/>
                 </BarChart>
               </ResponsiveContainer>
-            </Card>
-
-            <Card title="Attendance Alerts" subtitle="Departments needing attention">
-              {departmentAttendance.filter(d => d.pct < 88).map((d, i) => (
-                <div key={i} className="flex items-center justify-between py-2.5 border-b border-gray-50 last:border-none">
-                  <div>
-                    <div className="text-sm font-semibold text-gray-800">{d.dept} Department</div>
-                    <div className="text-xs text-gray-400">Attendance: {(d.pct||0)}% — {d.total - d.present} absent</div>
-                  </div>
-                  <Pill color={d.pct < 80 ? 'red' : 'yellow'}>
-                    {d.pct < 80 ? 'Critical' : 'Review'}
-                  </Pill>
-                </div>
-              ))}
-              {departmentAttendance.filter(d => d.pct < 88).length === 0 && (
-                <div className="text-center py-6 text-gray-400 text-sm">✅ All departments above threshold</div>
-              )}
-            </Card>
+            ) : (
+              <div style={{ padding:40, textAlign:'center', color:'#94a3b8', fontSize:12 }}>No department data yet</div>
+            )}
+          </div>
+          <div style={{ background:'#fff', borderRadius:14, border:'1px solid #e2e8f0', overflow:'hidden' }}>
+            <table style={{ width:'100%', borderCollapse:'collapse' }}>
+              <thead><tr style={{ background:'#f8fafc' }}>
+                {['Dept','Present','Total','Rate'].map(h => (
+                  <th key={h} style={{ padding:'8px 12px', textAlign:'left', fontSize:10, fontWeight:700, color:'#64748b', textTransform:'uppercase' }}>{h}</th>
+                ))}
+              </tr></thead>
+              <tbody>
+                {by_dept.length === 0 && (
+                  <tr><td colSpan={4} style={{ padding:24, textAlign:'center', color:'#94a3b8' }}>No data</td></tr>
+                )}
+                {by_dept.map((d, i) => (
+                  <tr key={i} style={{ borderBottom:'1px solid #f1f5f9' }}>
+                    <td style={{ padding:'9px 12px', fontSize:12, fontWeight:600 }}>{d.dept}</td>
+                    <td style={{ padding:'9px 12px', fontSize:12, color:'#16a34a', fontWeight:700 }}>{d.present}</td>
+                    <td style={{ padding:'9px 12px', fontSize:12, color:'#64748b' }}>{d.total}</td>
+                    <td style={{ padding:'9px 12px', fontSize:12, fontWeight:700, color:'#0891b2' }}>
+                      {d.pct ?? (d.total ? ((d.present/d.total)*100).toFixed(1) : 0)}%
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}

@@ -2,7 +2,8 @@
 // eLogix HRMS — Permission & Role Management
 // SuperAdmin (Level 1) only — assign/revoke module access per user/role
 // eLogix Technologies · www.elogix.com.np
-import { resolveTenantAccess, getSessionSlug, getTenantPermissionRecord, getTenantModules } from '../../../utils/tenantPermissions.js'
+import { resolveTenantAccess, getSessionSlug } from '../../../utils/tenantPermissions.js'
+import { tenantCanAccess } from '../../../utils/tenantPermissions.js'
 import AccessDenied from '../../shared/AccessDenied.jsx'
 import { useState } from 'react'
 
@@ -57,9 +58,9 @@ function notify(msg, setMsg) {
 
 export default function PermissionManagementPage() {
   const slug   = getSessionSlug()
-  const access = resolveTenantAccess(slug)
-  if (!access.hasAccess('permissions')) {
-    return <AccessDenied moduleName="Permission Management" />
+  // Tenant access check
+  if (!tenantCanAccess('user-management')) {
+    return <AccessDenied moduleName="PermissionManagement" />
   }
   // ── Tenant context ────────────────────────────────────────────
   const sess        = (() => { try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}} })()
@@ -153,12 +154,6 @@ export default function PermissionManagementPage() {
 
   return (
     <div style={{fontFamily:'system-ui,sans-serif',minHeight:'100vh',background:'#f0f7ff',padding:'0 0 32px'}}>
-      <style>{`
-        ::-webkit-scrollbar{width:8px;height:8px}
-        ::-webkit-scrollbar-track{background:#f1f5f9;border-radius:4px}
-        ::-webkit-scrollbar-thumb{background:#94a3b8;border-radius:4px}
-        ::-webkit-scrollbar-thumb:hover{background:#475569}
-      `}</style>
       {/* Toast */}
       {msg&&<div style={{position:'fixed',bottom:20,right:20,zIndex:9999,
         background:'#f0f9ff',border:'1px solid #bae6fd',borderRadius:10,
@@ -495,7 +490,7 @@ export default function PermissionManagementPage() {
 
       {/* ── Add User Modal ── */}
       {showAdd&&(
-        <div style={{position:'relative',width:'100%',minHeight:'100vh',background:'rgba(0,0,0,.5)',zIndex:1000,
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:1000,
           display:'flex',alignItems:'center',justifyContent:'center',padding:16}}
           onClick={()=>setShowAdd(false)}>
           <div style={{background:'#fff',borderRadius:16,width:440,maxWidth:'96vw',

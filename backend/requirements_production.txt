@@ -1,0 +1,56 @@
+# FILE: backend/requirements.txt
+# eLogix HRMS — Production Python dependencies
+# eLogix Technologies · www.elogix.com.np
+
+# ── Flask core ────────────────────────────────────────────────────────
+Flask==3.1.0
+Flask-CORS==5.0.0
+Flask-SQLAlchemy==3.1.1
+Flask-Migrate==4.1.0
+Flask-Caching==2.3.0
+Flask-Limiter==3.9.4
+
+# ── WSGI server ───────────────────────────────────────────────────────
+gunicorn==23.0.0
+
+# ── Database ──────────────────────────────────────────────────────────
+psycopg2-binary==2.9.10
+SQLAlchemy==2.0.38
+alembic==1.14.1
+
+# ── Celery + Redis ────────────────────────────────────────────────────
+celery==5.4.0
+redis==5.2.1
+celery[redis]==5.4.0
+redbeat==2.2.0              # Redis-based Celery Beat scheduler (VPS-safe, no file locking)
+flower==2.0.1               # Celery monitoring UI
+
+# ── Auth & Security ───────────────────────────────────────────────────
+PyJWT==2.10.1
+bcrypt==4.2.1
+cryptography==44.0.0
+
+# ── HTTP & Email ──────────────────────────────────────────────────────
+requests==2.32.3
+httpx==0.28.1
+
+# ── AI & ML ───────────────────────────────────────────────────────────
+anthropic==0.45.0
+openai==1.61.0
+
+# ── File handling ─────────────────────────────────────────────────────
+Pillow==11.1.0
+openpyxl==3.1.5
+python-docx==1.1.2
+reportlab==4.3.0
+PyPDF2==3.0.1
+
+# ── Utilities ─────────────────────────────────────────────────────────
+python-dotenv==1.0.1
+pydantic==2.10.6
+marshmallow==3.25.1
+python-dateutil==2.9.0.post0
+pytz==2024.2
+
+# ── Monitoring ────────────────────────────────────────────────────────
+sentry-sdk[flask]==2.20.0   # Error tracking (optional — set SENTRY_DSN in .env)

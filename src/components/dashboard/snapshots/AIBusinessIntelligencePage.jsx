@@ -525,29 +525,20 @@ function Bubble({ msg, onSpeak, speakingId }) {
 // ── MAIN COMPONENT ─────────────────────────────────────────────
 
 function _getSession() {
-  try {
-    return JSON.parse(
-      sessionStorage.getItem('elogix_session') ||
-      localStorage.getItem('elogix_session') || 'null'
-    ) || {}
-  } catch (_e) { return {} }
-}
-function _useAppFallback() {
-  const s = _getSession()
-  return {
-    sub: s?.last_page || '', persona: s?.persona || s?.user?.role || 'employee',
-    lang: s?.lang || 'en', currency: s?.currency || 'NPR',
-    company: s?.company || {}, user: s?.user || {},
-    darkMode: false, setDarkMode: () => {},
-    navTo: (p) => window.dispatchEvent(new CustomEvent('elogix:nav', { detail: { page: p } })),
-    switchPersona: () => {}, setShowNotif: () => {}, setShowAI: () => {},
-    setSidebarOpen: () => {}, sidebarOpen: true,
-    currentPersona: { id: s?.persona || 'employee', icon: '👤', color: '#7c3aed', label: '' },
-  }
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}}
 }
 
 export default function AIBusinessIntelligencePage() {
-  const { currentPersona, persona } = _useAppFallback()
+  const _s=_getSession()
+  const _c=_s?.company||{}; const _u=_s?.user||{}
+  const navTo=(p)=>window.dispatchEvent(new CustomEvent('elogix:nav',{detail:{page:p}}))
+  const persona=_s?.persona||_u?.role||'employee'
+  const sub=_s?.last_page||''
+  const lang=_s?.lang||'en'; const currency=_s?.currency||'NPR'
+  const company=_c; const user=_u
+  const setShowNotif=()=>{}; const setShowAI=()=>{}; const setSidebarOpen=()=>{}
+  const switchPersona=()=>{}; const darkMode=false
+  const currentPersona={id:persona,icon:'👤',color:'#7c3aed',label:persona}
   const roleLevel = classifyRole(currentPersona?.id, currentPersona?.label||persona)
   const hasKey = !!(VITE_KEY?.startsWith('sk-ant'))
   const isCEO = roleLevel==='c_level'||roleLevel==='super_admin'

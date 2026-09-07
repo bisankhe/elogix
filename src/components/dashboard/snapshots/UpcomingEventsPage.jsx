@@ -1,157 +1,290 @@
-// FILE: UpcomingEventsPage.jsx — Upcoming Events (was showing nothing)
+// FILE: src/components/dashboard/snapshots/UpcomingEventsPage.jsx
+// eLogix HRMS — Upcoming Events
+// COMPLETE REWRITE — Zero mock data. 100% real tenant API.
+// APIs: /api/v1/calendar/events + /api/v1/employees/birthdays-anniversaries
+// eLogix Technologies · www.elogix.com.np
+
 import { useState, useEffect } from 'react'
+
+function _getSession() {
+  try {
+    return JSON.parse(
+      sessionStorage.getItem('elogix_session') ||
+      localStorage.getItem('elogix_session') || 'null'
+    ) || {}
+  } catch (_e) { return {} }
+}
 
 const G = 'linear-gradient(135deg,#0c4a6e 0%,#0891b2 60%,#38bdf8 100%)'
 const A = '#0891b2'
+
 const TYPE_META = {
-  payroll:    {color:'#7c3aed',bg:'#f5f3ff',icon:'💰'},
-  compliance: {color:'#ef4444',bg:'#fef2f2',icon:'⚠️'},
-  training:   {color:'#0891b2',bg:'#f0f9ff',icon:'🎓'},
-  holiday:    {color:'#f59e0b',bg:'#fffbeb',icon:'🏖️'},
-  onboard:    {color:'#10b981',bg:'#f0fdf4',icon:'🎉'},
-  meeting:    {color:'#374151',bg:'#f9fafb',icon:'📋'},
-  review:     {color:'#8b5cf6',bg:'#faf5ff',icon:'📊'},
-  social:     {color:'#f97316',bg:'#fff7ed',icon:'🎊'},
-  birthday:   {color:'#ec4899',bg:'#fdf4ff',icon:'🎂'},
-  anniversary:{color:'#10b981',bg:'#f0fdf4',icon:'🥂'},
+  payroll    : { color:'#7c3aed', bg:'#f5f3ff', icon:'💰', label:'Payroll'     },
+  compliance : { color:'#ef4444', bg:'#fef2f2', icon:'⚠️', label:'Compliance'  },
+  training   : { color:'#0891b2', bg:'#f0f9ff', icon:'🎓', label:'Training'    },
+  holiday    : { color:'#f59e0b', bg:'#fffbeb', icon:'🏖️', label:'Holiday'     },
+  onboard    : { color:'#10b981', bg:'#f0fdf4', icon:'🎉', label:'Onboarding'  },
+  meeting    : { color:'#374151', bg:'#f9fafb', icon:'📋', label:'Meeting'     },
+  review     : { color:'#8b5cf6', bg:'#faf5ff', icon:'📊', label:'Review'      },
+  social     : { color:'#f97316', bg:'#fff7ed', icon:'🎊', label:'Social'      },
+  birthday   : { color:'#ec4899', bg:'#fdf4ff', icon:'🎂', label:'Birthday'    },
+  anniversary: { color:'#10b981', bg:'#f0fdf4', icon:'🥂', label:'Anniversary' },
+  deadline   : { color:'#ef4444', bg:'#fef2f2', icon:'⏰', label:'Deadline'    },
+  leave      : { color:'#06b6d4', bg:'#f0f9ff', icon:'🌴', label:'Leave'       },
+  default    : { color:'#64748b', bg:'#f8fafc', icon:'📅', label:'Event'       },
 }
-
-const UPCOMING = [
-  { id:1,  days:0,  date:'Today',   title:'Payroll Lock — July 2081',          type:'payroll',     time:'6:00 PM',   dept:'Finance',    priority:'high',   desc:'Monthly attendance lock before payroll run' },
-  { id:2,  days:1,  date:'Aug 1',   title:'New Joiners Orientation',           type:'onboard',     time:'09:00 AM',  dept:'HR',         priority:'high',   desc:'3 new hires reporting — Gita, Sunita, Ram' },
-  { id:3,  days:2,  date:'Aug 2',   title:'SSF Contribution Deadline',         type:'compliance',  time:'5:00 PM',   dept:'Finance',    priority:'critical',desc:'Monthly SSF submission to Employees Provident Fund' },
-  { id:4,  days:3,  date:'Aug 3',   title:'Birthday: Priya Maharjan',          type:'birthday',    time:'All Day',   dept:'Finance',    priority:'normal', desc:'Finance Manager celebrates birthday' },
-  { id:5,  days:5,  date:'Aug 5',   title:'AWS Cloud Training — Batch 2',      type:'training',    time:'10:00 AM',  dept:'IT',         priority:'normal', desc:'12 IT staff enrolled, Conf Room B' },
-  { id:6,  days:7,  date:'Aug 7',   title:'Q2 Performance Review Deadline',    type:'review',      time:'EOD',       dept:'All',        priority:'high',   desc:'All managers must submit reviews by end of day' },
-  { id:7,  days:8,  date:'Aug 8',   title:'Work Anniversary: Ram Sah (5 yrs)',type:'anniversary', time:'All Day',   dept:'Operations', priority:'normal', desc:'5 years of dedicated service — celebrate!' },
-  { id:8,  days:10, date:'Aug 10',  title:'Contract Expiry: Ramesh Koirala',   type:'compliance',  time:'—',         dept:'Sales',      priority:'critical',desc:'Contract ends — renew or conclude by Aug 10' },
-  { id:9,  days:12, date:'Aug 12',  title:'Board of Directors Meeting',        type:'meeting',     time:'10:00 AM',  dept:'Executive',  priority:'high',   desc:'Q2 results presentation + Q3 planning' },
-  { id:10, days:14, date:'Aug 14',  title:'National Holiday — Janai Purnima', type:'holiday',     time:'All Day',   dept:'All',        priority:'normal', desc:'Office closed — mandatory leave' },
-  { id:11, days:18, date:'Aug 18',  title:'HR Policy Review Workshop',         type:'meeting',     time:'2:00 PM',   dept:'HR',         priority:'normal', desc:'Annual policy update session for all HODs' },
-  { id:12, days:22, date:'Aug 22',  title:'Payroll Processing — August',       type:'payroll',     time:'09:00 AM',  dept:'Finance',    priority:'high',   desc:'Monthly salary disbursement' },
-  { id:13, days:28, date:'Aug 28',  title:'Company Picnic — Team Outing',      type:'social',      time:'7:00 AM',   dept:'All',        priority:'normal', desc:'Annual team-building at Nagarkot' },
-  { id:14, days:32, date:'Sep 2',   title:'Labour Audit — Dept. of Labour',    type:'compliance',  time:'10:00 AM',  dept:'HR',         priority:'critical',desc:'Annual inspection — documents must be ready' },
-]
-
 const PRIORITY_C = { critical:'#ef4444', high:'#f59e0b', normal:'#10b981' }
 
-
-function _getSession() {
-  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}}
+function daysFromNow(dateStr) {
+  const today = new Date(); today.setHours(0,0,0,0)
+  const ev    = new Date(dateStr); ev.setHours(0,0,0,0)
+  return Math.round((ev - today) / 86400000)
 }
-function _getTenantCtx() {
-  const s=_getSession()
-  const token=localStorage.getItem('access_token')||s?.token||''
-  const slug=s?.company?.slug||localStorage.getItem('elogix_tenant_slug')||''
-  return {token,slug,valid:!!(token&&slug)}
+function urgencyLabel(days) {
+  if (days < 0)  return { label:'Overdue', color:'#ef4444' }
+  if (days === 0) return { label:'Today',   color:'#ef4444' }
+  if (days === 1) return { label:'Tomorrow',color:'#f59e0b' }
+  if (days <= 7)  return { label:`In ${days}d`,  color:'#f59e0b' }
+  if (days <= 30) return { label:`In ${days}d`,  color:'#64748b' }
+  return               { label:`In ${days}d`,    color:'#94a3b8' }
 }
 
 export default function UpcomingEventsPage() {
-  const [apiData,setApiData]=useState(null)
-  const [apiLoading,setApiLoading]=useState(true)
-  const [apiError,setApiError]=useState(null)
-  const [filter, setFilter] = useState('all')
-  const [search, setSearch] = useState('')
+  const [events,  setEvents]  = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(null)
+  const [filter,  setFilter]  = useState('all')
+  const [search,  setSearch]  = useState('')
+  const [range,   setRange]   = useState(60)
 
-  const filtered = UPCOMING.filter(e =>
-    (filter==='all'||e.type===filter||e.priority===filter) &&
-    (!search||e.title.toLowerCase().includes(search.toLowerCase())||e.dept.toLowerCase().includes(search.toLowerCase()))
+  const s       = _getSession()
+  const company = s?.company || {}
+
+  function authHeaders() {
+    const token = localStorage.getItem('access_token') || s?.token || ''
+    const slug  = s?.company?.slug || ''
+    return { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': slug, 'Content-Type':'application/json' }
+  }
+
+  useEffect(() => {
+    const token = localStorage.getItem('access_token') || s?.token || ''
+    const slug  = s?.company?.slug || ''
+    if (!token || !slug) { setLoading(false); return }
+
+    setLoading(true)
+    Promise.all([
+      fetch(`/api/v1/calendar/events?days=${range}`, { headers: authHeaders() }).then(r => r.ok ? r.json() : null),
+      fetch('/api/v1/employees/birthdays-anniversaries', { headers: authHeaders() }).then(r => r.ok ? r.json() : null),
+      fetch('/api/v1/employees/contract-expiry', { headers: authHeaders() }).then(r => r.ok ? r.json() : null),
+    ])
+      .then(([calData, bdData, contractData]) => {
+        const all = []
+
+        // Calendar events
+        const calEvents = calData?.events || calData?.data || []
+        calEvents.forEach(e => {
+          const days = daysFromNow(e.date)
+          if (days >= -1 && days <= range) {
+            all.push({ ...e, days, source:'calendar',
+              type: e.type || 'meeting',
+              priority: days <= 1 ? 'critical' : days <= 7 ? 'high' : 'normal' })
+          }
+        })
+
+        // Birthdays
+        const bdays = bdData?.data?.birthdays || bdData?.birthdays || []
+        bdays.forEach(b => {
+          const days = daysFromNow(b.date || b.next_birthday)
+          if (days >= 0 && days <= range) {
+            all.push({
+              id: `bd-${b.id}`, title: `🎂 ${b.name}'s Birthday`,
+              date: b.date || b.next_birthday, days,
+              type:'birthday', dept: b.department, source:'birthday',
+              priority: days === 0 ? 'critical' : days <= 7 ? 'high' : 'normal',
+              detail: `${b.name} from ${b.department} turns ${b.age} today!`
+            })
+          }
+        })
+
+        // Anniversaries
+        const anns = bdData?.data?.anniversaries || bdData?.anniversaries || []
+        anns.forEach(a => {
+          const days = daysFromNow(a.date || a.next_anniversary)
+          if (days >= 0 && days <= range) {
+            all.push({
+              id: `ann-${a.id}`, title: `🥂 ${a.name} — ${a.years}yr Anniversary`,
+              date: a.date || a.next_anniversary, days,
+              type:'anniversary', dept: a.department, source:'anniversary',
+              priority: days === 0 ? 'critical' : days <= 7 ? 'high' : 'normal',
+              detail: `${a.name} celebrates ${a.years} years at ${company?.name}`
+            })
+          }
+        })
+
+        // Contract expiries
+        const contracts = contractData?.data?.contracts || contractData?.contracts || []
+        contracts.forEach(c => {
+          const days = daysFromNow(c.end_date)
+          if (days >= 0 && days <= range) {
+            all.push({
+              id: `ct-${c.id}`, title: `📄 Contract Expiry — ${c.name}`,
+              date: c.end_date, days,
+              type:'compliance', dept: c.dept, source:'contract',
+              priority: days <= 7 ? 'critical' : days <= 30 ? 'high' : 'normal',
+              detail: `${c.name}'s contract expires in ${days} days`
+            })
+          }
+        })
+
+        // Sort by days
+        all.sort((a,b) => a.days - b.days)
+        setEvents(all)
+      })
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false))
+  }, [range])
+
+  const types    = ['all', ...new Set(events.map(e => e.type))]
+  const critical = events.filter(e => e.priority === 'critical').length
+  const thisWeek = events.filter(e => e.days >= 0 && e.days <= 7).length
+
+  const filtered = events.filter(e => {
+    if (filter !== 'all' && e.type !== filter) return false
+    if (search && !e.title?.toLowerCase().includes(search.toLowerCase()) &&
+        !e.dept?.toLowerCase().includes(search.toLowerCase())) return false
+    return true
+  })
+
+  if (loading) return (
+    <div style={{ textAlign:'center', padding:60, color:A, fontFamily:'system-ui' }}>
+      <div style={{ fontSize:36, marginBottom:12 }}>⟳</div>
+      <div style={{ fontSize:13, fontWeight:600 }}>Loading upcoming events for {company?.name}...</div>
+    </div>
   )
 
-  const critical = UPCOMING.filter(e=>e.priority==='critical').length
-  const thisWeek = UPCOMING.filter(e=>e.days<=7).length
-
-  useEffect(()=>{
-    const {token,slug,valid} = _getTenantCtx()
-    if(!valid){setApiLoading(false);return}
-    setApiLoading(true);setApiError(null)
-    fetch('/api/v1/calendar/events',{headers:{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}})
-      .then(r=>{if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));throw new Error('Session expired')}if(!r.ok)throw new Error(`Error ${r.status}`);return r.json()})
-      .then(d=>{const p=d.events||d.data||d;if(p)setApiData(p)})
-      .catch(err=>setApiError(err.message))
-      .finally(()=>setApiLoading(false))
-  },[])
-
   return (
-    <div style={{fontFamily:'system-ui,sans-serif'}}>
-      <div style={{background:G,borderRadius:14,padding:'16px 22px',marginBottom:14,color:'#fff'}}>
-      {apiLoading && (
-        <div style={{textAlign:'center',padding:40,color:'#7c3aed',fontSize:13,fontWeight:600}}>
-          <div style={{fontSize:32,marginBottom:8}}>⟳</div>Loading...
-        </div>
-      )}
-      {apiError && !apiLoading && (
-        <div style={{padding:'8px 14px',background:'#fef2f2',border:'1px solid #fecaca',
-          borderRadius:8,fontSize:12,color:'#dc2626',marginBottom:8,fontWeight:600}}>
-          ⚠️ {apiError}
-        </div>
-      )}
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:10}}>
-          <div>
-            <h2 style={{margin:0,fontSize:20,fontWeight:900}}>🔔 Upcoming Events</h2>
-            <p style={{margin:'3px 0 0',fontSize:10,opacity:.8}}>Deadlines · Holidays · Meetings · Birthdays · Compliance · Training</p>
-          </div>
-          <div style={{display:'flex',gap:12}}>
-            <div style={{textAlign:'center'}}>
-              <div style={{fontSize:22,fontWeight:900,color:'#fbbf24'}}>{critical}</div>
-              <div style={{fontSize:8,opacity:.8}}>Critical</div>
-            </div>
-            <div style={{textAlign:'center'}}>
-              <div style={{fontSize:22,fontWeight:900}}>{thisWeek}</div>
-              <div style={{fontSize:8,opacity:.8}}>This Week</div>
-            </div>
-            <div style={{textAlign:'center'}}>
-              <div style={{fontSize:22,fontWeight:900}}>{UPCOMING.length}</div>
-              <div style={{fontSize:8,opacity:.8}}>Total</div>
-            </div>
+    <div style={{ fontFamily:"'Segoe UI',system-ui,sans-serif", padding:24 }}>
+      {/* Header */}
+      <div style={{ background:G, borderRadius:16, padding:'20px 24px', marginBottom:20,
+        boxShadow:'0 4px 24px rgba(8,145,178,.25)',
+        display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:10 }}>
+        <div>
+          <div style={{ fontSize:18, fontWeight:900, color:'#fff' }}>📅 Upcoming Events</div>
+          <div style={{ fontSize:11, color:'rgba(255,255,255,.7)', marginTop:4 }}>
+            {company?.name} · Next {range} days
           </div>
         </div>
+        <select value={range} onChange={e => setRange(Number(e.target.value))}
+          style={{ padding:'6px 12px', borderRadius:20, border:'1.5px solid rgba(255,255,255,.4)',
+            background:'rgba(255,255,255,.15)', color:'#fff', fontSize:11, fontWeight:700, outline:'none' }}>
+          {[7,14,30,60,90].map(d => <option key={d} value={d} style={{ color:'#0f172a' }}>Next {d} days</option>)}
+        </select>
       </div>
 
-      <div style={{display:'flex',gap:6,marginBottom:14,flexWrap:'wrap'}}>
-        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 Search events..."
-          style={{flex:1,minWidth:160,padding:'8px 12px',borderRadius:9,border:'1px solid #e2e8f0',fontSize:10,outline:'none'}}/>
-        {['all','critical','high','compliance','payroll','training','holiday','birthday'].map(f=>(
-          <button key={f} onClick={()=>setFilter(f)} style={{padding:'7px 14px',borderRadius:20,border:filter!==f?'1px solid #e2e8f0':'none',background:filter===f?A:'#fff',color:filter===f?'#fff':'#475569',fontSize:9,fontWeight:700,cursor:'pointer',textTransform:'capitalize'}}>{f}</button>
+      {/* KPI strip */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(120px,1fr))', gap:12, marginBottom:20 }}>
+        {[
+          { icon:'📅', label:'Total',     val:events.length, color:A          },
+          { icon:'🔴', label:'Critical',  val:critical,      color:'#ef4444'  },
+          { icon:'📆', label:'This Week', val:thisWeek,      color:'#f59e0b'  },
+          { icon:'📋', label:'Types',     val:types.length-1,color:'#8b5cf6'  },
+        ].map((k,i) => (
+          <div key={i} style={{ background:'#fff', borderRadius:13, padding:'14px 16px',
+            border:`1.5px solid ${k.color}20`, borderTop:`4px solid ${k.color}`,
+            boxShadow:'0 2px 8px rgba(0,0,0,.06)' }}>
+            <div style={{ fontSize:22, marginBottom:6 }}>{k.icon}</div>
+            <div style={{ fontSize:26, fontWeight:900, color:k.color }}>{k.val}</div>
+            <div style={{ fontSize:10, color:'#64748b', marginTop:3, fontWeight:600 }}>{k.label}</div>
+          </div>
         ))}
       </div>
 
-      <div style={{display:'grid',gap:8}}>
-        {filtered.map(ev=>{
-          const m = TYPE_META[ev.type]||TYPE_META.meeting
-          const isToday = ev.days===0
-          const isUrgent = ev.days<=3
+      {/* Filters */}
+      <div style={{ display:'flex', gap:6, marginBottom:10, flexWrap:'wrap' }}>
+        {types.map(type => {
+          const m = TYPE_META[type] || TYPE_META.default
           return (
-            <div key={ev.id} style={{background:'#fff',borderRadius:13,border:`1px solid ${isToday?A:m.color}30`,padding:'14px 16px',display:'flex',gap:14,alignItems:'flex-start',position:'relative',overflow:'hidden'}}>
-              {isToday&&<div style={{position:'absolute',top:0,left:0,right:0,height:3,background:G}}/>}
-              {/* Days badge */}
-              <div style={{width:54,height:54,borderRadius:12,background:isToday?A:isUrgent?`${m.color}15`:m.bg,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',flexShrink:0,border:`2px solid ${isToday?'#fff':m.color}30`}}>
-                <div style={{fontSize:isToday?11:16,fontWeight:900,color:isToday?'#fff':m.color}}>{isToday?'TODAY':ev.days}</div>
-                {!isToday&&<div style={{fontSize:7,color:m.color}}>days</div>}
-              </div>
-              <div style={{flex:1}}>
-                <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:6,marginBottom:4}}>
-                  <div style={{fontSize:12,fontWeight:800,color:'#0f172a'}}>{ev.title}</div>
-                  <div style={{display:'flex',gap:5}}>
-                    {ev.priority!=='normal'&&<span style={{fontSize:8,fontWeight:700,padding:'2px 8px',borderRadius:20,background:PRIORITY_C[ev.priority]+'20',color:PRIORITY_C[ev.priority]}}>{ev.priority.toUpperCase()}</span>}
-                    <span style={{fontSize:8,fontWeight:700,padding:'2px 8px',borderRadius:20,background:m.bg,color:m.color}}>{m.icon} {ev.type}</span>
-                  </div>
-                </div>
-                <div style={{fontSize:9,color:'#64748b',marginBottom:4}}>{ev.desc}</div>
-                <div style={{display:'flex',gap:12,fontSize:9,color:'#94a3b8'}}>
-                  <span>📅 {ev.date}</span>
-                  <span>⏰ {ev.time}</span>
-                  <span>🏢 {ev.dept}</span>
-                </div>
-              </div>
-              <div style={{display:'flex',flexDirection:'column',gap:4,flexShrink:0}}>
-                <button style={{padding:'5px 12px',borderRadius:8,border:'none',background:A,color:'#fff',fontSize:8,fontWeight:700,cursor:'pointer'}}>Details</button>
-                {ev.priority==='critical'&&<button style={{padding:'5px 12px',borderRadius:8,border:'1px solid #ef4444',background:'#fff',color:'#ef4444',fontSize:8,cursor:'pointer'}}>⚡ Act Now</button>}
-              </div>
-            </div>
+            <button key={type} onClick={() => setFilter(type)}
+              style={{ padding:'5px 12px', borderRadius:20,
+                border:`1.5px solid ${filter===type?m.color:'#e2e8f0'}`,
+                background:filter===type?m.color:'#fff',
+                color:filter===type?'#fff':'#64748b',
+                fontSize:11, fontWeight:700, cursor:'pointer' }}>
+              {type==='all'?'📋 All':`${m.icon} ${m.label}`}
+            </button>
           )
         })}
       </div>
+
+      {/* Search */}
+      <div style={{ marginBottom:14 }}>
+        <input value={search} onChange={e => setSearch(e.target.value)}
+          placeholder="Search events or departments..."
+          style={{ width:'100%', maxWidth:320, padding:'7px 12px', borderRadius:8,
+            border:'1px solid #e2e8f0', fontSize:12, outline:'none', boxSizing:'border-box' }}/>
+      </div>
+
+      {/* Error */}
+      {error && (
+        <div style={{ padding:'12px 16px', background:'#fffbeb', borderRadius:10,
+          color:'#92400e', fontSize:12, fontWeight:600, marginBottom:14 }}>
+          ⚠️ {error} — showing available data
+        </div>
+      )}
+
+      {/* Empty */}
+      {events.length === 0 && !loading && (
+        <div style={{ textAlign:'center', padding:60, color:'#94a3b8', background:'#fff', borderRadius:14 }}>
+          <div style={{ fontSize:40, marginBottom:12 }}>📅</div>
+          <div style={{ fontSize:14, fontWeight:700, color:'#475569' }}>No upcoming events in the next {range} days</div>
+          <div style={{ fontSize:12, marginTop:6 }}>Add events to your calendar to see them here</div>
+        </div>
+      )}
+
+      {/* Event list */}
+      {filtered.length > 0 && (
+        <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+          {filtered.map((ev, i) => {
+            const m   = TYPE_META[ev.type] || TYPE_META.default
+            const urg = urgencyLabel(ev.days)
+            const [exp, setExp] = useState(false)
+            return (
+              <div key={ev.id || i} onClick={() => setExp(v => !v)}
+                style={{ background:'#fff', borderRadius:13, padding:'14px 18px',
+                  border:`1.5px solid ${m.color}20`, borderLeft:`5px solid ${m.color}`,
+                  boxShadow:'0 2px 8px rgba(0,0,0,.06)', cursor:'pointer' }}
+                onMouseEnter={e => e.currentTarget.style.background=m.bg}
+                onMouseLeave={e => e.currentTarget.style.background='#fff'}>
+                <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                  <div style={{ width:40, height:40, borderRadius:10, flexShrink:0,
+                    background:m.bg, display:'flex', alignItems:'center', justifyContent:'center', fontSize:20 }}>
+                    {m.icon}
+                  </div>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ fontWeight:700, fontSize:13, color:'#0f172a' }}>{ev.title}</div>
+                    <div style={{ fontSize:11, color:'#64748b', marginTop:2 }}>
+                      {ev.date}{ev.time ? ` · ${ev.time}` : ''}{ev.dept ? ` · ${ev.dept}` : ''}{ev.loc ? ` · 📍${ev.loc}` : ''}
+                    </div>
+                  </div>
+                  <div style={{ textAlign:'right', flexShrink:0 }}>
+                    <div style={{ fontSize:11, fontWeight:800, color:urg.color }}>{urg.label}</div>
+                    <span style={{ fontSize:9, padding:'2px 8px', borderRadius:20, fontWeight:700,
+                      background:m.bg, color:m.color, display:'inline-block', marginTop:3 }}>
+                      {m.label}
+                    </span>
+                  </div>
+                </div>
+                {exp && ev.detail && (
+                  <div style={{ marginTop:10, padding:10, background:'#f8fafc', borderRadius:8,
+                    fontSize:12, color:'#475569', lineHeight:1.5 }}>
+                    {ev.detail}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

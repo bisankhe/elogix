@@ -50,29 +50,6 @@ const costData=[{dept:'Engineering',cost:1.8},{dept:'Sales',cost:0.9},{dept:'Ope
 const hireData=[{m:'Jan',hire:8},{m:'Feb',hire:5},{m:'Mar',hire:11},{m:'Apr',hire:7},{m:'May',hire:9},{m:'Jun',hire:6},{m:'Jul',hire:5}]
 const genderPie=[{name:'Male',value:187,color:'#0ea5e9'},{name:'Female',value:121,color:'#ec4899'},{name:'TG',value:4,color:'#10b981'}]
 
-
-function _getSession() {
-  try {
-    return JSON.parse(
-      sessionStorage.getItem('elogix_session') ||
-      localStorage.getItem('elogix_session') || 'null'
-    ) || {}
-  } catch (_e) { return {} }
-}
-function _useAppFallback() {
-  const s = _getSession()
-  return {
-    sub: s?.last_page || '', persona: s?.persona || s?.user?.role || 'employee',
-    lang: s?.lang || 'en', currency: s?.currency || 'NPR',
-    company: s?.company || {}, user: s?.user || {},
-    darkMode: false, setDarkMode: () => {},
-    navTo: (p) => window.dispatchEvent(new CustomEvent('elogix:nav', { detail: { page: p } })),
-    switchPersona: () => {}, setShowNotif: () => {}, setShowAI: () => {},
-    setSidebarOpen: () => {}, sidebarOpen: true,
-    currentPersona: { id: s?.persona || 'employee', icon: '👤', color: '#7c3aed', label: '' },
-  }
-}
-
 export default function AIHRAnalyticsPage(){
   const [insight,setInsight]=useState('')
   const [loading,setLoading]=useState(false)
