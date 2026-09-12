@@ -14,7 +14,7 @@ import ELogixAdminPage         from './pages/elogix-admin/ELogixAdminPage.jsx'
 export default function AppRouter() {
   const {
     isAuthenticated, isAdmin,
-    logout,
+    logout, logoutAdmin, logoutAll,
     getDashboardPage,
   } = useAuth()
 
@@ -39,13 +39,10 @@ export default function AppRouter() {
     if (data?.goto === 'elogix-admin' || data?.admin) {
       setPage('elogix-admin')
     } else {
-      // data.goto is set by LoginPage.jsx to the ROLE-based landing key
-      // from getLandingRoute() in tenantRouting.js.
-      // Do NOT fall back to getDashboardPage() here — AuthContext.loginTenant()
-      // runs async and getDashboardPage() may still return stale state.
-      // data.goto (or data.landing) is always the freshly computed value.
-      const landing = data?.goto || data?.landing || 'company-dashboard'
-      try { sessionStorage.removeItem('elogix_pending_login') } catch(_e) {}
+      // Use business-type landing page if available
+      const landing = data?.landing || data?.goto || getDashboardPage()
+      // Clear pending login session
+      try { sessionStorage.removeItem('elogix_pending_login') } catch {}
       setInitialPage(landing)
       setPage('app')
     }
@@ -53,28 +50,27 @@ export default function AppRouter() {
 
   // ── Logout — MUST call AuthContext methods so React state updates ──
   const handleLogout = () => {
-    // logout() is the single method from AuthContext — clears all session
-    // state, localStorage (elogix_session + all legacy keys), sessionStorage.
-    logout()
+    // 1. Call AuthContext logout → clears state + localStorage + sessionStorage
+    logoutAll()
+    // 2. Force page to login immediately (useEffect will also catch this)
     setPage('login')
     setInitialPage(null)
   }
 
   // ── Admin-specific logout ──────────────────────────────────
   const handleAdminLogout = () => {
-    // Clear legacy admin keys in case they exist
+    // Clear admin tokens from both storages
     ;['elogix_admin_token','elogix_admin_user','elogix_admin_key'].forEach(k => {
       localStorage.removeItem(k)
       sessionStorage.removeItem(k)
     })
-    // logout() clears elogix_admin_session (written by AuthContext.loginAdmin)
-    // and updates isAdmin → false → triggers useEffect → shows login
-    logout()
+    // Update AuthContext isAdmin state → triggers useEffect → shows login
+    logoutAdmin()
     setPage('login')
     setInitialPage(null)
   }
 
-  if (page === 'login')        return <LoginPage    onLoginSuccess={handleLoginSuccess} />
+  if (page === 'login')        return <LoginPage    onLoginSuccess={handleLoginSuccess} onRegister={()=>setPage('register')} />
   if (page === 'register')     return <RegisterPage onSuccess={() => setPage('login')} />
   if (page === 'elogix-admin') return <ELogixAdminPage onLogout={handleAdminLogout} />
   return <App initialPage={initialPage} onLogout={handleLogout} />

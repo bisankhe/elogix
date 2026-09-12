@@ -13,143 +13,16 @@ import {
   PolarAngleAxis, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
+import { useApp } from '../../context/AppContext.jsx'
 
 // ── THEME ────────────────────────────────────────────────────
 const P = '#7c3aed'
 const COLORS = ['#7c3aed','#0ea5e9','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899']
 
-// ── DATA ─────────────────────────────────────────────────────
-const headcount = { total:312, male:187, female:121, transgender:4 }
 
-const deptComparison = [
-  { dept:'Engineering', curr:68, prev:59 },
-  { dept:'Sales',       curr:45, prev:41 },
-  { dept:'HR',          curr:18, prev:16 },
-  { dept:'Finance',     curr:22, prev:20 },
-  { dept:'Operations',  curr:54, prev:49 },
-  { dept:'Marketing',   curr:31, prev:27 },
-  { dept:'IT',          curr:42, prev:38 },
-  { dept:'Admin',       curr:32, prev:29 },
-]
 
-const satisfactionData = [
-  { label:'Very Happy',   pct:28, color:'#10b981' },
-  { label:'Happy',        pct:41, color:'#0ea5e9' },
-  { label:'Neutral',      pct:18, color:'#f59e0b' },
-  { label:'Unhappy',      pct:9,  color:'#ef4444' },
-  { label:'Very Unhappy', pct:4,  color:'#dc2626' },
-]
-
-const worklifeData = [
-  { month:'Jan', score:72, burnout:22 },
-  { month:'Feb', score:74, burnout:20 },
-  { month:'Mar', score:68, burnout:28 },
-  { month:'Apr', score:76, burnout:18 },
-  { month:'May', score:79, burnout:15 },
-  { month:'Jun', score:75, burnout:19 },
-]
-
-const onboardingThisMonth = [
-  { name:'Priya Sharma',    dept:'Engineering', day:1,  status:'Week 3',  tasks:85 },
-  { name:'Arjun Thapa',     dept:'Sales',       day:8,  status:'Week 2',  tasks:60 },
-  { name:'Sunita Rai',      dept:'HR',          day:12, status:'Week 2',  tasks:55 },
-  { name:'Bikash Adhikari', dept:'Finance',     day:18, status:'Week 1',  tasks:30 },
-  { name:'Laxmi Karki',     dept:'Operations',  day:22, status:'Day 3',   tasks:10 },
-]
-
-const performanceData = [
-  { subject:'KPI',         score:78, benchmark:75 },
-  { subject:'OKR',         score:63, benchmark:80 },
-  { subject:'Attendance',  score:94, benchmark:90 },
-  { subject:'Learning',    score:82, benchmark:85 },
-  { subject:'Teamwork',    score:88, benchmark:80 },
-  { subject:'Innovation',  score:71, benchmark:75 },
-]
-
-const calendarEvents = [
-  { date:'Jul 5',  title:'Board Meeting',           type:'meeting',    icon:'📋' },
-  { date:'Jul 7',  title:'Performance Review Q2',   type:'review',     icon:'📊' },
-  { date:'Jul 10', title:'Priya Sharma Joins',       type:'onboard',    icon:'🎉' },
-  { date:'Jul 12', title:'SSF Filing Deadline',      type:'compliance', icon:'⚠️' },
-  { date:'Jul 15', title:'HR Strategy Workshop',     type:'training',   icon:'🎓' },
-  { date:'Jul 18', title:'Team Lunch - Sales',       type:'social',     icon:'🍽️' },
-  { date:'Jul 22', title:'Payroll Processing',       type:'payroll',    icon:'💰' },
-  { date:'Jul 25', title:'Safety Drill',             type:'compliance', icon:'🦺' },
-]
-
-const quickActions = [
-  { icon:'✅', label:'Approve Leave',     color:'#10b981', page:'leave-approval' },
-  { icon:'📋', label:'Run Payroll',       color:'#7c3aed', page:'automated-payroll' },
-  { icon:'👤', label:'Add Employee',      color:'#0ea5e9', page:'employee-joining' },
-  { icon:'📣', label:'Announcement',      color:'#f59e0b', page:'announcement-board' },
-  { icon:'🎯', label:'Set OKR',           color:'#8b5cf6', page:'okr-management' },
-  { icon:'📊', label:'BI Report',         color:'#ef4444', page:'ai-business-intelligence' },
-  { icon:'📝', label:'Generate Letter',   color:'#0d9488', page:'experience-letter' },
-  { icon:'🔮', label:'Predict Attrition', color:'#ec4899', page:'ai-attrition-prediction' },
-]
-
-const birthdays = [
-  { name:'Sita Adhikari',   dept:'Finance',     date:'Jul 5',  type:'birthday',     icon:'🎂' },
-  { name:'Ram Prasad Sah',  dept:'Operations',  date:'Jul 7',  type:'anniversary',  icon:'🥂', years:5 },
-  { name:'Anita Gurung',    dept:'HR',          date:'Jul 9',  type:'birthday',     icon:'🎂' },
-  { name:'Bikram Thapa',    dept:'Engineering', date:'Jul 11', type:'anniversary',  icon:'🥂', years:3 },
-  { name:'Priya Maharjan',  dept:'Marketing',   date:'Jul 14', type:'birthday',     icon:'🎂' },
-  { name:'Suresh KC',       dept:'IT',          date:'Jul 18', type:'anniversary',  icon:'🥂', years:7 },
-]
-
-const tenureData = [
-  { range:'<1 yr',   count:42, color:'#0ea5e9' },
-  { range:'1-2 yrs', count:68, color:'#7c3aed' },
-  { range:'2-5 yrs', count:94, color:'#10b981' },
-  { range:'5-10 yrs',count:71, color:'#f59e0b' },
-  { range:'>10 yrs', count:37, color:'#ef4444' },
-]
-
-const ageData = [
-  { range:'18-25', count:38 },
-  { range:'26-30', count:72 },
-  { range:'31-35', count:84 },
-  { range:'36-40', count:61 },
-  { range:'41-45', count:34 },
-  { range:'46-50', count:17 },
-  { range:'51+',   count:6  },
-]
-
-const bloodGroups = [
-  { group:'O+',  count:98, color:'#ef4444' },
-  { group:'A+',  count:74, color:'#f97316' },
-  { group:'B+',  count:63, color:'#f59e0b' },
-  { group:'AB+', count:32, color:'#8b5cf6' },
-  { group:'O-',  count:21, color:'#0ea5e9' },
-  { group:'A-',  count:14, color:'#10b981' },
-  { group:'B-',  count:8,  color:'#06b6d4' },
-  { group:'AB-', count:2,  color:'#ec4899' },
-]
-
-const contractExpiry = [
-  { name:'Ramesh Koirala',  dept:'Sales',       expiry:'Jul 15, 2026', days:10, risk:'critical' },
-  { name:'Anita Shrestha',  dept:'Marketing',   expiry:'Jul 28, 2026', days:23, risk:'warning'  },
-  { name:'Dilip Tamang',    dept:'Operations',  expiry:'Aug 5, 2026',  days:31, risk:'warning'  },
-  { name:'Sushma Khadka',   dept:'IT',          expiry:'Aug 20, 2026', days:46, risk:'normal'   },
-  { name:'Nabin Regmi',     dept:'Finance',     expiry:'Sep 1, 2026',  days:58, risk:'normal'   },
-]
-
-const rosterData = [
-  { dept:'Engineering', morning:28, evening:18, night:8,  wfh:14, leave:4  },
-  { dept:'Sales',       morning:22, evening:12, night:0,  wfh:6,  leave:5  },
-  { dept:'Operations',  morning:18, evening:20, night:12, wfh:2,  leave:2  },
-  { dept:'IT',          morning:24, evening:10, night:4,  wfh:8,  leave:2  },
-  { dept:'Finance',     morning:16, evening:4,  night:0,  wfh:2,  leave:0  },
-  { dept:'HR',          morning:12, evening:4,  night:0,  wfh:2,  leave:0  },
-]
-
-const aiInsights = [
-  { icon:'🔴', type:'Risk',       msg:'Engineering team: 34% attrition risk in 90 days. Salary gap NPR 13K below market. Recommend immediate salary review.', action:'View Brief' },
-  { icon:'🟡', type:'Compliance', msg:'SSF filing due in 20 days (Poush 25). 3 employees approaching 1-year gratuity threshold - provision NPR 485K.', action:'View' },
-  { icon:'🟢', type:'Positive',   msg:'Attendance improved 0.6% MoM. Worklife balance score up to 79 (target: 80). Sales team engagement at all-time high.', action:'Details' },
-  { icon:'🔵', type:'Predict',    msg:'AI predicts 2 resignations in Finance next 45 days based on login patterns, leave frequency, and performance dip.', action:'See Names' },
-  { icon:'🟠', type:'Action',     msg:'5 employees on probation confirmation due this week. 3 training certifications expiring in 30 days.', action:'Take Action' },
-]
+function _getSession(){try{return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{}}catch{return{}}}
+function _authH(){const s=_getSession();const token=localStorage.getItem('access_token')||s?.token||'';const slug=s?.company?.slug||'';return{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}}
 
 // ── HELPERS ───────────────────────────────────────────────────
 const W = ({ children, title, subtitle, extra, span=1 }) => (
@@ -290,33 +163,74 @@ const G = 'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)'
 
 // ── MAIN DASHBOARD ────────────────────────────────────────────
 
-function _getSession() {
-  try {
-    return JSON.parse(
-      sessionStorage.getItem('elogix_session') ||
-      localStorage.getItem('elogix_session') || 'null'
-    ) || {}
-  } catch (_e) { return {} }
-}
-function _getCurrency() {
-  const s = _getSession()
-  const code = s?.company?.currency || 'NPR'
-  return { code, symbol: {NPR:'रु',USD:'$',INR:'₹',EUR:'€',GBP:'£'}[code] || code }
-}
-function _useAppFallback() {
-  const s = _getSession(); const cc = _getCurrency()
-  return {
-    sub:'', persona:s?.user?.role||'employee', lang:'en', currency:cc.code, cc,
-    company:s?.company||{}, user:s?.user||{}, t:()=>'',
-    navTo:(p)=>window.dispatchEvent(new CustomEvent('elogix:nav',{detail:{page:p}})),
-    switchPersona:()=>{}, setShowNotif:()=>{}, setShowAI:()=>{},
-    setSidebarOpen:()=>{}, sidebarOpen:true, darkMode:false, setDarkMode:()=>{},
-    currentPersona:{id:'employee',icon:'👤',color:'#7c3aed',label:''},
-  }
-}
-
 export default function HRManagerDashboard() {
-  const { navTo, currentPersona } = _useAppFallback()
+
+  const _s   = _getSession()
+  const _co  = _s?.company || {}
+
+  // Replace all mock data with real API-sourced state
+  const [headcount,           setHeadcount]           = useState({})
+  const [deptComparison,      setDeptComparison]      = useState([])
+  const [satisfactionData,    setSatisfactionData]    = useState([])
+  const [worklifeData,        setWorklifeData]        = useState([])
+  const [onboardingThisMonth, setOnboardingThisMonth] = useState([])
+  const [performanceSnapshot, setPerformanceSnapshot] = useState([])
+  const [calendarEvents,      setCalendarEvents]      = useState([])
+  const [birthdays,           setBirthdays]           = useState([])
+  const [tenureData,          setTenureData]          = useState([])
+  const [ageData,             setAgeData]             = useState([])
+  const [bloodGroups,         setBloodGroups]         = useState([])
+  const [contractExpiry,      setContractExpiry]      = useState([])
+  const [rosterData,          setRosterData]          = useState([])
+  const [aiInsights,          setAiInsights]          = useState([])
+  const [quickActions,        setQuickActions]        = useState([
+    {icon:'📋',label:'New Employee',action:'add-employee'},
+    {icon:'💵',label:'Run Payroll',action:'automated-payroll'},
+    {icon:'🌴',label:'Leave Approval',action:'leave-approval'},
+    {icon:'📑',label:'Issue Letter',action:'letter-request'},
+    {icon:'⚡',label:'Attendance',action:'live-attendance'},
+    {icon:'🎯',label:'Performance',action:'performance'},
+  ])
+  const [performanceData,  setPerformanceData]  = useState([])
+  const [apiLoading, setApiLoading]     = useState(true)
+  const [apiError,   setApiError]       = useState(null)
+
+  useEffect(() => {
+    const token = localStorage.getItem('access_token') || _s?.token || ''
+    const slug  = _s?.company?.slug || ''
+    if (!token || !slug) { setApiLoading(false); return }
+    setApiLoading(true)
+    fetch('/api/v1/hr-manager/summary', { headers: _authH() })
+      .then(r => {
+        if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));throw new Error('Session expired')}
+        if(!r.ok) throw new Error(`Error ${r.status}`)
+        return r.json()
+      })
+      .then(d => {
+        const dd = d.data || d
+        if(dd.headcount)            setHeadcount(dd.headcount)
+        if(dd.dept_comparison)      setDeptComparison(dd.dept_comparison)
+        if(dd.satisfaction)         setSatisfactionData(dd.satisfaction)
+        if(dd.worklife)             setWorklifeData(dd.worklife)
+        if(dd.onboarding)           setOnboardingThisMonth(dd.onboarding)
+        if(dd.performance_snapshot) setPerformanceSnapshot(dd.performance_snapshot)
+        if(dd.calendar_events)      setCalendarEvents(dd.calendar_events)
+        if(dd.birthdays)            setBirthdays(dd.birthdays)
+        if(dd.tenure_data)          setTenureData(dd.tenure_data)
+        if(dd.age_data)             setAgeData(dd.age_data)
+        if(dd.blood_groups)         setBloodGroups(dd.blood_groups)
+        if(dd.contract_expiry)      setContractExpiry(dd.contract_expiry)
+        if(dd.roster)               setRosterData(dd.roster)
+        if(dd.ai_insights)          setAiInsights(dd.ai_insights)
+        if(dd.quick_actions)        setQuickActions(dd.quick_actions)
+        if(dd.performance_data)     setPerformanceData(dd.performance_data)
+        if(dd.performance_data)     setPerformanceData(dd.performance_data)
+      })
+      .catch(e => setApiError(e.message))
+      .finally(() => setApiLoading(false))
+  }, [])
+
+  const { navTo, currentPersona } = useApp()
   const [activeTab, setActiveTab] = useState('overview')
   const [now, setNow] = useState(new Date())
 
@@ -347,10 +261,10 @@ export default function HRManagerDashboard() {
           </div>
           <div style={{display:'flex',gap:8,marginTop:10,flexWrap:'wrap'}}>
             {[
-              {label:'Total Staff', val:'312', icon:'👨‍💼'},
-              {label:'Present Today', val:'294', icon:'✅'},
-              {label:'On Leave', val:'18', icon:'🌴'},
-              {label:'Open Positions', val:'11', icon:'📋'},
+              {label:'Total Staff',   val: headcount?.total         ?? '—', icon:'👨‍💼'},
+              {label:'Present Today', val: headcount?.present_today  ?? '—', icon:'✅'},
+              {label:'On Leave',      val: headcount?.on_leave       ?? '—', icon:'🌴'},
+              {label:'Open Positions',val: headcount?.open_positions ?? '—', icon:'📋'},
             ].map((s,i)=>(
               <div key={i} style={{background:'rgba(255,255,255,.12)',borderRadius:10,padding:'6px 12px',display:'flex',alignItems:'center',gap:6}}>
                 <span>{s.icon}</span>
@@ -394,10 +308,10 @@ export default function HRManagerDashboard() {
             extra={<Badge>Live</Badge>}>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
               {[
-                {label:'Total',       val:headcount.total,       icon:'👥', color:'#7c3aed'},
-                {label:'Male',        val:headcount.male,        icon:'👨', color:'#0ea5e9'},
-                {label:'Female',      val:headcount.female,      icon:'👩', color:'#ec4899'},
-                {label:'Transgender', val:headcount.transgender,  icon:'🏳️‍🌈',color:'#10b981'},
+                {label:'Total',       val:headcount?.total,       icon:'👥', color:'#7c3aed'},
+                {label:'Male',        val:headcount?.male,        icon:'👨', color:'#0ea5e9'},
+                {label:'Female',      val:headcount?.female,      icon:'👩', color:'#ec4899'},
+                {label:'Transgender', val:headcount?.transgender,  icon:'🏳️‍🌈',color:'#10b981'},
               ].map((s,i)=>(
                 <div key={i} style={{background:`${s.color}08`,borderRadius:12,padding:'12px',textAlign:'center',border:`1px solid ${s.color}20`}}>
                   <div style={{fontSize:20}}>{s.icon}</div>
@@ -407,8 +321,8 @@ export default function HRManagerDashboard() {
               ))}
             </div>
             <div style={{height:8,borderRadius:4,background:'#f1f5f9',overflow:'hidden',display:'flex'}}>
-              <div style={{background:'#0ea5e9',height:'100%',width:`${(headcount.male/headcount.total*100).toFixed(0)}%`,borderRadius:'4px 0 0 4px'}}/>
-              <div style={{background:'#ec4899',height:'100%',width:`${(headcount.female/headcount.total*100).toFixed(0)}%`}}/>
+              <div style={{background:'#0ea5e9',height:'100%',width:`${(headcount?.male/headcount?.total*100).toFixed(0)}%`,borderRadius:'4px 0 0 4px'}}/>
+              <div style={{background:'#ec4899',height:'100%',width:`${(headcount?.female/headcount?.total*100).toFixed(0)}%`}}/>
               <div style={{background:'#10b981',height:'100%',flex:1,borderRadius:'0 4px 4px 0'}}/>
             </div>
             <div style={{display:'flex',gap:10,justifyContent:'center'}}>
@@ -511,6 +425,9 @@ export default function HRManagerDashboard() {
 
           {/* 6. PERFORMANCE SNAPSHOT */}
           <W title="Performance Snapshot" subtitle="Competency radar vs benchmark">
+            {(performanceData||[]).length===0?(
+              <div style={{textAlign:'center',padding:24,color:'#94a3b8',fontSize:11}}>No performance data yet</div>
+            ):(
             <div style={{height:160}}>
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart data={performanceData} margin={{top:0,right:16,left:16,bottom:0}}>
@@ -522,6 +439,7 @@ export default function HRManagerDashboard() {
                 </RadarChart>
               </ResponsiveContainer>
             </div>
+            )}
             <Tip>OKR achievement 63% below 80% benchmark. Learning completion above target.</Tip>
           </W>
 
@@ -760,15 +678,15 @@ export default function HRManagerDashboard() {
             <div style={{background:G,borderRadius:12,padding:'14px',color:'#fff',marginBottom:8}}>
               <div style={{fontSize:14,fontWeight:900,marginBottom:6}}>🧠 Today's HR Brief</div>
               <div style={{fontSize:9,lineHeight:1.6,color:'rgba(255,255,255,.85)'}}>
-                312 employees active. Engineering needs urgent attention - 34% flight risk. SSF filing in 20 days. 5 contract renewals due. Worklife score at 79/100 - near target.
+                {headcount?.total ?? "—"} employees active. See AI insights below for risk analysisays. 5 contract renewals due. Worklife score at 79/100 - near target.
               </div>
             </div>
             <div style={{display:'flex',flexDirection:'column',gap:6}}>
               {[
-                {label:'Attrition Risk Score',    val:'Medium-High', color:'#f59e0b'},
-                {label:'Compliance Health',        val:'Good',        color:'#10b981'},
-                {label:'Engagement Score',         val:'74/100',      color:'#0ea5e9'},
-                {label:'AI Confidence',            val:'94.2%',       color:'#7c3aed'},
+                {label:'Attrition Risk Score', val: headcount?.attrition_risk   ?? 'Medium-High', color:'#f59e0b'},
+                {label:'Compliance Health',    val: headcount?.compliance_health ?? 'Good',        color:'#10b981'},
+                {label:'Engagement Score',     val: headcount?.engagement_score  ?? '—',           color:'#0ea5e9'},
+                {label:'AI Confidence',        val: headcount?.ai_confidence     ?? '—',           color:'#7c3aed'},
               ].map((s,i)=>(
                 <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'6px 8px',background:'#f8fafc',borderRadius:8}}>
                   <span style={{fontSize:9,color:'#64748b'}}>{s.label}</span>

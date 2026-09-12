@@ -5,6 +5,10 @@
 
 import { useState, useEffect } from 'react'
 
+function _getSession(){try{return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{}}catch{return{}}}
+function _authH(){const s=_getSession();const token=localStorage.getItem('access_token')||s?.token||'';const slug=s?.company?.slug||'';return{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}}
+
+
 const G  = 'linear-gradient(135deg,#0c4a6e 0%,#0369a1 60%,#0ea5e9 100%)'
 const A  = '#0369a1'
 
@@ -12,7 +16,7 @@ function getSession() {
   try {
     const s = JSON.parse(sessionStorage.getItem('elogix_session') || localStorage.getItem('elogix_session') || 'null')
     if (s?.user) return s
-    const a = JSON.parse(localStorage.getItem('elogix_auth') || '{}')
+    const a = JSON.parse(localStorage.getItem('access_token') || '{}')
     return { user: a.user || {}, company: a.company || {} }
   } catch(_e) { return { user:{}, company:{} } }
 }
@@ -39,8 +43,6 @@ const DEFAULT_PLAN_PRICES = {
 const PLAN_PRICES = { ...DEFAULT_PLAN_PRICES, ...(getCommissionConfig() || {}) }
 
 export default function BillingPage() {
-  const [sess]     = useState(getSession)
-  const company    = sess.company || {}
   const plan       = company.plan || 'trial'
   const planMeta   = PLAN_PRICES[plan] || PLAN_PRICES.trial
   const [invoices, setInvoices] = useState([])
@@ -49,14 +51,26 @@ export default function BillingPage() {
 
   const notify = m => { setToast(m); setTimeout(() => setToast(''), 3500) }
 
+  const [company, setCompanyData] = useState({})
+  const [billing,  setBilling]    = useState({})
+
   useEffect(() => {
-    // Load invoices from localStorage (tenant-scoped)
-    try {
-      const slug = company.slug || 'demo'
-      const saved = JSON.parse(localStorage.getItem(`elogix_invoices_${slug}`) || '[]')
-      setInvoices(saved)
-    } catch(_e) {}
-  }, [company.slug])
+    const _s = _getSession()
+    const co = _s?.company || {}
+    setCompanyData(co)
+    const token = localStorage.getItem('access_token') || _s?.token || ''
+    const slug  = co?.slug || ''
+    if(!token||!slug) return
+    fetch('/api/v1/billing/summary', { headers:_authH() })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if(!d) return
+        const dd = d.data || d
+        setBilling(dd)
+        setInvoices(dd.invoices || [])
+      })
+      .catch(() => {})
+  }, [])
 
   const tabs = [
     { id:'overview', label:'📊 Overview',    },

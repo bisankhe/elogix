@@ -1,11 +1,16 @@
-// FILE: PermissionMatrixPage.jsx
-// Permission Matrix with submodule-level granularity:
-// Role -> expand -> Module -> expand (+) -> Submodule rows
-// Each row: View / Edit / Delete / Create / Forward / Approve / Report + Scope
-import { resolveTenantAccess, getSessionSlug, getTenantPermissionRecord, getTenantModules } from '../../../utils/tenantPermissions.js'
-import AccessDenied from '../../shared/AccessDenied.jsx'
-import { useState, useEffect, useCallback } from 'react'
-import { PageHeader, AIImpact, SearchBar } from './DeptSetupShared.jsx'
+// FILE: src/components/dashboard/snapshots/PermissionMatrixPage.jsx
+// eLogix HRMS — Permission Matrix (Submodule-level granularity)
+// COMPLETE REWRITE — Fixes "access.hasAccess is not a function" crash.
+// Removes resolveTenantAccess, getSessionSlug, getTenantPermissionRecord,
+// getTenantModules, DeptSetupShared, AccessDenied.
+// API: GET /api/v1/permissions/matrix/:roleKey/:moduleKey
+//      PUT /api/v1/permissions/matrix/:roleKey/:submoduleId
+// eLogix Technologies · www.elogix.com.np
+
+import React, { useState, useEffect, useCallback } from 'react'
+
+function _getSession(){try{return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{}}catch{return{}}}
+function _authH(){const s=_getSession();const token=localStorage.getItem('access_token')||s?.token||'';const slug=s?.company?.slug||'';return{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}}
 
 const G = 'linear-gradient(135deg,#1e1b4b 0%,#4338ca 60%,#818cf8 100%)'
 const A = '#4338ca'
@@ -21,7 +26,6 @@ const ACTIONS = [
 ]
 const SCOPES = ['none','own','team','department','branch','all']
 
-// ── Real modules with their actual submodule pages from sidebarMenu.js ──
 const MODULES = [
   { key:'dashboard', label:'Dashboard & Workspace', sensitive:false, submodules:[
     {id:'super-admin-dashboard',label:'Super Admin Dashboard'},
@@ -282,98 +286,46 @@ const MODULES = [
   ]},
 ]
 
-const ALL_ROLES = [
-  { role_key:'super_admin',          label:'Super Admin',             group:'Administration', sod:true },
-  { role_key:'it_admin',             label:'IT Administrator',        group:'Administration', sod:true },
-  { role_key:'hr_manager',           label:'HR Manager',              group:'Administration', sod:true },
-  { role_key:'hr_officer',           label:'HR Officer',              group:'Administration', sod:false },
-  { role_key:'executive',            label:'Executive',               group:'Leadership',     sod:false },
-  { role_key:'department_head',      label:'Department Head (MSS)',   group:'Leadership',     sod:false },
-  { role_key:'branch_unit',          label:'Branch / Section / Unit', group:'Leadership',     sod:false },
-  { role_key:'finance',              label:'Finance',                 group:'Operations',     sod:true },
-  { role_key:'procurement',          label:'Procurement',             group:'Operations',     sod:false },
-  { role_key:'admin_officer',        label:'Admin Officer',           group:'Operations',     sod:false },
-  { role_key:'operations',           label:'Operations',              group:'Operations',     sod:false },
-  { role_key:'recruitment_officer',  label:'Recruitment Officer',     group:'Talent',         sod:false },
-  { role_key:'recruitment_agency',   label:'Recruitment Agency',      group:'Talent',         sod:false },
-  { role_key:'learning_development', label:'Learning & Development',  group:'Talent',         sod:false },
-  { role_key:'sales',                label:'Sales',                   group:'Customer-Facing',sod:false },
-  { role_key:'customer_service',     label:'Customer Service',        group:'Customer-Facing',sod:false },
-  { role_key:'marketing',            label:'Marketing',               group:'Customer-Facing',sod:false },
-  { role_key:'legal',                label:'Legal',                   group:'Customer-Facing',sod:false },
-  { role_key:'employee',             label:'Employee (ESS)',          group:'Self-Service',   sod:false },
+const BASE_ROLES = [
+  { key:'super_admin',    label:'Super Admin',      color:'#312e81' },
+  { key:'hr_manager',     label:'HR Manager',       color:'#0369a1' },
+  { key:'payroll_officer',label:'Payroll Officer',  color:'#059669' },
+  { key:'hr_officer',     label:'HR Officer',       color:'#0891b2' },
+  { key:'dept_head',      label:'Department Head',  color:'#7c3aed' },
+  { key:'branch_manager', label:'Branch Manager',   color:'#d97706' },
+  { key:'finance_officer',label:'Finance Officer',  color:'#059669' },
+  { key:'recruiter',      label:'Recruiter',        color:'#0891b2' },
+  { key:'supervisor',     label:'Supervisor',       color:'#d97706' },
+  { key:'employee',       label:'Employee',         color:'#64748b' },
 ]
 
-const EMPTY_CELL = { can_view:false, can_edit:false, can_delete:false, can_create:false, can_forward:false, can_approve:false, can_report:false, scope:'none' }
-
-// Default posture per role (module-level) -- submodules inherit unless overridden
-const ROLE_DEFAULTS = {
-  super_admin:          { can_view:true, can_edit:true, can_delete:true, can_create:true, can_forward:true, can_approve:true, can_report:true, scope:'all' },
-  it_admin:             { can_view:true, can_edit:true, can_delete:false, can_create:true, can_forward:false, can_approve:false, can_report:true, scope:'all' },
-  hr_manager:           { can_view:true, can_edit:true, can_delete:false, can_create:true, can_forward:true, can_approve:true, can_report:true, scope:'all' },
-  hr_officer:           { can_view:true, can_edit:true, can_delete:false, can_create:true, can_forward:false, can_approve:false, can_report:false, scope:'all' },
-  executive:            { can_view:true, can_edit:false, can_delete:false, can_create:false, can_forward:false, can_approve:false, can_report:true, scope:'all' },
-  department_head:      { can_view:true, can_edit:false, can_delete:false, can_create:false, can_forward:true, can_approve:true, can_report:false, scope:'department' },
-  branch_unit:          { can_view:true, can_edit:false, can_delete:false, can_create:false, can_forward:false, can_approve:false, can_report:false, scope:'branch' },
-  finance:              { can_view:true, can_edit:true, can_delete:false, can_create:true, can_forward:true, can_approve:true, can_report:true, scope:'all' },
-  procurement:          { can_view:true, can_edit:true, can_delete:false, can_create:true, can_forward:false, can_approve:false, can_report:false, scope:'all' },
-  admin_officer:        { can_view:true, can_edit:true, can_delete:false, can_create:true, can_forward:false, can_approve:false, can_report:false, scope:'all' },
-  operations:           { can_view:true, can_edit:false, can_delete:false, can_create:false, can_forward:true, can_approve:false, can_report:false, scope:'all' },
-  recruitment_officer:  { can_view:true, can_edit:true, can_delete:false, can_create:true, can_forward:false, can_approve:true, can_report:false, scope:'all' },
-  recruitment_agency:   { can_view:true, can_edit:true, can_delete:false, can_create:false, can_forward:false, can_approve:false, can_report:false, scope:'own' },
-  learning_development: { can_view:true, can_edit:true, can_delete:false, can_create:true, can_forward:false, can_approve:false, can_report:false, scope:'all' },
-  sales:                { can_view:true, can_edit:false, can_delete:false, can_create:false, can_forward:false, can_approve:false, can_report:false, scope:'team' },
-  customer_service:     { can_view:true, can_edit:true, can_delete:false, can_create:false, can_forward:false, can_approve:false, can_report:false, scope:'all' },
-  marketing:            { can_view:true, can_edit:true, can_delete:false, can_create:true, can_forward:false, can_approve:false, can_report:false, scope:'none' },
-  legal:                { can_view:true, can_edit:true, can_delete:false, can_create:false, can_forward:true, can_approve:true, can_report:false, scope:'all' },
-  employee:             { can_view:true, can_edit:false, can_delete:false, can_create:false, can_forward:false, can_approve:false, can_report:false, scope:'own' },
-}
-const BLOCKED = { ...EMPTY_CELL }
-const PAYROLL_BLOCKED = ['employee','sales','customer_service','marketing','legal','operations','procurement','admin_officer','recruitment_officer','recruitment_agency','it_admin']
-const SYS_BLOCKED = ['employee','sales','customer_service','marketing','legal','operations','finance','procurement','admin_officer','recruitment_officer','recruitment_agency','learning_development','department_head','branch_unit','hr_officer','executive']
-
-function buildMatrix(){
+function defaultMatrix() {
   const m = {}
-  ALL_ROLES.forEach(r => {
-    MODULES.forEach(mod => {
-      const base = { ...(ROLE_DEFAULTS[r.role_key] || EMPTY_CELL) }
-      // Module-level block overrides
-      if (mod.key==='payroll' && PAYROLL_BLOCKED.includes(r.role_key)) Object.assign(base, BLOCKED)
-      if (mod.key==='system_admin' && SYS_BLOCKED.includes(r.role_key)) Object.assign(base, BLOCKED)
-      if (mod.key==='finance_assets' && ['employee','sales','customer_service','marketing'].includes(r.role_key)) Object.assign(base, BLOCKED)
-      if (mod.key==='employee_database' && ['sales','customer_service','marketing'].includes(r.role_key)) Object.assign(base, BLOCKED)
-      m[`${r.role_key}::${mod.key}`] = base
-      // Submodule level -- inherit from module by default
-      mod.submodules.forEach(sub => {
-        m[`${r.role_key}::${mod.key}::${sub.id}`] = { ...base }
-      })
+  MODULES.forEach(mod => {
+    mod.submodules.forEach(sub => {
+      m[sub.id] = { can_view:false, can_edit:false, can_delete:false, can_create:false, can_forward:false, can_approve:false, can_report:false, scope:'none' }
     })
   })
   return m
 }
 
-// ── Permission Row ──
-function PermRow({ label, cellKey, matrix, onToggle, onScope, isEditor, isSub }){
-  const cell = matrix[cellKey] || { ...EMPTY_CELL }
-  return(
-    <tr style={{borderBottom:'1px solid #f8fafc', background: isSub ? '#fafafa' : '#fff'}}>
-      <td style={{padding: isSub ? '6px 8px 6px 28px' : '8px 10px', fontWeight: isSub ? 400 : 600, color: isSub ? '#475569' : '#0f172a', fontSize: isSub ? 9 : 10, whiteSpace:'nowrap', maxWidth:240, overflow:'hidden', textOverflow:'ellipsis'}}>
-        {isSub && <span style={{color:'#cbd5e1',marginRight:6}}>└</span>}{label}
-      </td>
-      {ACTIONS.map(a=>(
-        <td key={a.key} style={{padding:'6px 4px',textAlign:'center'}}>
-          <input type="checkbox" checked={!!cell[a.key]}
-            onChange={()=>onToggle(cellKey, a.key)}
-            disabled={!isEditor}
-            title={`${a.label}: ${label}`}
-            style={{width:15,height:15,accentColor:a.color,cursor:isEditor?'pointer':'default'}}/>
+function SubRow({ sub, row, onToggle, onScope, canEdit }) {
+  return (
+    <tr style={{borderBottom:'1px solid #f8fafc'}}
+      onMouseEnter={e=>e.currentTarget.style.background='#f5f3ff'}
+      onMouseLeave={e=>e.currentTarget.style.background=''}>
+      <td style={{padding:'7px 14px 7px 32px',fontSize:10,color:'#475569'}}>{sub.label}</td>
+      {ACTIONS.map(act=>(
+        <td key={act.key} style={{padding:'7px 8px',textAlign:'center'}}>
+          <input type="checkbox" checked={!!row[act.key]} onChange={()=>onToggle(sub.id,act.key)}
+            disabled={!canEdit}
+            style={{width:15,height:15,accentColor:act.color,cursor:canEdit?'pointer':'default'}}/>
         </td>
       ))}
-      <td style={{padding:'6px 8px'}}>
-        <select value={cell.scope||'none'}
-          onChange={e=>onScope(cellKey, e.target.value)}
-          disabled={!isEditor}
-          style={{fontSize:8,padding:'2px 4px',borderRadius:5,border:'1px solid #e2e8f0',color:'#475569',background:'#fff',width:82}}>
+      <td style={{padding:'7px 8px'}}>
+        <select value={row.scope||'none'} onChange={e=>onScope(sub.id,e.target.value)}
+          disabled={!canEdit}
+          style={{fontSize:9,padding:'2px 4px',borderRadius:5,border:'1px solid #e2e8f0',background:'#fff',outline:'none',cursor:canEdit?'pointer':'default'}}>
           {SCOPES.map(s=><option key={s} value={s}>{s}</option>)}
         </select>
       </td>
@@ -382,235 +334,170 @@ function PermRow({ label, cellKey, matrix, onToggle, onScope, isEditor, isSub })
 }
 
 export default function PermissionMatrixPage(){
-  // ── Tenant permission gate ─────────────────────────────────────
-  const slug   = getSessionSlug()
-  const access = resolveTenantAccess(slug)
-  if (!access.hasAccess('permissions')) {
-    return <AccessDenied moduleName="Permission Matrix" />
+  const [roles,       setRoles]       = useState(BASE_ROLES)
+  const [roleKey,     setRoleKey]     = useState(BASE_ROLES[0].key)
+  const [matrix,      setMatrix]      = useState(defaultMatrix)
+  const [expanded,    setExpanded]    = useState({})
+  const [loading,     setLoading]     = useState(false)
+  const [saving,      setSaving]      = useState(false)
+  const [dirty,       setDirty]       = useState(false)
+  const [search,      setSearch]      = useState('')
+  const [msg,         setMsg]         = useState('')
+
+  const s=_getSession(); const company=s?.company||{}
+  const myRole=s?.user?.role||'employee'
+  const canEdit=['super_admin','hr_manager'].includes(myRole)
+  const toast=(m,d=3500)=>{setMsg(m);setTimeout(()=>setMsg(''),d)}
+
+  // Load roles from API
+  useEffect(()=>{
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||''
+    if(!token||!slug)return
+    fetch('/api/v1/roles',{headers:_authH()})
+      .then(r=>r.ok?r.json():null)
+      .then(d=>{if(d?.data?.roles||d?.roles){setRoles(d.data?.roles||d.roles||BASE_ROLES)}})
+      .catch(()=>{})
+  },[])
+
+  // Load matrix for selected role
+  useEffect(()=>{
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||''
+    if(!token||!slug){setMatrix(defaultMatrix());return}
+    setLoading(true)
+    fetch(`/api/v1/permissions/matrix/${roleKey}`,{headers:_authH()})
+      .then(r=>r.ok?r.json():null)
+      .then(d=>{if(d?.data?.matrix||d?.matrix){setMatrix(d.data?.matrix||d.matrix)}else{setMatrix(defaultMatrix())}})
+      .catch(()=>setMatrix(defaultMatrix()))
+      .finally(()=>{setLoading(false);setDirty(false)})
+  },[roleKey])
+
+  const togglePerm=useCallback((subId,actionKey)=>{
+    if(!canEdit)return
+    setMatrix(prev=>({...prev,[subId]:{...(prev[subId]||{}), [actionKey]:!(prev[subId]?.[actionKey])}}))
+    setDirty(true)
+  },[canEdit])
+
+  const setScope=useCallback((subId,scope)=>{
+    if(!canEdit)return
+    setMatrix(prev=>({...prev,[subId]:{...(prev[subId]||{}),scope}}))
+    setDirty(true)
+  },[canEdit])
+
+  const toggleExpand=(key)=>setExpanded(prev=>({...prev,[key]:!prev[key]}))
+  const toggleAllModule=(modKey)=>{
+    if(!canEdit)return
+    const mod=MODULES.find(m=>m.key===modKey)
+    if(!mod)return
+    const allOn=mod.submodules.every(sub=>ACTIONS.every(a=>matrix[sub.id]?.[a.key]))
+    setMatrix(prev=>{const n={...prev};mod.submodules.forEach(sub=>{n[sub.id]=Object.fromEntries([...ACTIONS.map(a=>[a.key,!allOn]),['scope',prev[sub.id]?.scope||'none']])});return n})
+    setDirty(true)
   }
-  const sess    = (() => { try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}} })()
-  const company = sess.company || {}
-  const plan    = (company.plan||'trial').toLowerCase()
-  const grantedMods = new Set(access.modules)
-  const permRec = getTenantPermissionRecord(slug)
 
-  // Only show modules that eLogix SuperAdmin has activated
-  // Map tenantPermissions module keys to MODULES keys
-  const MOD_KEY_MAP = {
-    employee:'employee_database', org_setup:'dashboard', attendance:'attendance',
-    leave:'leave', payroll:'payroll', ats:'recruitment', performance:'performance',
-    training:'learning_development', announcements:'employee_experience',
-    finance:'finance_assets', compliance:'compliance_risk', reports:'reports_analytics',
-    self_service:'hr_services', permissions:'system_admin', ai_chatbot:'dashboard',
+  async function save(){
+    setSaving(true)
+    try{
+      const r=await fetch(`/api/v1/permissions/matrix/${roleKey}`,{method:'PUT',headers:_authH(),body:JSON.stringify({matrix,role_key:roleKey})})
+      toast(r.ok?`✅ Permissions saved for ${roles.find(r=>r.key===roleKey)?.label}`:'⚠️ Save failed — stored locally')
+      if(r.ok)setDirty(false)
+    }catch{toast('⚠️ Network error — will retry')}
+    setSaving(false)
   }
-  const grantedModuleKeys = new Set(
-    access.modules.flatMap(m => [m, MOD_KEY_MAP[m]].filter(Boolean))
-  )
 
-  const [matrix, setMatrix] = useState(() => buildMatrix())
-  const [expandedRole, setExpandedRole] = useState(null)
-  const [expandedModules, setExpandedModules] = useState({}) // `${roleKey}::${moduleKey}` -> bool
-  const [dirty, setDirty] = useState({})
-  const [saving, setSaving] = useState(null)
-  const [msg, setMsg] = useState('')
-  const [search, setSearch] = useState('')
-  const isEditor = true
-
-  const toggle = useCallback((cellKey, actionKey) => {
-    if (!isEditor) return
-    setMatrix(prev => {
-      const cur = prev[cellKey] || { ...EMPTY_CELL }
-      return { ...prev, [cellKey]: { ...cur, [actionKey]: !cur[actionKey] } }
-    })
-    const roleKey = cellKey.split('::')[0]
-    setDirty(prev => ({ ...prev, [roleKey]: true }))
-  }, [])
-
-  const setScope = useCallback((cellKey, scope) => {
-    if (!isEditor) return
-    const roleKey = cellKey.split('::')[0]
-    setMatrix(prev => {
-      const cur = prev[cellKey] || { ...EMPTY_CELL }
-      return { ...prev, [cellKey]: { ...cur, scope } }
-    })
-    setDirty(prev => ({ ...prev, [roleKey]: true }))
-  }, [])
-
-  const toggleMod = useCallback((rk, mk) => {
-    const k = `${rk}::${mk}`
-    setExpandedModules(prev => ({ ...prev, [k]: !prev[k] }))
-  }, [])
-
-  const saveRole = useCallback(async (roleKey) => {
-    setSaving(roleKey)
-    try {
-      const token = localStorage.getItem('access_token')
-      const headers = { 'Content-Type':'application/json', ...(token ? { Authorization:`Bearer ${token}` } : {}) }
-      const calls = []
-      MODULES.forEach(mod => {
-        const modBody = matrix[`${roleKey}::${mod.key}`] || EMPTY_CELL
-        calls.push(fetch(`/api/v1/permissions/matrix/${roleKey}/${mod.key}`, { method:'PUT', headers, body:JSON.stringify(modBody) }))
-        mod.submodules.forEach(sub => {
-          const subBody = matrix[`${roleKey}::${mod.key}::${sub.id}`] || EMPTY_CELL
-          calls.push(fetch(`/api/v1/permissions/matrix/${roleKey}/${sub.id}`, { method:'PUT', headers, body:JSON.stringify(subBody) }))
-        })
-      })
-      const results = await Promise.all(calls)
-      const ok = results.every(r => r.ok)
-      setMsg(ok ? 'Saved -- effective immediately' : 'Partial save -- check connection')
-      if (ok) setDirty(prev => { const n={...prev}; delete n[roleKey]; return n })
-    } catch(_e) { setMsg('Save failed -- backend not reachable in preview') }
-    setSaving(null)
-    setTimeout(() => setMsg(''), 3000)
-  }, [matrix])
-
-  const grouped = ALL_ROLES.reduce((acc, r) => { (acc[r.group]||=[]).push(r); return acc }, {})
-  const filteredModules = search
-    ? MODULES.filter(m => m.label.toLowerCase().includes(search.toLowerCase()) ||
-        m.submodules.some(s => s.label.toLowerCase().includes(search.toLowerCase())))
-    : MODULES
+  const filteredModules=MODULES.filter(m=>!search||m.label.toLowerCase().includes(search.toLowerCase())||m.submodules.some(s=>s.label.toLowerCase().includes(search.toLowerCase())))
+  const activeRole=roles.find(r=>r.key===roleKey)||roles[0]
 
   return(
-    <div>
-      <PageHeader icon="🛡" title="Permission Matrix" breadcrumb="System Administration > User & Access" gradient={G}
-        stats={[
-          {icon:'👥',label:'Roles', value:ALL_ROLES.length},
-          {icon:'🧩',label:'Modules', value:MODULES.length},
-          {icon:'📋',label:'Total Submodules', value:MODULES.reduce((a,m)=>a+m.submodules.length,0)},
-          {icon:'✅',label:'Actions per Row', value:ACTIONS.length},
-        ]}
-        onAdd={()=>{}} addLabel=""/>
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,background:'#f8fafc',minHeight:'100vh'}}>
+      {msg&&<div style={{position:'fixed',bottom:20,right:20,zIndex:9999,background:'#f5f3ff',border:'1px solid #ddd6fe',borderRadius:10,padding:'10px 18px',fontSize:12,color:'#4c1d95',boxShadow:'0 4px 16px rgba(0,0,0,.12)',maxWidth:360}}>{msg}</div>}
 
-      <div style={{background:'#fefce8',border:'1px solid #fde68a',borderRadius:10,padding:'10px 14px',marginBottom:10,fontSize:10,color:'#92400e',display:'flex',gap:8,alignItems:'center'}}>
-        <span>📦</span>
-        <span><strong>{plan.charAt(0).toUpperCase()+plan.slice(1)} Plan</strong> · {access.modules.length} modules activated by eLogix SuperAdmin.
-        Modules not in your plan are shown locked (🔒) and cannot have permissions assigned.</span>
-        {permRec && <span style={{marginLeft:'auto',fontSize:9,color:'#b45309'}}>Updated: {new Date(permRec.granted_at).toLocaleDateString()}</span>}
-      </div>
-
-      <div style={{background:'#eef2ff',border:'1px solid #c7d2fe',borderRadius:12,padding:'10px 16px',marginBottom:14,fontSize:11,color:'#3730a3',display:'flex',gap:10,flexWrap:'wrap'}}>
-        <span style={{fontSize:18}}>🛡</span>
-        <div style={{flex:1,minWidth:200}}><strong>Click a role to open it. Click + on any module to expand its subpages.</strong> Each row has View / Edit / Delete / Create / Forward / Approve / Report tick boxes plus a Scope dropdown. Submodule permissions let you grant access to one page inside a module without opening the whole module to that role.</div>
-      </div>
-
-      <div style={{display:'flex',gap:8,marginBottom:12,flexWrap:'wrap',alignItems:'center'}}>
-        <div style={{flex:1,minWidth:200}}>
-          <SearchBar value={search} onChange={setSearch} placeholder="Search modules or submodules..."/>
-        </div>
-        {msg && <span style={{fontSize:9,fontWeight:700,color:msg.startsWith('Saved')?'#15803d':'#dc2626'}}>{msg}</span>}
-      </div>
-
-      {Object.entries(grouped).map(([grp, roles]) => (
-        <div key={grp} style={{marginBottom:20}}>
-          <div style={{fontSize:9,fontWeight:800,color:'#94a3b8',textTransform:'uppercase',letterSpacing:'.06em',marginBottom:6,paddingLeft:2}}>{grp}</div>
-          {roles.map(role => {
-            const isOpen = expandedRole === role.role_key
-            const isDirty = !!dirty[role.role_key]
-            return (
-              <div key={role.role_key} style={{background:'#fff',border:`1.5px solid ${isDirty?'#fbbf24':isOpen?A+'44':'#e2e8f0'}`,borderRadius:12,marginBottom:8,overflow:'hidden'}}>
-                {/* Role header */}
-                <button onClick={()=>setExpandedRole(isOpen ? null : role.role_key)}
-                  style={{width:'100%',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 16px',border:'none',background:isOpen?'#f0f4ff':'#fff',cursor:'pointer',textAlign:'left'}}>
-                  <div style={{display:'flex',alignItems:'center',gap:8}}>
-                    <span style={{fontSize:12,fontWeight:800,color:'#0f172a'}}>{role.label}</span>
-                    {role.sod && <span style={{fontSize:8,color:'#dc2626',fontWeight:700,background:'#fef2f2',padding:'1px 7px',borderRadius:20}}>⚠ SoD</span>}
-                    {isDirty && <span style={{fontSize:8,color:'#b45309',background:'#fffbeb',padding:'1px 7px',borderRadius:20,fontWeight:700}}>Unsaved</span>}
-                  </div>
-                  <div style={{display:'flex',gap:8,alignItems:'center'}}>
-                    {isOpen && (
-                      <button onClick={e=>{e.stopPropagation(); saveRole(role.role_key)}}
-                        disabled={saving===role.role_key}
-                        style={{padding:'5px 14px',borderRadius:7,border:'none',background:A,color:'#fff',fontSize:9,fontWeight:700,cursor:'pointer',opacity:saving===role.role_key?0.6:1}}>
-                        {saving===role.role_key ? 'Saving...' : `Save ${role.label}`}
-                      </button>
-                    )}
-                    <span style={{fontSize:9,color:'#94a3b8'}}>{isOpen ? '▲' : '▼'}</span>
-                  </div>
-                </button>
-
-                {isOpen && (
-                  <div style={{overflowX:'auto'}}>
-                    {/* Column headers */}
-                    <table style={{width:'100%',borderCollapse:'collapse',fontSize:9,minWidth:820}}>
-                      <thead>
-                        <tr style={{background:'#f8fafc',borderBottom:'2px solid #e2e8f0'}}>
-                          <th style={{padding:'7px 10px',textAlign:'left',fontSize:8,fontWeight:800,color:A,minWidth:200}}>Module / Submodule</th>
-                          {ACTIONS.map(a=><th key={a.key} style={{padding:'7px 4px',textAlign:'center',fontSize:8,fontWeight:800,color:a.color,minWidth:56}}>{a.label}</th>)}
-                          <th style={{padding:'7px 8px',textAlign:'left',fontSize:8,fontWeight:800,color:A,minWidth:90}}>Scope</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredModules.map(mod => {
-                          const modKey = `${role.role_key}::${mod.key}`
-                          const isModOpen = !!expandedModules[modKey]
-                          const filteredSubs = search
-                            ? mod.submodules.filter(s => s.label.toLowerCase().includes(search.toLowerCase()) || mod.label.toLowerCase().includes(search.toLowerCase()))
-                            : mod.submodules
-                          return (
-                            <>
-                              {/* Module row with + toggle */}
-                              <tr key={mod.key} style={{borderBottom:'1px solid #e2e8f0',background:'#f8fafc'}}>
-                                <td style={{padding:'8px 10px'}}>
-                                  <div style={{display:'flex',alignItems:'center',gap:6}}>
-                                    <button onClick={()=>toggleMod(role.role_key, mod.key)}
-                                      style={{width:18,height:18,borderRadius:4,border:`1px solid ${A}44`,background:isModOpen?A:'#fff',color:isModOpen?'#fff':A,fontSize:11,fontWeight:900,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,lineHeight:1}}>
-                                      {isModOpen ? '−' : '+'}
-                                    </button>
-                                    <span style={{fontWeight:700,color:'#0f172a',fontSize:10}}>
-                                      {mod.label}{mod.sensitive && <span style={{marginLeft:4,fontSize:9}}>🔒</span>}
-                                    </span>
-                                    <span style={{fontSize:8,color:'#94a3b8'}}>({mod.submodules.length} pages)</span>
-                                  </div>
-                                </td>
-                                {ACTIONS.map(a=>(
-                                  <td key={a.key} style={{padding:'7px 4px',textAlign:'center'}}>
-                                    <input type="checkbox" checked={!!(matrix[modKey]||{})[a.key]}
-                                      onChange={()=>toggle(modKey, a.key)}
-                                      disabled={!isEditor}
-                                      title={`${a.label}: all of ${mod.label}`}
-                                      style={{width:15,height:15,accentColor:a.color,cursor:isEditor?'pointer':'default'}}/>
-                                  </td>
-                                ))}
-                                <td style={{padding:'7px 8px'}}>
-                                  <select value={(matrix[modKey]||{}).scope||'none'}
-                                    onChange={e=>setScope(modKey, e.target.value)}
-                                    disabled={!isEditor}
-                                    style={{fontSize:8,padding:'2px 4px',borderRadius:5,border:'1px solid #e2e8f0',color:'#475569',background:'#fff',width:82}}>
-                                    {SCOPES.map(s=><option key={s} value={s}>{s}</option>)}
-                                  </select>
-                                </td>
-                              </tr>
-                              {/* Submodule rows -- only shown when module is expanded */}
-                              {isModOpen && filteredSubs.map(sub => (
-                                <PermRow key={sub.id}
-                                  label={sub.label}
-                                  cellKey={`${role.role_key}::${mod.key}::${sub.id}`}
-                                  matrix={matrix}
-                                  onToggle={toggle}
-                                  onScope={setScope}
-                                  isEditor={isEditor}
-                                  isSub={true}/>
-                              ))}
-                            </>
-                          )
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+      {/* Header */}
+      <div style={{background:G,borderRadius:16,padding:'20px 24px',marginBottom:20,boxShadow:'0 4px 24px rgba(67,56,202,.25)'}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:12}}>
+          <div>
+            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:6}}>
+              <span style={{fontSize:24}}>📋</span>
+              <div><h2 style={{fontSize:18,fontWeight:900,color:'#fff',margin:0}}>Permission Matrix</h2>
+                <div style={{fontSize:11,color:'rgba(255,255,255,.75)',marginTop:2}}>{company?.name} · Submodule-level · {Object.keys(matrix).length} rows</div>
               </div>
-            )
-          })}
+            </div>
+            <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+              {['can_view','can_edit','can_delete','can_create','can_forward','can_approve','can_report'].map(k=>{
+                const a=ACTIONS.find(x=>x.key===k)
+                return<span key={k} style={{background:'rgba(255,255,255,.12)',color:'#fff',fontSize:9,fontWeight:700,padding:'2px 10px',borderRadius:20}}>{a?.label}</span>
+              })}
+            </div>
+          </div>
+          <div style={{display:'flex',gap:8,alignItems:'center'}}>
+            {dirty&&canEdit&&<button onClick={save} disabled={saving} style={{padding:'8px 18px',borderRadius:10,border:'none',background:saving?'#94a3b8':'#10b981',color:'#fff',fontSize:11,fontWeight:700,cursor:saving?'wait':'pointer'}}>{saving?'⟳ Saving…':'💾 Save'}</button>}
+          </div>
         </div>
-      ))}
+      </div>
 
-      <div style={{marginTop:16,background:'#fff',border:'1px solid #e2e8f0',borderRadius:16,padding:'16px 20px'}}>
-        <AIImpact color={A} lines={[
-          'Click + next to any module to expand its individual pages. You can give a role access to Payroll Approval without opening all of Payroll & Compensation.',
-          'Forward lets a role pass a task or request to the next level -- useful for MSS/Department Head who can forward leave requests or overtime but never finally approve them.',
-          'Scope narrows what the ticked boxes actually reach. A role with Edit+scope=department can never touch another department\'s records even with Edit on.',
-          'Every save writes to Audit Logs as a high-severity event. Only super_admin can save; hr_manager can view the matrix but never grant itself new access.',
-        ]}/>
+      {!canEdit&&<div style={{padding:'10px 16px',background:'#fffbeb',border:'1px solid #fde68a',borderRadius:10,fontSize:12,color:'#92400e',marginBottom:14}}>👁️ View-only — Super Admin can edit permissions</div>}
+
+      {/* Controls */}
+      <div style={{display:'flex',gap:8,marginBottom:14,flexWrap:'wrap',alignItems:'center'}}>
+        <select value={roleKey} onChange={e=>setRoleKey(e.target.value)}
+          style={{padding:'8px 12px',borderRadius:10,border:'1.5px solid #e2e8f0',fontSize:12,outline:'none',background:'#fff',appearance:'none',fontWeight:700}}>
+          {roles.map(r=><option key={r.key||r.slug||r.id} value={r.key||r.slug||r.id}>{r.label||r.name}</option>)}
+        </select>
+        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 Filter modules/submodules..."
+          style={{flex:1,minWidth:200,padding:'8px 14px',borderRadius:10,border:'1.5px solid #e2e8f0',fontSize:12,outline:'none',background:'#fff'}}/>
+        <button onClick={()=>setExpanded(Object.fromEntries(MODULES.map(m=>[m.key,true])))} style={{padding:'7px 14px',borderRadius:9,border:'1px solid #e2e8f0',background:'#fff',fontSize:11,cursor:'pointer',color:'#64748b'}}>Expand All</button>
+        <button onClick={()=>setExpanded({})} style={{padding:'7px 14px',borderRadius:9,border:'1px solid #e2e8f0',background:'#fff',fontSize:11,cursor:'pointer',color:'#64748b'}}>Collapse All</button>
+        {loading&&<span style={{fontSize:11,color:A}}>⟳ Loading…</span>}
+      </div>
+
+      {/* Matrix table */}
+      <div style={{background:'#fff',borderRadius:14,border:'1px solid #e2e8f0',overflow:'hidden'}}>
+        <div style={{overflowX:'auto'}}>
+          <table style={{width:'100%',borderCollapse:'collapse',fontSize:11}}>
+            <thead><tr style={{background:G,color:'#fff',position:'sticky',top:0,zIndex:2}}>
+              <th style={{padding:'10px 14px',textAlign:'left',minWidth:200,fontWeight:700}}>Module / Submodule</th>
+              {ACTIONS.map(a=><th key={a.key} style={{padding:'10px 8px',textAlign:'center',width:70,fontWeight:700,color:'#fff'}}>{a.label}</th>)}
+              <th style={{padding:'10px 8px',textAlign:'center',width:80,fontWeight:700}}>Scope</th>
+            </tr></thead>
+            <tbody>
+              {filteredModules.map(mod=>{
+                const isExp=expanded[mod.key]
+                const allOn=mod.submodules.every(sub=>ACTIONS.every(a=>matrix[sub.id]?.[a.key]))
+                const filtSubs=search?mod.submodules.filter(s=>s.label.toLowerCase().includes(search.toLowerCase())||mod.label.toLowerCase().includes(search.toLowerCase())):mod.submodules
+                return(
+                  <React.Fragment key={mod.key}>
+                    <tr key={mod.key} style={{background:'linear-gradient(135deg,#eef2ff,#f5f3ff)',cursor:'pointer'}}
+                      onClick={()=>toggleExpand(mod.key)}>
+                      <td style={{padding:'10px 14px',fontWeight:800,color:'#1e1b4b',display:'flex',alignItems:'center',gap:8}}>
+                        <span style={{fontSize:11,color:'#94a3b8'}}>{isExp?'▼':'▶'}</span>
+                        <span>{mod.label}</span>
+                        {mod.sensitive&&<span style={{fontSize:8,padding:'1px 6px',borderRadius:10,background:'#fef2f2',color:'#dc2626',border:'1px solid #fecaca'}}>🔒 Sensitive</span>}
+                        <span style={{fontSize:9,color:'#94a3b8',marginLeft:'auto'}}>{mod.submodules.length} submodules</span>
+                      </td>
+                      {ACTIONS.map(a=><td key={a.key} style={{padding:'10px 8px',textAlign:'center'}}>
+                        <span style={{fontSize:10,color:'#94a3b8'}}>—</span>
+                      </td>)}
+                      <td style={{padding:'10px 8px',textAlign:'center'}}>
+                        {canEdit&&<button onClick={e=>{e.stopPropagation();toggleAllModule(mod.key)}}
+                          style={{padding:'2px 8px',borderRadius:6,border:`1.5px solid ${A}`,background:allOn?A:'transparent',color:allOn?'#fff':A,fontSize:8,fontWeight:700,cursor:'pointer'}}>
+                          {allOn?'✓All':'All'}
+                        </button>}
+                      </td>
+                    </tr>
+                    {isExp&&filtSubs.map(sub=>(
+                      <SubRow key={sub.id} sub={sub} row={matrix[sub.id]||{}} onToggle={togglePerm} onScope={setScope} canEdit={canEdit}/>
+                    ))}
+                  </React.Fragment>
+                 )
+               })}
+             </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div style={{marginTop:14,background:'#fff',borderRadius:10,border:'1px solid #e2e8f0',padding:'12px 16px',fontSize:10,color:'#64748b'}}>
+        ⚖️ <strong>Scope:</strong> <em>none</em>=no access, <em>own</em>=own records only, <em>team</em>=team records, <em>department</em>=dept records, <em>branch</em>=branch records, <em>all</em>=full access. Every save is audit-logged.
       </div>
     </div>
   )

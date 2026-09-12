@@ -5,101 +5,74 @@
 //          birthdays, Nepal Labour Act leave entitlements
 // ============================================================
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useApp }      from '../../context/AppContext.jsx'
 import { StatCard }    from '../shared/StatCard.jsx'
 import { Card }        from '../shared/Card.jsx'
-import { Pill }        from '../shared/Pill.jsx'
-import { ProgressBar } from '../shared/ProgressBar.jsx'
-import { TaskItem }    from '../shared/TaskItem.jsx'
-import { PageTitle }   from '../shared/PageTitle.jsx'
 import EmployeeFeedWidget from '../shared/EmployeeFeedWidget.jsx'
 
-const leaveBalances = [
-  { type: 'Annual (Home) Leave',  used: 12, total: 20, color: '#3b82f6', law: 'Sec.55 — 1 day per 20 days worked' },
-  { type: 'Sick Leave',           used: 4,  total: 12, color: '#8b5cf6', law: 'Sec.56 — 12 days/year' },
-  { type: 'Compensatory Leave',   used: 3,  total: 5,  color: '#10b981', law: 'Earned via OT work' },
-  { type: 'Paternity Leave',      used: 0,  total: 15, color: '#f59e0b', law: 'Sec.58 — 15 days paid' },
-]
+function _getSession(){try{return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{}}catch{return{}}}
+function _authH(){const s=_getSession();const token=localStorage.getItem('access_token')||s?.token||'';const slug=s?.company?.slug||'';return{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}}
 
-const myTasks = [
-  { id: 1, task: 'Submit daily activity report',      priority: 'high',   done: false },
-  { id: 2, task: 'Update project status in system',   priority: 'high',   done: false },
-  { id: 3, task: 'Complete online training module 3', priority: 'medium', done: false },
-  { id: 4, task: 'Attend team standup at 9:30 AM',    priority: 'medium', done: true  },
-  { id: 5, task: 'Submit timesheet for May review',   priority: 'low',    done: true  },
-  { id: 6, task: 'Review and sign Q2 appraisal',      priority: 'medium', done: false },
-]
-
-const events = [
-  { day: '5',  month: 'Jun', title: 'Leadership Training',        sub: 'IT Dept · Mandatory',            type: 'mandatory'  },
-  { day: '10', month: 'Jun', title: 'Q2 Performance Review',      sub: 'With Bikram Shrestha',            type: 'review'     },
-  { day: '13', month: 'Jun', title: '⚠️ Tax Clearance EXPIRED',  sub: 'IRD · eLogix HRMS · Renew NOW',    type: 'doc_expired'},
-  { day: '15', month: 'Jun', title: 'Payroll Processing',         sub: 'Submit timesheet by Jun 12',      type: 'payroll'    },
-  { day: '20', month: 'Jun', title: '🔔 Trade License Renewal',   sub: 'Dept. of Commerce · Due Jul 1',  type: 'doc_warn'   },
-  { day: '20', month: 'Jun', title: 'Company Town Hall',          sub: 'All-hands · 10:00 AM',           type: 'company'    },
-  { day: '30', month: 'Jun', title: 'Compliance Review Due',      sub: 'Nepal Labour Act 2017',           type: 'compliance' },
-  { day: '15', month: 'Jul', title: '⚠️ OCR Certificate Expires', sub: 'OCR · eLogix HRMS · Renew by Jul 15', type: 'doc_warn'},
-]
-
-const birthdays = [
-  { name: 'Roshan Shrestha', dept: 'IT',      when: 'Today',    icon: '🎂', type: 'birthday'   },
-  { name: 'Anita Gurung',    dept: 'HR',      when: 'Tomorrow', icon: '🎂', type: 'birthday'   },
-  { name: 'Suresh Bista',    dept: 'Finance', when: 'Jun 8',    icon: '🏅', type: 'anniversary'},
-]
-
-const myPayslips = [
-  { month: 'May 2026', gross: 80000, deductions: 12000, net: 68000, status: 'Paid'    },
-  { month: 'Apr 2026', gross: 80000, deductions: 12000, net: 68000, status: 'Paid'    },
-  { month: 'Mar 2026', gross: 78000, deductions: 11700, net: 66300, status: 'Paid'    },
-]
-
-const eventColor = {
-  mandatory: '#ef4444', review: '#3b82f6', payroll: '#10b981',
-  company: '#8b5cf6', compliance: '#f59e0b',
-  doc_expired: '#dc2626', doc_warn: '#f59e0b',
+function ProgressBar({ value = 0, color = '#3b82f6', height = 6 }) {
+  return (
+    <div style={{ height, background: '#f1f5f9', borderRadius: height, overflow: 'hidden' }}>
+      <div style={{ height: '100%', width: `${Math.min(100, Math.max(0, value))}%`,
+        background: color, borderRadius: height, transition: 'width .5s' }}/>
+    </div>
+  )
 }
+
+
 
 const quickActions = [
-  { icon: '📝', label: 'Apply Leave',    action: 'leave-request-ess'  },
-  { icon: '🕐', label: 'Attendance',    action: 'my-attendance-ess'  },
-  { icon: '💵', label: 'Payslip',       action: 'payslip-download'   },
-  { icon: '🧾', label: 'Expenses',      action: 'field-visit-expenses'},
-  { icon: '👤', label: 'My Profile',    action: 'my-profile'         },
-  { icon: '🎯', label: 'My Goals',      action: 'my-goals-kpi'       },
-  { icon: '📋', label: 'Daily Report',  action: 'my-daily-activity'  },
-  { icon: '🎓', label: 'Training',      action: 'my-training-ess'    },
-  { icon: '💬', label: 'Feedback',      action: 'my-feedback-ess'    },
+  { icon: '📋', label: 'Apply Leave',     action: 'apply-leave'     },
+  { icon: '💵', label: 'View Payslip',    action: 'payslips'        },
+  { icon: '🎯', label: 'My Goals',        action: 'goals'           },
+  { icon: '📑', label: 'Request Letter',  action: 'letter-request'  },
+  { icon: '⏰', label: 'Attendance',      action: 'attendance'      },
+  { icon: '👤', label: 'My Profile',      action: 'employee-profile'},
 ]
 
-
-function _getSession() {
-  try {
-    return JSON.parse(
-      sessionStorage.getItem('elogix_session') ||
-      localStorage.getItem('elogix_session') || 'null'
-    ) || {}
-  } catch (_e) { return {} }
-}
-function _getCurrency() {
-  const s = _getSession()
-  const code = s?.company?.currency || 'NPR'
-  return { code, symbol: {NPR:'रु',USD:'$',INR:'₹',EUR:'€',GBP:'£'}[code] || code }
-}
-function _useAppFallback() {
-  const s = _getSession(); const cc = _getCurrency()
-  return {
-    sub:'', persona:s?.user?.role||'employee', lang:'en', currency:cc.code, cc,
-    company:s?.company||{}, user:s?.user||{}, t:()=>'',
-    navTo:(p)=>window.dispatchEvent(new CustomEvent('elogix:nav',{detail:{page:p}})),
-    switchPersona:()=>{}, setShowNotif:()=>{}, setShowAI:()=>{},
-    setSidebarOpen:()=>{}, sidebarOpen:true, darkMode:false, setDarkMode:()=>{},
-    currentPersona:{id:'employee',icon:'👤',color:'#7c3aed',label:''},
-  }
-}
-
 export default function EmployeeDashboard() {
-  const { t, cc, navTo } = _useAppFallback()
-  const [tasks, setTasks] = useState(myTasks)
+
+  const _s  = _getSession()
+  const _co = _s?.company || {}
+  const _u  = _s?.user    || {}
+
+  const [leaveBalances,  setLeaveBalances]  = useState([])
+  const [myTasks,        setMyTasks]        = useState([])
+  const [events,         setEvents]         = useState([])
+  const [birthdays,      setBirthdays]      = useState([])
+  const [performance,    setPerformance]    = useState([])
+  const [profile,        setProfile]        = useState({})
+  const [apiLoading,     setApiLoading]     = useState(true)
+  const [apiError,       setApiError]       = useState(null)
+
+  useEffect(() => {
+    const token = localStorage.getItem('access_token') || _s?.token || ''
+    const slug  = _s?.company?.slug || ''
+    if (!token || !slug) { setApiLoading(false); return }
+    fetch('/api/v1/employee-dashboard/my-summary', { headers: _authH() })
+      .then(r => {
+        if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));throw new Error('Session expired')}
+        if(!r.ok) throw new Error(`Error ${r.status}`)
+        return r.json()
+      })
+      .then(d => {
+        const dd = d.data || d
+        if(dd.leave_balances)   setLeaveBalances(dd.leave_balances)
+        if(dd.tasks)            setMyTasks(dd.tasks)
+        if(dd.events)           setEvents(dd.events)
+        if(dd.birthdays)        setBirthdays(dd.birthdays)
+        if(dd.performance)      setPerformance(dd.performance)
+        if(dd.profile)          setProfile(dd.profile)
+      })
+      .catch(e => setApiError(e.message))
+      .finally(() => setApiLoading(false))
+  }, [])
+  const { t, cc, navTo } = useApp()
+  const [tasks, setTasks] = useState([])
   const [activeTab, setActiveTab] = useState('overview')
   const toggle = (id) => setTasks(p => p.map(tk => tk.id === id ? { ...tk, done: !tk.done } : tk))
   const done = tasks.filter(t => t.done).length
@@ -155,12 +128,12 @@ export default function EmployeeDashboard() {
 
               {/* Performance */}
               <Card title="My Performance" subtitle="Q2 2026 at a glance">
-                {[
-                  { label: 'KPI Achievement',     pct: 82, color: '#10b981' },
-                  { label: 'Goals Completed',     pct: 65, color: '#3b82f6' },
-                  { label: 'Training Completion', pct: 90, color: '#8b5cf6' },
-                  { label: 'Attendance YTD',      pct: 96, color: '#f59e0b' },
-                ].map((p, i) => (
+                {(performance.length > 0 ? performance : [
+                  { label: 'KPI Achievement',     pct: null, color: '#10b981' },
+                  { label: 'Goals Completed',     pct: null, color: '#3b82f6' },
+                  { label: 'Training Completion', pct: null, color: '#8b5cf6' },
+                  { label: 'Attendance YTD',      pct: null, color: '#f59e0b' },
+                ]).map((p, i) => (
                   <div key={i} style={{ marginBottom: 10 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 2 }}>
                       <span style={{ color: '#475569' }}>{p.label}</span>

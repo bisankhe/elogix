@@ -11,121 +11,90 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
 } from 'recharts'
+import { useApp }        from '../../context/AppContext.jsx'
 import { StatCard }      from '../shared/StatCard.jsx'
 import { Card }          from '../shared/Card.jsx'
-import { Pill }          from '../shared/Pill.jsx'
-import { ProgressBar }   from '../shared/ProgressBar.jsx'
-import { TaskItem }      from '../shared/TaskItem.jsx'
-import { PageTitle }     from '../shared/PageTitle.jsx'
-import { AIInsightCard } from '../shared/AIInsightCard.jsx'
 
-// ── Mock Data ────────────────────────────────────────────────
-const payrollVsBudget = [
-  { month: 'Jan', actual: 3800000, budget: 4000000 },
-  { month: 'Feb', actual: 3900000, budget: 4000000 },
-  { month: 'Mar', actual: 4000000, budget: 4100000 },
-  { month: 'Apr', actual: 4100000, budget: 4100000 },
-  { month: 'May', actual: 4200000, budget: 4200000 },
-  { month: 'Jun', actual: 4350000, budget: 4200000 },
-]
+function _getSession(){try{return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{}}catch{return{}}}
+function _authH(){const s=_getSession();const token=localStorage.getItem('access_token')||s?.token||'';const slug=s?.company?.slug||'';return{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}}
 
-const attritionRisk = [
-  { name: 'Low Risk',    value: 62, color: '#10b981' },
-  { name: 'Medium Risk', value: 28, color: '#f59e0b' },
-  { name: 'High Risk',   value: 10, color: '#ef4444' },
-]
-
-const deptHeadcount = [
-  { dept: 'IT',         value: 320, color: '#3b82f6', last: 298 },
-  { dept: 'Operations', value: 280, color: '#f59e0b', last: 265 },
-  { dept: 'Sales',      value: 260, color: '#ef4444', last: 245 },
-  { dept: 'Finance',    value: 210, color: '#10b981', last: 205 },
-  { dept: 'HR',         value: 180, color: '#8b5cf6', last: 175 },
-]
-
-const okrProgress = [
-  { objective: 'Revenue Growth 20%',         q1: 55, q2: 74, target: 100 },
-  { objective: 'Employee Satisfaction',       q1: 76, q2: 82, target: 100 },
-  { objective: 'Product Releases',            q1: 70, q2: 88, target: 100 },
-  { objective: 'Hiring Plan',                 q1: 40, q2: 55, target: 100 },
-  { objective: 'Training Completion',         q1: 48, q2: 67, target: 100 },
-  { objective: 'Customer NPS',                q1: 52, q2: 61, target: 100 },
-]
-
-const genderData = [
-  { name: 'Male',   value: 56, color: '#3b82f6' },
-  { name: 'Female', value: 42, color: '#ec4899' },
-  { name: 'Other',  value: 2,  color: '#10b981' },
-]
-
-const headcountTrend = [
-  { month: 'Jan', headcount: 1185, target: 1200 },
-  { month: 'Feb', headcount: 1198, target: 1210 },
-  { month: 'Mar', headcount: 1215, target: 1220 },
-  { month: 'Apr', headcount: 1228, target: 1230 },
-  { month: 'May', headcount: 1238, target: 1240 },
-  { month: 'Jun', headcount: 1250, target: 1260 },
-]
-
-const tasksByDept = [
-  { id: 1, task: 'Review IT department OKR progress',          priority: 'high',   done: false, dept: 'IT',      role: 'Executive' },
-  { id: 2, task: 'Approve Q2 payroll budget variance',          priority: 'high',   done: false, dept: 'Finance', role: 'Executive' },
-  { id: 3, task: 'Board meeting preparation — Jun 15',          priority: 'high',   done: false, dept: 'All',     role: 'Executive' },
-  { id: 4, task: 'Review Sales team performance Q2',            priority: 'medium', done: true,  dept: 'Sales',   role: 'Executive' },
-  { id: 5, task: 'Sign off on 3 senior hire offers',            priority: 'medium', done: false, dept: 'HR',      role: 'Executive' },
-  { id: 6, task: 'Annual strategy review with department heads', priority: 'medium', done: false, dept: 'All',     role: 'Executive' },
-  { id: 7, task: 'Review Q3 workforce planning projections',    priority: 'low',    done: false, dept: 'HR',      role: 'Executive' },
-]
-
-const biMetrics = [
-  { metric: 'Revenue per Employee',     value: 'Rs 280K', change: '+12%',   up: true  },
-  { metric: 'Cost per Employee',        value: 'Rs 3.4K', change: '+2.1%',  up: false },
-  { metric: 'Training ROI',            value: '3.2x',    change: '+0.4x',  up: true  },
-  { metric: 'HR to Employee Ratio',    value: '1:14.4',  change: 'Optimal',up: true  },
-  { metric: 'Voluntary Turnover',      value: '6.8%',    change: '-1.4%',  up: true  },
-  { metric: 'Involuntary Turnover',    value: '1.4%',    change: 'Stable', up: true  },
-  { metric: 'Internal Hire Rate',      value: '33%',     change: '+5%',    up: true  },
-  { metric: 'Benefits Cost per EE',    value: 'Rs 248',  change: '+3.2%',  up: false },
-]
-
-const aiInsights = [
-  { color: '#ef4444', label: 'Attrition Alert',      text: '14 employees in IT show disengagement signals. Predicted exit within 60 days. Recommend compensation review.' },
-  { color: '#f59e0b', label: 'Cost Overrun Risk',    text: 'Jun payroll projected Rs 4.35M — Rs 150K above budget. Finance OT driving overage. Review staffing plan.' },
-  { color: '#10b981', label: 'OKR on Track',         text: 'Product Releases (88%) and Employee Satisfaction (82%) are exceeding targets. Maintain current momentum.' },
-  { color: '#3b82f6', label: 'Q3 Hiring Forecast',   text: 'Based on growth trajectory, 28–35 new hires needed in Q3 2026: IT (12), Sales (8), Operations (15).' },
-]
-
-
-function _getSession() {
-  try {
-    return JSON.parse(
-      sessionStorage.getItem('elogix_session') ||
-      localStorage.getItem('elogix_session') || 'null'
-    ) || {}
-  } catch (_e) { return {} }
+function ProgressBar({ value = 0, color = '#3b82f6', height = 6 }) {
+  return (
+    <div style={{ height, background: '#f1f5f9', borderRadius: height, overflow: 'hidden' }}>
+      <div style={{ height: '100%', width: `${Math.min(100, Math.max(0, value))}%`,
+        background: color, borderRadius: height, transition: 'width .5s' }}/>
+    </div>
+  )
 }
-function _getCurrency() {
-  const s = _getSession()
-  const code = s?.company?.currency || 'NPR'
-  return { code, symbol: {NPR:'रु',USD:'$',INR:'₹',EUR:'€',GBP:'£'}[code] || code }
+function AIInsightCard({ insights = [], title = 'AI Insights' }) {
+  if (!insights.length) return (
+    <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e2e8f0', padding: '16px 18px' }}>
+      <div style={{ fontSize: 12, fontWeight: 800, marginBottom: 12 }}>{title}</div>
+      <div style={{ textAlign: 'center', padding: 20, color: '#94a3b8', fontSize: 11 }}>No AI insights yet</div>
+    </div>
+  )
+  return (
+    <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e2e8f0', padding: '16px 18px' }}>
+      <div style={{ fontSize: 12, fontWeight: 800, marginBottom: 12 }}>{title}</div>
+      {insights.map((ins, i) => (
+        <div key={i} style={{ display: 'flex', gap: 10, padding: '8px 0',
+          borderBottom: i < insights.length - 1 ? '1px solid #f8fafc' : 'none' }}>
+          <span style={{ fontSize: 16, flexShrink: 0 }}>{ins.icon}</span>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#0f172a' }}>{ins.type}</div>
+            <div style={{ fontSize: 10, color: '#64748b', marginTop: 2 }}>{ins.msg}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
 }
-function _useAppFallback() {
-  const s = _getSession(); const cc = _getCurrency()
-  return {
-    sub:'', persona:s?.user?.role||'employee', lang:'en', currency:cc.code, cc,
-    company:s?.company||{}, user:s?.user||{}, t:()=>'',
-    navTo:(p)=>window.dispatchEvent(new CustomEvent('elogix:nav',{detail:{page:p}})),
-    switchPersona:()=>{}, setShowNotif:()=>{}, setShowAI:()=>{},
-    setSidebarOpen:()=>{}, sidebarOpen:true, darkMode:false, setDarkMode:()=>{},
-    currentPersona:{id:'employee',icon:'👤',color:'#7c3aed',label:''},
-  }
-}
+
 
 export default function ExecutiveDashboard() {
-  const { t, cc } = _useAppFallback()
-  const [tasks, setTasks] = useState(tasksByDept)
+
+  const _s = _getSession()
+  const _co = _s?.company || {}
+
+  const [payrollVsBudget, setPayrollVsBudget] = useState([])
+  const [attritionRisk,   setAttritionRisk]   = useState([])
+  const [deptHeadcount,   setDeptHeadcount]   = useState([])
+  const [okrProgress,     setOkrProgress]     = useState([])
+  const [genderData,      setGenderData]      = useState([])
+  const [tasksByDept,     setTasksByDept]      = useState([])
+  const [aiInsights,      setAiInsights]      = useState([])
+  const [kpis,            setKpis]            = useState({})
+  const [apiLoading,      setApiLoading]      = useState(true)
+  const [apiError,        setApiError]        = useState(null)
+
+  useEffect(() => {
+    const token = localStorage.getItem('access_token') || _s?.token || ''
+    const slug  = _s?.company?.slug || ''
+    if (!token || !slug) { setApiLoading(false); return }
+    fetch('/api/v1/executive-dashboard/summary', { headers: _authH() })
+      .then(r => {
+        if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));throw new Error('Session expired')}
+        if(!r.ok) throw new Error(`Error ${r.status}`)
+        return r.json()
+      })
+      .then(d => {
+        const dd = d.data || d
+        if(dd.payroll_vs_budget)  setPayrollVsBudget(dd.payroll_vs_budget)
+        if(dd.attrition_risk)     setAttritionRisk(dd.attrition_risk)
+        if(dd.dept_headcount)     setDeptHeadcount(dd.dept_headcount)
+        if(dd.okr_progress)       setOkrProgress(dd.okr_progress)
+        if(dd.gender_data)        setGenderData(dd.gender_data)
+        if(dd.tasks)              setTasksByDept(dd.tasks)
+        if(dd.ai_insights)        setAiInsights(dd.ai_insights)
+        if(dd.kpis)               setKpis(dd.kpis)
+      })
+      .catch(e => setApiError(e.message))
+      .finally(() => setApiLoading(false))
+  }, [])
+  const { t, cc } = useApp()
+  const [tasks, setTasks] = useState([])
   const [activeTab, setActiveTab] = useState('overview')
-  const toggleTask = (id) => setTasks(prev => prev.map(tk => tk.id === id ? { ...tk, done: !tk.done } : tk))
+  const toggleTask = (id) => setTasksByDept(prev => prev.map(tk => tk.id === id ? { ...tk, done: !tk.done } : tk))
 
   const fmt = (val, compact = true) => {
     if (compact) {
@@ -147,10 +116,10 @@ export default function ExecutiveDashboard() {
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-        <StatCard icon="👥" label="Total Headcount"         value="1,250"      change="+12 vs last month"   up  accent="#3b82f6" />
-        <StatCard icon="💰" label={`Labor Cost (${cc.code})`} value={fmt(4200000)} change="+2.1% this month" up  accent="#10b981" />
-        <StatCard icon="📉" label="Turnover Rate"           value="8.2%"       change="Industry avg 12%"    up  accent="#ef4444" />
-        <StatCard icon="🎯" label="OKR Completion (Avg)"    value="74%"        change="Q2 on track"         up  accent="#f59e0b" />
+        <StatCard icon="👥" label="Total Headcount"         value={kpis.total_headcount ?? "—"}      change="+12 vs last month"   up  accent="#3b82f6" />
+        <StatCard icon="💰" label={`Labor Cost (${cc.code})`} value={kpis.labor_cost != null ? fmt(kpis.labor_cost) : "—"} change="+2.1% this month" up  accent="#10b981" />
+        <StatCard icon="📉" label="Turnover Rate"           value={kpis.turnover_rate ?? "—"}       change="Industry avg 12%"    up  accent="#ef4444" />
+        <StatCard icon="🎯" label="OKR Completion (Avg)"    value={kpis.okr_completion ?? "—"}        change="Q2 on track"         up  accent="#f59e0b" />
       </div>
 
       {/* Tabs */}

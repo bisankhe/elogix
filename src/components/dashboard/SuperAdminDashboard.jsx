@@ -3,109 +3,79 @@
 // Fixed: Removed dual-axis BarChart (yAxisId conflict)
 // ============================================================
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
 } from 'recharts'
+import { useApp }        from '../../context/AppContext.jsx'
 import { StatCard }      from '../shared/StatCard.jsx'
 import { Card }          from '../shared/Card.jsx'
-import { Pill }          from '../shared/Pill.jsx'
-import { ProgressBar }   from '../shared/ProgressBar.jsx'
-import { PageTitle }     from '../shared/PageTitle.jsx'
-import { AIInsightCard } from '../shared/AIInsightCard.jsx'
 
-// ── Data ─────────────────────────────────────────────────────
-const tenantData = [
-  { region: 'Nepal',       tenants: 18, revenue: 2160000 },
-  { region: 'India',       tenants: 12, revenue: 1440000 },
-  { region: 'Middle East', tenants: 9,  revenue: 1800000 },
-  { region: 'SEA',         tenants: 5,  revenue: 600000  },
-  { region: 'Others',      tenants: 3,  revenue: 360000  },
-]
+function _getSession(){try{return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{}}catch{return{}}}
+function _authH(){const s=_getSession();const token=localStorage.getItem('access_token')||s?.token||'';const slug=s?.company?.slug||'';return{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}}
 
-const systemHealthData = [
-  { time: '08:00', cpu: 65, memory: 70 },
-  { time: '10:00', cpu: 78, memory: 74 },
-  { time: '12:00', cpu: 72, memory: 76 },
-  { time: '14:00', cpu: 69, memory: 73 },
-  { time: '16:00', cpu: 75, memory: 75 },
-  { time: '18:00', cpu: 58, memory: 68 },
-  { time: '20:00', cpu: 42, memory: 62 },
-]
-
-const licenseData = [
-  { plan: 'Enterprise (10 clients)',   pct: 89, color: '#3b82f6' },
-  { plan: 'Professional (24 clients)', pct: 72, color: '#8b5cf6' },
-  { plan: 'Starter (13 clients)',      pct: 41, color: '#10b981' },
-]
-
-const recentTenants = [
-  { name: 'Himalaya Corp Pvt. Ltd.',  plan: 'Enterprise',   users: 1250, status: 'Active',  joined: 'May 20, 2025' },
-  { name: 'Peak Solutions Nepal',     plan: 'Professional', users: 420,  status: 'Trial',   joined: 'Jun 1, 2026'  },
-  { name: 'Sunrise Finance Group',    plan: 'Enterprise',   users: 880,  status: 'Active',  joined: 'Mar 15, 2025' },
-  { name: 'Nepal IT Services',        plan: 'Starter',      users: 95,   status: 'Active',  joined: 'Apr 10, 2026' },
-  { name: 'TechBridge Pvt. Ltd.',     plan: 'Professional', users: 310,  status: 'Active',  joined: 'Feb 28, 2026' },
-]
-
-const auditLog = [
-  { icon: '🚨', event: 'Failed login × 5 — Himalaya Corp', user: 'Unknown',      time: '4 min ago',  severity: 'critical' },
-  { icon: '✅', event: 'New tenant onboarded',              user: 'Super Admin',  time: '2 hr ago',   severity: 'info'     },
-  { icon: '📤', event: 'Data export requested',             user: 'Admin User',   time: '5 hr ago',   severity: 'warning'  },
-  { icon: '🔧', event: 'System config updated',             user: 'Super Admin',  time: '1 day ago',  severity: 'info'     },
-  { icon: '🔄', event: 'AI models retrained — v3.2',        user: 'System',       time: 'May 28',     severity: 'info'     },
-  { icon: '🛡️', event: 'Security scan completed',          user: 'Security Bot', time: 'May 27',     severity: 'info'     },
-]
-
-const services = [
-  { name: 'API Gateway',      status: 'Healthy',  color: '#10b981' },
-  { name: 'Database Cluster', status: 'Healthy',  color: '#10b981' },
-  { name: 'AI Model Server',  status: 'Degraded', color: '#f59e0b' },
-  { name: 'File Storage',     status: 'Healthy',  color: '#10b981' },
-  { name: 'Email Service',    status: 'Issues',   color: '#ef4444' },
-  { name: 'Redis Cache',      status: 'Healthy',  color: '#10b981' },
-  { name: 'Notification Hub', status: 'Healthy',  color: '#10b981' },
-  { name: 'Search Engine',    status: 'Healthy',  color: '#10b981' },
-]
-
-const aiInsights = [
-  { color: '#ef4444', label: 'Security Alert',      text: 'Himalaya Corp: 5 failed logins. Possible brute-force. IP temporarily blocked.' },
-  { color: '#f59e0b', label: 'AI Server Degraded',  text: 'ML inference showing 1.2s latency (threshold: 800ms). Scale up recommended.' },
-  { color: '#3b82f6', label: 'License Conversion',  text: 'Peak Solutions trial ends in 14 days. 89% feature adoption — send upgrade offer.' },
-  { color: '#10b981', label: 'Revenue Forecast',    text: 'Projected MRR for Q3 2026: Rs 6.8M — 23% above Q2 target.' },
-]
-
-const severityColor = { critical: 'red', warning: 'yellow', info: 'blue' }
-
-
-function _getSession() {
-  try {
-    return JSON.parse(
-      sessionStorage.getItem('elogix_session') ||
-      localStorage.getItem('elogix_session') || 'null'
-    ) || {}
-  } catch (_e) { return {} }
+function ProgressBar({value=0,color='#3b82f6',height=6}){
+  return<div style={{height,background:'#f1f5f9',borderRadius:height,overflow:'hidden'}}><div style={{height:'100%',width:`${Math.min(100,value)}%`,background:color,borderRadius:height}}/></div>
 }
-function _getCurrency() {
-  const s = _getSession()
-  const code = s?.company?.currency || 'NPR'
-  return { code, symbol: {NPR:'रु',USD:'$',INR:'₹',EUR:'€',GBP:'£'}[code] || code }
+function Pill({color='blue',children}){
+  const cfg={blue:{bg:'#eff6ff',c:'#1d4ed8'},green:{bg:'#f0fdf4',c:'#15803d'},yellow:{bg:'#fffbeb',c:'#b45309'},red:{bg:'#fef2f2',c:'#dc2626'},gray:{bg:'#f8fafc',c:'#64748b'}}
+  const s=cfg[color]||cfg.gray
+  return<span style={{fontSize:9,fontWeight:700,padding:'2px 8px',borderRadius:20,background:s.bg,color:s.c}}>{children}</span>
 }
-function _useAppFallback() {
-  const s = _getSession(); const cc = _getCurrency()
-  return {
-    sub:'', persona:s?.user?.role||'employee', lang:'en', currency:cc.code, cc,
-    company:s?.company||{}, user:s?.user||{}, t:()=>'',
-    navTo:(p)=>window.dispatchEvent(new CustomEvent('elogix:nav',{detail:{page:p}})),
-    switchPersona:()=>{}, setShowNotif:()=>{}, setShowAI:()=>{},
-    setSidebarOpen:()=>{}, sidebarOpen:true, darkMode:false, setDarkMode:()=>{},
-    currentPersona:{id:'employee',icon:'👤',color:'#7c3aed',label:''},
-  }
+function AIInsightCard({insights=[],title='AI Insights'}){
+  return<div style={{background:'#fff',borderRadius:14,border:'1px solid #e2e8f0',padding:'16px 18px'}}>
+    <div style={{fontSize:12,fontWeight:800,marginBottom:12}}>{title}</div>
+    {insights.length===0?<div style={{textAlign:'center',padding:16,color:'#94a3b8',fontSize:11}}>No insights yet</div>:insights.map((ins,i)=>(
+      <div key={i} style={{display:'flex',gap:10,padding:'8px 0',borderBottom:i<insights.length-1?'1px solid #f8fafc':'none'}}>
+        <span style={{fontSize:16,flexShrink:0}}>{ins.icon}</span>
+        <div><div style={{fontSize:11,fontWeight:700,color:'#0f172a'}}>{ins.type}</div><div style={{fontSize:10,color:'#64748b',marginTop:2}}>{ins.msg}</div></div>
+      </div>
+    ))}
+  </div>
 }
+
 
 export default function SuperAdminDashboard() {
-  const { t, cc } = _useAppFallback()
+
+  const _s = _getSession(); const _co = _s?.company||{}
+
+  const [tenantData,       setTenantData]       = useState([])
+  const [systemHealthData, setSystemHealthData] = useState([])
+  const [licenseData,      setLicenseData]      = useState([])
+  const [recentTenants,    setRecentTenants]    = useState([])
+  const [auditLog,         setAuditLog]         = useState([])
+  const [services,         setServices]         = useState([])
+  const [aiInsights,       setAiInsights]       = useState([])
+  const [kpis,             setKpis]             = useState({})
+  const [apiLoading,       setApiLoading]       = useState(true)
+  const [apiError,         setApiError]         = useState(null)
+
+  useEffect(() => {
+    const token = localStorage.getItem('access_token') || _s?.token || ''
+    if (!token) { setApiLoading(false); return }
+    fetch('/api/v1/super-admin/summary', { headers: _authH() })
+      .then(r => {
+        if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));throw new Error('Session expired')}
+        if(!r.ok) throw new Error(`Error ${r.status}`)
+        return r.json()
+      })
+      .then(d => {
+        const dd = d.data || d
+        if(dd.tenant_data)       setTenantData(dd.tenant_data)
+        if(dd.system_health)     setSystemHealthData(dd.system_health)
+        if(dd.license_data)      setLicenseData(dd.license_data)
+        if(dd.recent_tenants)    setRecentTenants(dd.recent_tenants)
+        if(dd.audit_log)         setAuditLog(dd.audit_log)
+        if(dd.services)          setServices(dd.services)
+        if(dd.ai_insights)       setAiInsights(dd.ai_insights)
+        if(dd.kpis)              setKpis(dd.kpis)
+      })
+      .catch(e => setApiError(e.message))
+      .finally(() => setApiLoading(false))
+  }, [])
+  const { t, cc } = useApp()
   const [activeTab, setActiveTab] = useState('overview')
 
   const fmt = (val) => {
@@ -124,14 +94,28 @@ export default function SuperAdminDashboard() {
         </span>
       </div>
 
-      <PageTitle title="Super Admin Dashboard" sub="System health, multi-tenant management, security & compliance." badge="Full Access" />
+      {/* eLogix SA gradient header */}
+      <div style={{background:'linear-gradient(135deg,#0f172a 0%,#1e293b 60%,#334155 100%)',borderRadius:16,padding:'18px 22px',marginBottom:16,boxShadow:'0 4px 20px rgba(0,0,0,.25)'}}>
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          <span style={{fontSize:22}}>🌐</span>
+          <div>
+            <div style={{fontSize:18,fontWeight:900,color:'#fff'}}>Super Admin Dashboard</div>
+            <div style={{fontSize:11,color:'rgba(255,255,255,.65)',marginTop:2}}>System health · Multi-tenant management · Security & Compliance</div>
+          </div>
+          <span style={{marginLeft:'auto',fontSize:10,fontWeight:700,color:'#fbbf24',background:'rgba(251,191,36,.15)',padding:'3px 10px',borderRadius:20}}>eLogix SuperAdmin</span>
+        </div>
+      </div>
+      {apiError&&<div style={{padding:'10px 16px',background:'#fffbeb',border:'1px solid #fde68a',borderRadius:10,fontSize:12,color:'#92400e',marginBottom:12}}>⚠️ {apiError}</div>}
+
+      {/* removed PageTitle */}
+      
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-        <StatCard icon="🏢" label="Active Tenants"    value="47"     change="+3 this month"  up  accent="#3b82f6" />
-        <StatCard icon="👥" label="Total Users"       value="18,420" change="+240 this week" up  accent="#10b981" />
-        <StatCard icon="🖥️" label="System Uptime"    value="99.97%" change="SLA compliant"  up  accent="#f59e0b" />
-        <StatCard icon="🛡️" label="Security Alerts"  value="2"      change="Needs review"   up={false} accent="#ef4444" />
+        <StatCard icon="🏢" label="Active Tenants"    value={kpis.active_tenants ?? "—"}     change="+3 this month"  up  accent="#3b82f6" />
+        <StatCard icon="👥" label="Total Users"       value={kpis.total_users ?? "—"} change="+240 this week" up  accent="#10b981" />
+        <StatCard icon="🖥️" label="System Uptime"    value={kpis.system_uptime ?? "—"} change="SLA compliant"  up  accent="#f59e0b" />
+        <StatCard icon="🛡️" label="Security Alerts"  value={kpis.security_alerts ?? "—"}      change="Needs review"   up={false} accent="#ef4444" />
       </div>
 
       {/* Tabs */}
@@ -174,7 +158,7 @@ export default function SuperAdminDashboard() {
 
             {/* License */}
             <Card title="License Utilization" subtitle="Seats used vs allocated">
-              {licenseData.map((l, i) => (
+              {(licenseData||[]).length===0?<div style={{textAlign:"center",padding:16,color:"#94a3b8",fontSize:11}}>No license data</div>:(licenseData||[]).map((l, i) => (
                 <div key={i} style={{ marginBottom: 14 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
                     <span style={{ fontWeight: 600, color: '#334155' }}>{l.plan}</span>
@@ -200,7 +184,9 @@ export default function SuperAdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {recentTenants.map((t, i) => (
+                {(recentTenants||[]).length===0?(
+                  <tr><td colSpan={5} style={{textAlign:'center',padding:24,color:'#94a3b8',fontSize:11}}>No tenants yet</td></tr>
+                ):(recentTenants||[]).map((t, i) => (
                   <tr key={i} className="border-b border-gray-50 hover:bg-blue-50/30 transition-colors">
                     <td className="py-3 text-xs font-bold text-gray-800">{t.name}</td>
                     <td className="py-3">
@@ -268,10 +254,10 @@ export default function SuperAdminDashboard() {
       {activeTab === 'tenants' && (
         <div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-            <StatCard icon="🏆" label="Enterprise" value="10" change="+1 this month" up  accent="#8b5cf6" />
-            <StatCard icon="⭐" label="Professional" value="24" change="+2 this month" up  accent="#3b82f6" />
-            <StatCard icon="🔰" label="Starter"    value="13" change="Same as last"  up={false} accent="#10b981" />
-            <StatCard icon="🔄" label="Trial"      value="4"  change="2 expiring"    up={false} accent="#f59e0b" />
+            <StatCard icon="🏆" label="Enterprise" value={kpis?.auto_value ?? "—"} change="+1 this month" up  accent="#8b5cf6" />
+            <StatCard icon="⭐" label="Professional" value={kpis?.auto_value ?? "—"} change="+2 this month" up  accent="#3b82f6" />
+            <StatCard icon="🔰" label="Starter"    value={kpis?.auto_value ?? "—"} change="Same as last"  up={false} accent="#10b981" />
+            <StatCard icon="🔄" label="Trial"      value={kpis?.auto_val ?? "—"}  change="2 expiring"    up={false} accent="#f59e0b" />
           </div>
 
           {/* Revenue chart — SINGLE Y-AXIS */}

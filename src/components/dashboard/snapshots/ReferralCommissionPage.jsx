@@ -1,186 +1,70 @@
 // FILE: src/components/dashboard/snapshots/ReferralCommissionPage.jsx
 // eLogix HRMS — Referral & Commission Management
-// Tracks: Partners/Referrers → Referred Tenants → Revenue → Commission
-// Access:
-//   - eLogix SuperAdmin/Executive: full view + configure rates + approve payouts
-//   - Partner/Stakeholder: their own referrals, commission earned, payout status
-// Transparent: partners see live data on their referred tenants' billing
+// COMPLETE REWRITE — Zero mock data. Real admin API.
+// Removes:
+//   • DEMO_PARTNERS (4 fake partners: Rajesh Kumar Sharma, Sita Devi Adhikari,
+//     Bikram Thapa, Priya Shrestha with 38 fake referral companies)
+//   • calcPartnerStats computing fake totals from fake MRR data
+//   • platformStats computing fake platform KPIs from fake partners
+//   • PLAN_MRR hardcoded plan values (NPR 5000/12000/25000 etc.)
+//   • useState(DEMO_PARTNERS[0].id) hardcoded initial selection
+//   • Commission tiers persisted ONLY to localStorage → now synced to API
+// API:
+//   GET  /api/elogix-admin/v1/referral/partners
+//   GET  /api/elogix-admin/v1/referral/partners/:id
+//   POST /api/elogix-admin/v1/referral/partners
+//   GET  /api/elogix-admin/v1/referral/summary        (platform KPIs)
+//   GET  /api/elogix-admin/v1/referral/commission-config
+//   PUT  /api/elogix-admin/v1/referral/commission-config
+//   POST /api/elogix-admin/v1/referral/payouts/:partnerId/approve
+//   POST /api/elogix-admin/v1/referral/payouts/:partnerId/reject
 // eLogix Technologies · www.elogix.com.np
-import { useState, useMemo } from 'react'
+
+import { useState, useEffect, useMemo } from 'react'
 
 const A = '#7c3aed'
-const G = 'linear-gradient(135deg,#1e1b4b,#7c3aed,#c4b5fd)'
+const G = 'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)'
 
-// ── COMMISSION TIERS ──────────────────────────────────────────
-// Saved to 'elogix_commission_config' in localStorage
-// Read by BillingPage.jsx, ELogixAdminPage.jsx for live rate updates
-const COMMISSION_STORAGE_KEY = 'elogix_commission_config'
-function loadSavedTiers() {
-  try { const s=JSON.parse(localStorage.getItem(COMMISSION_STORAGE_KEY)||'null'); if(s?.tiers) return s.tiers } catch(_e) {}
-  return null
-}
-function saveCommissionTiers(tiers) {
-  try {
-    const cfg = JSON.parse(localStorage.getItem(COMMISSION_STORAGE_KEY)||'{}')
-    localStorage.setItem(COMMISSION_STORAGE_KEY, JSON.stringify({
-      ...cfg, tiers,
-      saved_at: new Date().toISOString(), saved_by: 'eLogix SuperAdmin'
-    }))
-    return true
-  } catch(_e) { return false }
-}
-const DEFAULT_COMMISSION_TIERS = [
-  { id:'silver',   label:'Silver Partner',   icon:'🥈', color:'#64748b', minClients:1,  maxClients:4,  rate:10, bonus:0,    monthlyBonus:0 },
-  { id:'gold',     label:'Gold Partner',     icon:'🥇', color:'#d97706', minClients:5,  maxClients:9,  rate:15, bonus:5000, monthlyBonus:2000 },
-  { id:'platinum', label:'Platinum Partner', icon:'💎', color:'#0891b2', minClients:10, maxClients:19, rate:20, bonus:15000,monthlyBonus:5000 },
-  { id:'diamond',  label:'Diamond Partner',  icon:'💠', color:'#7c3aed', minClients:20, maxClients:999,rate:25, bonus:50000,monthlyBonus:15000 },
-]
-const COMMISSION_TIERS = loadSavedTiers() || DEFAULT_COMMISSION_TIERS
-
-// ── COMMISSION RULES ──────────────────────────────────────────
-const COMMISSION_RULES = {
-  base_rate:         10,    // % of Monthly Recurring Revenue (MRR) - Silver default
-  trial_commission:  false, // No commission on free trials
-  min_payout:        2000,  // NPR minimum payout amount
-  payout_day:        25,    // 25th of every month
-  lock_period:       30,    // 30 days after client payment — then commission is released
-  chargeback_period: 90,    // 90 days — if client refunds, commission reversed
-  lifetime:          true,  // Lifetime commission (as long as client stays)
-  upgrade_bonus:     5,     // Extra % when referred client upgrades plan
-}
-
-// ── PLANS MONTHLY VALUE ───────────────────────────────────────
-const PLAN_MRR = {
-  trial:      0,
-  starter:    5000,
-  growth:     12000,
-  business:   25000,
-  enterprise: 45000,
-  unlimited:  75000,
-}
-
-// ── DEMO PARTNERS ─────────────────────────────────────────────
-const DEMO_PARTNERS = [
-  {
-    id:'p1', name:'Rajesh Kumar Sharma', type:'Individual Consultant',
-    email:'rajesh@example.com', phone:'+977-9801234567',
-    pan:'12345678', bank:'Nepal Investment Bank', account:'01234567890',
-    tier:'platinum', joined:'2082-06-15', status:'active',
-    referrals: [
-      { tenant_id:'t1', company:'Himalayan Bank Ltd.',    plan:'enterprise', mrr:45000, since:'2082-07-01', status:'active',  paid_months:13 },
-      { tenant_id:'t2', company:'Grande Hospital',        plan:'business',   mrr:25000, since:'2082-08-15', status:'active',  paid_months:12 },
-      { tenant_id:'t3', company:'Surya Nepal Pvt Ltd',    plan:'business',   mrr:25000, since:'2082-10-01', status:'active',  paid_months:10 },
-      { tenant_id:'t4', company:'Ncell Pvt Ltd',          plan:'enterprise', mrr:45000, since:'2083-01-20', status:'active',  paid_months:7  },
-      { tenant_id:'t5', company:'Nepal Airlines Corp',    plan:'growth',     mrr:12000, since:'2083-02-10', status:'active',  paid_months:6  },
-      { tenant_id:'t6', company:'Tara Gaon Resort',       plan:'starter',    mrr:5000,  since:'2083-03-05', status:'active',  paid_months:5  },
-      { tenant_id:'t7', company:'Nepal Telecom',          plan:'unlimited',  mrr:75000, since:'2083-03-20', status:'active',  paid_months:4  },
-      { tenant_id:'t8', company:'Shangrila Hotel',        plan:'business',   mrr:25000, since:'2083-04-01', status:'active',  paid_months:3  },
-      { tenant_id:'t9', company:'Yeti Airlines',          plan:'enterprise', mrr:45000, since:'2083-04-15', status:'pending', paid_months:2  },
-      { tenant_id:'t10',company:'CG Corp Nepal',          plan:'unlimited',  mrr:75000, since:'2083-04-20', status:'trial',   paid_months:0  },
-    ],
-  },
-  {
-    id:'p2', name:'Sita Devi Adhikari', type:'HR Consulting Firm',
-    email:'sita@hrconsult.com.np', phone:'+977-9851234567',
-    pan:'87654321', bank:'Nabil Bank', account:'9876543210',
-    tier:'gold', joined:'2082-09-01', status:'active',
-    referrals: [
-      { tenant_id:'t11',company:'Room to Read Nepal',     plan:'growth',     mrr:12000, since:'2082-10-01', status:'active',  paid_months:10 },
-      { tenant_id:'t12',company:'Plan International',     plan:'business',   mrr:25000, since:'2082-11-15', status:'active',  paid_months:9  },
-      { tenant_id:'t13',company:'World Vision Nepal',     plan:'business',   mrr:25000, since:'2083-01-01', status:'active',  paid_months:7  },
-      { tenant_id:'t14',company:'Save the Children',      plan:'growth',     mrr:12000, since:'2083-02-20', status:'active',  paid_months:5  },
-      { tenant_id:'t15',company:'Mercy Corps Nepal',      plan:'growth',     mrr:12000, since:'2083-03-10', status:'pending', paid_months:3  },
-    ],
-  },
-  {
-    id:'p3', name:'Bikram Thapa', type:'Technology Reseller',
-    email:'bikram@technepal.com', phone:'+977-9841234567',
-    pan:'11223344', bank:'Siddhartha Bank', account:'1122334455',
-    tier:'silver', joined:'2083-02-01', status:'active',
-    referrals: [
-      { tenant_id:'t16',company:'Leapfrog Technology',    plan:'growth',     mrr:12000, since:'2083-03-01', status:'active',  paid_months:4 },
-      { tenant_id:'t17',company:'Cotiviti Nepal',         plan:'business',   mrr:25000, since:'2083-03-20', status:'active',  paid_months:3 },
-      { tenant_id:'t18',company:'F1Soft International',   plan:'business',   mrr:25000, since:'2083-04-01', status:'pending', paid_months:2 },
-    ],
-  },
-  {
-    id:'p4', name:'Priya Shrestha', type:'Business Development',
-    email:'priya@elogix.com.np', phone:'+977-9861234567',
-    pan:'55667788', bank:'Standard Chartered', account:'5566778899',
-    tier:'diamond', joined:'2082-01-01', status:'active',
-    referrals: [
-      { tenant_id:'t19',company:'Ncell Axiata',           plan:'unlimited',  mrr:75000, since:'2082-02-01', status:'active',  paid_months:18 },
-      { tenant_id:'t20',company:'Chaudhary Group',        plan:'unlimited',  mrr:75000, since:'2082-03-15', status:'active',  paid_months:16 },
-      { tenant_id:'t21',company:'Soaltee Hotel',          plan:'enterprise', mrr:45000, since:'2082-05-01', status:'active',  paid_months:15 },
-      { tenant_id:'t22',company:'Dabur Nepal',            plan:'enterprise', mrr:45000, since:'2082-06-01', status:'active',  paid_months:14 },
-      { tenant_id:'t23',company:'Himalayan Power Plant',  plan:'business',   mrr:25000, since:'2082-07-01', status:'active',  paid_months:13 },
-      { tenant_id:'t24',company:'Nepal SBI Bank',         plan:'enterprise', mrr:45000, since:'2082-08-01', status:'active',  paid_months:12 },
-      { tenant_id:'t25',company:'Jawalakhel Group',       plan:'business',   mrr:25000, since:'2082-09-01', status:'active',  paid_months:11 },
-      { tenant_id:'t26',company:'Vianet Communications',  plan:'business',   mrr:25000, since:'2082-10-01', status:'active',  paid_months:10 },
-      { tenant_id:'t27',company:'Kathmandu Valley Water', plan:'growth',     mrr:12000, since:'2082-11-01', status:'active',  paid_months:9  },
-      { tenant_id:'t28',company:'Nepal Oil Corporation',  plan:'enterprise', mrr:45000, since:'2082-12-01', status:'active',  paid_months:8  },
-      { tenant_id:'t29',company:'Bottlers Nepal',         plan:'business',   mrr:25000, since:'2083-01-01', status:'active',  paid_months:7  },
-      { tenant_id:'t30',company:'Unilever Nepal',         plan:'enterprise', mrr:45000, since:'2083-02-01', status:'active',  paid_months:6  },
-      { tenant_id:'t31',company:'Siddhartha Group',       plan:'unlimited',  mrr:75000, since:'2083-03-01', status:'active',  paid_months:5  },
-      { tenant_id:'t32',company:'Global IME Bank',        plan:'enterprise', mrr:45000, since:'2083-03-15', status:'active',  paid_months:4  },
-      { tenant_id:'t33',company:'Nepal Bank Ltd',         plan:'enterprise', mrr:45000, since:'2083-04-01', status:'pending', paid_months:3  },
-      { tenant_id:'t34',company:'Bhrikuti Paper Mill',    plan:'business',   mrr:25000, since:'2083-04-10', status:'active',  paid_months:2  },
-      { tenant_id:'t35',company:'Chilime Hydropower',     plan:'business',   mrr:25000, since:'2083-04-15', status:'active',  paid_months:2  },
-      { tenant_id:'t36',company:'Khimti Hydropower',      plan:'growth',     mrr:12000, since:'2083-04-20', status:'trial',   paid_months:0  },
-      { tenant_id:'t37',company:'Shivam Cement',          plan:'business',   mrr:25000, since:'2083-04-25', status:'trial',   paid_months:0  },
-      { tenant_id:'t38',company:'Hetauda Cement',         plan:'growth',     mrr:12000, since:'2083-05-01', status:'trial',   paid_months:0  },
-    ],
-  },
-]
-
-// ── HELPERS ──────────────────────────────────────────────────
-function getCommissionRate(tier) {
-  return COMMISSION_TIERS.find(t=>t.id===tier)?.rate || 10
-}
-
-function calcPartnerStats(partner) {
-  const tier_info = COMMISSION_TIERS.find(t=>t.id===partner.tier)
-  const rate      = tier_info?.rate || 10
-  const active    = partner.referrals.filter(r=>r.status==='active')
-  const total_mrr = active.reduce((s,r)=>s+r.mrr,0)
-  const monthly_commission = Math.round(total_mrr * rate / 100)
-  const total_earned = partner.referrals.reduce((s,r)=>{
-    if (r.status==='active') return s + Math.round(r.mrr * rate/100 * r.paid_months)
-    return s
-  }, 0)
-  const pending_payout = Math.round(monthly_commission * 0.3) // simplified
+// ── Admin auth headers ──────────────────────────────────────────────────────
+function _adminH() {
   return {
-    rate, tier_info,
-    total_clients: partner.referrals.length,
-    active_clients: active.length,
-    total_mrr,
-    monthly_commission,
-    total_earned,
-    pending_payout,
-    ytd: Math.round(monthly_commission * 8),
+    'Content-Type': 'application/json',
+    'X-eLogix-Admin-Key': localStorage.getItem('elogix_admin_key') || '',
+    'Authorization': `Bearer ${localStorage.getItem('elogix_admin_token') || ''}`,
   }
 }
 
-// ── STATUS BADGE ─────────────────────────────────────────────
+// ── Default commission tiers (UI config, not fake data) ─────────────────────
+// Overridden by API response on load
+const DEFAULT_TIERS = [
+  { id:'silver',   label:'Silver Partner',   icon:'🥈', color:'#64748b', minClients:1,  maxClients:4,  rate:10, monthlyBonus:0 },
+  { id:'gold',     label:'Gold Partner',     icon:'🥇', color:'#d97706', minClients:5,  maxClients:9,  rate:15, monthlyBonus:500 },
+  { id:'platinum', label:'Platinum Partner', icon:'💎', color:'#0891b2', minClients:10, maxClients:19, rate:20, monthlyBonus:2000 },
+  { id:'diamond',  label:'Diamond Partner',  icon:'💠', color:A,          minClients:20, maxClients:999,rate:25, monthlyBonus:5000 },
+]
+
+// ── Helper components ────────────────────────────────────────────────────────
 function StatusBadge({ status }) {
   const cfg = {
-    active:  { bg:'#f0fdf4', color:'#16a34a', label:'● Active' },
-    pending: { bg:'#fffbeb', color:'#d97706', label:'⏳ Pending' },
-    trial:   { bg:'#f0f9ff', color:'#0369a1', label:'🎁 Trial' },
-    paid:    { bg:'#f0fdf4', color:'#16a34a', label:'✓ Paid' },
+    active:   { bg:'#f0fdf4', c:'#16a34a', label:'● Active'    },
+    inactive: { bg:'#f8fafc', c:'#64748b', label:'● Inactive'  },
+    pending:  { bg:'#fffbeb', c:'#d97706', label:'⏳ Pending'  },
+    paid:     { bg:'#f0fdf4', c:'#16a34a', label:'✓ Paid'      },
+    approved: { bg:'#eff6ff', c:'#0369a1', label:'✅ Approved' },
+    rejected: { bg:'#fef2f2', c:'#dc2626', label:'❌ Rejected' },
+    trial:    { bg:'#f0f9ff', c:'#0369a1', label:'🎁 Trial'    },
   }
-  const c = cfg[status] || cfg.active
+  const sc = cfg[status] || cfg.active
   return (
     <span style={{ fontSize:9,padding:'2px 8px',borderRadius:10,fontWeight:700,
-      background:c.bg,color:c.color,whiteSpace:'nowrap' }}>
-      {c.label}
+      background:sc.bg,color:sc.c,whiteSpace:'nowrap' }}>
+      {sc.label}
     </span>
   )
 }
 
-// ── TIER BADGE ───────────────────────────────────────────────
-function TierBadge({ tier }) {
-  const t = COMMISSION_TIERS.find(x=>x.id===tier) || COMMISSION_TIERS[0]
+function TierBadge({ tier, tiers }) {
+  const t = tiers.find(x=>x.id===tier) || tiers[0] || DEFAULT_TIERS[0]
   return (
     <span style={{ fontSize:9,padding:'2px 10px',borderRadius:10,fontWeight:800,
       background:t.color+'18',color:t.color,whiteSpace:'nowrap' }}>
@@ -189,707 +73,717 @@ function TierBadge({ tier }) {
   )
 }
 
-// ── MAIN COMPONENT ────────────────────────────────────────────
+function KPICard({ icon, label, value, sub, color = A }) {
+  return (
+    <div style={{ background:'rgba(255,255,255,.12)', borderRadius:12,
+      padding:'12px 14px', textAlign:'center', minWidth:110 }}>
+      <div style={{ fontSize:11, color:'rgba(255,255,255,.7)', marginBottom:4 }}>{icon} {label}</div>
+      <div style={{ fontSize:18, fontWeight:900, color:'#fff' }}>{value ?? '—'}</div>
+      {sub && <div style={{ fontSize:9, color:'rgba(255,255,255,.6)', marginTop:2 }}>{sub}</div>}
+    </div>
+  )
+}
+
+const fmt = n => n == null ? '—' : `NPR ${Number(n).toLocaleString()}`
+const inp = {
+  padding:'7px 10px',borderRadius:8,border:'1.5px solid #e2e8f0',
+  fontSize:11,outline:'none',fontFamily:'inherit',boxSizing:'border-box',
+}
+
+// ══════════════════════════════════════════════════════════════════════════
 export default function ReferralCommissionPage() {
-  // Rendered inside ELogixAdminPage — user is always eLogix SuperAdmin
-  // Read directly from admin session (no AppContext needed outside <App />)
-  const _adminSess = (() => { try {
-    return JSON.parse(localStorage.getItem('elogix_admin_session') || 'null')
-  } catch(_e) { return null } })()
-  const isSuperAdmin = true  // only eLogix admins can reach this tab
 
   const [tab,         setTab]         = useState('dashboard')
-  const [selPartner,  setSelPartner]  = useState(DEMO_PARTNERS[0].id)
-  const [showRules,   setShowRules]   = useState(false)
-  const [showAddPart, setShowAddPart] = useState(false)
+  const [partners,    setPartners]    = useState([])
+  const [selPartner,  setSelPartner]  = useState('')
+  const [partnerDetail, setPartnerDetail] = useState(null)
+  const [summary,     setSummary]     = useState({})      // platform KPIs
+  const [tiers,       setTiers]       = useState(DEFAULT_TIERS)
+  const [commRules,   setCommRules]   = useState({
+    trial_commission: false, min_payout: 2000, payout_day: 25,
+    lock_period: 30, chargeback_period: 90, lifetime: true, upgrade_bonus: 5,
+  })
+  const [planMRR,     setPlanMRR]     = useState({})
+  const [loading,     setLoading]     = useState(true)
+  const [detailLoad,  setDetailLoad]  = useState(false)
+  const [saving,      setSaving]      = useState(false)
   const [toast,       setToast]       = useState('')
-  const [editRate,    setEditRate]    = useState({})
+  const [showAdd,     setShowAdd]     = useState(false)
+  const [newPartner,  setNewPartner]  = useState({
+    name:'',type:'',email:'',phone:'',pan:'',
+    bank:'',account:'',tier:'silver',
+  })
+  const [editTiers,   setEditTiers]   = useState([])
 
-  const notify = m => { setToast(m); setTimeout(()=>setToast(''),3000) }
+  const notify = m => { setToast(m); setTimeout(()=>setToast(''),3500) }
 
-  // For partner view — only show their own data
-  const viewPartner = isSuperAdmin
-    ? DEMO_PARTNERS.find(p=>p.id===selPartner) || DEMO_PARTNERS[0]
-    : DEMO_PARTNERS[1]  // demo: show Sita's view for partner
-
-  const stats = useMemo(()=>calcPartnerStats(viewPartner), [viewPartner])
-
-  // Platform-wide stats (SuperAdmin only)
-  const platformStats = useMemo(()=>{
-    const all_stats = DEMO_PARTNERS.map(p=>({...p,...calcPartnerStats(p)}))
-    return {
-      total_partners:     DEMO_PARTNERS.length,
-      active_partners:    DEMO_PARTNERS.filter(p=>p.status==='active').length,
-      total_clients:      all_stats.reduce((s,p)=>s+p.total_clients,0),
-      active_clients:     all_stats.reduce((s,p)=>s+p.active_clients,0),
-      total_mrr:          all_stats.reduce((s,p)=>s+p.total_mrr,0),
-      total_commission:   all_stats.reduce((s,p)=>s+p.monthly_commission,0),
-      total_earned:       all_stats.reduce((s,p)=>s+p.total_earned,0),
-      pending_payout:     all_stats.reduce((s,p)=>s+p.pending_payout,0),
-    }
+  // ── Load all data on mount ─────────────────────────────────────────────────
+  useEffect(() => {
+    loadAll()
   }, [])
 
-  const TABS = isSuperAdmin
-    ? [
-        { id:'dashboard',  icon:'📊', label:'Platform Overview' },
-        { id:'partners',   icon:'🤝', label:'Partners' },
-        { id:'commission', icon:'💰', label:'Commission Payouts' },
-        { id:'rates',      icon:'⚙️', label:'Rate Configuration' },
-      ]
-    : [
-        { id:'dashboard',  icon:'📊', label:'My Dashboard' },
-        { id:'clients',    icon:'🏢', label:'My Clients' },
-        { id:'commission', icon:'💰', label:'My Earnings' },
-      ]
+  async function loadAll() {
+    setLoading(true)
+    try {
+      // 1. Partners list
+      const r1 = await fetch('/api/elogix-admin/v1/referral/partners', { headers:_adminH() })
+      if (r1.ok) {
+        const d1 = await r1.json()
+        const list = d1.data || d1.partners || []
+        setPartners(list)
+        if (list.length && !selPartner) setSelPartner(list[0].id)
+      }
 
+      // 2. Platform summary KPIs
+      const r2 = await fetch('/api/elogix-admin/v1/referral/summary', { headers:_adminH() })
+      if (r2.ok) { const d2 = await r2.json(); setSummary(d2.data || d2) }
+
+      // 3. Commission config (tiers + rules + plan MRR)
+      const r3 = await fetch('/api/elogix-admin/v1/referral/commission-config', { headers:_adminH() })
+      if (r3.ok) {
+        const d3 = await r3.json()
+        const cfg = d3.data || d3
+        if (cfg.tiers?.length)  { setTiers(cfg.tiers); setEditTiers(cfg.tiers) }
+        if (cfg.rules)            setCommRules(r => ({ ...r, ...cfg.rules }))
+        if (cfg.plan_mrr)         setPlanMRR(cfg.plan_mrr)
+      }
+    } catch(_e) {
+      notify('⚠️ API unavailable — showing cached data')
+    } finally { setLoading(false) }
+  }
+
+  // ── Load single partner detail when selected ───────────────────────────────
+  useEffect(() => {
+    if (!selPartner) return
+    setDetailLoad(true)
+    fetch(`/api/elogix-admin/v1/referral/partners/${selPartner}`, { headers:_adminH() })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) setPartnerDetail(d.data || d) })
+      .catch(() => {})
+      .finally(() => setDetailLoad(false))
+  }, [selPartner])
+
+  // ── Save commission config ─────────────────────────────────────────────────
+  async function saveConfig() {
+    setSaving(true)
+    try {
+      const r = await fetch('/api/elogix-admin/v1/referral/commission-config', {
+        method:'PUT', headers:_adminH(),
+        body: JSON.stringify({ tiers: editTiers, rules: commRules }),
+      })
+      const d = await r.json()
+      if (!r.ok) throw new Error(d.error || 'Save failed')
+      setTiers(editTiers)
+      notify(`✅ Commission config saved — rates live from next billing cycle`)
+    } catch(e) { notify(`❌ ${e.message}`) }
+    finally { setSaving(false) }
+  }
+
+  // ── Add new partner ────────────────────────────────────────────────────────
+  async function addPartner() {
+    if (!newPartner.name || !newPartner.email) { notify('⚠️ Name and email required'); return }
+    setSaving(true)
+    try {
+      const r = await fetch('/api/elogix-admin/v1/referral/partners', {
+        method:'POST', headers:_adminH(), body:JSON.stringify(newPartner),
+      })
+      const d = await r.json()
+      if (!r.ok) throw new Error(d.error || 'Failed to add partner')
+      notify(`✅ ${newPartner.name} added as ${newPartner.tier} partner`)
+      setShowAdd(false)
+      setNewPartner({ name:'',type:'',email:'',phone:'',pan:'',bank:'',account:'',tier:'silver' })
+      await loadAll()
+    } catch(e) { notify(`❌ ${e.message}`) }
+    finally { setSaving(false) }
+  }
+
+  // ── Approve / reject payout ────────────────────────────────────────────────
+  async function handlePayout(partnerId, action) {
+    try {
+      const r = await fetch(`/api/elogix-admin/v1/referral/payouts/${partnerId}/${action}`, {
+        method:'POST', headers:_adminH(),
+      })
+      const d = await r.json()
+      if (!r.ok) throw new Error(d.error || 'Action failed')
+      notify(action === 'approve' ? '✅ Payout approved' : '❌ Payout rejected')
+      await loadAll()
+    } catch(e) { notify(`❌ ${e.message}`) }
+  }
+
+  // ── TABS ───────────────────────────────────────────────────────────────────
+  const TABS = [
+    { id:'dashboard',  icon:'📊', label:'Platform Overview' },
+    { id:'partners',   icon:'🤝', label:'Partners' },
+    { id:'commission', icon:'💰', label:'Commission Payouts' },
+    { id:'rates',      icon:'⚙️', label:'Rate Configuration' },
+  ]
+
+  const viewPartner = partnerDetail || partners.find(p => p.id === selPartner) || null
+  const activeEt = idx => v => setEditTiers(prev => prev.map((t,i) => i===idx ? {...t,...v} : t))
+
+  // ── RENDER ─────────────────────────────────────────────────────────────────
   return (
-    <div style={{ fontFamily:'system-ui,sans-serif',minHeight:'100vh',background:'#f5f3ff' }}>
+    <div style={{ fontFamily:"'Segoe UI',system-ui,sans-serif", minHeight:'100vh',
+      background:'#f5f3ff', overflowY:'auto', scrollbarWidth:'thin',
+      scrollbarColor:`${A} #ede9fe` }}>
+
+      {/* Toast */}
       {toast && (
-        <div style={{ position:'fixed',bottom:20,right:20,zIndex:9999,background:'#f5f3ff',
-          border:'1px solid #ddd6fe',borderRadius:12,padding:'12px 20px',fontSize:11,
-          color:'#4c1d95',fontWeight:700,boxShadow:'0 4px 20px rgba(0,0,0,.12)' }}>
+        <div style={{ position:'fixed', bottom:20, right:20, zIndex:9999,
+          background:'#f5f3ff', border:'1px solid #ddd6fe', borderRadius:12,
+          padding:'12px 20px', fontSize:11, color:'#4c1d95', fontWeight:700,
+          boxShadow:'0 4px 20px rgba(0,0,0,.12)', maxWidth:360 }}>
           {toast}
         </div>
       )}
 
       {/* Header */}
-      <div style={{ background:G,padding:'16px 24px',borderRadius:'0 0 16px 16px',marginBottom:16 }}>
-        <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:12 }}>
+      <div style={{ background:G, padding:'18px 24px', borderRadius:'0 0 16px 16px', marginBottom:16 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center',
+          flexWrap:'wrap', gap:12, marginBottom: summary.total_partners != null ? 16 : 0 }}>
           <div>
-            <div style={{ fontSize:18,fontWeight:900,color:'#fff' }}>
+            <div style={{ fontSize:18, fontWeight:900, color:'#fff' }}>
               🤝 Referral & Commission Management
             </div>
-            <div style={{ fontSize:10,color:'rgba(255,255,255,.7)',marginTop:2 }}>
-              {isSuperAdmin
-                ? 'eLogix Executive · Full commission transparency & payout control'
-                : `Partner Dashboard · ${viewPartner.name} · ${viewPartner.tier.toUpperCase()} TIER`}
+            <div style={{ fontSize:10, color:'rgba(255,255,255,.7)', marginTop:2 }}>
+              eLogix SuperAdmin · Full commission transparency & payout control
             </div>
           </div>
-          {isSuperAdmin && (
-            <button onClick={()=>setShowAddPart(p=>!p)}
-              style={{ padding:'8px 18px',borderRadius:10,border:'none',
-                background:'rgba(255,255,255,.2)',color:'#fff',
-                fontSize:11,fontWeight:800,cursor:'pointer' }}>
-              + Add Partner
-            </button>
-          )}
+          <button onClick={() => setShowAdd(p => !p)}
+            style={{ padding:'8px 18px', borderRadius:10, border:'none',
+              background:'rgba(255,255,255,.2)', color:'#fff',
+              fontSize:11, fontWeight:800, cursor:'pointer' }}>
+            ＋ Add Partner
+          </button>
         </div>
 
-        {/* Platform KPIs — SuperAdmin */}
-        {isSuperAdmin && (
-          <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(130px,1fr))',gap:10,marginTop:14 }}>
-            {[
-              { l:'Total Partners',   v:platformStats.total_partners,                       i:'🤝' },
-              { l:'Active Partners',  v:platformStats.active_partners,                      i:'✅' },
-              { l:'Total Clients',    v:platformStats.total_clients,                         i:'🏢' },
-              { l:'Active Clients',   v:platformStats.active_clients,                       i:'📈' },
-              { l:'Total MRR',        v:`NPR ${(platformStats.total_mrr/1000).toFixed(0)}K`,i:'💵' },
-              { l:'Monthly Commission',v:`NPR ${(platformStats.total_commission/1000).toFixed(0)}K`,i:'💰' },
-              { l:'Pending Payout',   v:`NPR ${(platformStats.pending_payout/1000).toFixed(0)}K`,i:'⏳' },
-              { l:'Total Earned',     v:`NPR ${(platformStats.total_earned/100000).toFixed(1)}L`,i:'🏆' },
-            ].map(s=>(
-              <div key={s.l} style={{ background:'rgba(255,255,255,.15)',borderRadius:10,padding:'10px 12px',textAlign:'center' }}>
-                <div style={{ fontSize:13,fontWeight:900,color:'#fff' }}>{s.i} {s.v}</div>
-                <div style={{ fontSize:8,color:'rgba(255,255,255,.65)',marginTop:2 }}>{s.l}</div>
-              </div>
-            ))}
+        {/* Platform KPIs from API */}
+        {!loading && (
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(110px,1fr))',
+            gap:10, marginTop:4 }}>
+            <KPICard icon="🤝" label="Partners"      value={summary.total_partners}   sub="registered"/>
+            <KPICard icon="🏢" label="Client Cos."   value={summary.total_clients}    sub="referred total"/>
+            <KPICard icon="✅" label="Active Clients" value={summary.active_clients}   sub="paying tenants"/>
+            <KPICard icon="💵" label="Platform MRR"  value={summary.total_mrr != null ? `NPR ${Number(summary.total_mrr).toLocaleString()}` : '—'}/>
+            <KPICard icon="💰" label="Comm. Due"     value={summary.commission_due != null ? `NPR ${Number(summary.commission_due).toLocaleString()}` : '—'} sub="this cycle"/>
+            <KPICard icon="📤" label="Paid Out (YTD)" value={summary.ytd_payout != null ? `NPR ${Number(summary.ytd_payout).toLocaleString()}` : '—'}/>
           </div>
         )}
-
-        {/* Partner KPIs */}
-        {!isSuperAdmin && (
-          <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(130px,1fr))',gap:10,marginTop:14 }}>
-            {[
-              { l:'My Clients',       v:stats.total_clients,                              i:'🏢' },
-              { l:'Active Clients',   v:stats.active_clients,                             i:'✅' },
-              { l:'My MRR',           v:`NPR ${(stats.total_mrr/1000).toFixed(0)}K`,      i:'💵' },
-              { l:'Commission Rate',  v:`${stats.rate}%`,                                 i:'📊' },
-              { l:'Monthly Earning',  v:`NPR ${stats.monthly_commission.toLocaleString()}`,i:'💰' },
-              { l:'Total Earned',     v:`NPR ${(stats.total_earned/100000).toFixed(1)}L`, i:'🏆' },
-              { l:'Pending Payout',   v:`NPR ${stats.pending_payout.toLocaleString()}`,   i:'⏳' },
-              { l:'YTD Earning',      v:`NPR ${(stats.ytd/1000).toFixed(0)}K`,            i:'📅' },
-            ].map(s=>(
-              <div key={s.l} style={{ background:'rgba(255,255,255,.15)',borderRadius:10,padding:'10px 12px',textAlign:'center' }}>
-                <div style={{ fontSize:13,fontWeight:900,color:'#fff' }}>{s.i} {s.v}</div>
-                <div style={{ fontSize:8,color:'rgba(255,255,255,.65)',marginTop:2 }}>{s.l}</div>
-              </div>
-            ))}
+        {loading && (
+          <div style={{ textAlign:'center', padding:'24px 0', color:'rgba(255,255,255,.7)', fontSize:12 }}>
+            ⟳ Loading referral data...
           </div>
         )}
       </div>
 
-      <div style={{ padding:'0 20px 24px' }}>
-        {/* Tabs */}
-        <div style={{ display:'flex',gap:6,marginBottom:16,flexWrap:'wrap' }}>
-          {TABS.map(t=>(
-            <button key={t.id} onClick={()=>setTab(t.id)}
-              style={{ padding:'8px 18px',borderRadius:20,border:'none',cursor:'pointer',
-                fontSize:11,fontWeight:700,transition:'all .12s',
-                background:tab===t.id?A:'#fff',color:tab===t.id?'#fff':'#374151',
-                boxShadow:'0 1px 4px rgba(0,0,0,.07)' }}>
-              {t.icon} {t.label}
-            </button>
-          ))}
-        </div>
-
-        {/* ══ DASHBOARD TAB ══ */}
-        {tab==='dashboard' && (
-          <div>
-            {/* Commission Tier Cards */}
-            <div style={{ background:'#fff',borderRadius:12,padding:16,
-              boxShadow:'0 2px 8px rgba(0,0,0,.06)',marginBottom:14 }}>
-              <div style={{ fontSize:13,fontWeight:800,color:'#0f172a',marginBottom:12 }}>
-                📊 Commission Tier Structure
+      {/* Add Partner form */}
+      {showAdd && (
+        <div style={{ margin:'0 24px 16px', background:'#fff', borderRadius:14,
+          border:'1px solid #ddd6fe', padding:'20px', boxShadow:'0 4px 20px rgba(124,58,237,.08)' }}>
+          <div style={{ fontSize:14, fontWeight:800, color:'#0f172a', marginBottom:16 }}>
+            ➕ Add New Partner
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))', gap:12 }}>
+            {[
+              ['Full Name *',        'name',    'text',   'Partner full name'],
+              ['Partner Type',       'type',    'text',   'Individual / HR Firm / Reseller'],
+              ['Email *',            'email',   'email',  'partner@example.com'],
+              ['Phone',              'phone',   'tel',    '+977-98XXXXXXXX'],
+              ['PAN Number',         'pan',     'text',   'Tax PAN/VAT number'],
+              ['Bank Name',          'bank',    'text',   'Nepal Investment Bank'],
+              ['Bank Account No.',   'account', 'text',   'Account number'],
+            ].map(([lbl,key,type,ph]) => (
+              <div key={key}>
+                <div style={{ fontSize:10, fontWeight:700, color:'#64748b', marginBottom:4 }}>{lbl}</div>
+                <input type={type} value={newPartner[key]} placeholder={ph}
+                  onChange={e => setNewPartner(p => ({...p, [key]:e.target.value}))}
+                  style={{ ...inp, width:'100%' }}/>
               </div>
-              <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:10 }}>
-                {COMMISSION_TIERS.map(tier=>{
-                  const isActive = !isSuperAdmin && viewPartner.tier===tier.id
-                  const partnerCount = DEMO_PARTNERS.filter(p=>p.tier===tier.id).length
+            ))}
+            <div>
+              <div style={{ fontSize:10, fontWeight:700, color:'#64748b', marginBottom:4 }}>Tier</div>
+              <select value={newPartner.tier}
+                onChange={e => setNewPartner(p => ({...p, tier:e.target.value}))}
+                style={{ ...inp, width:'100%' }}>
+                {tiers.map(t => <option key={t.id} value={t.id}>{t.icon} {t.label} ({t.rate}%)</option>)}
+              </select>
+            </div>
+          </div>
+          <div style={{ display:'flex', gap:8, marginTop:16 }}>
+            <button onClick={addPartner} disabled={saving}
+              style={{ padding:'9px 22px', borderRadius:10, border:'none',
+                background:A, color:'#fff', fontSize:12, fontWeight:700,
+                cursor:'pointer', opacity:saving ? .6 : 1 }}>
+              {saving ? 'Adding...' : '✅ Add Partner'}
+            </button>
+            <button onClick={() => setShowAdd(false)}
+              style={{ padding:'9px 18px', borderRadius:10, border:'1px solid #e2e8f0',
+                background:'#fff', fontSize:11, cursor:'pointer' }}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Tabs */}
+      <div style={{ display:'flex', gap:4, padding:'0 24px', marginBottom:16, flexWrap:'wrap' }}>
+        {TABS.map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)}
+            style={{ padding:'8px 16px', borderRadius:20, border:'none', cursor:'pointer',
+              fontSize:11, fontWeight: tab===t.id ? 700 : 500,
+              background: tab===t.id ? A : 'rgba(124,58,237,.1)',
+              color: tab===t.id ? '#fff' : A,
+              boxShadow: tab===t.id ? '0 2px 8px rgba(124,58,237,.25)' : 'none' }}>
+            {t.icon} {t.label}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ padding:'0 24px 32px' }}>
+
+        {/* ══ PLATFORM OVERVIEW TAB ══ */}
+        {tab === 'dashboard' && (
+          <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+            {partners.length === 0 && !loading ? (
+              <div style={{ textAlign:'center', padding:60, background:'#fff',
+                borderRadius:16, border:'1px solid #e2e8f0' }}>
+                <div style={{ fontSize:48, marginBottom:12 }}>🤝</div>
+                <div style={{ fontSize:15, fontWeight:700, color:'#475569', marginBottom:6 }}>
+                  No partners registered yet
+                </div>
+                <div style={{ fontSize:12, color:'#94a3b8', marginBottom:20 }}>
+                  Add your first referral partner to start tracking commissions
+                </div>
+                <button onClick={() => setShowAdd(true)}
+                  style={{ padding:'10px 24px', borderRadius:10, border:'none',
+                    background:A, color:'#fff', fontSize:12, fontWeight:700, cursor:'pointer' }}>
+                  ＋ Add First Partner
+                </button>
+              </div>
+            ) : (
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))', gap:14 }}>
+                {partners.map(p => {
+                  const stats = p.stats || {}
+                  const tierInfo = tiers.find(t=>t.id===p.tier) || DEFAULT_TIERS[0]
                   return (
-                    <div key={tier.id}
-                      style={{ borderRadius:12,padding:14,
-                        border:`2px solid ${isActive?tier.color:tier.color+'30'}`,
-                        background:isActive?tier.color+'10':'#fafafa',
-                        position:'relative' }}>
-                      {isActive && (
-                        <div style={{ position:'absolute',top:-8,right:10,
-                          background:tier.color,color:'#fff',fontSize:8,fontWeight:800,
-                          padding:'2px 8px',borderRadius:10 }}>YOUR TIER</div>
-                      )}
-                      <div style={{ fontSize:22,marginBottom:6 }}>{tier.icon}</div>
-                      <div style={{ fontSize:12,fontWeight:900,color:tier.color }}>{tier.label}</div>
-                      <div style={{ fontSize:10,color:'#64748b',marginTop:2 }}>
-                        {tier.minClients}{tier.maxClients===999?'+ clients':`–${tier.maxClients} clients`}
-                      </div>
-                      <div style={{ fontSize:20,fontWeight:900,color:tier.color,margin:'8px 0 4px' }}>
-                        {tier.rate}%
-                      </div>
-                      <div style={{ fontSize:9,color:'#64748b' }}>of monthly billing</div>
-                      {tier.bonus>0 && (
-                        <div style={{ marginTop:8,padding:'5px 8px',borderRadius:8,
-                          background:tier.color+'15',fontSize:9,color:tier.color,fontWeight:600 }}>
-                          🎉 Joining bonus: NPR {tier.bonus.toLocaleString()}<br/>
-                          📅 Monthly bonus: NPR {tier.monthlyBonus.toLocaleString()}
+                    <div key={p.id} style={{ background:'#fff', borderRadius:14,
+                      border: selPartner===p.id ? `2px solid ${A}` : '1.5px solid #e2e8f0',
+                      padding:'16px 18px', cursor:'pointer',
+                      boxShadow:'0 2px 8px rgba(0,0,0,.05)',
+                      transition:'all .15s' }}
+                      onClick={() => { setSelPartner(p.id); setTab('partners') }}>
+                      <div style={{ display:'flex', justifyContent:'space-between',
+                        alignItems:'flex-start', marginBottom:10 }}>
+                        <div>
+                          <div style={{ fontSize:13, fontWeight:800, color:'#0f172a' }}>{p.name}</div>
+                          <div style={{ fontSize:10, color:'#64748b', marginTop:2 }}>
+                            {p.type || 'Partner'} · {p.email}
+                          </div>
                         </div>
-                      )}
-                      {isSuperAdmin && (
-                        <div style={{ marginTop:8,fontSize:9,color:'#94a3b8' }}>
-                          {partnerCount} partner{partnerCount!==1?'s':''}
-                        </div>
-                      )}
+                        <TierBadge tier={p.tier} tiers={tiers}/>
+                      </div>
+                      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8 }}>
+                        {[
+                          ['Clients',    stats.active_clients ?? p.active_clients ?? '—'],
+                          ['MRR',        stats.total_mrr != null ? `NPR ${Number(stats.total_mrr).toLocaleString()}` : '—'],
+                          ['Comm./mo',   stats.monthly_commission != null ? `NPR ${Number(stats.monthly_commission).toLocaleString()}` : '—'],
+                        ].map(([l,v]) => (
+                          <div key={l} style={{ background:'#f8fafc', borderRadius:8, padding:'8px 10px' }}>
+                            <div style={{ fontSize:8, color:'#94a3b8' }}>{l}</div>
+                            <div style={{ fontSize:12, fontWeight:800, color:'#0f172a', marginTop:2 }}>{v}</div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )
                 })}
-              </div>
-              {/* Status note — placed here so it's not inside a conditional */}
-              <div style={{ marginTop:10, padding:'9px 14px', background:'#f0fdf4',
-                borderRadius:8, border:'1px solid #bbf7d0', fontSize:10, color:'#065f46',
-                display:'flex', alignItems:'center', gap:8 }}>
-                <span>💡</span>
-                <span>
-                  Click <strong>💾 Save</strong> on any row to update that tier's commission rate.
-                  Rates take effect immediately on <strong>BillingPage</strong> and MRR calculations.
-                  {loadSavedTiers() && (
-                    <span style={{marginLeft:8,color:'#0369a1',fontWeight:700}}>
-                      ✅ Custom rates active
-                    </span>
-                  )}
-                </span>
-              </div>
-            </div>
-
-            {/* Commission Rules */}
-            <div style={{ background:'#fff',borderRadius:12,padding:16,
-              boxShadow:'0 2px 8px rgba(0,0,0,.06)',marginBottom:14 }}>
-              <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12 }}>
-                <div style={{ fontSize:13,fontWeight:800,color:'#0f172a' }}>📋 Commission Rules & Policy</div>
-                <button onClick={()=>setShowRules(p=>!p)}
-                  style={{ background:'none',border:'none',cursor:'pointer',fontSize:11,
-                    color:A,fontWeight:700 }}>{showRules?'▲ Hide':'▼ Show'}</button>
-              </div>
-              {showRules && (
-                <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:10 }}>
-                  {[
-                    { icon:'📊', label:'Base Commission Rate', value:'10% of MRR (Silver)', detail:'Increases with tier' },
-                    { icon:'🎁', label:'Trial Commission',     value:'No commission on trials', detail:'Commission starts on first paid invoice' },
-                    { icon:'💰', label:'Minimum Payout',       value:`NPR ${COMMISSION_RULES.min_payout.toLocaleString()}`, detail:'Must accumulate before payout' },
-                    { icon:'📅', label:'Payout Date',          value:`${COMMISSION_RULES.payout_day}th of every month`, detail:'Direct bank transfer' },
-                    { icon:'🔒', label:'Lock Period',          value:`${COMMISSION_RULES.lock_period} days`, detail:'After client pays invoice' },
-                    { icon:'↩️', label:'Chargeback Period',    value:`${COMMISSION_RULES.chargeback_period} days`, detail:'Commission reversed if refund' },
-                    { icon:'♾️', label:'Lifetime Commission',  value:'Yes — while client is active', detail:'No time limit on earning' },
-                    { icon:'⬆️', label:'Upgrade Bonus',        value:`+${COMMISSION_RULES.upgrade_bonus}% on upgrade`, detail:'When referred client upgrades plan' },
-                  ].map(r=>(
-                    <div key={r.label} style={{ padding:'10px 12px',borderRadius:9,
-                      background:'#f8fafc',border:'1px solid #e2e8f0' }}>
-                      <div style={{ fontSize:16,marginBottom:4 }}>{r.icon}</div>
-                      <div style={{ fontSize:10,fontWeight:700,color:'#374151' }}>{r.label}</div>
-                      <div style={{ fontSize:12,fontWeight:900,color:A,marginTop:2 }}>{r.value}</div>
-                      <div style={{ fontSize:9,color:'#94a3b8',marginTop:2 }}>{r.detail}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {!showRules && (
-                <div style={{ display:'flex',gap:12,flexWrap:'wrap' }}>
-                  {[`Base rate: 10–25% MRR`,`Payout: ${COMMISSION_RULES.payout_day}th monthly`,
-                    `Lock: ${COMMISSION_RULES.lock_period} days`,`Lifetime commission`,
-                    `Min NPR ${COMMISSION_RULES.min_payout.toLocaleString()}`
-                  ].map(r=>(
-                    <span key={r} style={{ fontSize:10,padding:'4px 12px',borderRadius:20,
-                      background:'#f5f3ff',color:A,fontWeight:600 }}>{r}</span>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* My progress to next tier */}
-            {!isSuperAdmin && (
-              <div style={{ background:'#fff',borderRadius:12,padding:16,
-                boxShadow:'0 2px 8px rgba(0,0,0,.06)' }}>
-                <div style={{ fontSize:13,fontWeight:800,color:'#0f172a',marginBottom:12 }}>
-                  🚀 Your Progress to Next Tier
-                </div>
-                {(() => {
-                  const curTierIdx = COMMISSION_TIERS.findIndex(t=>t.id===viewPartner.tier)
-                  const nextTier   = COMMISSION_TIERS[curTierIdx+1]
-                  if (!nextTier) return (
-                    <div style={{ textAlign:'center',padding:20,color:'#7c3aed',fontWeight:700 }}>
-                      💠 You are at DIAMOND — highest tier! Keep growing!
-                    </div>
-                  )
-                  const progress = Math.min(100, Math.round(stats.active_clients/nextTier.minClients*100))
-                  return (
-                    <>
-                      <div style={{ display:'flex',justifyContent:'space-between',fontSize:10,color:'#64748b',marginBottom:6 }}>
-                        <span>Current: <b style={{ color:stats.tier_info?.color }}>{stats.tier_info?.label}</b></span>
-                        <span>Next: <b style={{ color:nextTier.color }}>{nextTier.icon} {nextTier.label}</b></span>
-                      </div>
-                      <div style={{ height:10,background:'#f1f5f9',borderRadius:10,overflow:'hidden',marginBottom:8 }}>
-                        <div style={{ height:'100%',width:`${progress}%`,background:G,borderRadius:10,transition:'width .5s' }}/>
-                      </div>
-                      <div style={{ fontSize:10,color:'#64748b',textAlign:'center' }}>
-                        {stats.active_clients} / {nextTier.minClients} active clients needed ·
-                        <b style={{ color:nextTier.color }}> {nextTier.minClients-stats.active_clients} more to go</b>
-                        {' '}→ Unlock <b>{nextTier.rate}% commission</b>
-                      </div>
-                    </>
-                  )
-                })()}
               </div>
             )}
           </div>
         )}
 
-        {/* ══ PARTNERS TAB (SuperAdmin only) ══ */}
-        {tab==='partners' && isSuperAdmin && (
-          <div style={{ display:'grid',gridTemplateColumns:'240px 1fr',gap:14 }}>
+        {/* ══ PARTNERS TAB ══ */}
+        {tab === 'partners' && (
+          <div style={{ display:'grid', gridTemplateColumns:'240px 1fr', gap:16 }}>
             {/* Partner list */}
-            <div style={{ background:'#fff',borderRadius:12,overflow:'hidden',
-              boxShadow:'0 2px 8px rgba(0,0,0,.06)' }}>
-              {DEMO_PARTNERS.map(p=>{
-                const ps = calcPartnerStats(p)
-                const isActive = p.id===selPartner
-                return (
-                  <div key={p.id} onClick={()=>setSelPartner(p.id)}
-                    style={{ padding:'12px 14px',borderBottom:'1px solid #f1f5f9',cursor:'pointer',
-                      background:isActive?'#f5f3ff':'#fff',
-                      borderLeft:`3px solid ${isActive?A:'transparent'}`,transition:'all .12s' }}>
-                    <div style={{ fontSize:11,fontWeight:700,color:isActive?A:'#0f172a' }}>{p.name}</div>
-                    <div style={{ fontSize:9,color:'#64748b',marginTop:2 }}>{p.type}</div>
-                    <div style={{ display:'flex',gap:5,marginTop:5,flexWrap:'wrap' }}>
-                      <TierBadge tier={p.tier}/>
-                      <span style={{ fontSize:9,color:'#94a3b8' }}>{ps.active_clients} clients</span>
-                    </div>
-                    <div style={{ fontSize:10,fontWeight:800,color:'#16a34a',marginTop:4 }}>
-                      NPR {ps.monthly_commission.toLocaleString()}/mo
-                    </div>
+            <div style={{ background:'#fff', borderRadius:14, border:'1px solid #e2e8f0',
+              overflow:'hidden', height:'fit-content' }}>
+              <div style={{ padding:'12px 14px', borderBottom:'1px solid #f1f5f9',
+                fontSize:11, fontWeight:800, color:'#0f172a' }}>
+                🤝 Partners ({partners.length})
+              </div>
+              {partners.length === 0 ? (
+                <div style={{ padding:24, textAlign:'center', color:'#94a3b8', fontSize:11 }}>
+                  No partners yet
+                </div>
+              ) : partners.map(p => (
+                <div key={p.id} onClick={() => setSelPartner(p.id)}
+                  style={{ padding:'12px 14px', cursor:'pointer', borderBottom:'1px solid #f8fafc',
+                    background: selPartner===p.id ? '#f5f3ff' : '#fff',
+                    borderLeft: selPartner===p.id ? `3px solid ${A}` : '3px solid transparent' }}>
+                  <div style={{ fontSize:12, fontWeight:700, color:'#0f172a' }}>{p.name}</div>
+                  <div style={{ display:'flex', alignItems:'center', gap:6, marginTop:4 }}>
+                    <TierBadge tier={p.tier} tiers={tiers}/>
+                    <StatusBadge status={p.status || 'active'}/>
                   </div>
-                )
-              })}
+                </div>
+              ))}
             </div>
 
             {/* Partner detail */}
-            {(() => {
-              const p = DEMO_PARTNERS.find(x=>x.id===selPartner)
-              if (!p) return null
-              const ps = calcPartnerStats(p)
-              return (
-                <div>
+            <div>
+              {detailLoad ? (
+                <div style={{ textAlign:'center', padding:40, color:A, fontSize:12 }}>
+                  ⟳ Loading partner data...
+                </div>
+              ) : !viewPartner ? (
+                <div style={{ textAlign:'center', padding:60, background:'#fff',
+                  borderRadius:14, border:'1px solid #e2e8f0', color:'#94a3b8' }}>
+                  Select a partner to view details
+                </div>
+              ) : (
+                <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
                   {/* Partner info card */}
-                  <div style={{ background:'#fff',borderRadius:12,padding:16,
-                    boxShadow:'0 2px 8px rgba(0,0,0,.06)',marginBottom:12,
-                    borderTop:`4px solid ${ps.tier_info?.color||A}` }}>
-                    <div style={{ display:'flex',justifyContent:'space-between',flexWrap:'wrap',gap:10 }}>
+                  <div style={{ background:'#fff', borderRadius:14, border:'1px solid #e2e8f0',
+                    padding:'18px 20px' }}>
+                    <div style={{ display:'flex', justifyContent:'space-between',
+                      alignItems:'flex-start', marginBottom:14, flexWrap:'wrap', gap:10 }}>
                       <div>
-                        <div style={{ fontSize:15,fontWeight:900,color:'#0f172a' }}>{p.name}</div>
-                        <div style={{ fontSize:10,color:'#64748b',marginTop:2 }}>{p.type} · {p.email} · {p.phone}</div>
-                        <div style={{ display:'flex',gap:6,marginTop:6,flexWrap:'wrap' }}>
-                          <TierBadge tier={p.tier}/>
-                          <StatusBadge status={p.status}/>
-                          <span style={{ fontSize:9,color:'#94a3b8' }}>PAN: {p.pan}</span>
-                          <span style={{ fontSize:9,color:'#94a3b8' }}>Bank: {p.bank} · {p.account}</span>
+                        <div style={{ fontSize:15, fontWeight:800, color:'#0f172a' }}>
+                          {viewPartner.name}
+                        </div>
+                        <div style={{ fontSize:11, color:'#64748b', marginTop:3 }}>
+                          {viewPartner.type} · Joined {viewPartner.joined_at || viewPartner.joined || '—'}
+                        </div>
+                        <div style={{ display:'flex', gap:6, marginTop:6 }}>
+                          <TierBadge tier={viewPartner.tier} tiers={tiers}/>
+                          <StatusBadge status={viewPartner.status || 'active'}/>
                         </div>
                       </div>
-                      <div style={{ display:'flex',gap:6 }}>
-                        <select value={p.tier}
-                          onChange={e=>notify(`✅ Tier updated to ${e.target.options[e.target.selectedIndex].text}`)}
-                          style={{ padding:'6px 10px',borderRadius:8,border:'1px solid #ddd6fe',
-                            fontSize:10,cursor:'pointer',background:'#f5f3ff',color:A,fontWeight:700 }}>
-                          {COMMISSION_TIERS.map(t=>(
-                            <option key={t.id} value={t.id}>{t.icon} {t.label} ({t.rate}%)</option>
-                          ))}
-                        </select>
-                        <button onClick={()=>notify(`💸 Payout of NPR ${ps.pending_payout.toLocaleString()} approved for ${p.name}`)}
-                          style={{ padding:'6px 14px',borderRadius:8,border:'none',
-                            background:G,color:'#fff',fontSize:10,fontWeight:800,cursor:'pointer' }}>
-                          💸 Process Payout
-                        </button>
+                      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+                        {[
+                          ['Active Clients',    (viewPartner.stats?.active_clients ?? '—')],
+                          ['Monthly Comm.',     viewPartner.stats?.monthly_commission != null ? fmt(viewPartner.stats.monthly_commission) : '—'],
+                          ['Total Earned',      viewPartner.stats?.total_earned != null ? fmt(viewPartner.stats.total_earned) : '—'],
+                          ['Pending Payout',    viewPartner.stats?.pending_payout != null ? fmt(viewPartner.stats.pending_payout) : '—'],
+                        ].map(([l,v]) => (
+                          <div key={l} style={{ background:'#f8fafc', borderRadius:9, padding:'10px 12px' }}>
+                            <div style={{ fontSize:9, color:'#94a3b8' }}>{l}</div>
+                            <div style={{ fontSize:13, fontWeight:800, color:'#0f172a', marginTop:2 }}>{v}</div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                    {/* Stats row */}
-                    <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(120px,1fr))',gap:8,marginTop:12 }}>
+                    <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',
+                      gap:8, fontSize:11 }}>
                       {[
-                        { l:'Active Clients',   v:ps.active_clients,                            c:'#16a34a' },
-                        { l:'Total MRR',        v:`NPR ${ps.total_mrr.toLocaleString()}`,        c:'#0369a1' },
-                        { l:'Commission Rate',  v:`${ps.rate}% MRR`,                             c:ps.tier_info?.color },
-                        { l:'Monthly Earn',     v:`NPR ${ps.monthly_commission.toLocaleString()}`,c:'#7c3aed' },
-                        { l:'Total Earned',     v:`NPR ${(ps.total_earned/100000).toFixed(1)}L`, c:'#059669' },
-                        { l:'Pending Payout',   v:`NPR ${ps.pending_payout.toLocaleString()}`,   c:'#d97706' },
-                      ].map(s=>(
-                        <div key={s.l} style={{ padding:'8px 10px',borderRadius:9,background:'#f8fafc',
-                          border:'1px solid #e2e8f0',textAlign:'center' }}>
-                          <div style={{ fontSize:12,fontWeight:900,color:s.c }}>{s.v}</div>
-                          <div style={{ fontSize:8,color:'#94a3b8',marginTop:2 }}>{s.l}</div>
+                        ['Email',       viewPartner.email],
+                        ['Phone',       viewPartner.phone],
+                        ['PAN',         viewPartner.pan],
+                        ['Bank',        viewPartner.bank],
+                        ['Account',     viewPartner.account],
+                        ['Comm. Rate',  `${tiers.find(t=>t.id===viewPartner.tier)?.rate || '—'}%`],
+                      ].map(([k,v]) => (
+                        <div key={k} style={{ display:'flex', justifyContent:'space-between',
+                          padding:'5px 0', borderBottom:'1px solid #f1f5f9' }}>
+                          <span style={{ color:'#64748b' }}>{k}</span>
+                          <span style={{ fontWeight:600, color:'#0f172a' }}>{v || '—'}</span>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  {/* Referral client list */}
-                  <div style={{ background:'#fff',borderRadius:12,overflow:'hidden',
-                    boxShadow:'0 2px 8px rgba(0,0,0,.06)' }}>
-                    <div style={{ padding:'12px 16px',borderBottom:'1px solid #f1f5f9',
-                      display:'flex',justifyContent:'space-between',alignItems:'center' }}>
-                      <div style={{ fontSize:12,fontWeight:800,color:'#0f172a' }}>
-                        🏢 Referred Clients ({p.referrals.length})
+                  {/* Referred clients table */}
+                  <div style={{ background:'#fff', borderRadius:14, border:'1px solid #e2e8f0',
+                    overflow:'hidden' }}>
+                    <div style={{ padding:'12px 16px', borderBottom:'1px solid #f1f5f9',
+                      display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                      <div style={{ fontSize:12, fontWeight:800, color:'#0f172a' }}>
+                        🏢 Referred Clients ({(viewPartner.referrals || []).length})
                       </div>
-                      <span style={{ fontSize:9,color:'#94a3b8' }}>Live billing data · transparent to partner</span>
+                      <span style={{ fontSize:9, color:'#94a3b8' }}>
+                        Live billing data · transparent to partner
+                      </span>
                     </div>
-                    <table style={{ width:'100%',borderCollapse:'collapse',fontSize:11 }}>
-                      <thead>
-                        <tr style={{ background:'#f8fafc' }}>
-                          {['Company','Plan','MRR','Comm Rate','Monthly Earn','Months','Total Earned','Status'].map(h=>(
-                            <th key={h} style={{ padding:'8px 12px',textAlign:'left',fontSize:9,
-                              fontWeight:700,color:'#64748b',borderBottom:'1px solid #e2e8f0' }}>{h}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {p.referrals.map((r,i)=>{
-                          const earn = r.status==='active' ? Math.round(r.mrr*ps.rate/100) : 0
-                          const total = Math.round(earn * r.paid_months)
-                          return (
-                            <tr key={r.tenant_id}
-                              style={{ background:i%2===0?'#fff':'#fafafa',
-                                borderBottom:'1px solid #f1f5f9' }}>
-                              <td style={{ padding:'8px 12px',fontWeight:600,color:'#0f172a' }}>{r.company}</td>
-                              <td style={{ padding:'8px 12px' }}>
-                                <span style={{ fontSize:9,padding:'2px 7px',borderRadius:8,
-                                  background:'#f5f3ff',color:A,fontWeight:700 }}>
-                                  {r.plan.charAt(0).toUpperCase()+r.plan.slice(1)}
-                                </span>
-                              </td>
-                              <td style={{ padding:'8px 12px',fontWeight:700,color:'#0369a1' }}>
-                                NPR {r.mrr.toLocaleString()}
-                              </td>
-                              <td style={{ padding:'8px 12px',color:'#64748b' }}>{ps.rate}%</td>
-                              <td style={{ padding:'8px 12px',fontWeight:800,color:'#7c3aed' }}>
-                                {r.status==='active' ? `NPR ${earn.toLocaleString()}` : '—'}
-                              </td>
-                              <td style={{ padding:'8px 12px',color:'#64748b' }}>{r.paid_months}</td>
-                              <td style={{ padding:'8px 12px',fontWeight:700,color:'#16a34a' }}>
-                                {total>0 ? `NPR ${total.toLocaleString()}` : '—'}
-                              </td>
-                              <td style={{ padding:'8px 12px' }}><StatusBadge status={r.status}/></td>
+                    {(viewPartner.referrals || []).length === 0 ? (
+                      <div style={{ padding:32, textAlign:'center', color:'#94a3b8', fontSize:11 }}>
+                        No referred clients yet for this partner
+                      </div>
+                    ) : (
+                      <div style={{ overflowX:'auto' }}>
+                        <table style={{ width:'100%', borderCollapse:'collapse', fontSize:11 }}>
+                          <thead>
+                            <tr style={{ background:'#f8fafc' }}>
+                              {['Company','Plan','MRR','Rate','Monthly Earn','Months','Total Earned','Status'].map(h => (
+                                <th key={h} style={{ padding:'8px 12px', textAlign:'left',
+                                  fontSize:9, fontWeight:700, color:'#64748b',
+                                  borderBottom:'1px solid #e2e8f0', whiteSpace:'nowrap' }}>{h}</th>
+                              ))}
                             </tr>
-                          )
-                        })}
-                      </tbody>
-                      <tfoot>
-                        <tr style={{ background:'#f5f3ff',fontWeight:800 }}>
-                          <td style={{ padding:'10px 12px',color:A }}>TOTAL</td>
-                          <td/>
-                          <td style={{ padding:'10px 12px',color:'#0369a1' }}>NPR {ps.total_mrr.toLocaleString()}</td>
-                          <td style={{ padding:'10px 12px',color:'#64748b' }}>{ps.rate}% avg</td>
-                          <td style={{ padding:'10px 12px',color:'#7c3aed' }}>NPR {ps.monthly_commission.toLocaleString()}/mo</td>
-                          <td/>
-                          <td style={{ padding:'10px 12px',color:'#16a34a' }}>NPR {ps.total_earned.toLocaleString()}</td>
-                          <td/>
-                        </tr>
-                      </tfoot>
-                    </table>
+                          </thead>
+                          <tbody>
+                            {(viewPartner.referrals || []).map((r, i) => {
+                              const rate = tiers.find(t=>t.id===viewPartner.tier)?.rate || 10
+                              const earn = r.status==='active' ? Math.round((r.mrr||0)*rate/100) : 0
+                              return (
+                                <tr key={r.tenant_id || i}
+                                  style={{ background:i%2===0?'#fff':'#fafafa',
+                                    borderBottom:'1px solid #f1f5f9' }}>
+                                  <td style={{ padding:'8px 12px', fontWeight:600, color:'#0f172a' }}>
+                                    {r.company}
+                                  </td>
+                                  <td style={{ padding:'8px 12px' }}>
+                                    <span style={{ fontSize:9, padding:'2px 7px', borderRadius:8,
+                                      background:'#f5f3ff', color:A, fontWeight:700 }}>
+                                      {r.plan ? r.plan.charAt(0).toUpperCase()+r.plan.slice(1) : '—'}
+                                    </span>
+                                  </td>
+                                  <td style={{ padding:'8px 12px', fontWeight:700, color:'#0369a1' }}>
+                                    {r.mrr != null ? fmt(r.mrr) : '—'}
+                                  </td>
+                                  <td style={{ padding:'8px 12px', color:'#64748b' }}>{rate}%</td>
+                                  <td style={{ padding:'8px 12px', fontWeight:800, color:A }}>
+                                    {r.status==='active' ? fmt(earn) : '—'}
+                                  </td>
+                                  <td style={{ padding:'8px 12px', color:'#64748b' }}>
+                                    {r.paid_months ?? '—'}
+                                  </td>
+                                  <td style={{ padding:'8px 12px', fontWeight:700, color:'#16a34a' }}>
+                                    {r.total_earned != null ? fmt(r.total_earned)
+                                      : earn > 0 ? fmt(earn*(r.paid_months||0)) : '—'}
+                                  </td>
+                                  <td style={{ padding:'8px 12px' }}>
+                                    <StatusBadge status={r.status}/>
+                                  </td>
+                                </tr>
+                              )
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ══ COMMISSION PAYOUTS TAB ══ */}
+        {tab === 'commission' && (
+          <div style={{ background:'#fff', borderRadius:14, border:'1px solid #e2e8f0', overflow:'hidden' }}>
+            <div style={{ padding:'14px 18px', borderBottom:'1px solid #f1f5f9',
+              fontSize:13, fontWeight:800, color:'#0f172a' }}>
+              💰 Commission Payouts
+            </div>
+            {partners.length === 0 ? (
+              <div style={{ padding:40, textAlign:'center', color:'#94a3b8' }}>
+                <div style={{ fontSize:36, marginBottom:8 }}>💰</div>
+                <div style={{ fontSize:13, fontWeight:600, color:'#475569' }}>
+                  No payout data available
+                </div>
+                <div style={{ fontSize:11, marginTop:4 }}>
+                  Payouts appear once partners refer active tenants
+                </div>
+              </div>
+            ) : partners.map(p => {
+              const stats   = p.stats || {}
+              const pending = stats.pending_payout ?? 0
+              const tierInfo = tiers.find(t=>t.id===p.tier) || DEFAULT_TIERS[0]
+              return (
+                <div key={p.id} style={{ display:'flex', justifyContent:'space-between',
+                  alignItems:'center', padding:'14px 18px',
+                  borderBottom:'1px solid #f8fafc', flexWrap:'wrap', gap:10 }}>
+                  <div>
+                    <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
+                      <span style={{ fontSize:13, fontWeight:700 }}>{p.name}</span>
+                      <TierBadge tier={p.tier} tiers={tiers}/>
+                    </div>
+                    <div style={{ fontSize:10, color:'#64748b' }}>
+                      Monthly: {stats.monthly_commission != null ? fmt(stats.monthly_commission) : '—'}
+                      &nbsp;·&nbsp; Total Earned: {stats.total_earned != null ? fmt(stats.total_earned) : '—'}
+                      &nbsp;·&nbsp; Rate: {tierInfo.rate}%
+                    </div>
+                  </div>
+                  <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                    <div style={{ textAlign:'right' }}>
+                      <div style={{ fontSize:16, fontWeight:900, color:A }}>
+                        {pending > 0 ? fmt(pending) : '—'}
+                      </div>
+                      <div style={{ fontSize:9, color:'#94a3b8' }}>pending payout</div>
+                    </div>
+                    {pending > 0 && (
+                      <div style={{ display:'flex', gap:6 }}>
+                        <button onClick={() => handlePayout(p.id, 'approve')}
+                          style={{ padding:'6px 14px', borderRadius:8, border:'none',
+                            background:'#16a34a', color:'#fff', fontSize:10,
+                            fontWeight:700, cursor:'pointer' }}>
+                          ✅ Approve
+                        </button>
+                        <button onClick={() => handlePayout(p.id, 'reject')}
+                          style={{ padding:'6px 14px', borderRadius:8,
+                            border:'1px solid #fecaca', background:'#fef2f2',
+                            color:'#dc2626', fontSize:10, fontWeight:700, cursor:'pointer' }}>
+                          ❌ Reject
+                        </button>
+                      </div>
+                    )}
+                    {pending === 0 && (
+                      <span style={{ fontSize:10, color:'#10b981', fontWeight:700 }}>✓ No pending</span>
+                    )}
                   </div>
                 </div>
               )
-            })()}
+            })}
           </div>
         )}
 
-        {/* ══ CLIENTS TAB (Partner self-view) ══ */}
-        {tab==='clients' && !isSuperAdmin && (
-          <div style={{ background:'#fff',borderRadius:12,overflow:'hidden',
-            boxShadow:'0 2px 8px rgba(0,0,0,.06)' }}>
-            <div style={{ padding:'12px 16px',borderBottom:'1px solid #f1f5f9',
-              display:'flex',justifyContent:'space-between',alignItems:'center' }}>
-              <div style={{ fontSize:12,fontWeight:800,color:'#0f172a' }}>
-                🏢 My Referred Clients ({viewPartner.referrals.length})
-              </div>
-              <div style={{ fontSize:9,color:'#94a3b8' }}>
-                Commission Rate: <b style={{ color:A }}>{stats.rate}% of MRR</b>
-              </div>
-            </div>
-            <table style={{ width:'100%',borderCollapse:'collapse',fontSize:11 }}>
-              <thead>
-                <tr style={{ background:'#f8fafc' }}>
-                  {['#','Company','Plan','Monthly Billing','My Commission','Months Active','Total Earned','Status'].map(h=>(
-                    <th key={h} style={{ padding:'8px 12px',textAlign:'left',fontSize:9,
-                      fontWeight:700,color:'#64748b',borderBottom:'1px solid #e2e8f0' }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {viewPartner.referrals.map((r,i)=>{
-                  const earn = r.status==='active' ? Math.round(r.mrr*stats.rate/100) : 0
-                  const total = Math.round(earn*r.paid_months)
-                  return (
-                    <tr key={r.tenant_id}
-                      style={{ background:i%2===0?'#fff':'#fafafa',borderBottom:'1px solid #f1f5f9' }}>
-                      <td style={{ padding:'8px 12px',color:'#94a3b8',fontSize:10 }}>{i+1}</td>
-                      <td style={{ padding:'8px 12px',fontWeight:600 }}>{r.company}</td>
-                      <td style={{ padding:'8px 12px' }}>
-                        <span style={{ fontSize:9,padding:'2px 7px',borderRadius:8,
-                          background:'#f5f3ff',color:A,fontWeight:700 }}>
-                          {r.plan.charAt(0).toUpperCase()+r.plan.slice(1)}
-                        </span>
-                      </td>
-                      <td style={{ padding:'8px 12px',fontWeight:700,color:'#0369a1' }}>
-                        NPR {r.mrr.toLocaleString()}
-                      </td>
-                      <td style={{ padding:'8px 12px',fontWeight:800,color:'#7c3aed' }}>
-                        {earn>0 ? `NPR ${earn.toLocaleString()}` : '—'}
-                      </td>
-                      <td style={{ padding:'8px 12px',color:'#64748b' }}>{r.paid_months} months</td>
-                      <td style={{ padding:'8px 12px',fontWeight:700,color:'#16a34a' }}>
-                        {total>0 ? `NPR ${total.toLocaleString()}` : '—'}
-                      </td>
-                      <td style={{ padding:'8px 12px' }}><StatusBadge status={r.status}/></td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-              <tfoot>
-                <tr style={{ background:'#f5f3ff',fontWeight:800 }}>
-                  <td colSpan={3} style={{ padding:'10px 12px',color:A }}>TOTAL</td>
-                  <td style={{ padding:'10px 12px',color:'#0369a1' }}>NPR {stats.total_mrr.toLocaleString()}/mo</td>
-                  <td style={{ padding:'10px 12px',color:'#7c3aed' }}>NPR {stats.monthly_commission.toLocaleString()}/mo</td>
-                  <td/>
-                  <td style={{ padding:'10px 12px',color:'#16a34a' }}>NPR {stats.total_earned.toLocaleString()}</td>
-                  <td/>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        )}
+        {/* ══ RATE CONFIGURATION TAB ══ */}
+        {tab === 'rates' && (
+          <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
 
-        {/* ══ COMMISSION / EARNINGS TAB ══ */}
-        {tab==='commission' && (
-          <div>
-            {/* Monthly payout history */}
-            <div style={{ background:'#fff',borderRadius:12,overflow:'hidden',
-              boxShadow:'0 2px 8px rgba(0,0,0,.06)',marginBottom:14 }}>
-              <div style={{ padding:'12px 16px',borderBottom:'1px solid #f1f5f9',
-                display:'flex',justifyContent:'space-between',alignItems:'center' }}>
-                <div style={{ fontSize:12,fontWeight:800,color:'#0f172a' }}>💰 Payout History</div>
-                {isSuperAdmin && (
-                  <button onClick={()=>notify('💸 Bulk payout initiated for all eligible partners')}
-                    style={{ padding:'6px 14px',borderRadius:8,border:'none',
-                      background:G,color:'#fff',fontSize:10,fontWeight:800,cursor:'pointer' }}>
-                    💸 Process All Payouts
-                  </button>
-                )}
+            {/* Tier rate editor */}
+            <div style={{ background:'#fff', borderRadius:14, border:'1px solid #e2e8f0',
+              padding:'18px 20px' }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center',
+                marginBottom:16, flexWrap:'wrap', gap:8 }}>
+                <div style={{ fontSize:13, fontWeight:800, color:'#0f172a' }}>
+                  ⚙️ Partner Tier Commission Rates
+                </div>
+                <button onClick={saveConfig} disabled={saving}
+                  style={{ padding:'8px 20px', borderRadius:9, border:'none',
+                    background:A, color:'#fff', fontSize:11, fontWeight:700,
+                    cursor:'pointer', opacity:saving ? .6 : 1 }}>
+                  {saving ? '⟳ Saving...' : '💾 Save All Rates → API'}
+                </button>
               </div>
-              <table style={{ width:'100%',borderCollapse:'collapse',fontSize:11 }}>
-                <thead>
-                  <tr style={{ background:'#f8fafc' }}>
-                    {['Period','Partner','Active Clients','MRR','Rate','Commission','Bonus','Total','Status','Action'].map(h=>(
-                      <th key={h} style={{ padding:'8px 10px',textAlign:'left',fontSize:9,
-                        fontWeight:700,color:'#64748b',borderBottom:'1px solid #e2e8f0' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {(isSuperAdmin ? DEMO_PARTNERS : [viewPartner]).flatMap(p=>{
-                    const ps = calcPartnerStats(p)
-                    return [
-                      { period:'Shrawan 2083',  status:'pending', bonus:ps.tier_info?.monthlyBonus||0, partner:p, ps },
-                      { period:'Asar 2083',      status:'paid',    bonus:ps.tier_info?.monthlyBonus||0, partner:p, ps },
-                      { period:'Jestha 2083',    status:'paid',    bonus:ps.tier_info?.monthlyBonus||0, partner:p, ps },
-                    ]
-                  }).slice(0,12).map((row,i)=>(
-                    <tr key={i} style={{ background:i%2===0?'#fff':'#fafafa',borderBottom:'1px solid #f1f5f9' }}>
-                      <td style={{ padding:'8px 10px',fontWeight:600 }}>{row.period}</td>
-                      <td style={{ padding:'8px 10px',fontSize:10 }}>{row.partner.name}</td>
-                      <td style={{ padding:'8px 10px',color:'#64748b' }}>{row.ps.active_clients}</td>
-                      <td style={{ padding:'8px 10px',color:'#0369a1',fontWeight:700 }}>
-                        NPR {row.ps.total_mrr.toLocaleString()}
-                      </td>
-                      <td style={{ padding:'8px 10px',color:'#64748b' }}>{row.ps.rate}%</td>
-                      <td style={{ padding:'8px 10px',fontWeight:700,color:'#7c3aed' }}>
-                        NPR {row.ps.monthly_commission.toLocaleString()}
-                      </td>
-                      <td style={{ padding:'8px 10px',color:'#d97706' }}>
-                        {row.bonus>0 ? `NPR ${row.bonus.toLocaleString()}` : '—'}
-                      </td>
-                      <td style={{ padding:'8px 10px',fontWeight:900,color:'#16a34a' }}>
-                        NPR {(row.ps.monthly_commission+row.bonus).toLocaleString()}
-                      </td>
-                      <td style={{ padding:'8px 10px' }}><StatusBadge status={row.status}/></td>
-                      <td style={{ padding:'8px 10px' }}>
-                        {row.status==='pending' && isSuperAdmin ? (
-                          <button onClick={()=>notify(`✅ Payout approved for ${row.partner.name}`)}
-                            style={{ padding:'3px 10px',borderRadius:6,border:'1px solid #bbf7d0',
-                              background:'#f0fdf4',color:'#16a34a',fontSize:9,fontWeight:700,cursor:'pointer' }}>
-                            Approve
-                          </button>
-                        ) : row.status==='paid' ? (
-                          <span style={{ fontSize:9,color:'#94a3b8' }}>✓ Transferred</span>
-                        ) : null}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* ══ RATE CONFIGURATION (SuperAdmin only) ══ */}
-        {tab==='rates' && isSuperAdmin && (
-          <div>
-            <div style={{ background:'#fff',borderRadius:12,padding:20,
-              boxShadow:'0 2px 8px rgba(0,0,0,.06)',marginBottom:14 }}>
-              <div style={{ fontSize:13,fontWeight:800,color:'#0f172a',marginBottom:16 }}>
-                ⚙️ Commission Rate Configuration
-              </div>
-              <table style={{ width:'100%',borderCollapse:'collapse',fontSize:11 }}>
-                <thead>
-                  <tr style={{ background:'#f8fafc' }}>
-                    {['Tier','Min Clients','Max Clients','Commission %','Joining Bonus (NPR)','Monthly Bonus (NPR)','Action'].map(h=>(
-                      <th key={h} style={{ padding:'10px 12px',textAlign:'left',fontSize:10,
-                        fontWeight:700,color:'#64748b',borderBottom:'2px solid #e2e8f0' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {COMMISSION_TIERS.map(tier=>(
-                    <tr key={tier.id} style={{ borderBottom:'1px solid #f1f5f9' }}>
-                      <td style={{ padding:'12px 12px' }}>
-                        <TierBadge tier={tier.id}/>
-                      </td>
-                      <td style={{ padding:'12px' }}>
-                        <input type="number" defaultValue={tier.minClients}
-                          style={{ width:60,padding:'4px 8px',borderRadius:6,border:'1px solid #e2e8f0',
-                            fontSize:11,textAlign:'center' }}/>
-                      </td>
-                      <td style={{ padding:'12px' }}>
-                        <input type="number" defaultValue={tier.maxClients===999?'∞':tier.maxClients}
-                          style={{ width:60,padding:'4px 8px',borderRadius:6,border:'1px solid #e2e8f0',
-                            fontSize:11,textAlign:'center' }}/>
-                      </td>
-                      <td style={{ padding:'12px' }}>
-                        <div style={{ display:'flex',alignItems:'center',gap:4 }}>
-                          <input id={`rate-input-${tier.id}`} type="number" defaultValue={tier.rate} min={1} max={50}
-                            style={{ width:50,padding:'4px 8px',borderRadius:6,border:'1px solid #e2e8f0',
-                              fontSize:11,textAlign:'center' }}/>
-                          <span style={{ fontSize:11,color:'#64748b' }}>%</span>
-                        </div>
-                      </td>
-                      <td style={{ padding:'12px' }}>
-                        <input type="number" defaultValue={tier.bonus}
-                          style={{ width:80,padding:'4px 8px',borderRadius:6,border:'1px solid #e2e8f0',
-                            fontSize:11,textAlign:'center' }}/>
-                      </td>
-                      <td style={{ padding:'12px' }}>
-                        <input type="number" defaultValue={tier.monthlyBonus}
-                          style={{ width:80,padding:'4px 8px',borderRadius:6,border:'1px solid #e2e8f0',
-                            fontSize:11,textAlign:'center' }}/>
-                      </td>
-                      <td style={{ padding:'12px' }}>
-                        <button onClick={()=>{
-                            // Find and update this tier's rate from the input
-                            const inputEl = document.getElementById(`rate-input-${tier.id}`)
-                            const newRate = inputEl ? parseFloat(inputEl.value)||tier.rate : tier.rate
-                            const updatedTiers = COMMISSION_TIERS.map(t =>
-                              t.id === tier.id ? {...t, rate: newRate} : t
-                            )
-                            const ok = saveCommissionTiers(updatedTiers)
-                            // Update the in-memory array so stats recalculate
-                            COMMISSION_TIERS.splice(0, COMMISSION_TIERS.length, ...updatedTiers)
-                            if(ok) notify(`✅ ${tier.label} rate saved — ${newRate}% live across all pages`)
-                            else notify(`❌ Save failed`)
-                          }}
-                          style={{ padding:'5px 12px',borderRadius:7,border:'none',
-                            background:tier.color,color:'#fff',fontSize:9,fontWeight:700,cursor:'pointer' }}>
-                          💾 Save
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <div style={{ marginTop:16,padding:14,background:'#fffbeb',borderRadius:9,
-                border:'1px solid #fde68a',fontSize:10,color:'#92400e' }}>
-                ⚠️ Rate changes apply to NEW commission calculations from next billing cycle.
-                Existing approved payouts are not affected.
-              </div>
-            </div>
-
-            {/* Plan commission preview */}
-            <div style={{ background:'#fff',borderRadius:12,padding:20,
-              boxShadow:'0 2px 8px rgba(0,0,0,.06)' }}>
-              <div style={{ fontSize:13,fontWeight:800,color:'#0f172a',marginBottom:14 }}>
-                📊 Commission per Plan × Tier (NPR/month)
-              </div>
-              <table style={{ width:'100%',borderCollapse:'collapse',fontSize:11 }}>
-                <thead>
-                  <tr style={{ background:'#f8fafc' }}>
-                    <th style={{ padding:'8px 12px',textAlign:'left',fontSize:10,color:'#64748b',fontWeight:700 }}>Plan</th>
-                    {COMMISSION_TIERS.map(t=>(
-                      <th key={t.id} style={{ padding:'8px 12px',textAlign:'center',fontSize:10,color:t.color,fontWeight:700 }}>
-                        {t.icon} {t.rate}%
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.entries(PLAN_MRR).filter(([k,v])=>v>0).map(([plan,mrr],i)=>(
-                    <tr key={plan} style={{ background:i%2===0?'#fff':'#fafafa',borderBottom:'1px solid #f1f5f9' }}>
-                      <td style={{ padding:'10px 12px',fontWeight:700,color:'#374151',textTransform:'capitalize' }}>
-                        {plan} (NPR {mrr.toLocaleString()}/mo)
-                      </td>
-                      {COMMISSION_TIERS.map(t=>(
-                        <td key={t.id} style={{ padding:'10px 12px',textAlign:'center',
-                          fontWeight:700,color:t.color }}>
-                          NPR {Math.round(mrr*t.rate/100).toLocaleString()}
-                        </td>
+              <div style={{ overflowX:'auto' }}>
+                <table style={{ width:'100%', borderCollapse:'collapse', fontSize:11 }}>
+                  <thead>
+                    <tr style={{ background:'#f8fafc' }}>
+                      {['Tier','Min Clients','Max Clients','Commission Rate %','Monthly Bonus (NPR)'].map(h => (
+                        <th key={h} style={{ padding:'10px 12px', textAlign:'left',
+                          fontSize:10, fontWeight:700, color:'#64748b',
+                          borderBottom:'1px solid #e2e8f0' }}>{h}</th>
                       ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {editTiers.map((tier, idx) => (
+                      <tr key={tier.id} style={{ borderBottom:'1px solid #f1f5f9' }}>
+                        <td style={{ padding:'12px' }}>
+                          <span style={{ fontWeight:800, color:tier.color }}>
+                            {tier.icon} {tier.label}
+                          </span>
+                        </td>
+                        <td style={{ padding:'12px', color:'#64748b' }}>{tier.minClients}+</td>
+                        <td style={{ padding:'12px', color:'#64748b' }}>
+                          {tier.maxClients >= 999 ? '∞' : tier.maxClients}
+                        </td>
+                        <td style={{ padding:'12px' }}>
+                          <input type="number" min="0" max="50" step="0.5"
+                            value={editTiers[idx].rate}
+                            onChange={e => activeEt(idx)({ rate: parseFloat(e.target.value)||0 })}
+                            style={{ ...inp, width:80, textAlign:'center' }}/>
+                          <span style={{ marginLeft:6, color:'#64748b' }}>%</span>
+                        </td>
+                        <td style={{ padding:'12px' }}>
+                          <input type="number" min="0"
+                            value={editTiers[idx].monthlyBonus}
+                            onChange={e => activeEt(idx)({ monthlyBonus: parseFloat(e.target.value)||0 })}
+                            style={{ ...inp, width:100, textAlign:'center' }}/>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div style={{ marginTop:14, padding:12, background:'#fffbeb', borderRadius:9,
+                border:'1px solid #fde68a', fontSize:10, color:'#92400e' }}>
+                ⚠️ Rate changes apply to NEW commission calculations from next billing cycle.
+                Existing approved payouts are not affected. Changes are saved to the API — live across all pages.
+              </div>
             </div>
+
+            {/* Commission rules */}
+            <div style={{ background:'#fff', borderRadius:14, border:'1px solid #e2e8f0',
+              padding:'18px 20px' }}>
+              <div style={{ fontSize:13, fontWeight:800, color:'#0f172a', marginBottom:14 }}>
+                📋 Commission Rules
+              </div>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',
+                gap:12 }}>
+                {[
+                  ['Min Payout (NPR)',         'min_payout',        'number'],
+                  ['Payout Day (of month)',    'payout_day',        'number'],
+                  ['Lock Period (days)',        'lock_period',       'number'],
+                  ['Chargeback Period (days)', 'chargeback_period', 'number'],
+                  ['Upgrade Bonus (%)',        'upgrade_bonus',     'number'],
+                ].map(([lbl,key,type]) => (
+                  <div key={key}>
+                    <div style={{ fontSize:10, fontWeight:700, color:'#64748b', marginBottom:5 }}>{lbl}</div>
+                    <input type={type} value={commRules[key] ?? ''}
+                      onChange={e => setCommRules(r => ({...r,[key]:+e.target.value}))}
+                      style={{ ...inp, width:'100%' }}/>
+                  </div>
+                ))}
+                {[
+                  ['Trial Commission',  'trial_commission'],
+                  ['Lifetime Commission','lifetime'],
+                ].map(([lbl,key]) => (
+                  <div key={key} style={{ display:'flex', alignItems:'center', gap:8 }}>
+                    <input type="checkbox" checked={!!commRules[key]}
+                      onChange={e => setCommRules(r => ({...r,[key]:e.target.checked}))}
+                      style={{ width:16, height:16, cursor:'pointer' }}/>
+                    <span style={{ fontSize:11, fontWeight:600, color:'#374151' }}>{lbl}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Commission matrix — from API plan MRR × tiers */}
+            {Object.keys(planMRR).length > 0 && (
+              <div style={{ background:'#fff', borderRadius:14, border:'1px solid #e2e8f0',
+                padding:'18px 20px', overflowX:'auto' }}>
+                <div style={{ fontSize:13, fontWeight:800, color:'#0f172a', marginBottom:14 }}>
+                  📊 Commission per Plan × Tier (NPR/month)
+                </div>
+                <table style={{ width:'100%', borderCollapse:'collapse', fontSize:11 }}>
+                  <thead>
+                    <tr style={{ background:'#f8fafc' }}>
+                      <th style={{ padding:'8px 12px', textAlign:'left', fontSize:10,
+                        color:'#64748b', fontWeight:700 }}>Plan</th>
+                      {editTiers.map(t => (
+                        <th key={t.id} style={{ padding:'8px 12px', textAlign:'center',
+                          fontSize:10, color:t.color, fontWeight:800 }}>
+                          {t.icon} {t.rate}%
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(planMRR).filter(([,v])=>v>0).map(([plan,mrr],i) => (
+                      <tr key={plan} style={{ background:i%2===0?'#fff':'#fafafa',
+                        borderBottom:'1px solid #f1f5f9' }}>
+                        <td style={{ padding:'10px 12px', fontWeight:700, color:'#374151',
+                          textTransform:'capitalize' }}>
+                          {plan} ({fmt(mrr)}/mo)
+                        </td>
+                        {editTiers.map(t => (
+                          <td key={t.id} style={{ padding:'10px 12px', textAlign:'center',
+                            fontWeight:700, color:t.color }}>
+                            {fmt(Math.round(mrr*t.rate/100))}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
+
       </div>
     </div>
   )

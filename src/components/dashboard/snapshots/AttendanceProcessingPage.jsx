@@ -1,250 +1,216 @@
 // FILE: src/components/dashboard/snapshots/AttendanceProcessingPage.jsx
-// eLogix HRMS — Attendance Processing (Attendance Management)
-// Calendar-based consolidation: exception isolation, multi-source ingest status
-// FIXED: msg is not defined (was _pm/_spm)
-// FIXED: sc is not defined inside tbody map (SOURCE_CFG[r.source] never assigned to sc)
-// ADDED: tenant-wise access, SaaS DB integration, scrollbar
+// eLogix HRMS — Attendance Processing
+// COMPLETE REWRITE — Zero mock data. Real tenant API. No bad imports.
+// Removes MOCK_RECORDS (6 fake Nepali employees), DeptSetupShared, tenantPermissions.
+// API: GET /api/v1/attendance/today  POST /api/v1/attendance/process
 // eLogix Technologies · www.elogix.com.np
 
 import { useState, useEffect } from 'react'
-import { tenantCanAccess } from '../../../utils/tenantPermissions.js'
-import { Field, ExcelModal, PageHeader, AIImpact, SearchBar, ContextMenu } from './DeptSetupShared.jsx'
-import { resolveTenantAccess, getSessionSlug } from '../../../utils/tenantPermissions.js'
-import AccessDenied from '../../shared/AccessDenied.jsx'
+
+function _getSession(){try{return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{}}catch{return{}}}
+function _authH(){const s=_getSession();const token=localStorage.getItem('access_token')||s?.token||'';const slug=s?.company?.slug||'';return{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}}
 
 const G = 'linear-gradient(135deg,#0c4a6e 0%,#0284c7 60%,#7dd3fc 100%)'
 const A = '#0284c7'
 
-function getSession() {
-  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} }
-  catch(_e){ return {} }
-}
-
 const SOURCE_CFG = {
-  biometric: {c:'#10b981', icon:'👆', label:'Biometric'},
-  gps       : {c:'#3b82f6', icon:'📍', label:'GPS'},
-  web       : {c:'#7c3aed', icon:'💻', label:'Web'},
-  qr        : {c:'#f59e0b', icon:'📱', label:'QR Code'},
+  biometric:{c:'#10b981',icon:'👆',label:'Biometric'},
+  gps      :{c:'#3b82f6',icon:'📍',label:'GPS'},
+  web      :{c:'#7c3aed',icon:'💻',label:'Web'},
+  qr       :{c:'#f59e0b',icon:'📱',label:'QR Code'},
+  mobile   :{c:'#0ea5e9',icon:'📲',label:'Mobile'},
+  manual   :{c:'#64748b',icon:'📋',label:'Manual'},
 }
 const EXCEPTION_CFG = {
-  missed_checkout : {c:'#ef4444', label:'Missed Checkout'},
-  late_arrival    : {c:'#f59e0b', label:'Late Arrival'},
-  early_departure : {c:'#f59e0b', label:'Early Departure'},
+  missed_checkout:{c:'#ef4444',label:'Missed Checkout'},
+  late_arrival   :{c:'#f59e0b',label:'Late Arrival'},
+  early_departure:{c:'#f59e0b',label:'Early Departure'},
+  missed_checkin :{c:'#dc2626',label:'Missed Check-In'},
+  overtime       :{c:'#8b5cf6',label:'Overtime'},
 }
 
-const MOCK_RECORDS = [
-  { id:'p1', employee:'Gita Maharjan',  emp_code:'E00001', dept:'IT',      source:'biometric', login:'09:02 AM', logout:'06:15 PM', total_hrs:8.5, break_min:32, exception:null,             processed:true,  impact_links:['Employee Movement','Payroll Setup'] },
-  { id:'p2', employee:'Bikash Rai',     emp_code:'E00004', dept:'IT',      source:'web',       login:'08:58 AM', logout:null,        total_hrs:null, break_min:0, exception:'missed_checkout', processed:false, impact_links:['Missed Log In/Out Request'] },
-  { id:'p3', employee:'Anjali Sharma',  emp_code:'E00007', dept:'Sales',   source:'gps',       login:'10:18 AM', logout:'05:00 PM', total_hrs:6.7, break_min:30, exception:'late_arrival',    processed:true,  impact_links:['Late & Early Tracking'] },
-  { id:'p4', employee:'Sunita Rai',     emp_code:'E00005', dept:'HR',      source:'qr',        login:'09:01 AM', logout:'06:05 PM', total_hrs:8.5, break_min:30, exception:null,             processed:true,  impact_links:[] },
-  { id:'p5', employee:'Ramesh KC',      emp_code:'E00003', dept:'Sales',   source:'gps',       login:'10:15 AM', logout:'04:45 PM', total_hrs:6.2, break_min:30, exception:'late_arrival',    processed:true,  impact_links:['Late & Early Tracking'] },
-  { id:'p6', employee:'Sunil Magar',    emp_code:'E00008', dept:'Ops',     source:'biometric', login:'08:52 AM', logout:'06:00 PM', total_hrs:8.8, break_min:30, exception:null,             processed:true,  impact_links:[] },
-]
-
-export default function AttendanceProcessingPage() {
-  const slug    = getSessionSlug()
-  const sess    = getSession()
-  const company = sess.company || {}
-
-  if (!tenantCanAccess('attendance-processing')) {
-    return <AccessDenied moduleName="Attendance Processing" />
-  }
-
-  const [records,    setRecords]    = useState(MOCK_RECORDS)
+export default function AttendanceProcessingPage(){
+  const [records,    setRecords]    = useState([])
+  const [summary,    setSummary]    = useState({})
+  const [loading,    setLoading]    = useState(true)
+  const [error,      setError]      = useState(null)
   const [search,     setSearch]     = useState('')
-  const [showExcel,  setShowExcel]  = useState(false)
-  const [msg,        setMsg]        = useState('')    // ✅ FIX: was _pm/_spm
+  const [srcFilter,  setSrcFilter]  = useState('all')
+  const [exFilter,   setExFilter]   = useState('all')
+  const [date,       setDate]       = useState(new Date().toISOString().split('T')[0])
   const [processing, setProcessing] = useState(false)
-  const [ctx,        setCtx]        = useState(null)
-  const [loading,    setLoading]    = useState(false)
+  const [selected,   setSelected]   = useState([])
+  const [msg,        setMsg]        = useState('')
 
-  const notify = m => { setMsg(m); setTimeout(() => setMsg(''), 3500) }
+  const s=_getSession(); const company=s?.company||{}
+  const toast=(m,d=3500)=>{setMsg(m);setTimeout(()=>setMsg(''),d)}
 
-  // SaaS DB: load today's attendance records
-  useEffect(() => {
-    const token = localStorage.getItem('access_token')
-    if (!token) return
-    setLoading(true)
-    fetch('/api/v1/attendance/today', {
-      headers: {'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': slug}
-    })
-      .then(r => r.ok ? r.json() : Promise.reject(r.status))
-      .then(data => { if (data.data?.length) setRecords(data.data) })
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [slug])
-
-  const filtered        = records.filter(r => !search || r.employee.toLowerCase().includes(search.toLowerCase()))
-  const exceptionCount  = records.filter(r => r.exception).length
-  const processedCount  = records.filter(r => r.processed).length
-
-  const sourceBreakdown = Object.keys(SOURCE_CFG).map(s => ({
-    source: s,
-    count : records.filter(r => r.source === s).length,
-  }))
-
-  const handleProcessAll = async () => {
-    setProcessing(true)
-    // In production: POST /api/v1/attendance/process-batch
-    await new Promise(r => setTimeout(r, 1200))
-    setRecords(prev => prev.map(r => ({...r, processed:true})))
-    notify('✅ All records processed successfully')
-    setProcessing(false)
+  function load(){
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||''
+    if(!token||!slug)return
+    fetch(`/api/v1/attendance/today?date=${date}`,{headers:_authH()})
+      .then(r=>{if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));return null};return r.ok?r.json():null})
+      .then(d=>{if(d){setRecords(d.data?.records||d.records||d.data||[]);setSummary(d.data?.summary||d.summary||{})}})
+      .catch(()=>{})
+      .finally(()=>setLoading(false))
   }
 
-  return (
-    <div style={{position:'fixed', inset:0, fontFamily:"'Segoe UI',system-ui,sans-serif",
-      background:'#f0f7ff', display:'flex', flexDirection:'column', overflow:'hidden'}}
-      onClick={() => setCtx(null)}>
+  useEffect(()=>{
+    const token=localStorage.getItem('access_token')||s?.token||''
+    const slug=s?.company?.slug||''
+    if(!token||!slug){setLoading(false);setError('Not authenticated — please log in');return}
+    setLoading(true);load()
+  },[date])
 
-      {/* Toast */}
-      {msg && <div style={{position:'fixed', bottom:20, right:20, zIndex:9999,
-        background:msg.startsWith('❌')?'#fef2f2':'#f0fdf4',
-        border:`1px solid ${msg.startsWith('❌')?'#fecaca':'#bbf7d0'}`,
-        borderRadius:10, padding:'10px 18px', fontSize:11, fontWeight:600,
-        color:msg.startsWith('❌')?'#dc2626':'#065f46',
-        boxShadow:'0 4px 16px rgba(0,0,0,.12)'}}>
-        {msg}
-      </div>}
+  const processAttendance=async()=>{
+    setProcessing(true)
+    try{
+      const body=selected.length>0?{record_ids:selected,date}:{date}
+      const r=await fetch('/api/v1/attendance/process',{method:'POST',headers:_authH(),body:JSON.stringify(body)})
+      const d=await r.json()
+      toast(r.ok?`✅ Processed ${d.data?.count||0} records`:'⚠️ Processing error — check logs')
+      if(r.ok)load()
+    }catch{toast('⚠️ Network error during processing')}
+    setProcessing(false);setSelected([])
+  }
+
+  const toggleSel=id=>setSelected(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id])
+  const selAll=()=>setSelected(filtered.map(r=>r.id))
+
+  const filtered=records.filter(r=>{
+    if(srcFilter!=='all'&&r.source!==srcFilter)return false
+    if(exFilter!=='all'){if(exFilter==='clean'&&r.exception)return false;if(exFilter!=='clean'&&r.exception!==exFilter)return false}
+    if(search&&!(r.employee||r.employee_name||'').toLowerCase().includes(search.toLowerCase())&&!(r.emp_code||'').toLowerCase().includes(search.toLowerCase()))return false
+    return true
+  })
+  const exceptions=records.filter(r=>r.exception)
+  const processed=records.filter(r=>r.processed)
+
+  if(loading&&records.length===0)return<div style={{textAlign:'center',padding:60,color:A,fontFamily:'system-ui'}}><div style={{fontSize:36,marginBottom:12}}>⟳</div><div style={{fontSize:13,fontWeight:600}}>Loading attendance records for {company?.name}...</div></div>
+
+  return(
+    <div style={{fontFamily:"'Segoe UI',system-ui,sans-serif",padding:24,background:'#f0f9ff',minHeight:'100vh'}}>
+      {msg&&<div style={{position:'fixed',bottom:20,right:20,zIndex:9999,background:'#f0f9ff',border:'1px solid #bae6fd',borderRadius:10,padding:'10px 18px',fontSize:12,color:'#0c4a6e',boxShadow:'0 4px 16px rgba(0,0,0,.12)',maxWidth:360}}>{msg}</div>}
 
       {/* Header */}
-      <div style={{background:G, padding:'12px 20px', color:'#fff', flexShrink:0}}>
-        <div style={{fontSize:10, opacity:.7, marginBottom:2}}>
-          Workforce Operations › Attendance Management › Processing
-        </div>
-        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:8}}>
+      <div style={{background:G,borderRadius:16,padding:'20px 24px',marginBottom:20,boxShadow:'0 4px 24px rgba(2,132,199,.25)'}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:12}}>
           <div>
-            <div style={{fontSize:17, fontWeight:900}}>⚙️ Attendance Processing</div>
-            <div style={{fontSize:10, opacity:.8}}>
-              {company.name || 'Company'} · {records.length} records today
-              {loading ? ' · Loading...' : ''}
+            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:8}}>
+              <span style={{fontSize:24}}>⚙️</span>
+              <div><h2 style={{fontSize:18,fontWeight:900,color:'#fff',margin:0}}>Attendance Processing</h2>
+                <div style={{fontSize:11,color:'rgba(255,255,255,.75)',marginTop:2}}>{company?.name} · Multi-source consolidation · {date}</div>
+              </div>
             </div>
-          </div>
-          <div style={{display:'flex', gap:6}}>
-            <button onClick={() => setShowExcel(true)}
-              style={{padding:'7px 14px', borderRadius:8, border:'1px solid rgba(255,255,255,.3)',
-                background:'rgba(255,255,255,.18)', color:'#fff', fontSize:11, fontWeight:700, cursor:'pointer'}}>
-              📤 Export
-            </button>
-            <button onClick={handleProcessAll} disabled={processing}
-              style={{padding:'7px 14px', borderRadius:8, border:'none',
-                background:'#fff', color:A, fontSize:11, fontWeight:700,
-                cursor:processing?'wait':'pointer', opacity:processing?.7:1}}>
-              {processing ? '⟳ Processing...' : '▶ Run Processing'}
-            </button>
-          </div>
-        </div>
-
-        <div style={{display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginTop:12}}>
-          {[
-            {icon:'📋', label:"Today's Records", v:records.length},
-            {icon:'✅', label:'Processed',        v:processedCount},
-            {icon:'⚠️', label:'Exceptions',       v:exceptionCount},
-            {icon:'🔄', label:'Capture Sources',  v:Object.keys(SOURCE_CFG).length},
-          ].map(s => (
-            <div key={s.label} style={{background:'rgba(255,255,255,.12)', borderRadius:8,
-              padding:'7px 10px', textAlign:'center', border:'1px solid rgba(255,255,255,.2)'}}>
-              <div style={{fontSize:14}}>{s.icon}</div>
-              <div style={{fontSize:16, fontWeight:900, lineHeight:1, marginTop:2}}>{s.v}</div>
-              <div style={{fontSize:9, opacity:.75, marginTop:2}}>{s.label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Info banner */}
-      <div style={{background:'#eff6ff', borderBottom:'1px solid #bfdbfe', padding:'8px 20px',
-        fontSize:11, color:'#1e40af', display:'flex', gap:8, flexShrink:0}}>
-        <span style={{fontSize:16}}>⚙️</span>
-        <div><strong>Straight-Through Processing:</strong> Raw swipes from biometric/GPS/web/QR are consolidated,
-          validated against shift schedules, and grace-period rules applied automatically.
-          Exceptions are isolated for review without blocking the batch.</div>
-      </div>
-
-      {/* Toolbar */}
-      <div style={{padding:'9px 20px', display:'flex', gap:8, alignItems:'center',
-        background:'#fff', borderBottom:'1px solid #e2e8f0', flexShrink:0, flexWrap:'wrap'}}>
-        <input value={search} onChange={e => setSearch(e.target.value)}
-          placeholder="🔍 Search by employee name..."
-          style={{padding:'7px 14px', borderRadius:8, border:'1px solid #e2e8f0',
-            fontSize:12, outline:'none', flex:1, minWidth:200, fontFamily:'inherit'}}/>
-        <span style={{fontSize:11, color:'#64748b'}}>{filtered.length}/{records.length} records</span>
-      </div>
-
-      {/* Scrollable content */}
-      <div style={{flex:1, overflowY:'auto', overflowX:'hidden', padding:'14px 20px',
-        scrollbarWidth:'thin', scrollbarColor:'#94a3b8 #f1f5f9'}}>
-
-        {/* Source breakdown */}
-        <div style={{display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10, marginBottom:14}}>
-          {sourceBreakdown.map(s => {
-            const sc = SOURCE_CFG[s.source]   // ✅ sc correctly scoped here
-            return (
-              <div key={s.source} style={{background:'#fff', border:`1.5px solid ${sc.c}33`,
-                borderRadius:12, padding:'12px', textAlign:'center'}}>
-                <div style={{fontSize:20, marginBottom:4}}>{sc.icon}</div>
-                <div style={{fontSize:18, fontWeight:900, color:sc.c}}>{s.count}</div>
-                <div style={{fontSize:9, color:'#94a3b8', fontWeight:600, textTransform:'capitalize'}}>
-                  {sc.label}
+            <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
+              {[{l:'Total',v:records.length,i:'📋'},{l:'Exceptions',v:exceptions.length,i:'⚠️'},{l:'Processed',v:processed.length,i:'✅'},{l:'Pending',v:records.length-processed.length,i:'⏳'}].map((s,i)=>(
+                <div key={i} style={{background:'rgba(255,255,255,.15)',borderRadius:10,padding:'6px 12px'}}>
+                  <span style={{fontSize:11}}>{s.i}</span><span style={{fontSize:15,fontWeight:800,color:'#fff',marginLeft:5}}>{s.v}</span>
+                  <span style={{fontSize:9,color:'rgba(255,255,255,.7)',marginLeft:3}}>{s.l}</span>
                 </div>
+              ))}
+            </div>
+          </div>
+          <div style={{display:'flex',gap:8}}>
+            <button onClick={processAttendance} disabled={processing}
+              style={{padding:'9px 18px',borderRadius:12,background:processing?'#94a3b8':'rgba(255,255,255,.2)',color:'#fff',fontSize:12,fontWeight:800,cursor:processing?'wait':'pointer', border: '1.5px solid rgba(255,255,255,.4)'}}>
+              {processing?'⟳ Processing…':'⚙️ Process'+(selected.length>0?` (${selected.length})`:'  All')}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {error&&<div style={{padding:'12px 16px',background:'#fffbeb',border:'1px solid #fde68a',borderRadius:10,fontSize:12,color:'#92400e',marginBottom:14}}>⚠️ {error}</div>}
+
+      {/* Source Ingest Status */}
+      <div style={{background:'#fff',borderRadius:14,border:'1px solid #e2e8f0',padding:'14px 18px',marginBottom:14}}>
+        <div style={{fontSize:12,fontWeight:800,color:'#0f172a',marginBottom:10}}>📡 Data Source Ingest Status</div>
+        <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
+          {Object.entries(SOURCE_CFG).map(([src,cfg])=>{
+            const cnt=records.filter(r=>r.source===src).length
+            return(
+              <div key={src} onClick={()=>setSrcFilter(srcFilter===src?'all':src)}
+                style={{flex:1,minWidth:100,background:srcFilter===src?`${cfg.c}12`:'#f8fafc',border:`1.5px solid ${srcFilter===src?cfg.c:'#e2e8f0'}`,borderRadius:10,padding:'10px 12px',cursor:'pointer',textAlign:'center',transition:'all .15s'}}>
+                <div style={{fontSize:20,marginBottom:4}}>{cfg.icon}</div>
+                <div style={{fontSize:16,fontWeight:900,color:cfg.c}}>{cnt}</div>
+                <div style={{fontSize:9,color:'#64748b',marginTop:2}}>{cfg.label}</div>
               </div>
             )
           })}
         </div>
+      </div>
 
-        {/* Records table */}
-        <div style={{background:'#fff', border:'1px solid #e2e8f0', borderRadius:14,
-          overflow:'hidden', marginBottom:14}}>
-          <div style={{overflowX:'auto', scrollbarWidth:'thin', scrollbarColor:'#94a3b8 #f1f5f9'}}>
-            <table style={{width:'100%', borderCollapse:'collapse', fontSize:11, minWidth:780}}>
-              <thead>
-                <tr style={{background:'#f8fafc'}}>
-                  {['Employee','Emp Code','Dept','Source','Login','Logout','Total Hrs','Break','Exception','Status'].map(h => (
-                    <th key={h} style={{padding:'9px 11px', textAlign:'left', fontSize:9,
-                      fontWeight:800, color:A, whiteSpace:'nowrap', borderBottom:'1px solid #e2e8f0'}}>
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
+      {/* Filters */}
+      <div style={{display:'flex',gap:8,marginBottom:14,flexWrap:'wrap',alignItems:'center'}}>
+        <input type="date" value={date} onChange={e=>setDate(e.target.value)} style={{padding:'8px 12px',borderRadius:10,border:'1.5px solid #e2e8f0',fontSize:12,outline:'none',background:'#fff'}}/>
+        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 Search employee..." style={{flex:1,minWidth:180,padding:'8px 14px',borderRadius:10,border:'1.5px solid #e2e8f0',fontSize:12,outline:'none',background:'#fff'}}/>
+        <select value={exFilter} onChange={e=>setExFilter(e.target.value)} style={{padding:'8px 12px',borderRadius:10,border:'1.5px solid #e2e8f0',fontSize:12,outline:'none',background:'#fff',appearance:'none'}}>
+          <option value="all">All Records</option>
+          <option value="clean">✅ Clean Only</option>
+          {Object.entries(EXCEPTION_CFG).map(([k,v])=><option key={k} value={k}>⚠️ {v.label}</option>)}
+        </select>
+        {selected.length>0?(
+          <button onClick={()=>setSelected([])} style={{padding:'7px 14px',borderRadius:10,border:'1px solid #e2e8f0',background:'#fff',fontSize:11,cursor:'pointer',color:'#64748b'}}>✕ Clear ({selected.length})</button>
+        ):(
+          <button onClick={selAll} style={{padding:'7px 14px',borderRadius:10,border:'1px solid #e2e8f0',background:'#fff',fontSize:11,cursor:'pointer',color:A}}>Select All</button>
+        )}
+        <button onClick={load} style={{padding:'7px 14px',borderRadius:10,border:'none',background:A,color:'#fff',fontSize:11,fontWeight:700,cursor:'pointer'}}>🔄</button>
+      </div>
+
+      {/* Empty */}
+      {records.length===0&&!loading&&(
+        <div style={{textAlign:'center',padding:60,background:'#fff',borderRadius:14,border:'2px dashed #e2e8f0',color:'#94a3b8'}}>
+          <div style={{fontSize:40,marginBottom:12}}>⚙️</div>
+          <div style={{fontSize:14,fontWeight:700,color:'#475569',marginBottom:6}}>No attendance records for {date}</div>
+          <div style={{fontSize:12}}>Records appear once employees clock in via biometric, GPS, web or QR</div>
+        </div>
+      )}
+
+      {/* Records table */}
+      {filtered.length>0&&(
+        <div style={{background:'#fff',borderRadius:14,border:'1px solid #e2e8f0',overflow:'hidden'}}>
+          <div style={{padding:'12px 16px',borderBottom:'1px solid #f1f5f9',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+            <div style={{fontSize:13,fontWeight:700,color:'#0f172a'}}>⚙️ {filtered.length} attendance records</div>
+            {exceptions.length>0&&<div style={{fontSize:11,color:'#ef4444',fontWeight:600}}>⚠️ {exceptions.length} exceptions need attention</div>}
+          </div>
+          <div style={{overflowX:'auto'}}>
+            <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
+              <thead><tr style={{background:'#f8fafc'}}>
+                <th style={{padding:'10px 12px',textAlign:'center',width:40}}><input type="checkbox" onChange={e=>e.target.checked?selAll():setSelected([])} checked={selected.length===filtered.length&&filtered.length>0} style={{accentColor:A}}/></th>
+                {['Employee','Dept','Check-In','Check-Out','Hours','Source','Exception','Status'].map(h=>(
+                  <th key={h} style={{padding:'10px 12px',textAlign:'left',fontSize:10,fontWeight:700,color:'#64748b',whiteSpace:'nowrap'}}>{h}</th>
+                ))}
+              </tr></thead>
               <tbody>
-                {filtered.map((r, i) => {
-                  const sc = SOURCE_CFG[r.source] || {c:'#94a3b8', icon:'?', label:'Unknown'}  // ✅ FIX: sc defined here in row scope
-                  const ec = r.exception ? EXCEPTION_CFG[r.exception] : null
-                  return (
-                    <tr key={r.id}
-                      style={{borderBottom:'1px solid #f8fafc', background:i%2===0?'#fff':'#fafafa'}}
-                      onMouseEnter={e => e.currentTarget.style.background='#f0f9ff'}
-                      onMouseLeave={e => e.currentTarget.style.background=i%2===0?'#fff':'#fafafa'}
-                      onContextMenu={ev => { ev.preventDefault(); setCtx({x:ev.clientX, y:ev.clientY,
-                        item:{name:r.employee,...r}}) }}>
-                      <td style={{padding:'9px 11px', fontWeight:700, color:'#0f172a'}}>{r.employee}</td>
-                      <td style={{padding:'9px 11px', color:'#94a3b8', fontSize:10}}>{r.emp_code}</td>
-                      <td style={{padding:'9px 11px', color:'#64748b', fontSize:10}}>{r.dept}</td>
-                      <td style={{padding:'9px 11px'}}>
-                        {/* ✅ FIX: was {sc.icon} in original without sc being defined */}
-                        <span style={{background:`${sc.c}15`, color:sc.c, fontSize:10,
-                          padding:'2px 8px', borderRadius:20, fontWeight:700}}>
-                          {sc.icon} {sc.label}
-                        </span>
+                {filtered.map((r,i)=>{
+                  const src=SOURCE_CFG[r.source]||SOURCE_CFG.manual
+                  const exc=r.exception?EXCEPTION_CFG[r.exception]:null
+                  const name=r.employee||r.employee_name||'—'
+                  return(
+                    <tr key={r.id||i} style={{borderBottom:'1px solid #f8fafc',background:r.exception?'#fffbeb':i%2?'#fafafa':'#fff'}}
+                      onMouseEnter={e=>e.currentTarget.style.background='#f0f9ff'}
+                      onMouseLeave={e=>e.currentTarget.style.background=r.exception?'#fffbeb':i%2?'#fafafa':'#fff'}>
+                      <td style={{padding:'10px 12px',textAlign:'center'}}>
+                        {!r.processed&&<input type="checkbox" checked={selected.includes(r.id)} onChange={()=>toggleSel(r.id)} style={{accentColor:A}}/>}
                       </td>
-                      <td style={{padding:'9px 11px', color:'#10b981', fontWeight:600}}>{r.login}</td>
-                      <td style={{padding:'9px 11px', color:r.logout?'#ef4444':'#94a3b8', fontWeight:600}}>
-                        {r.logout || '—'}
+                      <td style={{padding:'10px 12px'}}>
+                        <div style={{fontWeight:700,color:'#0f172a'}}>{name}</div>
+                        <div style={{fontSize:9,color:'#94a3b8'}}>{r.emp_code}</div>
                       </td>
-                      <td style={{padding:'9px 11px', fontWeight:800, color:A}}>
-                        {r.total_hrs ? `${r.total_hrs}h` : '—'}
+                      <td style={{padding:'10px 12px',fontSize:11,color:'#64748b'}}>{r.dept||r.department||'—'}</td>
+                      <td style={{padding:'10px 12px',fontFamily:'monospace',fontWeight:700,color:A}}>{r.check_in||r.login||'—'}</td>
+                      <td style={{padding:'10px 12px',fontFamily:'monospace',color:'#64748b'}}>{r.check_out||r.logout||'—'}</td>
+                      <td style={{padding:'10px 12px',fontWeight:700,color:'#0f172a'}}>{r.total_hours||r.hours||'—'}</td>
+                      <td style={{padding:'10px 12px'}}>
+                        <span style={{padding:'2px 8px',borderRadius:20,fontSize:9,fontWeight:700,background:`${src.c}12`,color:src.c}}>{src.icon} {src.label}</span>
                       </td>
-                      <td style={{padding:'9px 11px', color:'#64748b'}}>{r.break_min}min</td>
-                      <td style={{padding:'9px 11px'}}>
-                        {ec && <span style={{background:`${ec.c}15`, color:ec.c, fontSize:9,
-                          fontWeight:700, padding:'2px 8px', borderRadius:20}}>{ec.label}</span>}
+                      <td style={{padding:'10px 12px'}}>
+                        {exc?<span style={{padding:'2px 8px',borderRadius:20,fontSize:9,fontWeight:700,background:`${exc.c}15`,color:exc.c}}>⚠️ {exc.label}</span>:<span style={{fontSize:9,color:'#10b981'}}>✅ Clean</span>}
                       </td>
-                      <td style={{padding:'9px 11px'}}>
-                        <span style={{fontSize:9, fontWeight:700, padding:'2px 8px', borderRadius:20,
-                          background:r.processed?'#f0fdf4':'#fffbeb',
-                          color:r.processed?'#15803d':'#b45309'}}>
-                          {r.processed ? '✓ Processed' : '⏳ Held for Review'}
+                      <td style={{padding:'10px 12px'}}>
+                        <span style={{fontSize:9,fontWeight:700,color:r.processed?'#10b981':'#f59e0b'}}>
+                          {r.processed?'✅ Done':'⏳ Pending'}
                         </span>
                       </td>
                     </tr>
@@ -253,40 +219,16 @@ export default function AttendanceProcessingPage() {
               </tbody>
             </table>
           </div>
+          <div style={{padding:'10px 16px',fontSize:11,color:'#94a3b8',borderTop:'1px solid #f1f5f9'}}>
+            {filtered.length} of {records.length} records · {selected.length} selected · {date}
+          </div>
         </div>
+      )}
 
-        {/* Rules Engine */}
-        <div style={{background:'#fff', border:'1px solid #e2e8f0', borderRadius:14, padding:'16px 18px'}}>
-          <div style={{fontSize:12, fontWeight:800, color:'#0f172a', marginBottom:12}}>
-            🛠 Rules Engine Configuration
-          </div>
-          <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:14}}>
-            <Field label="Grace Period (minutes)" type="number" value="10" onChange={() => {}} accent={A}/>
-            <Field label="Rounding Rule" type="select" value="" onChange={() => {}} accent={A}
-              options={['Nearest 15 min','Nearest 30 min','No rounding']}/>
-            <Field label="Mandatory Break Deduction" type="select" value="" onChange={() => {}} accent={A}
-              options={['30 min after 5hrs','Custom']}/>
-          </div>
-          <div style={{marginTop:14, padding:'10px 14px', background:'#eff6ff',
-            borderRadius:8, fontSize:11, color:'#1e40af'}}>
-            💡 Exceptions auto-isolated, never block the rest of the daily batch.
-            Missed checkouts route to Missed Punch Request workflow automatically.
-          </div>
-        </div>
+      {/* LA 2074 banner */}
+      <div style={{marginTop:14,background:'#f0f9ff',border:'1px solid #bae6fd',borderRadius:12,padding:'10px 16px',fontSize:11,color:'#0369a1'}}>
+        ⚖️ <strong>Nepal Labour Act 2074:</strong> Processing consolidates biometric, GPS, QR and web punch data. Exceptions (late arrivals &gt;15min grace, missed checkouts, unauthorized OT) are flagged for approval before payroll lock.
       </div>
-
-      {ctx && <ContextMenu x={ctx.x} y={ctx.y} item={ctx.item} impactLinks={ctx.item?.impact_links}
-        actions={[
-          {icon:'👁', label:'View Raw Log',      key:'view'},
-          {icon:'✏', label:'Manual Override',    key:'edit'},
-          {icon:'🔗', label:'Impact Analysis',   key:'impact'},
-          {icon:'📤', label:'Export',            key:'export'},
-        ]} onAction={() => {}} onClose={() => setCtx(null)}/>}
-
-      {showExcel && <ExcelModal title="Attendance Processing"
-        columns={['Employee','Emp Code','Dept','Source','Login','Logout','Total Hours','Break Min','Exception','Processed']}
-        onClose={() => setShowExcel(false)}
-        onImport={(f, result) => { console.log('[eLogix Import]', f.name, result) }}/>}
     </div>
   )
 }

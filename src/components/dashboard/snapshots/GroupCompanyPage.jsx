@@ -3,6 +3,17 @@
 
 import React, { useState, useRef, useCallback, useEffect } from 'react'
 
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch { return {} }
+}
+function _authH() {
+  const s = _getSession()
+  const token = localStorage.getItem('access_token') || s?.token || ''
+  const slug  = s?.company?.slug || ''
+  return { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': slug, 'Content-Type': 'application/json' }
+}
+
+
 // -- Shared luxury UI atoms ------------------------------------
 const THEME = {
   gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -26,8 +37,7 @@ function useTenantCompany() {
     const load = async () => {
       // 1. Try real API
       try {
-        const token = localStorage.getItem('elogix_token') ||
-          JSON.parse(localStorage.getItem('elogix_auth')||'{}').token
+        const token = localStorage.getItem('access_token') || _getSession()?.token || ''
         if (token) {
           const res = await fetch('/api/v1/companies/me', {
             headers: { Authorization: `Bearer ${token}` }
@@ -42,23 +52,21 @@ function useTenantCompany() {
       } catch {}
       // 2. Fallback: localStorage auth
       try {
-        const auth = JSON.parse(localStorage.getItem('elogix_auth')||'{}')
-        const regCos = JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}')
-        const co = auth.company || {}
-        const slug = co.slug || auth.user?.company || 'demo'
-        const regData = regCos[slug] || {}
+        const s = _getSession()
+        const co = s?.company || {}
+        const slug = co.slug || ''
         setCompany({
           id:            co.id || `c_${slug}`,
-          name:          co.name || regData.name || 'Your Company',
+          name:          co.name || 'Your Company',
           slug,
-          plan:          co.plan || regData.plan || 'trial',
+          plan:          co.plan || 'trial',
           status:        co.status || 'active',
-          business_type: co.business_type || regData.business_type || 'custom',
-          country:       co.country || regData.country || 'Nepal',
-          currency:      co.currency || regData.currency || 'NPR',
-          admin_email:   co.admin_email || regData.admin_email || auth.user?.email || '',
-          modules:       co.modules || regData.modules || [],
-          created_at:    co.created_at || regData.created_at || '',
+          business_type: co.business_type || 'custom',
+          country:       co.country || 'Nepal',
+          currency:      co.currency || 'NPR',
+          admin_email:   co.admin_email || s?.user?.email || '',
+          modules:       co.modules || [],
+          created_at:    co.created_at || '',
           // Profile fields (empty until filled in setup)
           legal_name: '', short_name: '', pan_number: '', vat_number: '',
           ocr_number: '', ssf_code: '', industry: regData.business_type?.replace(/_/g,' ') || '',
@@ -74,15 +82,15 @@ function useTenantCompany() {
   const saveTenantCompany = async (updates) => {
     // Merge updates into localStorage
     try {
-      const auth = JSON.parse(localStorage.getItem('elogix_auth')||'{}')
-      auth.company = { ...(auth.company||{}), ...updates }
-      localStorage.setItem('elogix_auth', JSON.stringify(auth))
+      const sess2 = _getSession()
+      sess2.company = { ...(sess2.company||{}), ...updates }
+      sessionStorage.setItem('elogix_session', JSON.stringify(sess2))
+      localStorage.setItem('elogix_session', JSON.stringify(sess2))
       setCompany(p => ({...p, ...updates}))
     } catch {}
     // Try API
     try {
-      const token = localStorage.getItem('elogix_token') ||
-        JSON.parse(localStorage.getItem('elogix_auth')||'{}').token
+      const token = localStorage.getItem('access_token') || _getSession()?.token || ''
       if (token) {
         await fetch('/api/v1/companies/me', {
           method: 'PATCH',
@@ -490,7 +498,20 @@ function AddGroupModal({ onClose, onSave }) {
 
 // -- Main Page -------------------------------------------------
 export default function GroupCompanyPage() {
-  const [groups,      setGroups]      = useState(MOCK_GROUPS)
+
+  const _s = _getSession()
+  const _company = _s?.company || {}
+
+  React.useEffect(() => {
+    const token = localStorage.getItem('access_token') || _s?.token || ''
+    const slug  = _s?.company?.slug || ''
+    if (!token || !slug) return
+    fetch('/api/v1/companies/group', { headers: _authH() })
+      .then(r => { if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));return null}; return r.ok ? r.json() : null })
+      .then(d => d && setGroups(d.data?.groups || d.groups || d.data || []))
+      .catch(() => {})
+  }, [])
+  const [groups,      setGroups]      = useState([])
   const [contextMenu, setContextMenu] = useState(null)
   const [showAdd,     setShowAdd]     = useState(false)
   const [showExcel,   setShowExcel]   = useState(false)

@@ -1,10 +1,15 @@
 // FILE: LeaveBalanceReportPage.jsx
 // eLogix HRMS — Leave Balance Report
-// Columns from Excel: No·SrNo·EmpCode·MemberName·Designation·Dept·DaysAttended
-//   Leaves in Month (CL/EL/SL/HD/A) · Balance (CL/EL/SL) · Consumed (CL/EL/SL)
-//   Carry Forward (EL/SL) · Applicable (CL/EL/SL) · Remarks
-// Color-coded per leave type · Digital signatures
-import { useState, useRef } from 'react'
+// COMPLETE REWRITE — Zero mock data. Real tenant API.
+// Removes genLBRow() (33 fake records), FIRST/LAST/DESIG/rand arrays, brace=2 syntax error.
+// API: GET /api/v1/leave/balance-report?month=YYYY-MM
+// eLogix Technologies · www.elogix.com.np
+
+import { useState, useRef, useEffect } from 'react'
+
+
+function _getSession(){try{return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{}}catch{return{}}}
+function _authH(){const s=_getSession();const token=localStorage.getItem('access_token')||s?.token||'';const slug=s?.company?.slug||'';return{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}}
 
 const LEAVE_COLORS = {
   CL: { bg:'#e0f2fe', c:'#075985', border:'#7dd3fc', label:'Casual Leave'   },
@@ -16,35 +21,7 @@ const LEAVE_COLORS = {
   PL: { bg:'#e3f2fd', c:'#1565c0', border:'#90caf9', label:'Paternity'     },
   HD: { bg:'#fff7ed', c:'#9a3412', border:'#fdba74', label:'Half Day'      },
   A:  { bg:'#fef2f2', c:'#dc2626', border:'#fca5a5', label:'Absent'        },
-
-const DEPTS   = ['All Departments','Nursing','Administration','Finance','IT','HR','Operations','Medical']
-const FIRST   = ['Ram','Shyam','Hari','Sita','Gita','Maya','Binod','Sunil','Priya','Anil','Bikash','Sunita','Rajesh','Puja','Deepak','Anita','Sanjay','Rupa','Nabin','Sabita']
-const LAST    = ['Thapa','Shrestha','Maharjan','Tamang','Gurung','Rai','Limbu','Karki','Basnet','Adhikari','KC','Bhattarai','Sharma','Poudel']
-const DESIG   = ['Staff Nurse','Head Nurse','Admin Officer','HR Officer','Finance Officer','Manager','Officer','Supervisor']
-const rand    = a=>a[Math.floor(Math.random()*a.length)]
-
-function genLBRow(i) {
-  const daysAtt = 15+Math.floor(Math.random()*8)
-  const cl_m=Math.floor(Math.random()*3), el_m=Math.floor(Math.random()*5), sl_m=Math.floor(Math.random()*2)
-  const hd_m=Math.floor(Math.random()*2), ab_m=Math.floor(Math.random()*2)
-  const cl_b=7-cl_m, el_b=parseFloat((14+Math.random()*2-el_m).toFixed(2)), sl_b=8-sl_m
-  const el_cf=parseFloat((Math.random()*5).toFixed(2))
-  const cl_ap=7, el_ap=parseFloat((14+el_cf).toFixed(2)), sl_ap=8
-  return {
-    no:i+1,srNo:i+1,empCode:`EMP-${String(i+1).padStart(4,'0')}`,
-    name:`${rand(FIRST)} ${rand(LAST)}`,desig:rand(DESIG),dept:rand(DEPTS.slice(1)),
-    daysAtt,
-    // Leaves in month
-    cl_m,el_m,sl_m,hd_m,ab_m,
-    // Balance
-    cl_b,el_b,sl_b,
-    // Consumed
-    cl_c:cl_m,el_c:el_m,sl_c:sl_m,
-    // Carry forward
-    el_cf,sl_cf:parseFloat((Math.random()*2).toFixed(2)),
-    // Applicable
-    cl_ap,el_ap,sl_ap,
-const ALL_LB = Array.from({length:33},(_,i)=>genLBRow(i))
+}
 
 const G  = 'linear-gradient(135deg,#14532d 0%,#15803d 55%,#86efac 100%)'
 const A  = '#15803d'
@@ -73,11 +50,32 @@ const LV = ({val,type}) => {
   )
 
 }
-}
-}
-}
+
 
 export default function LeaveBalanceReportPage() {
+
+  const _s = _getSession(); const company = _s?.company || {}
+  const [rows,    setRows]    = useState([])
+  const [depts,   setDepts]   = useState(['All Departments'])
+  const [apiLoad, setApiLoad] = useState(true)
+  const [apiErr,  setApiErr]  = useState(null)
+
+  useEffect(() => {
+    const token = localStorage.getItem('access_token') || _s?.token || ''
+    const slug  = _s?.company?.slug || ''
+    if(!token||!slug){setApiLoad(false);return}
+    setApiLoad(true)
+    fetch(`/api/v1/leave/balance-report?month=${month}`, {headers:_authH()})
+      .then(r=>{if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));throw new Error('Session expired')};return r.ok?r.json():Promise.reject(r.status)})
+      .then(d=>{
+        const data=d.data||d||[]
+        setRows(data)
+        const uniq=['All Departments',...new Set(data.map(r=>r.dept).filter(Boolean))]
+        setDepts(uniq)
+      })
+      .catch(e=>setApiErr(String(e)))
+      .finally(()=>setApiLoad(false))
+  },[month])
   const [dept,setDept]   = useState('All Departments')
   const [month,setMonth] = useState(today.slice(0,7))
   const [search,setSearch]=useState('')
@@ -94,7 +92,7 @@ export default function LeaveBalanceReportPage() {
     const s=sigs[k2];if(!s.name||!s.designation){notify('⚠️ Fill name & designation');return}
     setSigs(p=>({...p,[k2]:{...p[k2],signed:true,date:today}}));notify(`✅ ${k2} signed`)
 
-  const filtered = ALL_LB.filter(r=>{
+  const filtered = rows.filter(r=>{
     if(dept!=='All Departments'&&r.dept!==dept) return false
     if(search&&!r.name.toLowerCase().includes(search.toLowerCase())&&!r.empCode.includes(search)) return false
     return true
@@ -119,6 +117,11 @@ export default function LeaveBalanceReportPage() {
 
   return (
     <div style={{fontFamily:'system-ui,sans-serif',height:'100vh',display:'flex',flexDirection:'column',background:'#f0fdf4'}}>
+      {apiLoad&&<div style={{position:'fixed',inset:0,zIndex:9990,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(255,255,255,.85)'}}>
+        <div style={{textAlign:'center',color:'#15803d'}}><div style={{fontSize:30,marginBottom:8}}>⟳</div><div style={{fontSize:12,fontWeight:600}}>Loading for {company?.name}...</div></div>
+      </div>}
+      {apiErr&&<div style={{padding:'10px 16px',background:'#fef2f2',border:'1px solid #fecaca',borderRadius:10,fontSize:12,color:'#dc2626',margin:'8px 16px'}}>⚠️ {apiErr}</div>}
+      {!apiLoad&&rows.length===0&&<div style={{textAlign:'center',padding:40,color:'#94a3b8',fontSize:12}}>No leave report data yet for {company?.name}. Data appears once leave records exist.</div>}
       {msg&&<div style={{position:'fixed',bottom:20,right:20,zIndex:9999,background:'#f0fdf4',
         border:'1px solid #bbf7d0',borderRadius:10,padding:'10px 18px',fontSize:11,color:'#065f46',
         boxShadow:'0 4px 16px rgba(0,0,0,.12)',maxWidth:400}}>{msg}</div>}
@@ -170,7 +173,7 @@ export default function LeaveBalanceReportPage() {
         <div style={{flex:'1 1 150px'}}>
           <label style={{fontSize:8,fontWeight:700,color:'#374151',display:'block',marginBottom:2}}>Department</label>
           <select value={dept} onChange={e=>setDept(e.target.value)} style={{...inp,width:'100%'}}>
-            {DEPTS.map(d=><option key={d}>{d}</option>)}
+            {depts.map(d=><option key={d}>{d}</option>)}
           </select>
         </div>
         <div style={{flex:'2 1 180px'}}>
@@ -380,4 +383,5 @@ export default function LeaveBalanceReportPage() {
     </div>
   )
 
+}}
 }

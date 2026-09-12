@@ -1,5 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { tenantCanAccess } from '../../../utils/tenantPermissions.js'
+
+function _getSession(){try{return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{}}catch{return{}}}
+function _authH(){const s=_getSession();const token=localStorage.getItem('access_token')||s?.token||'';const slug=s?.company?.slug||'';return{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}}
+
 // FILE: src/components/dashboard/snapshots/LeaveBalancePage.jsx
 // eLogix HRMS — Leave Balance Report
 // FIXED: Missing key prop on React.Fragment in map (line 211 & 237)
@@ -7,57 +10,23 @@ import { tenantCanAccess } from '../../../utils/tenantPermissions.js'
 // eLogix Technologies · www.elogix.com.np
 
 // react imported above
-import { resolveTenantAccess, getSessionSlug } from '../../../utils/tenantPermissions.js'
-import AccessDenied from '../../shared/AccessDenied.jsx'
 
 const G = 'linear-gradient(135deg,#4c1d95 0%,#7c3aed 60%,#a78bfa 100%)'
 const A = '#7c3aed'
 
-function getSession() {
-  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} }
-  catch(_e){ return {} }
-}
 
 const LEAVE_TYPES = {
-  CL : { label:'Casual Leave',    bg:'#fff7ed', text:'#9a3412', border:'#fed7aa', dot:'#f97316', total:12 },
-  EL : { label:'Earned Leave',    bg:'#ecfdf5', text:'#065f46', border:'#6ee7b7', dot:'#10b981', total:18 },
-  SL : { label:'Sick Leave',      bg:'#eff6ff', text:'#1e40af', border:'#bfdbfe', dot:'#3b82f6', total:12 },
-  ML : { label:'Maternity Leave', bg:'#fdf4ff', text:'#6b21a8', border:'#e9d5ff', dot:'#a855f7', total:98 },
-  PL : { label:'Paternity Leave', bg:'#f0f9ff', text:'#075985', border:'#7dd3fc', dot:'#0ea5e9', total:15 },
-  BL : { label:'Bereavement',     bg:'#f1f5f9', text:'#334155', border:'#cbd5e1', dot:'#64748b', total:13 },
-  CWL: { label:'Child Welfare',   bg:'#fefce8', text:'#713f12', border:'#fef08a', dot:'#eab308', total:10 },
-  HD : { label:'Half Day',        bg:'#fff1f2', text:'#9f1239', border:'#fda4af', dot:'#f43f5e', total:6  },
+  CL : { label:'Casual Leave',    bg:'#fff7ed', text:'#9a3412', border:'#fed7aa', dot:'#f97316' },
+  EL : { label:'Earned Leave',    bg:'#ecfdf5', text:'#065f46', border:'#6ee7b7', dot:'#10b981' },
+  SL : { label:'Sick Leave',      bg:'#eff6ff', text:'#1e40af', border:'#bfdbfe', dot:'#3b82f6' },
+  ML : { label:'Maternity Leave', bg:'#fdf4ff', text:'#6b21a8', border:'#e9d5ff', dot:'#a855f7' },
+  PL : { label:'Paternity Leave', bg:'#f0f9ff', text:'#075985', border:'#7dd3fc', dot:'#0ea5e9' },
+  BL : { label:'Bereavement',     bg:'#f1f5f9', text:'#334155', border:'#cbd5e1', dot:'#64748b' },
+  CWL: { label:'Child Welfare',   bg:'#fefce8', text:'#713f12', border:'#fef08a', dot:'#eab308' },
+  HD : { label:'Half Day',        bg:'#fff1f2', text:'#9f1239', border:'#fda4af', dot:'#f43f5e'  },
 }
-const DEPTS = ['All','Management','Human Resources','Finance','IT','Sales','Operations','Procurement']
+const depts = ['All'] // populated from API
 
-function genRows(companySlug) {
-  const names = [
-    ['Ram Thapa',       'Senior Officer',    'Management'],
-    ['Sita Shrestha',   'HR Manager',        'Human Resources'],
-    ['Hari Maharjan',   'Finance Officer',   'Finance'],
-    ['Gita Tamang',     'IT Lead',           'IT'],
-    ['Maya Gurung',     'Recruiter',         'Human Resources'],
-    ['Binod Rai',       'Sales Executive',   'Sales'],
-    ['Sunita KC',       'Procurement',       'Procurement'],
-    ['Rajesh Sharma',   'Operations Head',   'Operations'],
-    ['Puja Karki',      'Department Head',   'Management'],
-    ['Deepak Joshi',    'HR Officer',        'Human Resources'],
-    ['Anita Basnet',    'Supervisor',        'Operations'],
-    ['Sanjay Bhattarai','Team Lead',         'Sales'],
-  ]
-  return names.map(([name, desig, dept], idx) => ({
-    sn    : idx + 1,
-    empId : `${(companySlug||'EMP').toUpperCase().slice(0,3)}-${String(idx+1).padStart(4,'0')}`,
-    name, desig, dept,
-    daysAttended: 18 + Math.floor(Math.random() * 4),
-    balances: Object.fromEntries(Object.entries(LEAVE_TYPES).map(([code, lt]) => {
-      const used  = Math.floor(Math.random() * (lt.total / 3))
-      const carry = Math.floor(Math.random() * 5)
-      const avail = lt.total + carry - used
-      return [code, { used, carry, avail, total: lt.total }]
-    })),
-  }))
-}
 
 const inp = {
   padding:'7px 10px', borderRadius:8, border:'1.5px solid #e2e8f0',
@@ -79,7 +48,7 @@ const LeaveCell = ({ code, value, type }) => {
 }
 
 export default function LeaveBalancePage() {
-  const slug    = getSessionSlug()
+  const slug    = (_getSession()?.company?.slug||'')
   const sess    = getSession()
   const company = sess.company || {}
 
@@ -91,6 +60,7 @@ export default function LeaveBalancePage() {
   const [month,   setMonth]   = useState(today.getMonth() + 1)
   const [year,    setYear]    = useState(today.getFullYear())
   const [dept,    setDept]    = useState('All')
+  const [depts,   setDepts]   = useState(['All'])
   const [showSig, setShowSig] = useState(false)
   const [msg,     setMsg]     = useState('')
   const [loading, setLoading] = useState(false)
@@ -102,7 +72,7 @@ export default function LeaveBalancePage() {
   const fileRef = useRef(null)
   const notify  = m => { setMsg(m); setTimeout(() => setMsg(''), 3500) }
 
-  const [rows, setRows] = useState(() => genRows(company.slug || slug))
+  const [rows, setRows] = useState([])
 
   // SaaS DB: load leave balances for this tenant
   useEffect(() => {
@@ -113,8 +83,13 @@ export default function LeaveBalancePage() {
       headers: { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': slug }
     })
       .then(r => r.ok ? r.json() : Promise.reject(r.status))
-      .then(data => { if (data.data?.length) setRows(data.data) })
-      .catch(() => {}) // keep mock
+      .then(data => {
+        const d = data.data||data||[]
+        if(d.length) setRows(d)
+        const uniq = ['All',...new Set(d.map(r=>r.dept).filter(Boolean))]
+        setDepts(uniq)
+      })
+      .catch(e => setRows([]))
       .finally(() => setLoading(false))
   }, [slug, month, year])
 
@@ -254,7 +229,7 @@ export default function LeaveBalancePage() {
           <div style={{flex:'2 1 140px'}}>
             <div style={{fontSize:8,opacity:.7,marginBottom:3}}>Department</div>
             <select value={dept} onChange={e => setDept(e.target.value)} style={{...inp,padding:'5px 8px'}}>
-              {DEPTS.map(d => <option key={d}>{d}</option>)}
+              {depts.map(d => <option key={d}>{d}</option>)}
             </select>
           </div>
           <div style={{alignSelf:'flex-end',paddingBottom:2}}>

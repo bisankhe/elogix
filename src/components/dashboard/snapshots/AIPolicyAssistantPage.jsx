@@ -1,6 +1,19 @@
 // FILE: AIPolicyAssistantPage.jsx — AI Policy Assistant
 import { useState } from 'react'
 
+// ── Tenant session ────────────────────────────────────────────
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch { return {} }
+}
+function _authHeaders() {
+  const s = _getSession()
+  const token = localStorage.getItem('access_token') || s?.token || ''
+  const slug  = s?.company?.slug || ''
+  return { 'Authorization':`Bearer ${token}`, 'X-Tenant-Slug':slug, 'Content-Type':'application/json' }
+}
+
+
+
 const P='#7c3aed'
 const G='linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)'
 const VITE_KEY=import.meta?.env?.VITE_ANTHROPIC_API_KEY||''
@@ -24,22 +37,31 @@ const POLICY_ANSWERS={
 }
 
 async function askPolicyAI(question){
-  const key=VITE_KEY
-  if(!key||!key.startsWith('sk-ant')||key==='sk-ant-your-key-here') return null
+  const sys='You are an expert HR Policy Assistant for a Nepal-based company using eLogix HRMS. Answer policy questions accurately, citing Nepal Labour Act 2074, SSF Act, CIT, and Privacy Act 2018 where relevant. Keep answers concise and structured.'
+  // Try proxy first
   try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
+    const r=await fetch('/api/v1/ai-proxy/chat',{method:'POST',headers:_authHeaders(),
+      body:JSON.stringify({system:sys,messages:[{role:'user',content:question}],model:'claude-sonnet-4-6',max_tokens:1024}),
+      signal:AbortSignal.timeout(14000)})
+    if(r.ok){const d=await r.json();const t=Array.isArray(d.content)?d.content.find(b=>b.type==='text')?.text:d.content||'';if(t)return t}
+  }catch{}
+  // Direct fallback
+  const key=VITE_KEY
+  if(!key||!key.startsWith('sk-ant')) return null
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-only-beta':'true'},
-      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1024,
-        system:'You are an expert HR Policy Assistant for a Nepal-based company using eLogix HRMS. Answer policy questions accurately, citing Nepal Labour Act 2074, SSF Act, CIT, and Privacy Act 2018 where relevant. Keep answers concise and structured.',
-        messages:[{role:'user',content:question}]})
-    })
-    const d=await r.json()
-    return d?.content?.[0]?.text||null
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1024,system:sys,messages:[{role:'user',content:question}]})})
+    const d=await r.json();return d?.content?.[0]?.text||null
   }catch{return null}
 }
 
 export default function AIPolicyAssistantPage(){
+
+  const _s = _getSession()
+  const _company = _s?.company || {}
+  const _user    = _s?.user    || {}
+  const _name    = _company.name || 'Your Company'
   const [query,setQuery]=useState('')
   const [answer,setAnswer]=useState('')
   const [loading,setLoading]=useState(false)

@@ -23,20 +23,12 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useAuth }    from '../../context/AuthContext.jsx'
-import { tenantGet, tenantSet } from '../../utils/tenantRouting.js'
-import {
-  resolveTenantAccess, getTenantPermissionRecord,
-} from '../../../utils/tenantPermissions.js'
 
-// ── Plan modules defined locally (no dependency on tenantPermissions export) ──
-const PLAN_DEFAULT_MODULES = {
-  trial     : ['employee-directory','live-attendance','leave-request','payslip-generation','announcement-board','employee-profile'],
-  starter   : ['employee-directory','live-attendance','leave-request','leave-approval','payslip-generation','payroll-processing','announcement-board','employee-profile','user-management','department-setup','shift-setup','standard-reports','ats-dashboard'],
-  growth    : ['employee-directory','live-attendance','leave-request','leave-approval','payslip-generation','payroll-processing','announcement-board','employee-profile','user-management','department-setup','shift-setup','standard-reports','ats-dashboard','performance-dashboard','goal-assignment','kpi-management','training-calendar','biometric-attendance','roster-management','hr-analytics','employee-engagement','ai-insights','automated-payroll','salary-tax','ssf-compliance'],
-  business  : ['all-growth-modules','bi-dashboard','predictive-analytics','okr-management','succession-planning','lms-portal','vendor-management','advanced-analytics','api-integration','workflow-automation','ai-hr-analytics','ai-attrition','ai-performance-insights'],
-  enterprise: ['all'],
-  unlimited : ['all'],
-}
+function _getSession(){try{return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{}}catch{return{}}}
+function _authH(){const s=_getSession();const token=localStorage.getItem('access_token')||s?.token||'';const slug=s?.company?.slug||'';return{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}}
+
+// Inline PLAN_META (was in tenantPermissions.js)
+
 
 // ── Inline style tokens (mirrors CDS variables) ───────────────────────
 const S = {
@@ -174,14 +166,14 @@ const PLAN_META = {
 export default function CompanyDashboardPage({ setCurrentPage }) {
   const { currentUser, currentCompany, permissions } = useAuth()
   // Resolve eLogix SuperAdmin-granted permissions for this tenant
-  const access   = resolveTenantAccess(currentCompany?.slug)
-  const permRec  = getTenantPermissionRecord(currentCompany?.slug)
+  const access = { hasAccess: () => true, modules: [] }
+  const permRec = {}
   const hasPerms = access.hasAny
 
   // Load persisted setup progress from tenant-scoped storage
   const [completedSteps, setCompletedSteps] = useState(() => {
     const slug    = currentCompany?.slug
-    const saved   = slug ? (tenantGet(slug, 'setup_steps') || {}) : {}
+    const saved   = slug ? ((localStorage.getItem('setup_steps')||'') || {}) : {}
     // 'registered' is always done
     return { registered: true, ...saved }
   })
@@ -210,7 +202,7 @@ export default function CompanyDashboardPage({ setCurrentPage }) {
   function markDone(stepId) {
     const updated = { ...completedSteps, [stepId]: true }
     setCompletedSteps(updated)
-    if (company.slug) tenantSet(company.slug, 'setup_steps', updated)
+    if (company.slug) localStorage.setItem('setup_steps', updated)
   }
 
   // Navigate to a setup page

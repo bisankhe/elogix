@@ -17,7 +17,7 @@ const STATUS_C = {
   churned:   { c:'#6b7280', bg:'#f9fafb', b:'#e5e7eb', icon:'💀' },
 }
 
-const ADMIN_KEY = localStorage.getItem('elogix_admin_key') || ''
+// ADMIN_KEY is read inside adminFetch() at call time
 
 async function adminFetch(path, opts={}) {
   const res = await fetch(`${API}${path}`, {

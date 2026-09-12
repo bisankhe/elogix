@@ -1,14 +1,14 @@
+import { useEffect, useState } from 'react'
+
+function _getSession(){try{return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{}}catch{return{}}}
+function _authH(){const s=_getSession();const token=localStorage.getItem('access_token')||s?.token||'';const slug=s?.company?.slug||'';return{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}}
+function _adminH(){return{'Content-Type':'application/json','X-eLogix-Admin-Key':localStorage.getItem('elogix_admin_key')||'','Authorization':`Bearer ${localStorage.getItem('elogix_admin_token')||''}`}}
 // FILE: src/components/dashboard/snapshots/TenantModulePermissionPage.jsx
 // eLogix HRMS — SuperAdmin: Tenant Module & Permission Control
 // SuperAdmin controls which modules/features each tenant company can access
 // Business Types: Recruitment Agency, Bank, Hospital, NGO, IT Company, etc.
 // eLogix Technologies · www.elogix.com.np
-import { useState, useEffect } from 'react'
-import {
-  saveTenantModules, getTenantModules, getTenantPermissionRecord,
-  computeDefaultModules, provisionTenantPermissions,
-  PLAN_DEFAULT_MODULES, BUSINESS_TYPE_EXTRA_MODULES,
-} from '../../../utils/tenantPermissions.js'
+
 
 const A = '#7c3aed'
 const G = 'linear-gradient(135deg,#1e1b4b,#7c3aed,#a78bfa)'
@@ -191,59 +191,46 @@ const BUSINESS_TYPES = [
 
 // ── DEMO TENANTS ──────────────────────────────────────────────
 // ── Load real approved tenants from localStorage ──────────────────────
-function loadAllTenants() {
-  try {
-    const sources = []
-    const slugSeen = new Set()
 
-    const pushTenant = (t, i, prefix='t') => {
-      if (!t || (!t.name && !t.slug)) return
-      if (slugSeen.has(t.slug)) return
-      slugSeen.add(t.slug)
-      sources.push({
-        id:          t.id || `${prefix}-${t.slug || i}`,
-        name:        t.name || t.slug || `Tenant ${i+1}`,
-        slug:        t.slug || '',
-        type:        t.business_type || t.type || 'custom',
-        plan:        ((t.plan||'trial').charAt(0).toUpperCase()+(t.plan||'trial').slice(1)),
-        employees:   t.employee_count || 0,
-        status:      t.status || 'active',
-        joined:      (t.approved_at||t.created_at||new Date().toISOString()).split('T')[0],
-        admin_email: t.admin_email || '',
-      })
-    }
+function saveTenantModules(slug, modules) { try { localStorage.setItem(`elogix_modules_${slug}`, JSON.stringify(modules)) } catch(_e) {} }
+function getTenantModules(slug) { try { return JSON.parse(localStorage.getItem(`elogix_modules_${slug}`) || '[]') } catch(_e) { return [] } }
 
-    // 1. Approved active companies (set by ELogixAdminPage.approveTenant)
-    const active = JSON.parse(localStorage.getItem('elogix_active_companies') || '[]')
-    active.forEach((t, i) => pushTenant(t, i, 'active'))
-
-    // 2. Approved tenants registry (also set by ELogixAdminPage.approveTenant)
-    const registry = JSON.parse(localStorage.getItem('elogix_approved_tenants') || '{}')
-    Object.values(registry).forEach((t, i) => pushTenant(t, i, 'reg'))
-
-    // 3. Registered companies (set by RegisterPage before approval)
-    // These appear as 'pending' status until admin approves
-    const regCos = JSON.parse(localStorage.getItem('elogix_registered_companies') || '{}')
-    Object.values(regCos).forEach((t, i) => pushTenant(t, i, 'reg2'))
-
-    if (sources.length > 0) return sources
-  } catch(_e) {}
-  // Default: real eLogix tenants
-  return [
-    { id:'c1', name:'Abasar Nepal',              slug:'abasarnepal',     type:'recruitment_agency', plan:'Starter', employees:0, status:'active', joined:'2083-05-04' },
-    { id:'c2', name:'Subisu Cablenet Pvt. Ltd.', slug:'subisu',          type:'it_software',        plan:'Growth',  employees:0, status:'active', joined:'2083-05-05' },
-    { id:'c3', name:'Mainawati Steels',           slug:'mainawatisteels', type:'manufacturing',      plan:'Starter', employees:0, status:'active', joined:'2083-05-05' },
-    { id:'c4', name:'HR Hub',                     slug:'hrhub',           type:'custom',             plan:'Trial',   employees:0, status:'trial',  joined:'2083-05-05' },
-  ]
-}
-const DEMO_TENANTS = loadAllTenants()
 
 const GROUP_ORDER = ['Core HR','Recruitment','Performance','Training','Finance','AI & Analytics','Workforce','Communication','Integrations','Admin']
 const PLAN_COLORS = { Enterprise:'#7c3aed', Business:'#0369a1', Growth:'#059669', Starter:'#d97706', Trial:'#64748b' }
 const STATUS_COLORS = { active:'#16a34a', trial:'#d97706', suspended:'#dc2626', inactive:'#6b7280' }
 
 export default function TenantModulePermissionPage() {
-  const [selTenant, setSelTenant] = useState(DEMO_TENANTS[0]?.id || '')
+
+  const [tenants, setTenants] = useState([])
+  const [apiLoad, setApiLoad] = useState(true)
+
+  useEffect(() => {
+    setApiLoad(true)
+    fetch('/api/elogix-admin/v1/companies', { headers:_adminH() })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        const list = d?.companies || d?.data || []
+        const mapped = list.map((co,i) => ({
+          id:co.id||`c${i}`,name:co.name||co.slug,slug:co.slug||'',
+          type:co.business_type||co.type||'custom',
+          plan:co.plan?(co.plan.charAt(0).toUpperCase()+co.plan.slice(1)):'Trial',
+          employees:co.employee_count||0,status:co.status||'active',
+          joined:(co.approved_at||co.created_at||'').split('T')[0],
+          admin_email:co.admin_email||'',
+        }))
+        setTenants(mapped)
+        if(mapped.length) setSelTenant(t => t || mapped[0].id)
+      })
+      .catch(() => {
+        try {
+          const cached = JSON.parse(localStorage.getItem('elogix_active_companies')||'[]')
+          setTenants(cached.map((co,i)=>({id:co.id||`c${i}`,name:co.name||co.slug,slug:co.slug||'',type:co.business_type||'custom',plan:co.plan||'trial',employees:co.employee_count||0,status:co.status||'active',joined:(co.created_at||'').split('T')[0],admin_email:co.admin_email||''})))
+        } catch(_e) {}
+      })
+      .finally(() => setApiLoad(false))
+  }, [])
+  const [selTenant, setSelTenant] = useState('')
   const [search, setSearch]       = useState('')
   const [groupFilter, setGroupFilter] = useState('All')
   const [toast, setToast]         = useState('')
@@ -252,7 +239,7 @@ export default function TenantModulePermissionPage() {
   // Per-tenant module state
   const [tenantModules, setTenantModules] = useState(() => {
     const init = {}
-    DEMO_TENANTS.forEach(t => {
+    tenants.forEach(t => {
       if (!t?.id) return
       const bt = BUSINESS_TYPES.find(b => b.id === (t.type || 'custom'))
       init[t.id] = new Set(bt?.modules || ['employee','attendance','leave','payroll','self_service'])
@@ -262,10 +249,10 @@ export default function TenantModulePermissionPage() {
 
   const notify = m => { setToast(m); setTimeout(() => setToast(''), 3000) }
 
-  const tenant   = DEMO_TENANTS.find(t => t.id === selTenant)
+  const tenant   = tenants.find(t => t.id === selTenant)
   const bt       = BUSINESS_TYPES.find(b => b.id === tenant?.type)
   const enabled  = tenantModules[selTenant] || new Set()
-  const filtered = DEMO_TENANTS.filter(t => {
+  const filtered = tenants.filter(t => {
     if (!t || !t.name) return false
     const q = search.toLowerCase()
     if (!q) return true
@@ -317,9 +304,9 @@ export default function TenantModulePermissionPage() {
             </div>
           </div>
           <div style={{ display:'flex',gap:8,flexWrap:'wrap' }}>
-            {[{l:'Total Tenants',v:DEMO_TENANTS.length,i:'🏢'},
-              {l:'Active',v:DEMO_TENANTS.filter(t=>t.status==='active').length,i:'✅'},
-              {l:'Trial',v:DEMO_TENANTS.filter(t=>t.status==='trial').length,i:'⏳'},
+            {[{l:'Total Tenants',v:tenants.length,i:'🏢'},
+              {l:'Active',v:tenants.filter(t=>t.status==='active').length,i:'✅'},
+              {l:'Trial',v:tenants.filter(t=>t.status==='trial').length,i:'⏳'},
               {l:'Total Modules',v:ALL_MODULES.length,i:'🧩'},
             ].map(s=>(
               <div key={s.l} style={{ background:'rgba(255,255,255,.15)',borderRadius:10,padding:'8px 14px',textAlign:'center',minWidth:80 }}>

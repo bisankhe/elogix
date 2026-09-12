@@ -6,6 +6,19 @@
 // eLogix Technologies · www.elogix.com.np
 import { useState, useRef, useEffect, useCallback } from 'react'
 
+// ── Tenant session ────────────────────────────────────────────
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch { return {} }
+}
+function _authHeaders() {
+  const s = _getSession()
+  const token = localStorage.getItem('access_token') || s?.token || ''
+  const slug  = s?.company?.slug || ''
+  return { 'Authorization':`Bearer ${token}`, 'X-Tenant-Slug':slug, 'Content-Type':'application/json' }
+}
+
+
+
 const A  = '#7c3aed'
 const G  = 'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)'
 const d  = new Date()
@@ -43,8 +56,7 @@ const VITE_KEY = import.meta?.env?.VITE_ANTHROPIC_API_KEY || ''
 async function callClaude(messages, system) {
   try {
     const r = await fetch('/api/v1/ai-proxy/chat', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ system, messages, model:'claude-sonnet-4-6', max_tokens:4096 }),
+      method:'POST', headers: { 'Content-Type': 'application/json', ..._authHeaders() }, body: JSON.stringify({ system, messages, model:'claude-sonnet-4-6', max_tokens:4096 }),
       signal: AbortSignal.timeout(15000),
     })
     if (r.ok) { const d = await r.json(); if (d.content) return { text:Array.isArray(d.content)?d.content.map(c=>c.text||'').join(''): d.content, ok:true } }
@@ -524,11 +536,9 @@ function Bubble({ msg, onSpeak, speakingId }) {
 
 // ── MAIN COMPONENT ─────────────────────────────────────────────
 
-function _getSession() {
-  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch(_e){return{}}
-}
 
 export default function AIBusinessIntelligencePage() {
+
   const _s=_getSession()
   const _c=_s?.company||{}; const _u=_s?.user||{}
   const navTo=(p)=>window.dispatchEvent(new CustomEvent('elogix:nav',{detail:{page:p}}))

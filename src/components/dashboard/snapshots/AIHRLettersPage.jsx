@@ -9,6 +9,19 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 
+// ── Tenant session ────────────────────────────────────────────
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch { return {} }
+}
+function _authHeaders() {
+  const s = _getSession()
+  const token = localStorage.getItem('access_token') || s?.token || ''
+  const slug  = s?.company?.slug || ''
+  return { 'Authorization':`Bearer ${token}`, 'X-Tenant-Slug':slug, 'Content-Type':'application/json' }
+}
+
+
+
 const G  = 'linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)'
 const P  = '#7c3aed'
 const VK = import.meta?.env?.VITE_ANTHROPIC_API_KEY || ''
@@ -26,8 +39,7 @@ Return JSON: {"english":"...full letter...","nepali":"...full Nepali letter..."}
 
   try {
     const r = await fetch('/api/v1/ai-proxy/chat', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ system: sys, messages: [{ role: 'user', content: prompt }], model: 'claude-sonnet-4-6', max_tokens: 3000 }),
+      method: 'POST', headers: { 'Content-Type': 'application/json', ..._authHeaders() }, body: JSON.stringify({ system: sys, messages: [{ role: 'user', content: prompt }], model: 'claude-sonnet-4-6', max_tokens: 3000 }),
       signal: AbortSignal.timeout(20000),
     })
     if (r.ok) { const d = await r.json(); if (d.content) return d.content }
@@ -323,14 +335,6 @@ const HISTORY_KEY = 'elogix_letters_history'
 
 // ── MAIN COMPONENT ────────────────────────────────────────────
 
-function _getSession() {
-  try {
-    return JSON.parse(
-      sessionStorage.getItem('elogix_session') ||
-      localStorage.getItem('elogix_session') || 'null'
-    ) || {}
-  } catch (_e) { return {} }
-}
 function _useAppFallback() {
   const s = _getSession()
   return {
@@ -341,6 +345,11 @@ function _useAppFallback() {
 }
 
 export default function AIHRLettersPage() {
+
+  const _s = _getSession()
+  const _company = _s?.company || {}
+  const _user    = _s?.user    || {}
+  const _name    = _company.name || 'Your Company'
   const { persona } = _useAppFallback()
   const [step,          setStep]          = useState(1)   // 1=type 2=vars 3=preview 4=sign 5=done
   const [letterType,    setLetterType]    = useState(null)
@@ -576,7 +585,7 @@ Return ONLY valid JSON: {"english":"...","nepali":"..."}`
                 <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
                   {[['both', '🌐 Both'], ['english', '🇬🇧 English'], ['nepali', '🇳🇵 Nepali']].map(([v, l]) => (
                     <button key={v} onClick={() => setLetterLang(v)}
-                      style={{ padding: '5px 12px', borderRadius: 20, border: `1px solid ${lang === v ? P : '#e2e8f0'}`, background: lang === v ? `${P}10` : '#fff', color: lang === v ? P : '#64748b', fontSize: 9, fontWeight: 700, cursor: 'pointer' }}>
+                      style={{ padding: '5px 12px', borderRadius: 20, border: `1px solid ${letterLang === v ? P : '#e2e8f0'}`, background: letterLang === v ? `${P}10` : '#fff', color: letterLang === v ? P : '#64748b', fontSize: 9, fontWeight: 700, cursor: 'pointer' }}>
                       {l}
                     </button>
                   ))}
@@ -622,7 +631,7 @@ Return ONLY valid JSON: {"english":"...","nepali":"..."}`
                   </div>
                 </div>
 
-                {(lang === 'both' || lang === 'english') && (
+                {(letterLang === 'both' || letterLang === 'english') && (
                   <div style={{ marginBottom: 16 }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: '#374151', marginBottom: 6 }}>🇬🇧 English Version</div>
                     <textarea value={editEn} onChange={e => setEditEn(e.target.value)} rows={12}
@@ -630,7 +639,7 @@ Return ONLY valid JSON: {"english":"...","nepali":"..."}`
                   </div>
                 )}
 
-                {(lang === 'both' || lang === 'nepali') && (
+                {(letterLang === 'both' || letterLang === 'nepali') && (
                   <div style={{ marginBottom: 16 }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: '#374151', marginBottom: 6 }}>🇳🇵 Nepali Version (नेपाली)</div>
                     <textarea value={editNe} onChange={e => setEditNe(e.target.value)} rows={12}

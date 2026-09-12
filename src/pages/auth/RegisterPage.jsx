@@ -8,7 +8,6 @@
 // Step 6: Review & Confirm
 // eLogix Technologies · www.elogix.com.np
 import { useState } from 'react'
-import { eLogixAPI } from '../../utils/api.js'
 
 const G = 'linear-gradient(135deg,#059669 0%,#0369a1 55%,#38bdf8 100%)'
 const A = '#0369a1'
@@ -297,10 +296,6 @@ export default function RegisterPage({ onSuccess }) {
         if (fetchErr.message?.includes('already taken')) throw fetchErr
         console.warn('[eLogix] API unavailable, localStorage-only mode:', fetchErr.message)
       }
-      // ── FALLBACK: old eLogixAPI ───────────────────────────────────
-      if (!data?.success) {
-        try { data = await eLogixAPI.createCompany(form) } catch(_e) {}
-      }
 
       // ── Always save to localStorage (works with or without API) ──
       const slugKey = (form.slug||'COMP').toUpperCase().replace(/[^A-Z]/g,'').slice(0,4)||'COMP'
@@ -317,7 +312,7 @@ export default function RegisterPage({ onSuccess }) {
       const regCos = JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}')
       regCos[form.slug] = {
         id:`c_${form.slug}`, name:form.company_name, plan:form.plan,
-        status:form.plan==='trial'?'trial':'active',
+        status:'pending',  // SuperAdmin must approve
         business_type:form.business_type, business_label:form.business_label,
         modules:form.modules, country:form.country||'Nepal', currency:form.currency||'NPR',
         landing:form.landing, admin_email:form.admin_email, admin_name:form.admin_name,
@@ -329,7 +324,7 @@ export default function RegisterPage({ onSuccess }) {
       if (!pending.find(t=>t.slug===form.slug)) {
         pending.push({
           id:`c_${form.slug}`, name:form.company_name, slug:form.slug,
-          plan:form.plan, status:form.plan==='trial'?'trial':'active',
+          plan:form.plan, status:'pending',  // SuperAdmin must approve
           employee_count:0,
           max_employees:{trial:10,starter:50,growth:250,business:500,enterprise:1000}[form.plan]||10,
           created_at:new Date().toISOString().split('T')[0],
@@ -393,9 +388,9 @@ export default function RegisterPage({ onSuccess }) {
     }}>
       <div style={{ textAlign:'center',maxWidth:520 }}>
         <div style={{ fontSize:72,marginBottom:12 }}>🎉</div>
-        <div style={{ fontSize:26,fontWeight:900,color:'#065f46',marginBottom:6 }}>Registration Complete! 🎉</div>
+        <div style={{ fontSize:26,fontWeight:900,color:'#0369a1',marginBottom:6 }}>Application Submitted! ✅</div>
         <div style={{ fontSize:13,color:'#374151',marginBottom:20,lineHeight:1.7 }}>
-          Your <b>{done.company_name}</b> account is ready.<br/>
+          Your <b>{done?.name || done?.company_name || 'Company'}</b> application is under review.<br/>
           Configured for <b>{form.business_icon} {form.business_label}</b> ·
           Currency: <b>{selectedCur?.symbol} {form.currency}</b>
         </div>
@@ -413,11 +408,18 @@ export default function RegisterPage({ onSuccess }) {
             </div>
           </div>
         </div>
-        <a href="/login" style={{ display:'inline-block',padding:'12px 32px',borderRadius:10,
-          background:G,color:'#fff',fontSize:13,fontWeight:800,textDecoration:'none',
-          boxShadow:'0 4px 14px rgba(3,105,161,.3)' }}>
-          🚀 Sign In to Your Portal
-        </a>
+        <div style={{ background:'#fffbeb',border:'1px solid #fde68a',borderRadius:12,
+          padding:'16px 20px',marginBottom:18,fontSize:11,color:'#92400e',lineHeight:1.8 }}>
+          ⏳ <strong>Awaiting eLogix SuperAdmin approval</strong><br/>
+          Your login credentials will be sent via:<br/>
+          📧 Email &nbsp;·&nbsp; 📱 WhatsApp &nbsp;·&nbsp; 💬 Viber<br/>
+          <span style={{fontSize:10,color:'#a16207'}}>Typically approved within 1 business day.</span>
+        </div>
+        <button onClick={()=>onSuccess?.()} style={{ display:'inline-block',padding:'12px 32px',borderRadius:10,
+          border:'2px solid #0369a1',background:'#fff',color:'#0369a1',fontSize:13,
+          fontWeight:800,cursor:'pointer',fontFamily:'inherit' }}>
+          ← Back to Login
+        </button>
         <div style={{ marginTop:14,fontSize:11,color:'#64748b' }}>
           Need help? <a href="mailto:support@elogix.com.np" style={{ color:A }}>support@elogix.com.np</a>
         </div>
@@ -444,9 +446,9 @@ export default function RegisterPage({ onSuccess }) {
           <div style={{ fontSize:18,fontWeight:900 }}>🏢 eLogix HRMS</div>
           <div style={{ fontSize:10,opacity:.75 }}>Start your 14-day free trial · No credit card needed</div>
         </div>
-        <a href="/login" style={{ color:'#bae6fd',fontSize:11,fontWeight:700,textDecoration:'none' }}>
+        <span onClick={()=>onSuccess?.()} style={{ color:'#bae6fd',fontSize:11,fontWeight:700,cursor:'pointer',textDecoration:'underline' }}>
           Already have an account? Sign in →
-        </a>
+        </span>
       </div>
 
       <div style={{ maxWidth: step===4 ? 920 : 660, margin:'0 auto', padding:'24px 16px', width:'100%', boxSizing:'border-box' }}>
@@ -933,13 +935,14 @@ export default function RegisterPage({ onSuccess }) {
                   </div>
                 </div>
 
-                <div style={{ background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:9,
-                  padding:'12px 14px',fontSize:10,color:'#065f46',lineHeight:1.7 }}>
-                  ⚡ Clicking below will instantly provision:<br/>
-                  • Isolated tenant database: <code>elogix_{form.slug}</code><br/>
-                  • {form.modules.length} modules for {form.business_label}<br/>
-                  • Super Admin account + welcome email<br/>
-                  • {form.currency} currency · {form.country} compliance settings
+                <div style={{ background:'#eff6ff',border:'1px solid #bfdbfe',borderRadius:9,
+                  padding:'12px 14px',fontSize:10,color:'#1e40af',lineHeight:1.8 }}>
+                  📋 <strong>What happens after submitting:</strong><br/>
+                  • Registration sent to eLogix SuperAdmin for review<br/>
+                  • Status: <strong>Pending Approval</strong> (typically 1 business day)<br/>
+                  • SuperAdmin approves and sets up your account<br/>
+                  • Login credentials sent via 📧 Email / 📱 WhatsApp / 💬 Viber<br/>
+                  • You log in at elogix.com.np with your company slug + credentials
                 </div>
               </div>
             )}

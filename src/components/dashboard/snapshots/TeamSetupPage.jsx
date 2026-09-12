@@ -1,8 +1,17 @@
 // FILE: TeamSetupPage.jsx - Page 4: Team Setup
-import { useState } from 'react'
-import { THEMES, Field, ContextMenu, ExcelModal, PageHeader, AIImpact, Drawer, SearchBar, Badge, LuxCard } from './DeptSetupShared.jsx'
+import { useState, useEffect } from 'react'
 
-const T = THEMES.team
+
+function _getSession(){try{return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{}}catch{return{}}}
+function _authH(){const s=_getSession();const token=localStorage.getItem('access_token')||s?.token||'';const slug=s?.company?.slug||'';return{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}}
+
+// Inline theme — replaces missing DeptSetupShared THEMES.team
+const T = {
+  gradient: 'linear-gradient(135deg,#10b981 0%,#0ea5e9 100%)',
+}
+
+
+
 
 const MOCK_TEAMS = [
   { id:'t1', code:'TEAM-FE-WEB', name:'Web Frontend Team', short:'Web FE',
@@ -60,8 +69,129 @@ const CONTEXT_ACTIONS = [
   {icon:'🗑️',label:'Dissolve Team',   key:'dissolve', danger:true},
 ]
 
+
+// ── Inline shared components (replaces missing DeptSetupShared.jsx) ───────────
+
+function PageHeader({ icon, title, breadcrumb, gradient, stats, onAdd, addLabel, onExcel }) {
+  const _s2 = _getSession(); const _co = _s2?.company||{}
+  return (
+    <div style={{background:gradient,borderRadius:16,padding:'18px 22px',marginBottom:16,boxShadow:'0 4px 20px rgba(0,0,0,.1)'}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:10}}>
+        <div>
+          <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:8}}>
+            <span style={{fontSize:22}}>{icon}</span>
+            <div style={{fontSize:18,fontWeight:900,color:'#fff'}}>{title}</div>
+          </div>
+          <div style={{fontSize:10,color:'rgba(255,255,255,.7)',marginBottom:10}}>{breadcrumb} · {_co?.name}</div>
+          <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
+            {(stats||[]).map((s,i)=>(
+              <div key={i} style={{background:'rgba(255,255,255,.15)',borderRadius:10,padding:'5px 12px'}}>
+                <span style={{fontSize:11}}>{s.icon}</span>
+                <span style={{fontSize:14,fontWeight:800,color:'#fff',marginLeft:5}}>{s.value}</span>
+                <span style={{fontSize:9,color:'rgba(255,255,255,.7)',marginLeft:3}}>{s.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{display:'flex',gap:8}}>
+          {onAdd&&<button onClick={onAdd} style={{padding:'8px 16px',borderRadius:10,border:'1.5px solid rgba(255,255,255,.4)',background:'rgba(255,255,255,.15)',color:'#fff',fontSize:11,fontWeight:700,cursor:'pointer'}}>+ {addLabel||'Add'}</button>}
+          {onExcel&&<button onClick={onExcel} style={{padding:'8px 14px',borderRadius:10,border:'1.5px solid rgba(255,255,255,.3)',background:'rgba(255,255,255,.1)',color:'#fff',fontSize:11,cursor:'pointer'}}>📊 Excel</button>}
+        </div>
+      </div>
+    </div>
+  )
+}
+function Field({ label, value, onChange, type='text', options, required, placeholder='' }) {
+  return (
+    <div style={{marginBottom:12}}>
+      <label style={{display:'block',fontSize:11,fontWeight:700,color:'#374151',marginBottom:4}}>{label}{required&&<span style={{color:'#ef4444'}}> *</span>}</label>
+      {type==='select'
+        ?<select value={value||''} onChange={e=>onChange(e.target.value)} style={{width:'100%',padding:'8px 12px',borderRadius:8,border:'1.5px solid #e2e8f0',fontSize:12,outline:'none',appearance:'none',background:'#fff',boxSizing:'border-box'}}>
+          <option value=''>Select...</option>{(options||[]).map(o=><option key={o} value={o}>{o}</option>)}
+        </select>
+        :<input type={type} value={value||''} onChange={e=>onChange(e.target.value)} placeholder={placeholder} style={{width:'100%',padding:'8px 12px',borderRadius:8,border:'1.5px solid #e2e8f0',fontSize:12,outline:'none',boxSizing:'border-box'}}/>
+      }
+    </div>
+  )
+}
+function SearchBar({ value, onChange, placeholder }) {
+  return <input value={value||''} onChange={e=>onChange(e.target.value)} placeholder={placeholder||'🔍 Search...'} style={{padding:'8px 14px',borderRadius:10,border:'1.5px solid #e2e8f0',fontSize:12,outline:'none',background:'#fff',minWidth:200}}/>
+}
+function Badge({ label, color='#64748b' }) {
+  return <span style={{background:`${color}15`,color,fontSize:9,fontWeight:700,padding:'2px 8px',borderRadius:20}}>{label}</span>
+}
+function LuxCard({ children, onClick, selected, accentColor='#7c3aed' }) {
+  return (
+    <div onClick={onClick}
+      style={{background:'#fff',borderRadius:14,border:`1.5px solid ${selected?accentColor:'#e2e8f0'}`,padding:16,cursor:'pointer',boxShadow:`0 2px 8px rgba(0,0,0,.05)`,transition:'all .15s'}}
+      onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-1px)';e.currentTarget.style.boxShadow='0 4px 16px rgba(0,0,0,.1)'}}
+      onMouseLeave={e=>{e.currentTarget.style.transform='';e.currentTarget.style.boxShadow='0 2px 8px rgba(0,0,0,.05)'}}>
+      {children}
+    </div>
+  )
+}
+function ContextMenu({ ctx, actions, onClose }) {
+  if(!ctx) return null
+  return (
+    <div onClick={e=>e.stopPropagation()} style={{position:'fixed',zIndex:9999,left:ctx.x,top:ctx.y,background:'#fff',borderRadius:12,width:190,boxShadow:'0 20px 60px rgba(0,0,0,.2)',border:'1px solid #e2e8f0',overflow:'hidden'}}>
+      {(actions||[]).map((a,i)=>(
+        <button key={i} onClick={()=>{a.fn();onClose?.()}}
+          style={{width:'100%',padding:'9px 14px',border:'none',background:'transparent',textAlign:'left',fontSize:12,cursor:'pointer',color:a.danger?'#ef4444':'#334155',borderBottom:i<(actions.length-1)?'1px solid #f8fafc':'none'}}
+          onMouseEnter={e=>e.currentTarget.style.background=a.danger?'#fef2f2':'#f8fafc'}
+          onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+          {a.icon} {a.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+function Drawer({ show, onClose, title, children }) {
+  if(!show) return null
+  return (
+    <>
+      <div onClick={onClose} style={{position:'fixed',inset:0,background:'rgba(0,0,0,.4)',zIndex:3999}}/>
+      <div style={{position:'fixed',right:0,top:0,bottom:0,width:420,background:'#fff',zIndex:4000,overflowY:'auto',boxShadow:'-20px 0 60px rgba(0,0,0,.15)'}}>
+        <div style={{padding:'16px 20px',borderBottom:'1px solid #f1f5f9',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+          <div style={{fontSize:14,fontWeight:700,color:'#0f172a'}}>{title}</div>
+          <button onClick={onClose} style={{background:'none',border:'none',fontSize:20,cursor:'pointer',color:'#94a3b8'}}>×</button>
+        </div>
+        <div style={{padding:'20px'}}>{children}</div>
+      </div>
+    </>
+  )
+}
+function ExcelModal({ show, onClose }) {
+  if(!show) return null
+  return (
+    <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:5000,display:'flex',alignItems:'center',justifyContent:'center'}} onClick={onClose}>
+      <div style={{background:'#fff',borderRadius:14,padding:24,maxWidth:400,width:'90%'}} onClick={e=>e.stopPropagation()}>
+        <div style={{fontSize:14,fontWeight:700,marginBottom:12}}>📊 Excel Import / Export</div>
+        <p style={{fontSize:12,color:'#64748b',marginBottom:16}}>Upload an Excel file to bulk-import data, or export the current list to Excel.</p>
+        <button onClick={onClose} style={{padding:'8px 20px',borderRadius:8,border:'none',background:'#64748b',color:'#fff',cursor:'pointer',fontSize:12}}>Close</button>
+      </div>
+    </div>
+  )
+}
+function AIImpact({ links }) { return null }
+// ─────────────────────────────────────────────────────────────────────────────
+
+
 export default function TeamSetupPage() {
-  const [teams,     setTeams]     = useState(MOCK_TEAMS)
+
+  // Load real tenant data
+  const _s = _getSession()
+  const _company = _s?.company || {}
+
+  useEffect(() => {
+    const token = localStorage.getItem('access_token') || _s?.token || ''
+    const slug  = _s?.company?.slug || ''
+    if (!token || !slug) return
+    fetch('/api/v1/teams', { headers: _authH() })
+      .then(r => { if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));return null}; return r.ok ? r.json() : null })
+      .then(d => d && setTeams(d.data?.teams || d.teams || d.data || []))
+      .catch(() => {})
+  }, [])
+  const [teams,     setTeams]     = useState([])
   const [search,    setSearch]    = useState('')
   const [ctx,       setCtx]       = useState(null)
   const [showAdd,   setShowAdd]   = useState(false)

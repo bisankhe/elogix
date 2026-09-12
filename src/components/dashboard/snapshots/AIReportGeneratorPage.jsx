@@ -3,13 +3,26 @@
 import { useState } from 'react'
 import { BarChart,Bar,PieChart,Pie,Cell,XAxis,YAxis,CartesianGrid,Tooltip,ResponsiveContainer } from 'recharts'
 
+// ── Tenant session ────────────────────────────────────────────
+function _getSession() {
+  try { return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{} } catch { return {} }
+}
+function _authHeaders() {
+  const s = _getSession()
+  const token = localStorage.getItem('access_token') || s?.token || ''
+  const slug  = s?.company?.slug || ''
+  return { 'Authorization':`Bearer ${token}`, 'X-Tenant-Slug':slug, 'Content-Type':'application/json' }
+}
+
+
+
 const P='#7c3aed',G='linear-gradient(135deg,#1e1b4b 0%,#7c3aed 60%,#c4b5fd 100%)'
 const VITE_KEY=import.meta?.env?.VITE_ANTHROPIC_API_KEY||''
 const COLORS=['#7c3aed','#0ea5e9','#10b981','#f59e0b','#ef4444','#8b5cf6']
 
 async function callAI(q){
-  const sys=`You are an expert HR report writer for eLogix HRMS. Generate professional, data-rich reports in markdown format. Include: Executive Summary, Key Metrics table, Analysis, Recommendations, and Action Items. Be specific with numbers. Nepal Labour Act 2074 context. Company: 312 employees, NPR 4.8M payroll, 8.2% attrition.`
-  try{const r=await fetch('/api/v1/ai-proxy/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:sys,messages:[{role:'user',content:q}],model:'claude-sonnet-4-6',max_tokens:2048}),signal:AbortSignal.timeout(15000)});if(r.ok){const d=await r.json();if(d.content)return d.content}}catch{}
+  const sys=`You are an expert HR report writer for eLogix HRMS. Generate professional, data-rich reports in markdown format. Include: Executive Summary, Key Metrics table, Analysis, Recommendations, and Action Items. Be specific with numbers. Nepal Labour Act 2074 context. Company: real tenant data — see session for company context.`
+  try{const r=await fetch('/api/v1/ai-proxy/chat',{method:'POST',headers: { 'Content-Type': 'application/json', ..._authHeaders() },body:JSON.stringify({system:sys,messages:[{role:'user',content:q}],model:'claude-sonnet-4-6',max_tokens:2048}),signal:AbortSignal.timeout(15000)});if(r.ok){const d=await r.json();if(d.content)return d.content}}catch{}
   if(VITE_KEY&&VITE_KEY.startsWith('sk-ant')&&VITE_KEY!=='sk-ant-your-key-here'){try{const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':VITE_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-only-beta':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:2048,system:sys,messages:[{role:'user',content:q}]})});const d=await r.json();if(r.ok&&d?.content?.[0]?.text)return d.content[0].text}catch{}}
   return null
 }
@@ -23,12 +36,7 @@ const TEMPLATES=[
   {icon:'⚖️',label:'Compliance Report',    prompt:'Generate a Nepal Labour Act 2074 compliance audit report including SSF status, gratuity provisions, overtime compliance, and risk areas.'},
 ]
 
-const sampleChartData=[
-  {dept:'Engineering',current:68,target:72},
-  {dept:'Sales',current:45,target:50},
-  {dept:'Operations',current:54,target:56},
-  {dept:'IT',current:42,target:44},
-]
+const sampleChartData = [] // populated from API when available
 
 const MsgLine=({l})=>{
   const h=l.replace(/\*\*(.+?)\*\*/g,(_,t)=>`<b>${t}</b>`).replace(/\*(.+?)\*/g,(_,t)=>`<i>${t}</i>`)
@@ -43,6 +51,11 @@ const MsgLine=({l})=>{
 }
 
 export default function AIReportGeneratorPage(){
+
+  const _s = _getSession()
+  const _company = _s?.company || {}
+  const _user    = _s?.user    || {}
+  const _name    = _company.name || 'Your Company'
   const [prompt,setPrompt]=useState('')
   const [report,setReport]=useState('')
   const [loading,setLoading]=useState(false)

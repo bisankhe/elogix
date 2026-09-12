@@ -908,6 +908,17 @@ function SummaryTab({ country, companyForm, financialForm, uploadedDocs }) {
 
 // ── MAIN PAGE ─────────────────────────────────────────────────
 
+
+// ── Session helper ───────────────────────────────────────────
+function _getSession() {
+  try {
+    return JSON.parse(
+      sessionStorage.getItem('elogix_session') ||
+      localStorage.getItem('elogix_session') || 'null'
+    ) || {}
+  } catch (_e) { return {} }
+}
+
 // ── Shared tenant data hook ─────────────────────────────────
 function useTenantCompany() {
   const [company, setCompany] = React.useState(null)
@@ -917,11 +928,11 @@ function useTenantCompany() {
     const load = async () => {
       // 1. Try real API
       try {
-        const token = localStorage.getItem('elogix_token') ||
-          JSON.parse(localStorage.getItem('elogix_auth')||'{}').token
+        const s2 = _getSession()
+        const token = localStorage.getItem('access_token') || s2?.token || ''
         if (token) {
           const res = await fetch('/api/v1/companies/me', {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: { 'Authorization': `Bearer ${token}`, 'X-Tenant-Slug': _getSession()?.company?.slug||'' }
           })
           if (res.ok) {
             const d = await res.json()
@@ -933,27 +944,25 @@ function useTenantCompany() {
       } catch {}
       // 2. Fallback: localStorage auth
       try {
-        const auth = JSON.parse(localStorage.getItem('elogix_auth')||'{}')
-        const regCos = JSON.parse(localStorage.getItem('elogix_registered_companies')||'{}')
-        const co = auth.company || {}
-        const slug = co.slug || auth.user?.company || 'demo'
-        const regData = regCos[slug] || {}
+        const sess = _getSession()
+        const co = sess.company || {}
+        const slug = co.slug || ''
         setCompany({
           id:            co.id || `c_${slug}`,
-          name:          co.name || regData.name || 'Your Company',
+          name:          co.name || 'Your Company',
           slug,
-          plan:          co.plan || regData.plan || 'trial',
+          plan:          co.plan || 'trial',
           status:        co.status || 'active',
-          business_type: co.business_type || regData.business_type || 'custom',
-          country:       co.country || regData.country || 'Nepal',
-          currency:      co.currency || regData.currency || 'NPR',
-          admin_email:   co.admin_email || regData.admin_email || auth.user?.email || '',
-          modules:       co.modules || regData.modules || [],
-          created_at:    co.created_at || regData.created_at || '',
+          business_type: co.business_type || 'custom',
+          country:       co.country || 'Nepal',
+          currency:      co.currency || 'NPR',
+          admin_email:   co.admin_email || '',
+          modules:       co.modules || [],
+          created_at:    co.created_at || '',
           // Profile fields (empty until filled in setup)
           legal_name: '', short_name: '', pan_number: '', vat_number: '',
-          ocr_number: '', ssf_code: '', industry: regData.business_type?.replace(/_/g,' ') || '',
-          phone: regData.phone || '', email: regData.admin_email || co.admin_email || '',
+          ocr_number: '', ssf_code: '', industry: co.business_type?.replace(/_/g,' ') || '',
+          phone: co.phone || '', email: co.admin_email || '',
           province:'', district:'', municipality:'', registered_address:'', website:'',
         })
       } catch {}
@@ -965,19 +974,20 @@ function useTenantCompany() {
   const saveTenantCompany = async (updates) => {
     // Merge updates into localStorage
     try {
-      const auth = JSON.parse(localStorage.getItem('elogix_auth')||'{}')
-      auth.company = { ...(auth.company||{}), ...updates }
-      localStorage.setItem('elogix_auth', JSON.stringify(auth))
+      const sess = _getSession()
+      sess.company = { ...(sess.company||{}), ...updates }
+      sessionStorage.setItem('elogix_session', JSON.stringify(sess))
+      localStorage.setItem('elogix_session', JSON.stringify(sess))
       setCompany(p => ({...p, ...updates}))
     } catch {}
     // Try API
     try {
-      const token = localStorage.getItem('elogix_token') ||
-        JSON.parse(localStorage.getItem('elogix_auth')||'{}').token
+      const s3 = _getSession()
+      const token = localStorage.getItem('access_token') || s3?.token || ''
       if (token) {
         await fetch('/api/v1/companies/me', {
           method: 'PATCH',
-          headers: { 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
+          headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${token}`, 'X-Tenant-Slug': _getSession()?.company?.slug||'' },
           body: JSON.stringify(updates)
         })
       }

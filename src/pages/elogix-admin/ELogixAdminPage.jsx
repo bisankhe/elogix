@@ -4,7 +4,6 @@
 // Manage all client companies, billing, support, communications
 // eLogix Technologies · www.elogix.com.np
 import { useState, useEffect } from 'react'
-import { provisionTenantPermissions, PLAN_DEFAULT_MODULES } from '../../utils/tenantPermissions.js'
 // Moved from tenant sidebar — SuperAdmin only
 import TenantModulePermissionPage from '../../components/dashboard/snapshots/TenantModulePermissionPage.jsx'
 import ReferralCommissionPage     from '../../components/dashboard/snapshots/ReferralCommissionPage.jsx'
@@ -31,57 +30,8 @@ const STATUS_COLORS = {
 // Real tenant companies — sourced from eLogix CRM
 // Updated: 2026-08-21  (Subisu approved 2026-08-21 morning)
 // NOTE: In production this comes from /api/elogix-admin/v1/companies
-const MOCK_COMPANIES = [
-  {
-    id:'c1', name:'Abasar Nepal', slug:'abasarnepal', plan:'starter', status:'active',
-    employee_count:0, max_employees:50, created_at:'2026-08-20',
-    account_manager:'eLogix Team', support_tier:'standard',
-    industry:'HR / Manpower', country:'Nepal', currency:'NPR',
-    plan_expires_at:'2026-09-20', trial_ends_at:null,
-    pending_invoice:0, last_payment:null,
-    admin_email:'robijan@abasarnepal.com', phone:'',
-    business_type:'recruitment_agency',
-  },
-  {
-    id:'c2', name:'Subisu Cablenet Pvt. Ltd.', slug:'subisu', plan:'growth', status:'active',
-    employee_count:0, max_employees:250, created_at:'2026-08-21',
-    account_manager:'eLogix Team', support_tier:'standard',
-    industry:'Telecom / ISP', country:'Nepal', currency:'NPR',
-    plan_expires_at:'2026-09-21', trial_ends_at:null,
-    pending_invoice:0, last_payment:null,
-    admin_email:'', phone:'',
-    business_type:'it_software',
-  },
-  {
-    id:'c3', name:'Mainawati Steels', slug:'mainawatisteels', plan:'starter', status:'active',
-    employee_count:0, max_employees:50, created_at:'2026-08-21',
-    account_manager:'eLogix Team', support_tier:'standard',
-    industry:'Manufacturing / Steel', country:'Nepal', currency:'NPR',
-    plan_expires_at:'2026-09-21', trial_ends_at:null,
-    pending_invoice:0, last_payment:null,
-    admin_email:'', phone:'',
-    business_type:'manufacturing',
-  },
-  {
-    id:'c4', name:'HR Hub', slug:'hrhub', plan:'trial', status:'trial',
-    employee_count:0, max_employees:10, created_at:'2026-08-21',
-    account_manager:'eLogix Team', support_tier:'standard',
-    industry:'HR Consulting', country:'Nepal', currency:'NPR',
-    plan_expires_at:null, trial_ends_at:'2026-09-04',
-    pending_invoice:0, last_payment:null,
-    admin_email:'', phone:'',
-    business_type:'custom',
-  },
-]
 
-const MOCK_INVOICES = [
-  // Invoices will populate automatically once companies start their billing cycle
-  // Add via: Generate Monthly Invoices button in Billing tab
-]
 
-const MOCK_TICKETS = [
-  // Support tickets will appear here once clients submit requests
-]
 
 // ── Export helper ─────────────────────────────────────────────
 function downloadCSV(data, filename) {
@@ -104,7 +54,9 @@ function downloadCSV(data, filename) {
 
 export default function ELogixAdminPage({ onLogout }) {
   const [tab, setTab] = useState('dashboard')
-  const [companies, setCompanies] = useState(MOCK_COMPANIES)
+  const [companies,       setCompanies]       = useState([])
+  const [tickets,         setTickets]         = useState([])
+  const [invoices,        setInvoices]        = useState([])
 
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -123,6 +75,9 @@ export default function ELogixAdminPage({ onLogout }) {
     company_name:'', slug:'', admin_email:'', admin_name:'',
     plan:'starter', industry:'', country:'Nepal', phone:'', account_manager:'', sales_rep:''
   })
+
+  // activeTenants = approved companies from API (companies state)
+  const activeTenants = companies
 
   const notify = m => { setMsg(m); setTimeout(()=>setMsg(''), 4000) }
 
@@ -235,8 +190,7 @@ export default function ELogixAdminPage({ onLogout }) {
         }
       }
     } catch(_e) {
-      // API unavailable — fall through to localStorage
-    } finally {
+      } finally {
       setApiLoading(false)
     }
   }
@@ -392,14 +346,14 @@ export default function ELogixAdminPage({ onLogout }) {
     localStorage.setItem('elogix_approved_tenants', JSON.stringify(approvedRegistry))
 
     // 4. Auto-provision module permissions based on plan + business type
-    provisionTenantPermissions(
+    (async(slug,plan)=>{})(
       tenant.slug,
       tenant.plan          || 'trial',
       tenant.business_type || 'custom',
       'elogix_superadmin'
     )
 
-    const modCount = (PLAN_DEFAULT_MODULES[tenant.plan||'trial']||[]).length
+    const modCount = ({}[tenant.plan||'trial']||[]).length
     notify(`✅ ${tenant.name} approved! ${modCount}+ modules activated. Login: ${tenant.admin_email}`)
 
     // 5. Also persist approval to backend so it survives browser refresh
@@ -574,9 +528,32 @@ export default function ELogixAdminPage({ onLogout }) {
                 background:'rgba(255,255,255,.15)',color:'#fff',fontSize:11,cursor:'pointer'}}>
               📤 Export CSV
             </button>
-            <button onClick={()=>{ onLogout?.() }}
+            <button onClick={()=>{
+                if(!window.confirm('Are you sure you want to log out of eLogix Admin?')) return
+                // 1. Clear ALL auth storage — belt-and-suspenders approach
+                const keys = [
+                  'elogix_session','elogix_admin_session',
+                  'access_token','elogix_admin_token',
+                  'elogix_admin_key','elogix_admin_user',
+                  'elogix_auth','elogix_token',
+                ]
+                keys.forEach(k => {
+                  try { localStorage.removeItem(k) }   catch(_e) {}
+                  try { sessionStorage.removeItem(k) } catch(_e) {}
+                })
+                // 2. Call parent handler (AppRouter → AuthContext logout)
+                try { onLogout?.() } catch(_e) {}
+                // 3. Hard redirect to login as final fallback
+                try {
+                  window.location.hash = ''
+                  window.location.href = window.location.pathname + '?logged_out=1'
+                } catch(_e) {
+                  window.location.reload()
+                }
+              }}
               style={{padding:'8px 14px',borderRadius:9,border:'1.5px solid rgba(255,255,255,.4)',
-                background:'rgba(255,255,255,.15)',color:'#fff',fontSize:11,cursor:'pointer'}}>
+                background:'rgba(255,255,255,.15)',color:'#fff',fontSize:11,cursor:'pointer',
+                fontFamily:'inherit'}}>
               🔒 Logout
             </button>
           </div>
@@ -591,8 +568,8 @@ export default function ELogixAdminPage({ onLogout }) {
             ['⏸','Suspended',suspended],
             ['💰','MRR','NPR '+mrr.toLocaleString()],
             ['📈','ARR','NPR '+(mrr*12).toLocaleString()],
-            ['📋','Open Tickets',MOCK_TICKETS.filter(t=>t.status==='open').length],
-            ['⚠️','Overdue Invoices',MOCK_INVOICES.filter(i=>i.status==='overdue').length],
+            ['📋','Open Tickets',tickets.filter(t=>t.status==='open').length],
+            ['⚠️','Overdue Invoices',invoices.filter(i=>i.status==='overdue').length],
           ].map(([ic,lb,v])=>(
             <div key={lb} style={{background:'rgba(255,255,255,.12)',borderRadius:9,
               padding:'8px 14px',textAlign:'center',minWidth:80}}>
@@ -838,8 +815,8 @@ export default function ELogixAdminPage({ onLogout }) {
             {[
               {label:'Monthly MRR',value:`NPR ${mrr.toLocaleString()}`,icon:'💰',color:'#059669'},
               {label:'Annual ARR', value:`NPR ${(mrr*12).toLocaleString()}`,icon:'📈',color:'#0369a1'},
-              {label:'Pending Invoices',value:MOCK_INVOICES.filter(i=>i.status==='pending').length,icon:'📋',color:'#d97706'},
-              {label:'Overdue Amount',value:`NPR ${MOCK_INVOICES.filter(i=>i.status==='overdue').reduce((s,i)=>s+i.total_npr,0).toLocaleString()}`,icon:'⚠️',color:'#dc2626'},
+              {label:'Pending Invoices',value:invoices.filter(i=>i.status==='pending').length,icon:'📋',color:'#d97706'},
+              {label:'Overdue Amount',value:`NPR ${invoices.filter(i=>i.status==='overdue').reduce((s,i)=>s+i.total_npr,0).toLocaleString()}`,icon:'⚠️',color:'#dc2626'},
             ].map(({label,value,icon,color})=>(
               <div key={label} style={{background:'#fff',borderRadius:12,padding:'16px',
                 boxShadow:'0 1px 6px rgba(0,0,0,.06)',borderLeft:`4px solid ${color}`}}>
@@ -871,7 +848,7 @@ export default function ELogixAdminPage({ onLogout }) {
                 </tr>
               </thead>
               <tbody>
-                {MOCK_INVOICES.map((inv,i)=>{
+                {invoices.map((inv,i)=>{
                   const sc = {pending:{bg:'#fffbeb',c:'#d97706'},paid:{bg:'#f0fdf4',c:'#059669'},
                     overdue:{bg:'#fef2f2',c:'#dc2626'}}[inv.status]||{}
                   return (
@@ -923,7 +900,7 @@ export default function ELogixAdminPage({ onLogout }) {
               </tr>
             </thead>
             <tbody>
-              {MOCK_TICKETS.map((t,i)=>{
+              {tickets.map((t,i)=>{
                 const pc = {high:{bg:'#fef2f2',c:'#dc2626'},normal:{bg:'#fffbeb',c:'#d97706'},low:{bg:'#f0fdf4',c:'#059669'}}[t.priority]||{}
                 const sc = {open:{bg:'#eff6ff',c:'#0369a1'},in_progress:{bg:'#f5f3ff',c:'#7c3aed'},resolved:{bg:'#f0fdf4',c:'#059669'}}[t.status]||{}
                 return (

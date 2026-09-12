@@ -1,281 +1,357 @@
-// ============================================================
 // FILE: src/components/dashboard/DepartmentDashboard.jsx
-// PURPOSE: Department Head Dashboard — IT dept, sprint velocity,
-//          team ops, engagement, performance, peer recognition,
-//          daily tasks, things to do by role
-// ============================================================
+// eLogix HRMS — Department Head Dashboard
+// COMPLETE REWRITE — Zero mock data. Real tenant API. No bad imports.
+// Removes 5 hardcoded arrays:
+//   sprintData (6 fake sprints), deptTasks (8 fake tasks),
+//   roleTasks (5 fake role names), recognitions (3 fake Nepali names),
+//   aiInsights (4 fake insights).
+// Also removes 6 missing shared imports:
+//   Pill, ProgressBar, TaskItem, PageTitle, AIInsightCard.
+// API: GET /api/v1/department-dashboard/summary
+// eLogix Technologies · www.elogix.com.np
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useApp } from '../../context/AppContext.jsx'
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
-import { StatCard }      from '../shared/StatCard.jsx'
-import { Card }          from '../shared/Card.jsx'
-import { Pill }          from '../shared/Pill.jsx'
-import { ProgressBar }   from '../shared/ProgressBar.jsx'
-import { TaskItem }      from '../shared/TaskItem.jsx'
-import { PageTitle }     from '../shared/PageTitle.jsx'
-import { AIInsightCard } from '../shared/AIInsightCard.jsx'
 
-const sprintData = [
-  { sprint: 'S1', velocity: 72 }, { sprint: 'S2', velocity: 68 },
-  { sprint: 'S3', velocity: 78 }, { sprint: 'S4', velocity: 80 },
-  { sprint: 'S5', velocity: 79 }, { sprint: 'S6', velocity: 84 },
-]
+function _getSession(){try{return JSON.parse(sessionStorage.getItem('elogix_session')||localStorage.getItem('elogix_session')||'null')||{}}catch{return{}}}
+function _authH(){const s=_getSession();const token=localStorage.getItem('access_token')||s?.token||'';const slug=s?.company?.slug||'';return{'Authorization':`Bearer ${token}`,'X-Tenant-Slug':slug,'Content-Type':'application/json'}}
 
-const deptTasks = [
-  { id: 1, task: 'Review 360° feedback for all team members', priority: 'high',   done: false, role: 'Dept Head' },
-  { id: 2, task: 'Approve 4 overtime requests',               priority: 'high',   done: false, role: 'Dept Head' },
-  { id: 3, task: 'Complete Q2 performance reviews — 7 staff', priority: 'high',   done: false, role: 'Dept Head' },
-  { id: 4, task: 'Sprint S7 planning session',               priority: 'medium', done: true,  role: 'Dept Head' },
-  { id: 5, task: 'Review training nominations × 3',           priority: 'medium', done: false, role: 'Dept Head' },
-  { id: 6, task: 'Approve WFH requests × 7',                 priority: 'medium', done: false, role: 'Dept Head' },
-  { id: 7, task: 'Asset allocation request — 2 laptops',     priority: 'low',    done: true,  role: 'Dept Head' },
-  { id: 8, task: 'Forward weekly report to HR Manager',       priority: 'low',    done: false, role: 'Dept Head' },
-]
+const G  = 'linear-gradient(135deg,#1e3a5f 0%,#3b82f6 60%,#93c5fd 100%)'
+const A  = '#3b82f6'
 
-const roleTasks = [
-  { role: 'Senior Developer', tasks: 3, done: 2, color: '#3b82f6' },
-  { role: 'Junior Developer', tasks: 5, done: 4, color: '#8b5cf6' },
-  { role: 'QA Engineer',      tasks: 4, done: 3, color: '#10b981' },
-  { role: 'DevOps',           tasks: 2, done: 2, color: '#f59e0b' },
-  { role: 'UI/UX Designer',   tasks: 3, done: 1, color: '#ef4444' },
-]
-
-const recognitions = [
-  { name: 'Prabesh Karki',   note: 'Exceptional API migration delivery — 2 days ahead of schedule',  icon: '⭐', color: '#3b82f6' },
-  { name: 'Maya Adhikari',   note: 'Best bug-fix turnaround — zero regression in 3 weeks',           icon: '🏆', color: '#8b5cf6' },
-  { name: 'Dev Raj Poudel',  note: 'Outstanding team mentorship — 3 junior devs leveled up',         icon: '💡', color: '#10b981' },
-]
-
-const aiInsights = [
-  { color: '#ef4444', label: 'Attrition Risk',    text: '3 senior developers showing disengagement signals. Schedule 1-on-1s this week before it escalates.' },
-  { color: '#10b981', label: 'Sprint Velocity',   text: 'Team velocity improved 16% over last 6 sprints. At current rate, Q3 targets are achievable.' },
-  { color: '#f59e0b', label: 'Skill Gap Detected',text: 'Cloud infrastructure skills gap identified. 4 developers need AWS certification — budget allocation recommended.' },
-]
-
-
-function _getSession() {
-  try {
-    return JSON.parse(
-      sessionStorage.getItem('elogix_session') ||
-      localStorage.getItem('elogix_session') || 'null'
-    ) || {}
-  } catch (_e) { return {} }
+function ProgressBar({ value = 0, color = A, height = 6 }) {
+  return (
+    <div style={{ height, background: '#f1f5f9', borderRadius: height, overflow: 'hidden' }}>
+      <div style={{ height: '100%', width: `${Math.min(100, Math.max(0, value))}%`,
+        background: color, borderRadius: height, transition: 'width .5s' }}/>
+    </div>
+  )
 }
-function _getCurrency() {
-  const s = _getSession()
-  const code = s?.company?.currency || 'NPR'
-  return { code, symbol: {NPR:'रु',USD:'$',INR:'₹',EUR:'€',GBP:'£'}[code] || code }
-}
-function _useAppFallback() {
-  const s = _getSession(); const cc = _getCurrency()
-  return {
-    sub:'', persona:s?.user?.role||'employee', lang:'en', currency:cc.code, cc,
-    company:s?.company||{}, user:s?.user||{}, t:()=>'',
-    navTo:(p)=>window.dispatchEvent(new CustomEvent('elogix:nav',{detail:{page:p}})),
-    switchPersona:()=>{}, setShowNotif:()=>{}, setShowAI:()=>{},
-    setSidebarOpen:()=>{}, sidebarOpen:true, darkMode:false, setDarkMode:()=>{},
-    currentPersona:{id:'employee',icon:'👤',color:'#7c3aed',label:''},
-  }
+
+function KPICard({ icon, label, value, change, up, color = A }) {
+  return (
+    <div style={{ background: '#fff', borderRadius: 14, border: `1.5px solid ${color}18`,
+      padding: '14px 16px', boxShadow: '0 2px 8px rgba(0,0,0,.04)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <div style={{ fontSize: 22, fontWeight: 900, color, marginBottom: 2 }}>{value ?? '—'}</div>
+          <div style={{ fontSize: 10, color: '#64748b' }}>{label}</div>
+        </div>
+        <span style={{ fontSize: 22 }}>{icon}</span>
+      </div>
+      {change && (
+        <div style={{ fontSize: 9, marginTop: 8, color: up !== false ? '#10b981' : '#ef4444' }}>
+          {up !== false ? '▲' : '▼'} {change}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function DepartmentDashboard() {
-  const { t } = _useAppFallback()
-  const [tasks, setTasks] = useState(deptTasks)
+  const { navTo } = useApp()
+  const [data,      setData]      = useState(null)
+  const [loading,   setLoading]   = useState(true)
+  const [error,     setError]     = useState(null)
   const [activeTab, setActiveTab] = useState('overview')
-  const toggle = (id) => setTasks(p => p.map(tk => tk.id === id ? { ...tk, done: !tk.done } : tk))
-  const done = tasks.filter(t => t.done).length
+  const [tasks,     setTasks]     = useState([])
+
+  const s = _getSession(); const company = s?.company || {}
+
+  useEffect(() => {
+    const token = localStorage.getItem('access_token') || s?.token || ''
+    const slug  = s?.company?.slug || ''
+    if (!token || !slug) { setLoading(false); return }
+    fetch('/api/v1/department-dashboard/summary', { headers: _authH() })
+      .then(r => { if(r.status===401){window.dispatchEvent(new CustomEvent('elogix:session-expired'));throw new Error('Session expired')}; if(!r.ok) throw new Error(`Error ${r.status}`); return r.json() })
+      .then(d => { const dd = d.data || d; setData(dd); setTasks(dd.tasks || []) })
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const toggleTask = (id) => setTasks(prev => prev.map(t => t.id === id ? { ...t, done: !t.done } : t))
+
+  if (loading) return (
+    <div style={{ textAlign: 'center', padding: 60, color: A, fontFamily: 'system-ui' }}>
+      <div style={{ fontSize: 30, marginBottom: 10 }}>⟳</div>
+      <div style={{ fontSize: 12, fontWeight: 600 }}>Loading department dashboard for {company?.name}...</div>
+    </div>
+  )
+
+  const kpis         = data?.kpis          || {}
+  const sprintData   = data?.sprint_data   || []
+  const roleTasks    = data?.role_tasks    || []
+  const recognitions = data?.recognitions  || []
+  const aiInsights   = data?.ai_insights   || []
+  const engagement   = data?.engagement    || {}
+  const leave_wfh    = data?.leave_wfh     || []
+  const done         = tasks.filter(t => t.done).length
+
+  const TABS = [
+    { id: 'overview',     label: '📊 Overview'   },
+    { id: 'performance',  label: '🎯 Performance' },
+    { id: 'tasks',        label: `✅ Tasks (${done}/${tasks.length})` },
+    { id: 'team',         label: '👥 Team'        },
+    { id: 'ai',           label: '🧠 AI'          },
+  ]
 
   return (
-    <div>
-      <PageTitle title="Department Head Dashboard" sub="IT Department · 320 members · Head: Bikram Shrestha — Sprint velocity, performance & team operations." badge="IT Dept" />
+    <div style={{ fontFamily: "'Segoe UI',system-ui,sans-serif", color: '#0f172a' }}>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-        <StatCard icon="👥" label="Team Headcount"  value="320"    change="+5 this quarter"    up  accent="#3b82f6" />
-        <StatCard icon="✅" label="Team Attendance" value="91.2%"  change="vs 89% last month"  up  accent="#10b981" />
-        <StatCard icon="📊" label="Sprint Velocity" value="84 pts" change="+6 this sprint"     up  accent="#f59e0b" />
-        <StatCard icon="💰" label="Budget Used"     value="67%"    change="On track Q2"        up  accent="#8b5cf6" />
+      {/* Header */}
+      <div style={{ background: G, borderRadius: 16, padding: '18px 22px', marginBottom: 16,
+        boxShadow: '0 4px 20px rgba(59,130,246,.2)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 22 }}>🏛️</span>
+          <div>
+            <div style={{ fontSize: 18, fontWeight: 900, color: '#fff' }}>Department Dashboard</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,.75)', marginTop: 2 }}>
+              {company?.name} · {data?.dept_name || 'Department Operations'}
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-xl border border-gray-200 mb-4">
-        {[
-          { id: 'overview',     label: '📊 Overview'    },
-          { id: 'performance',  label: '🎯 Performance' },
-          { id: 'tasks',        label: `✅ Tasks (${done}/${tasks.length})` },
-          { id: 'team',         label: '👥 Team'        },
-          { id: 'ai',           label: '🧠 AI Insights' },
-        ].map(tab => (
+      {error && <div style={{ padding: '10px 16px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, fontSize: 12, color: '#92400e', marginBottom: 12 }}>⚠️ {error}</div>}
+
+      {/* KPI strip */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: 12, marginBottom: 16 }}>
+        <KPICard icon="👥" label="Team Size"         value={kpis.team_size}          color="#3b82f6"/>
+        <KPICard icon="✅" label="Attendance"         value={kpis.attendance_pct}     color="#10b981"/>
+        <KPICard icon="🎯" label="Sprint Velocity"    value={kpis.sprint_velocity}    color="#8b5cf6"/>
+        <KPICard icon="⏳" label="Pending Actions"    value={kpis.pending_actions}     up={false} color="#ef4444"/>
+      </div>
+
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', padding: 4, borderRadius: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+        {TABS.map(tab => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all border-none cursor-pointer
-              ${activeTab === tab.id ? 'bg-white text-gray-900 shadow-sm' : 'bg-transparent text-gray-500 hover:text-gray-700'}`}>
+            style={{ flex: 1, minWidth: 70, padding: '7px 8px', borderRadius: 9, border: 'none', cursor: 'pointer',
+              fontSize: 10, fontWeight: activeTab === tab.id ? 700 : 400,
+              background: activeTab === tab.id ? '#fff' : 'transparent',
+              color: activeTab === tab.id ? '#0f172a' : '#64748b',
+              boxShadow: activeTab === tab.id ? '0 1px 4px rgba(0,0,0,.08)' : 'none' }}>
             {tab.label}
           </button>
         ))}
       </div>
 
+      {/* Overview tab */}
       {activeTab === 'overview' && (
-        <div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-            <Card title="Sprint Velocity Trend" subtitle="Last 6 sprints (Agile story points)">
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={sprintData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="sprint" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} domain={[60, 90]} />
-                  <Tooltip />
-                  <Bar dataKey="velocity" fill="#3b82f6" radius={[6, 6, 0, 0]} name="Story Points" />
-                </BarChart>
-              </ResponsiveContainer>
-            </Card>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
 
-            <Card title="Team Engagement Score" subtitle="Pulse survey — this week">
-              <div style={{ textAlign: 'center', padding: '12px 0' }}>
-                <svg viewBox="0 0 100 100" width="120" height="120" style={{ display: 'block', margin: '0 auto' }}>
-                  <circle cx="50" cy="50" r="40" fill="none" stroke="#f1f5f9" strokeWidth="10" />
-                  <circle cx="50" cy="50" r="40" fill="none" stroke="#3b82f6" strokeWidth="10"
-                    strokeDasharray={`${(78 / 100) * 251.2} 251.2`} strokeLinecap="round" transform="rotate(-90 50 50)" />
-                  <text x="50" y="48" textAnchor="middle" fontSize="18" fontWeight="700" fill="#0f172a">78</text>
-                  <text x="50" y="60" textAnchor="middle" fontSize="8" fill="#94a3b8">/100</text>
-                </svg>
-                <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>Employee Engagement Score</div>
-              </div>
-              {[
-                { label: 'Work-life balance',    v: 7.8, c: '#3b82f6' },
-                { label: 'Manager support',      v: 8.1, c: '#10b981' },
-                { label: 'Growth opportunities', v: 6.9, c: '#f59e0b' },
-              ].map((s, i) => (
-                <div key={i} style={{ marginBottom: 8 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 2 }}>
-                    <span style={{ color: '#475569' }}>{s.label}</span>
-                    <span style={{ fontWeight: 700 }}>{s.v}/10</span>
-                  </div>
-                  <ProgressBar value={s.v * 10} color={s.c} />
-                </div>
-              ))}
-            </Card>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <Card title="Team Leave / WFH">
-              {[
-                { label: 'Annual leave',  count: '18 members', bg: '#eff6ff', color: '#1d4ed8' },
-                { label: 'Sick leave',    count: '7 members',  bg: '#fef2f2', color: '#dc2626' },
-                { label: 'WFH approved', count: '42 members', bg: '#f0fdf4', color: '#15803d' },
-                { label: 'On training',  count: '15 members', bg: '#f5f3ff', color: '#6d28d9' },
-              ].map((l, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: l.bg, color: l.color, padding: '9px 12px', borderRadius: 8, marginBottom: 6, fontSize: 12, fontWeight: 600 }}>
-                  <span>{l.label}</span><span style={{ fontWeight: 800 }}>{l.count}</span>
-                </div>
-              ))}
-            </Card>
-
-            <Card title="Pending Approvals">
-              {[
-                { label: 'Overtime approval',    value: '4 pending', color: 'red'    },
-                { label: 'WFH requests',         value: '7 pending', color: 'yellow' },
-                { label: 'Training nominations', value: '3 pending', color: 'blue'   },
-                { label: 'Project budget',       value: '2 pending', color: 'purple' },
-                { label: 'Asset allocation',     value: '5 pending', color: 'yellow' },
-              ].map((c, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 0', borderBottom: '1px solid #f8fafc', fontSize: 12 }}>
-                  <span style={{ color: '#475569' }}>{c.label}</span>
-                  <Pill color={c.color}>{c.value}</Pill>
-                </div>
-              ))}
-            </Card>
-
-            <Card title="Peer Recognition Wall" subtitle="This month">
-              {recognitions.map((r, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid #f8fafc' }}>
-                  <div style={{ width: 30, height: 30, borderRadius: '50%', background: r.color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 11, fontWeight: 700, flexShrink: 0 }}>
-                    {r.name[0]}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: '#334155' }}>{r.name}</div>
-                    <div style={{ fontSize: 10, color: '#94a3b8', lineHeight: 1.4 }}>{r.note}</div>
-                  </div>
-                  <span style={{ fontSize: 18 }}>{r.icon}</span>
-                </div>
-              ))}
-            </Card>
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'performance' && (
-        <div>
-          <Card title="Performance Management — IT Department" subtitle="Q2 2026 performance tracking">
-            {[
-              { label: 'Appraisals completed',  pct: 73, color: '#3b82f6' },
-              { label: 'Goals on track',        pct: 81, color: '#10b981' },
-              { label: 'Avg performance score', pct: 83, color: '#8b5cf6' },
-              { label: 'Training completion',   pct: 67, color: '#f59e0b' },
-              { label: 'PIP active',            pct: 3,  color: '#ef4444' },
-            ].map((p, i) => (
-              <div key={i} style={{ marginBottom: 12 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 2 }}>
-                  <span style={{ color: '#475569' }}>{p.label}</span>
-                  <span style={{ fontWeight: 700, color: '#0f172a' }}>{p.pct}%</span>
-                </div>
-                <ProgressBar value={p.pct} color={p.color} />
-              </div>
-            ))}
-          </Card>
-        </div>
-      )}
-
-      {activeTab === 'tasks' && (
-        <div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-            <Card title="My Daily Tasks" subtitle="Stored for performance records">
-              {tasks.map(tk => <TaskItem key={tk.id} {...tk} onToggle={() => toggle(tk.id)} />)}
-            </Card>
-            <Card title="Role-wise Task Completion" subtitle="Team tasks by role — today">
-              {roleTasks.map((r, i) => (
-                <div key={i} style={{ marginBottom: 10 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 3 }}>
-                    <span style={{ color: '#475569', fontWeight: 500 }}>{r.role}</span>
-                    <span style={{ fontWeight: 700, color: r.color }}>{r.done}/{r.tasks} done</span>
-                  </div>
-                  <ProgressBar value={(r.done / r.tasks) * 100} color={r.color} />
-                </div>
-              ))}
-            </Card>
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'team' && (
-        <Card title="Team Composition — IT Department" subtitle="320 members across roles">
-          {[
-            { role: 'Senior Developer',    count: 45, color: '#3b82f6' },
-            { role: 'Mid Developer',       count: 80, color: '#8b5cf6' },
-            { role: 'Junior Developer',    count: 65, color: '#06b6d4' },
-            { role: 'QA Engineer',         count: 40, color: '#10b981' },
-            { role: 'DevOps Engineer',     count: 25, color: '#f59e0b' },
-            { role: 'UI/UX Designer',      count: 20, color: '#ec4899' },
-            { role: 'Data Analyst',        count: 18, color: '#ef4444' },
-            { role: 'Project Manager',     count: 15, color: '#84cc16' },
-            { role: 'IT Support',          count: 12, color: '#94a3b8' },
-          ].map((r, i) => (
-            <div key={i} style={{ marginBottom: 10 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 3 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ width: 10, height: 10, borderRadius: 2, background: r.color, display: 'inline-block' }} />
-                  <span style={{ color: '#475569', fontWeight: 500 }}>{r.role}</span>
-                </div>
-                <span style={{ fontWeight: 700, color: '#0f172a' }}>{r.count}</span>
-              </div>
-              <ProgressBar value={(r.count / 80) * 100} color={r.color} />
+            {/* Sprint chart */}
+            <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e2e8f0', padding: '16px 18px' }}>
+              <div style={{ fontSize: 12, fontWeight: 800, marginBottom: 4 }}>⚡ Sprint Velocity Trend</div>
+              <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 12 }}>Story points per sprint</div>
+              {sprintData.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: 30, color: '#94a3b8', fontSize: 11 }}>No sprint data yet</div>
+              ) : (
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart data={sprintData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0"/>
+                    <XAxis dataKey="sprint" tick={{ fontSize: 10 }}/>
+                    <YAxis tick={{ fontSize: 10 }}/>
+                    <Tooltip/>
+                    <Bar dataKey="velocity" fill={A} radius={[6, 6, 0, 0]} name="Story Points"/>
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
-          ))}
-        </Card>
+
+            {/* Engagement */}
+            <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e2e8f0', padding: '16px 18px' }}>
+              <div style={{ fontSize: 12, fontWeight: 800, marginBottom: 12 }}>❤️ Team Engagement Score</div>
+              {Object.keys(engagement).length === 0 ? (
+                <div style={{ textAlign: 'center', padding: 20, color: '#94a3b8', fontSize: 11 }}>No engagement data yet</div>
+              ) : (
+                <>
+                  <div style={{ textAlign: 'center', marginBottom: 12 }}>
+                    <div style={{ fontSize: 36, fontWeight: 900, color: A }}>{engagement.score ?? '—'}</div>
+                    <div style={{ fontSize: 10, color: '#94a3b8' }}>/ 100 overall score</div>
+                  </div>
+                  {(engagement.breakdown || []).map((e, i) => (
+                    <div key={i} style={{ marginBottom: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 3 }}>
+                        <span style={{ color: '#475569' }}>{e.label}</span>
+                        <span style={{ fontWeight: 700 }}>{e.value}/10</span>
+                      </div>
+                      <ProgressBar value={(e.value / 10) * 100} color={e.color || A}/>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Leave / WFH */}
+          <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e2e8f0', padding: '16px 18px' }}>
+            <div style={{ fontSize: 12, fontWeight: 800, marginBottom: 12 }}>📅 Team Leave / WFH Status</div>
+            {leave_wfh.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 16, color: '#94a3b8', fontSize: 11 }}>No leave/WFH data</div>
+            ) : (
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                {leave_wfh.map((l, i) => (
+                  <div key={i} style={{ flex: 1, minWidth: 120, padding: '10px 14px', borderRadius: 10,
+                    background: l.bg || '#f8fafc', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: l.color || '#374151' }}>{l.count}</div>
+                    <div style={{ fontSize: 10, color: '#64748b', marginTop: 3 }}>{l.label}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       )}
 
+      {/* Performance tab */}
+      {activeTab === 'performance' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {roleTasks.length > 0 && (
+            <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e2e8f0', padding: '16px 18px' }}>
+              <div style={{ fontSize: 12, fontWeight: 800, marginBottom: 14 }}>👥 Team Performance by Role</div>
+              {roleTasks.map((r, i) => (
+                <div key={i} style={{ marginBottom: 12 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 4 }}>
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                      <div style={{ width: 8, height: 8, borderRadius: 2, background: r.color || A }}/>
+                      <span style={{ color: '#475569', fontWeight: 500 }}>{r.role}</span>
+                    </div>
+                    <span style={{ fontWeight: 700, color: r.color || A }}>
+                      {r.done}/{r.tasks} tasks · {r.count ?? ''} {r.count ? 'members' : ''}
+                    </span>
+                  </div>
+                  <ProgressBar value={r.tasks > 0 ? (r.done / r.tasks) * 100 : 0} color={r.color || A}/>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {recognitions.length > 0 && (
+            <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e2e8f0', padding: '16px 18px' }}>
+              <div style={{ fontSize: 12, fontWeight: 800, marginBottom: 12 }}>🏆 Peer Recognitions</div>
+              {recognitions.map((r, i) => (
+                <div key={i} style={{ display: 'flex', gap: 12, padding: '10px 0',
+                  borderBottom: i < recognitions.length - 1 ? '1px solid #f8fafc' : 'none' }}>
+                  <span style={{ fontSize: 20, flexShrink: 0 }}>{r.icon || '⭐'}</span>
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#0f172a' }}>{r.name}</div>
+                    <div style={{ fontSize: 10, color: '#64748b', marginTop: 2 }}>{r.note}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {roleTasks.length === 0 && recognitions.length === 0 && (
+            <div style={{ textAlign: 'center', padding: 60, background: '#fff', borderRadius: 14, border: '1px solid #e2e8f0', color: '#94a3b8' }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>🎯</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>No performance data yet for {company?.name}</div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Tasks tab */}
+      {activeTab === 'tasks' && (
+        <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+          <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9', fontSize: 12, fontWeight: 800 }}>
+            ✅ Tasks ({done}/{tasks.length} done)
+          </div>
+          {tasks.length === 0 ? (
+            <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>✅</div>
+              <div style={{ fontSize: 12 }}>No tasks assigned for today</div>
+            </div>
+          ) : (
+            tasks.map(t => (
+              <div key={t.id} onClick={() => toggleTask(t.id)}
+                style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '10px 16px',
+                  borderBottom: '1px solid #f8fafc', cursor: 'pointer', opacity: t.done ? 0.55 : 1 }}>
+                <div style={{ width: 18, height: 18, borderRadius: 5, border: `2px solid ${t.done ? '#10b981' : '#d1d5db'}`,
+                  background: t.done ? '#10b981' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0, marginTop: 1 }}>
+                  {t.done && <span style={{ color: '#fff', fontSize: 10 }}>✓</span>}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#0f172a',
+                    textDecoration: t.done ? 'line-through' : 'none' }}>{t.task}</div>
+                  <div style={{ fontSize: 9, color: '#94a3b8', marginTop: 2 }}>{t.role} · {t.priority} priority</div>
+                </div>
+                <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
+                  background: t.priority === 'high' ? '#fef2f2' : t.priority === 'medium' ? '#fffbeb' : '#f8fafc',
+                  color: t.priority === 'high' ? '#dc2626' : t.priority === 'medium' ? '#d97706' : '#64748b' }}>
+                  {t.priority}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* Team tab */}
+      {activeTab === 'team' && (
+        <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e2e8f0', padding: '16px 20px' }}>
+          <div style={{ fontSize: 12, fontWeight: 800, marginBottom: 14 }}>👥 Team Overview</div>
+          {(data?.team_members || []).length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 40, color: '#94a3b8' }}>
+              <div style={{ fontSize: 36, marginBottom: 12 }}>👥</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>No team data yet for {company?.name}</div>
+            </div>
+          ) : (
+            (data.team_members || []).map((m, i) => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                padding: '8px 0', borderBottom: '1px solid #f8fafc', fontSize: 12 }}>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: `${A}15`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: A }}>
+                    {(m.name || '?').charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 700, color: '#0f172a' }}>{m.name}</div>
+                    <div style={{ fontSize: 9, color: '#94a3b8' }}>{m.role} · {m.status}</div>
+                  </div>
+                </div>
+                <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
+                  background: m.status === 'present' ? '#f0fdf4' : '#fef2f2',
+                  color: m.status === 'present' ? '#15803d' : '#dc2626' }}>
+                  {m.status}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* AI tab */}
       {activeTab === 'ai' && (
-        <AIInsightCard insights={aiInsights} title="🧠 Department Head AI Insights" />
+        <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e2e8f0', padding: '16px 18px' }}>
+          <div style={{ fontSize: 12, fontWeight: 800, marginBottom: 14 }}>🧠 Department AI Insights</div>
+          {aiInsights.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 40, color: '#94a3b8' }}>
+              <div style={{ fontSize: 36, marginBottom: 8 }}>🧠</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>No AI insights yet for {company?.name}</div>
+              <div style={{ fontSize: 11, marginTop: 6 }}>Insights appear as your department data accumulates</div>
+            </div>
+          ) : (
+            aiInsights.map((ins, i) => (
+              <div key={i} style={{ padding: '12px 14px', background: '#f8fafc', borderRadius: 10,
+                marginBottom: 8, border: '1px solid #e2e8f0' }}>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                  <span style={{ fontSize: 16, flexShrink: 0 }}>{ins.icon || '💡'}</span>
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#0f172a', marginBottom: 3 }}>{ins.title}</div>
+                    <div style={{ fontSize: 10, color: '#64748b' }}>{ins.body || ins.message}</div>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       )}
     </div>
   )
