@@ -8,6 +8,55 @@ import { useState, useEffect } from 'react'
 import TenantModulePermissionPage from '../../components/dashboard/snapshots/TenantModulePermissionPage.jsx'
 import ReferralCommissionPage     from '../../components/dashboard/snapshots/ReferralCommissionPage.jsx'
 
+// ── PERMANENT ONE-TIME PURGE of stale mock company data ─────────────────────
+// Runs synchronously at module load — before any useState or render.
+// Removes old MOCK_COMPANIES (Abasar Nepal, Subisu, Mainawati Steels, HR Hub)
+// that were written to localStorage by previous versions of this app.
+;(function _purgeStaleCompanyData() {
+  const DEMO_SLUGS = new Set(['abasar','abasarnepal','subisu','mainawatisteels',
+    'hrhub','himalayan','solidfuture','demo','testcompany','elogixdemo'])
+  const STALE_KEYS = ['elogix_active_companies','elogix_approved_tenants',
+    'elogix_registered_companies','elogix_companies']
+  for (const key of STALE_KEYS) {
+    try {
+      const raw = localStorage.getItem(key)
+      if (!raw) continue
+      const parsed = JSON.parse(raw)
+      // Array form (elogix_active_companies)
+      if (Array.isArray(parsed)) {
+        const clean = parsed.filter(c => c?.slug && !DEMO_SLUGS.has(c.slug.toLowerCase()))
+        if (clean.length !== parsed.length) {
+          clean.length > 0
+            ? localStorage.setItem(key, JSON.stringify(clean))
+            : localStorage.removeItem(key)
+        }
+      }
+      // Object/map form (elogix_approved_tenants, elogix_registered_companies)
+      else if (parsed && typeof parsed === 'object') {
+        let changed = false
+        for (const slug of Object.keys(parsed)) {
+          if (DEMO_SLUGS.has(slug.toLowerCase())) { delete parsed[slug]; changed = true }
+        }
+        if (changed) {
+          Object.keys(parsed).length > 0
+            ? localStorage.setItem(key, JSON.stringify(parsed))
+            : localStorage.removeItem(key)
+        }
+      }
+    } catch(_e) {}
+  }
+  // Also purge elogix_pending_tenants of demo entries
+  try {
+    const pend = JSON.parse(localStorage.getItem('elogix_pending_tenants') || '[]')
+    const clean = pend.filter(t => t?.slug && !DEMO_SLUGS.has(t.slug.toLowerCase()))
+    if (clean.length !== pend.length)
+      localStorage.setItem('elogix_pending_tenants', JSON.stringify(clean))
+  } catch(_e) {}
+}())
+// ─────────────────────────────────────────────────────────────────────────────
+
+
+
 const G  = 'linear-gradient(135deg,#1e1b4b 0%,#312e81 55%,#6366f1 100%)'
 const A  = '#4338ca'
 const inp = {
@@ -89,9 +138,7 @@ export default function ELogixAdminPage({ onLogout }) {
   // The admin MUST read from the API to see ALL registrations
   // ══════════════════════════════════════════════════════════
   // Pending self-registered tenants waiting for SuperAdmin approval
-  const [pendingTenants, setPendingTenants] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('elogix_pending_tenants') || '[]') } catch(_e) { return [] }
-  })
+  const [pendingTenants, setPendingTenants] = useState([])
   const [apiLoading, setApiLoading] = useState(false)
   const [apiError,   setApiError]   = useState(null)
 
@@ -135,16 +182,10 @@ export default function ELogixAdminPage({ onLogout }) {
           created_at     : co.created_at || new Date().toISOString().split('T')[0],
           approved_at    : co.approved_at || co.created_at || '',
         }))
-        if (apiCompanies.length > 0) {
-          setCompanies(prev => {
-            const slugMap = {}
-            for (const co of prev) slugMap[co.slug] = co
-            for (const co of apiCompanies) slugMap[co.slug] = {...(slugMap[co.slug]||{}), ...co}
-            const merged = Object.values(slugMap)
-            localStorage.setItem('elogix_active_companies', JSON.stringify(merged))
-            return merged
-          })
-        }
+        // API data loaded — not caching to localStorage (wiped on mount)
+        // Stale keys already wiped on mount
+        setCompanies(apiCompanies)
+        setApiError(null)
       }
 
       // Load pending registrations from backend
@@ -189,59 +230,31 @@ export default function ELogixAdminPage({ onLogout }) {
           localStorage.setItem('elogix_pending_tenants', JSON.stringify(apiPending))
         }
       }
-    } catch(_e) {
-      } finally {
+    } catch(apiErr) {
+      console.error('[eLogix Admin] API load failed:', apiErr)
+      setApiError('API unavailable — ' + apiErr.message)
+    } finally {
       setApiLoading(false)
     }
   }
 
-  const mergeFromLocalStorage = () => {
-    try {
-      const savedActive = JSON.parse(localStorage.getItem('elogix_active_companies') || '[]')
-      if (savedActive.length > 0) {
-        setCompanies(prev => {
-          const existingSlugs = new Set(prev.map(c => c.slug))
-          const toAdd = savedActive.filter(t => t.slug && !existingSlugs.has(t.slug))
-          return toAdd.length ? [...prev, ...toAdd] : prev
-        })
-      }
-      const approvedRegistry = JSON.parse(localStorage.getItem('elogix_approved_tenants') || '{}')
-      const approvedList = Object.values(approvedRegistry)
-      if (approvedList.length > 0) {
-        setCompanies(prev => {
-          const existingSlugs = new Set(prev.map(c => c.slug))
-          const toAdd = approvedList.filter(t => t.slug && !existingSlugs.has(t.slug))
-          return toAdd.length ? [...prev, ...toAdd] : prev
-        })
-      }
-      // elogix_registered_companies — written by RegisterPage on client browser
-      // This is shared when backend API is unavailable
-      const regCos = JSON.parse(localStorage.getItem('elogix_registered_companies') || '{}')
-      const regList = Object.values(regCos)
-      if (regList.length > 0) {
-        setCompanies(prev => {
-          const existingSlugs = new Set(prev.map(c => c.slug))
-          const toAdd = regList.filter(t => t.slug && !existingSlugs.has(t.slug))
-          return toAdd.length ? [...prev, ...toAdd] : prev
-        })
-      }
-      const pending = JSON.parse(localStorage.getItem('elogix_pending_tenants') || '[]')
-      const approvedSlugs = new Set(Object.keys(approvedRegistry))
-      const stillPending = pending.filter(t => !approvedSlugs.has(t.slug))
-      setPendingTenants(prev => {
-        const existing = new Set(prev.map(t => t.slug))
-        const toAdd = stillPending.filter(t => t.slug && !existing.has(t.slug))
-        return toAdd.length ? [...prev, ...toAdd] : prev
-      })
-    } catch(_e) {}
-  }
+  // mergeFromLocalStorage removed — companies come from API only
 
   useEffect(() => {
-    // Try API first (works on live server, sees ALL registrations)
-    // Then merge localStorage (works offline/dev, sees same-browser data)
-    loadFromAPI().then(() => mergeFromLocalStorage())
-    // Poll every 30 seconds to catch new registrations in real time
-    const interval = setInterval(() => loadFromAPI(), 30000)
+    // ── WIPE ALL STALE / MOCK COMPANY DATA from localStorage ─────────────
+    // These keys may contain old MOCK_COMPANIES data (Abasar Nepal, Subisu,
+    // Mainawati Steels, HR Hub etc.) written by previous app versions.
+    // Companies MUST come from the API only — localStorage is not a source of truth.
+    const STALE_KEYS = [
+      'elogix_active_companies',
+      'elogix_approved_tenants',
+      'elogix_registered_companies',
+      'elogix_companies',
+    ]
+    STALE_KEYS.forEach(k => { try { localStorage.removeItem(k) } catch(_e) {} })
+    // ─────────────────────────────────────────────────────────────────────
+    loadFromAPI()
+    const interval = setInterval(() => loadFromAPI(), 30_000)
     return () => clearInterval(interval)
   }, [])
 
@@ -311,7 +324,6 @@ export default function ELogixAdminPage({ onLogout }) {
   const refreshTenants = async () => {
     notify('🔄 Refreshing from server...')
     await loadFromAPI()
-    mergeFromLocalStorage()
     notify('✅ Refreshed — latest registrations loaded from server')
   }
 
@@ -328,7 +340,7 @@ export default function ELogixAdminPage({ onLogout }) {
       const without = prev.filter(c => c.slug !== tenant.slug)
       const next = [...without, approvedTenant]
       // ✅ KEY FIX: persist active companies so they survive page refresh
-      localStorage.setItem('elogix_active_companies', JSON.stringify(next))
+      // Not caching in localStorage — companies come from API only
       return next
     })
 
@@ -337,13 +349,7 @@ export default function ELogixAdminPage({ onLogout }) {
     setPendingTenants(updatedPending)
     localStorage.setItem('elogix_pending_tenants', JSON.stringify(updatedPending))
 
-    // 3. Write to approved registry (used by TenantModulePermissionPage)
-    const approvedRegistry = JSON.parse(localStorage.getItem('elogix_approved_tenants') || '{}')
-    approvedRegistry[tenant.slug] = {
-      ...approvedTenant,
-      approved_at: new Date().toISOString(),
-    }
-    localStorage.setItem('elogix_approved_tenants', JSON.stringify(approvedRegistry))
+    // 3. Approval recorded via API (step 5 below) — no localStorage write
 
     // 4. Auto-provision module permissions based on plan + business type
     (async(slug,plan)=>{})(
@@ -508,6 +514,21 @@ export default function ELogixAdminPage({ onLogout }) {
                 color:A,fontSize:11,fontWeight:800,cursor:'pointer'}}>
               + Onboard Client
             </button>
+            <button onClick={()=>{
+                if(!window.confirm('This will wipe cached company data and reload fresh from API. Continue?')) return
+                ;['elogix_active_companies','elogix_approved_tenants',
+                  'elogix_registered_companies','elogix_pending_tenants'].forEach(k=>localStorage.removeItem(k))
+                setCompanies([])
+                setPendingTenants([])
+                loadFromAPI()
+                notify('🔄 Cache cleared — loading fresh data from API...')
+              }}
+              style={{padding:'8px 14px',borderRadius:9,border:'1.5px solid rgba(255,255,255,.4)',
+                background:'rgba(255,255,255,.12)',color:'#fff',fontSize:11,cursor:'pointer',
+                fontFamily:'inherit'}}>
+              🔄 Sync
+            </button>
+
             <button onClick={()=>{
                 const exportData = companies.map(c=>({
                   'Company Name': c.name,
@@ -700,6 +721,34 @@ export default function ELogixAdminPage({ onLogout }) {
           </div>
 
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(360px,1fr))',gap:14}}>
+        {/* Stale mock-data warning — shown when only old demo slugs are loaded */}
+        {companies.length > 0 &&
+         companies.every(co => ['abasar','subisu','mainawatisteels','hrhub','himalayan','solidfuture'].includes(co.slug)) && (
+          <div style={{background:'#fffbeb',border:'2px solid #f59e0b',borderRadius:12,
+            padding:'14px 18px',marginBottom:16,display:'flex',gap:12,alignItems:'flex-start',flexWrap:'wrap'}}>
+            <span style={{fontSize:22,flexShrink:0}}>⚠️</span>
+            <div style={{flex:1,minWidth:200}}>
+              <div style={{fontSize:13,fontWeight:800,color:'#92400e',marginBottom:4}}>
+                Stale demo/mock data detected in browser cache
+              </div>
+              <div style={{fontSize:11,color:'#a16207',lineHeight:1.6}}>
+                This list contains <strong>stale cached data</strong> from a previous session — not real registered companies.
+                Click <strong>🗑️ Clear &amp; Reload</strong> to remove cached data and load fresh data from the API.
+              </div>
+            </div>
+            <button onClick={()=>{
+              ;['elogix_active_companies','elogix_approved_tenants',
+                'elogix_registered_companies','elogix_pending_tenants'].forEach(k=>localStorage.removeItem(k))
+              setCompanies([])
+              setPendingTenants([])
+              loadFromAPI()
+            }} style={{padding:'10px 18px',borderRadius:9,border:'none',background:'#d97706',
+              color:'#fff',fontSize:11,fontWeight:800,cursor:'pointer',fontFamily:'inherit',flexShrink:0}}>
+              🗑️ Clear &amp; Reload
+            </button>
+          </div>
+        )}
+
             {filtered.map(c=>{
               const sc = STATUS_COLORS[c.status]||STATUS_COLORS.active
               const utilPct = c.max_employees ? Math.round((c.employee_count||0)/c.max_employees*100) : 0

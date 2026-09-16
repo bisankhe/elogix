@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>eLogix — Clear Stale Data</title>
+<style>
+  body { font-family: 'Segoe UI', sans-serif; background: #0f172a;
+         display: flex; align-items: center; justify-content: center;
+         min-height: 100vh; margin: 0; }
+  .box { background: #1e293b; border: 1px solid #334155; border-radius: 16px;
+         padding: 36px 40px; max-width: 480px; width: 90%; text-align: center; }
+  h2   { color: #f8fafc; margin: 0 0 8px; font-size: 20px; }
+  p    { color: #94a3b8; font-size: 13px; margin: 0 0 28px; line-height: 1.6; }
+  .btn { display: block; width: 100%; padding: 14px; border-radius: 10px;
+         border: none; font-size: 14px; font-weight: 800; cursor: pointer;
+         font-family: inherit; margin-bottom: 12px; }
+  .red  { background: #dc2626; color: #fff; }
+  .blue { background: #0369a1; color: #fff; }
+  .gray { background: #334155; color: #94a3b8; }
+  .log  { background: #0f172a; border: 1px solid #334155; border-radius: 8px;
+          padding: 12px; margin-top: 20px; text-align: left; font-size: 11px;
+          color: #4ade80; font-family: monospace; max-height: 200px;
+          overflow-y: auto; display: none; }
+  .done { color: #4ade80; font-size: 28px; display: none; }
+</style>
+</head>
+<body>
+<div class="box">
+  <div style="font-size:40px;margin-bottom:12px">🗑️</div>
+  <h2>Wipe eLogix Stale Data</h2>
+  <p>This will permanently remove all old mock companies<br>
+     (Abasar Nepal, Subisu, Mainawati Steels, HR Hub)<br>
+     from your browser's localStorage right now.</p>
+
+  <button class="btn red" onclick="nukeAll()">
+    💣 WIPE ALL — Remove Everything Now
+  </button>
+  <button class="btn blue" onclick="nukeDemo()">
+    🎯 Remove Only Demo Companies
+  </button>
+  <button class="btn gray" onclick="showKeys()">
+    🔍 Inspect Current localStorage
+  </button>
+
+  <div class="done" id="done">✅ Done! Redirecting...</div>
+  <div class="log" id="log"></div>
+</div>
+
+<script>
+const DEMO_SLUGS = ['abasar','abasarnepal','subisu','subisulimited',
+  'mainawati','mainawatisteels','hrhub','hr-hub','himalayan',
+  'solidfuture','demo','testco','elogixdemo','trial']
+
+function log(msg, color) {
+  const el = document.getElementById('log')
+  el.style.display = 'block'
+  el.innerHTML += `<div style="color:${color||'#4ade80'}">${msg}</div>`
+  el.scrollTop = el.scrollHeight
+}
+
+function nukeAll() {
+  const count = localStorage.length
+  const keys  = []
+  for (let i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i))
+  keys.forEach(k => { localStorage.removeItem(k); sessionStorage.removeItem(k) })
+  log(`💣 Wiped ALL ${count} localStorage keys`, '#f87171')
+  log('💣 Wiped sessionStorage too', '#f87171')
+  showDone()
+}
+
+function nukeDemo() {
+  let wiped = 0
+  const allKeys = []
+  for (let i = 0; i < localStorage.length; i++) allKeys.push(localStorage.key(i))
+
+  allKeys.forEach(key => {
+    try {
+      const raw = localStorage.getItem(key)
+      if (!raw) return
+      const val = JSON.parse(raw)
+
+      // Array: filter out demo entries
+      if (Array.isArray(val)) {
+        const before = val.length
+        const clean  = val.filter(item => {
+          const s = (item?.slug || item?.company || '').toLowerCase()
+          const n = (item?.name || '').toLowerCase()
+          return !DEMO_SLUGS.some(d => s.includes(d) || n.includes(d))
+        })
+        if (clean.length !== before) {
+          clean.length > 0
+            ? localStorage.setItem(key, JSON.stringify(clean))
+            : localStorage.removeItem(key)
+          log(`🗑 ${key}: removed ${before - clean.length} demo entries (${clean.length} remain)`)
+          wiped += (before - clean.length)
+        }
+      }
+      // Object: delete demo slug keys
+      else if (val && typeof val === 'object') {
+        let changed = false
+        Object.keys(val).forEach(slug => {
+          const sLow = slug.toLowerCase()
+          if (DEMO_SLUGS.some(d => sLow.includes(d))) {
+            log(`🗑 ${key}["${slug}"] deleted`)
+            delete val[slug]; changed = true; wiped++
+          }
+        })
+        if (changed) {
+          Object.keys(val).length > 0
+            ? localStorage.setItem(key, JSON.stringify(val))
+            : localStorage.removeItem(key)
+        }
+      }
+      // String containing demo names
+      else if (typeof val === 'string') {
+        if (DEMO_SLUGS.some(d => val.toLowerCase().includes(d))) {
+          localStorage.removeItem(key)
+          log(`🗑 ${key} (string) deleted — contained demo slug`, '#fbbf24')
+          wiped++
+        }
+      }
+    } catch(_e) {
+      // Not JSON — check raw string
+      const raw = localStorage.getItem(key) || ''
+      if (DEMO_SLUGS.some(d => raw.toLowerCase().includes(d))) {
+        localStorage.removeItem(key)
+        log(`🗑 ${key} (raw) deleted`, '#fbbf24')
+        wiped++
+      }
+    }
+  })
+
+  // Also wipe specific known stale keys entirely
+  const ALWAYS_WIPE = [
+    'elogix_active_companies',
+    'elogix_approved_tenants',
+    'elogix_registered_companies',
+    'elogix_companies',
+    'elogix_registered_tenants',
+  ]
+  ALWAYS_WIPE.forEach(k => {
+    if (localStorage.getItem(k) !== null) {
+      localStorage.removeItem(k)
+      log(`🗑 ${k} wiped entirely (company cache key)`)
+      wiped++
+    }
+  })
+
+  if (wiped === 0) {
+    log('✅ No demo data found — localStorage is already clean!', '#4ade80')
+  } else {
+    log(`✅ Removed ${wiped} stale entries total`, '#4ade80')
+  }
+  showDone()
+}
+
+function showKeys() {
+  const el = document.getElementById('log')
+  el.style.display = 'block'
+  el.innerHTML = ''
+  if (localStorage.length === 0) {
+    log('📭 localStorage is empty', '#94a3b8')
+    return
+  }
+  log(`📦 ${localStorage.length} keys in localStorage:`, '#94a3b8')
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i)
+    const v = localStorage.getItem(k) || ''
+    const preview = v.length > 80 ? v.slice(0, 80) + '…' : v
+    const isDemo  = DEMO_SLUGS.some(d => v.toLowerCase().includes(d))
+    log(`${isDemo ? '🔴' : '⚪'} ${k}: ${preview}`, isDemo ? '#f87171' : '#94a3b8')
+  }
+}
+
+function showDone() {
+  document.getElementById('done').style.display = 'block'
+  setTimeout(() => {
+    window.location.href = 'http://localhost:5173'
+  }, 2000)
+}
+</script>
+</body>
+</html>
