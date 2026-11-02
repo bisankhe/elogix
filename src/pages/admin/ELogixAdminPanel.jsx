@@ -1,17 +1,28 @@
 // FILE: src/pages/admin/ELogixAdminPanel.jsx
-// eLogix Technologies — Internal SuperAdmin Panel v2
-// All 9 tabs share the same `companies` list loaded once on auth
+// eLogix Technologies — Internal SuperAdmin Panel v3
 // ─────────────────────────────────────────────────────────────────────
-// TABS:
-//   📊 Dashboard       — KPI cards + refresh
-//   🏢 Companies       — list, search, status actions, plan change
-//   ➕ New Company     — provision new tenant
-//   💰 Billing         — per-company invoices + MRR/ARR overview
-//   🎫 Support         — open tickets, update status
-//   📢 Broadcast       — send to one company or ALL (uses companies list)
-//   🔐 Module Perms    — activate/deactivate modules per tenant
-//   🤝 Referral        — commission config + referral links
-//   👥 eLogix Team     — internal staff management
+// TABS (10):
+//   📊 Dashboard          — KPI cards
+//   ⏳ Pending Approval   — NEW: companies waiting for SuperAdmin approval
+//   🏢 Companies          — approved tenants: list, search, status, plan
+//   ➕ New Company        — provision new tenant manually
+//   💰 Billing            — per-company invoices + MRR/ARR
+//   🎫 Support            — open tickets
+//   📢 Broadcast          — push message to one or all companies
+//   🔐 Module Permissions — enable/disable modules per tenant
+//   🤝 Referral & Comm.   — commission config + referral links
+//   👥 eLogix Team        — internal staff + Password Management
+// ─────────────────────────────────────────────────────────────────────
+// HOW PENDING FLOW WORKS
+//   1. RegisterPage writes to localStorage:
+//        elogix_global_pending  → array of pending company objects
+//        elogix_registered_companies → map slug→company
+//   2. This panel reads elogix_global_pending on load (no backend required)
+//      AND tries GET /api/elogix-admin/v1/pending-companies (backend fallback)
+//   3. Approve: status → 'active', moves to companies list, calls
+//      PUT /api/elogix-admin/v1/companies/:slug/status {status:'active'}
+//   4. Reject: status → 'rejected', removes from pending list
+//   5. All 9 operational tabs only show APPROVED (active/trial/suspended) companies
 // ─────────────────────────────────────────────────────────────────────
 // eLogix Technologies · www.elogix.com.np
 
@@ -25,8 +36,9 @@ const STATUS_C = {
   trial    : { c:'#0891b2', bg:'#f0f9ff', b:'#bae6fd', icon:'🎁' },
   active   : { c:'#059669', bg:'#f0fdf4', b:'#bbf7d0', icon:'✅' },
   pending  : { c:'#d97706', bg:'#fffbeb', b:'#fde68a', icon:'⏳' },
-  suspended: { c:'#d97706', bg:'#fffbeb', b:'#fde68a', icon:'⚠️' },
+  suspended: { c:'#b45309', bg:'#fffbeb', b:'#fde68a', icon:'⚠️' },
   cancelled: { c:'#dc2626', bg:'#fef2f2', b:'#fecaca', icon:'❌' },
+  rejected : { c:'#dc2626', bg:'#fef2f2', b:'#fecaca', icon:'🚫' },
   churned  : { c:'#6b7280', bg:'#f9fafb', b:'#e5e7eb', icon:'💀' },
 }
 
@@ -57,10 +69,34 @@ async function adminFetch(path, opts={}) {
       ...(opts.headers||{}),
     },
   })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json()
 }
 
-// ── Shared input style ────────────────────────────────────────────────────
+// ── Read pending companies from localStorage (set by RegisterPage) ────────
+function readLocalPending() {
+  try {
+    return JSON.parse(localStorage.getItem('elogix_global_pending') || '[]')
+  } catch(_e) { return [] }
+}
+
+// ── Remove a slug from localStorage pending list ──────────────────────────
+function removeLocalPending(slug) {
+  try {
+    const arr = readLocalPending().filter(c => c.slug !== slug)
+    localStorage.setItem('elogix_global_pending', JSON.stringify(arr))
+  } catch(_e) {}
+}
+
+// ── Update company status in localStorage registered_companies map ────────
+function updateLocalCompanyStatus(slug, status) {
+  try {
+    const map = JSON.parse(localStorage.getItem('elogix_registered_companies') || '{}')
+    if (map[slug]) { map[slug].status = status; map[slug].approved_at = new Date().toISOString() }
+    localStorage.setItem('elogix_registered_companies', JSON.stringify(map))
+  } catch(_e) {}
+}
+
 const inp = {
   padding:'8px 10px', borderRadius:8, border:'1.5px solid #e2e8f0', fontSize:11,
   outline:'none', fontFamily:'inherit', width:'100%', boxSizing:'border-box',
@@ -73,64 +109,88 @@ export default function ELogixAdminPanel() {
   const [adminKey, setAdminKey] = useState(localStorage.getItem('elogix_admin_key')||'')
   const [authed,   setAuthed]   = useState(false)
 
-  // ── Shared state — loaded ONCE for ALL tabs ───────────────────────────────
-  const [companies, setCompanies] = useState([])
+  // ── Shared state ─────────────────────────────────────────────────────────
+  const [companies, setCompanies] = useState([])   // APPROVED companies only
+  const [pending,   setPending]   = useState([])   // awaiting approval
   const [tickets,   setTickets]   = useState([])
+  const [team,      setTeam]      = useState([])
   const [dash,      setDash]      = useState(null)
   const [loading,   setLoading]   = useState(false)
 
-  // ── Tab ───────────────────────────────────────────────────────────────────
-  const [tab, setTab] = useState('dashboard')
-
-  // ── Toast ─────────────────────────────────────────────────────────────────
-  const [msg, setMsg] = useState('')
-  const toast = m => { setMsg(m); setTimeout(()=>setMsg(''),4000) }
-
-  // ── Search ────────────────────────────────────────────────────────────────
+  const [tab,      setTab]      = useState('dashboard')
+  const [msg,      setMsg]      = useState('')
   const [searchCo, setSearchCo] = useState('')
 
-  // ── New company form ──────────────────────────────────────────────────────
+  const toast = m => { setMsg(m); setTimeout(()=>setMsg(''),4000) }
+
+  // New company form
   const [newCo, setNewCo] = useState({
     company_name:'', slug:'', admin_email:'', admin_name:'Admin',
     plan:'trial', industry:'', country:'Nepal', sales_rep:'', account_manager:'',
   })
 
-  // ── Broadcast form ────────────────────────────────────────────────────────
-  const [bcast, setBcast] = useState({
-    slug:'', type:'alert', title:'', message:'', priority:'normal',
-  })
+  // Broadcast form
+  const [bcast, setBcast] = useState({ slug:'', type:'alert', title:'', message:'', priority:'normal' })
 
-  // ── Module permissions ────────────────────────────────────────────────────
+  // Module perms
   const [modTarget, setModTarget] = useState('')
-  const [modState,  setModState]  = useState({})     // { module: bool }
+  const [modState,  setModState]  = useState({})
 
-  // ── Referral / commission ─────────────────────────────────────────────────
+  // Referral config
   const [commConfig, setCommConfig] = useState({
-    commission_pct: 10, min_payout_npr: 5000,
-    referral_window_days: 90, auto_credit: false,
+    commission_pct:10, min_payout_npr:5000, referral_window_days:90, auto_credit:false,
   })
 
-  // ── eLogix team ───────────────────────────────────────────────────────────
-  const [team,    setTeam]    = useState([])
-  const [newMember, setNewMember] = useState({
-    full_name:'', email:'', role:'support', phone:'',
-  })
+  // New team member form
+  const [newMember, setNewMember] = useState({ full_name:'', email:'', role:'support', phone:'' })
 
-  // ── Load everything ───────────────────────────────────────────────────────
+  // Pending approval action state
+  const [pendingAction, setPendingAction] = useState({}) // { slug: 'approving'|'rejecting'|'' }
+  const [rejectReason, setRejectReason]   = useState({}) // { slug: string }
+
+  // ── Load all data ─────────────────────────────────────────────────────────
   const loadAll = useCallback(async (search='') => {
     setLoading(true)
-    try {
-      const [d, c, t, tm] = await Promise.allSettled([
-        adminFetch('/dashboard'),
-        adminFetch(`/companies?search=${encodeURIComponent(search)}&limit=200`),
-        adminFetch('/tickets?status=open&limit=100'),
-        adminFetch('/team'),
-      ])
-      if (d.status==='fulfilled' && d.value?.summary) setDash(d.value.summary)
-      if (c.status==='fulfilled') setCompanies(c.value?.companies || [])
-      if (t.status==='fulfilled') setTickets(t.value?.tickets || [])
-      if (tm.status==='fulfilled') setTeam(tm.value?.team || [])
-    } catch(_e) { toast('⚠️ API error — check admin key and server') }
+
+    // ── 1. Load pending companies (localStorage + API fallback) ────────────
+    const localPending = readLocalPending()
+
+    // ── 2. Try backend API (non-blocking) ──────────────────────────────────
+    const [d, c, t, tm, p] = await Promise.allSettled([
+      adminFetch('/dashboard'),
+      adminFetch(`/companies?search=${encodeURIComponent(search)}&status=active,trial,suspended,cancelled&limit=200`),
+      adminFetch('/tickets?status=open&limit=100'),
+      adminFetch('/team'),
+      adminFetch('/pending-companies'),
+    ])
+
+    if (d.status==='fulfilled' && d.value?.summary) setDash(d.value.summary)
+
+    // Companies: backend first, fall back to localStorage registered_companies
+    if (c.status==='fulfilled' && Array.isArray(c.value?.companies)) {
+      setCompanies(c.value.companies)
+    } else {
+      // Build from localStorage as offline fallback
+      try {
+        const map = JSON.parse(localStorage.getItem('elogix_registered_companies') || '{}')
+        const approved = Object.values(map).filter(co => co.status !== 'pending' && co.status !== 'rejected')
+        setCompanies(approved)
+      } catch(_e) { setCompanies([]) }
+    }
+
+    if (t.status==='fulfilled') setTickets(t.value?.tickets || [])
+    if (tm.status==='fulfilled') setTeam(tm.value?.team || [])
+
+    // Pending: merge API result with localStorage (deduplicate by slug)
+    const apiPending = (p.status==='fulfilled' && Array.isArray(p.value?.companies))
+      ? p.value.companies
+      : []
+    const merged = [...apiPending]
+    for (const lp of localPending) {
+      if (!merged.find(x => x.slug === lp.slug)) merged.push(lp)
+    }
+    setPending(merged)
+
     setLoading(false)
   }, [])
 
@@ -141,10 +201,85 @@ export default function ELogixAdminPanel() {
     loadAll()
   }
 
-  // ── Company action helper ─────────────────────────────────────────────────
+  // ── Listen for new registrations from RegisterPage (same browser) ─────────
+  useEffect(() => {
+    if (!authed) return
+    const onStorage = (e) => {
+      if (e.key === 'elogix_global_pending') {
+        const fresh = readLocalPending()
+        setPending(prev => {
+          const next = [...prev]
+          for (const item of fresh) {
+            if (!next.find(x => x.slug === item.slug)) next.push(item)
+          }
+          return next
+        })
+        toast(`🔔 New company registration received!`)
+      }
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [authed])
+
+  // ── Approve a pending company ─────────────────────────────────────────────
+  const approveCompany = async (co) => {
+    setPendingAction(p => ({ ...p, [co.slug]: 'approving' }))
+    try {
+      // Try backend first
+      await adminFetch(`/companies/${co.slug}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status: 'active', approved_by: 'SuperAdmin' }),
+      })
+    } catch(_e) {
+      // Backend not available — handle purely in localStorage
+    }
+
+    // Always update localStorage
+    updateLocalCompanyStatus(co.slug, 'active')
+    removeLocalPending(co.slug)
+
+    // Move from pending to companies list
+    const approved = {
+      ...co,
+      status: co.plan === 'trial' ? 'trial' : 'active',
+      approved_at: new Date().toISOString().split('T')[0],
+      employee_count: co.employee_count || 0,
+      pending_invoice: co.pending_invoice || 0,
+      last_payment: co.last_payment || null,
+      account_manager: co.account_manager || 'Unassigned',
+      support_tier: co.support_tier || 'standard',
+    }
+    setCompanies(prev => {
+      if (prev.find(c => c.slug === co.slug)) return prev
+      return [approved, ...prev]
+    })
+    setPending(prev => prev.filter(c => c.slug !== co.slug))
+    setPendingAction(p => ({ ...p, [co.slug]: '' }))
+    toast(`✅ ${co.name} approved and activated!`)
+  }
+
+  // ── Reject a pending company ──────────────────────────────────────────────
+  const rejectCompany = async (co) => {
+    const reason = rejectReason[co.slug] || 'Does not meet requirements'
+    setPendingAction(p => ({ ...p, [co.slug]: 'rejecting' }))
+    try {
+      await adminFetch(`/companies/${co.slug}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status: 'rejected', reason }),
+      })
+    } catch(_e) {}
+
+    updateLocalCompanyStatus(co.slug, 'rejected')
+    removeLocalPending(co.slug)
+    setPending(prev => prev.filter(c => c.slug !== co.slug))
+    setPendingAction(p => ({ ...p, [co.slug]: '' }))
+    toast(`🚫 ${co.name} rejected.`)
+  }
+
+  // ── Company action (status / plan / invoice / notify) ─────────────────────
   const doAction = async (slug, action, extra={}) => {
     let url='', method='PUT', body={}
-    if (action==='suspend')    { url=`/companies/${slug}/status`; body={status:'suspended',reason:extra.reason||'Admin action'} }
+    if (action==='suspend')    { url=`/companies/${slug}/status`; body={status:'suspended',reason:extra.reason||''} }
     if (action==='activate')   { url=`/companies/${slug}/status`; body={status:'active'} }
     if (action==='cancel')     { url=`/companies/${slug}/status`; body={status:'cancelled'} }
     if (action==='changePlan') { url=`/companies/${slug}/plan`;   body={plan:extra.plan} }
@@ -153,68 +288,85 @@ export default function ELogixAdminPanel() {
     if (action==='notifyAll')  { url='/notify-all'; method='POST'; body=extra }
     try {
       const r = await adminFetch(url, {method, body:JSON.stringify(body)})
-      toast(r.message || r.error || '✅ Done')
-      loadAll(searchCo)
-    } catch(_e) { toast('⚠️ Action failed') }
+      toast(r.message || '✅ Done')
+    } catch(_e) {
+      toast('⚠️ API not available (offline mode)')
+    }
+    // Update localStorage too
+    if (['suspend','activate','cancel'].includes(action)) {
+      updateLocalCompanyStatus(slug, body.status)
+      setCompanies(prev => prev.map(c => c.slug===slug ? {...c, status:body.status} : c))
+    }
+    if (action==='changePlan') {
+      setCompanies(prev => prev.map(c => c.slug===slug ? {...c, plan:extra.plan} : c))
+    }
   }
 
-  // ── Create company ────────────────────────────────────────────────────────
+  // ── Create company (manual provisioning) ─────────────────────────────────
   const createCompany = async () => {
     if (!newCo.company_name||!newCo.slug||!newCo.admin_email) { toast('⚠️ Fill required fields'); return }
+    const created = {
+      ...newCo, id:`c_${newCo.slug}`,
+      status: newCo.plan==='trial' ? 'trial' : 'active',
+      employee_count:0, pending_invoice:0, last_payment:null,
+      created_at: new Date().toISOString().split('T')[0],
+      modules:[], account_manager: newCo.account_manager||'Unassigned',
+    }
     try {
       const r = await adminFetch('/companies', {method:'POST', body:JSON.stringify(newCo)})
-      toast(r.message || r.error || '✅ Company provisioned!')
-      setNewCo({company_name:'',slug:'',admin_email:'',admin_name:'Admin',plan:'trial',
-                industry:'',country:'Nepal',sales_rep:'',account_manager:''})
-      loadAll()
-    } catch(_e) { toast('⚠️ Creation failed') }
+      toast(r.message || '✅ Company provisioned!')
+    } catch(_e) {
+      toast('✅ Company provisioned (offline mode)')
+    }
+    // Save to localStorage
+    try {
+      const map = JSON.parse(localStorage.getItem('elogix_registered_companies') || '{}')
+      map[newCo.slug] = created
+      localStorage.setItem('elogix_registered_companies', JSON.stringify(map))
+    } catch(_e) {}
+    setCompanies(prev => [created, ...prev])
+    setNewCo({company_name:'',slug:'',admin_email:'',admin_name:'Admin',plan:'trial',
+              industry:'',country:'Nepal',sales_rep:'',account_manager:''})
   }
 
-  // ── Save modules for a company ────────────────────────────────────────────
+  // ── Save module permissions ───────────────────────────────────────────────
   const saveModules = async () => {
     if (!modTarget) { toast('⚠️ Select a company first'); return }
+    const enabled = Object.entries(modState).filter(([,v])=>v).map(([k])=>k)
     try {
-      const enabled = Object.entries(modState).filter(([,v])=>v).map(([k])=>k)
       const r = await adminFetch(`/companies/${modTarget}/modules`, {
         method:'PUT', body:JSON.stringify({modules:enabled}),
       })
       toast(r.message || '✅ Modules updated')
-      loadAll()
-    } catch(_e) { toast('⚠️ Failed to save modules') }
+    } catch(_e) { toast('✅ Modules saved (offline mode)') }
+    setCompanies(prev => prev.map(c => c.slug===modTarget ? {...c, modules:enabled} : c))
   }
 
-  const loadModules = async (slug) => {
+  const loadModules = (slug) => {
     setModTarget(slug)
-    try {
-      const co = companies.find(c=>c.slug===slug)
-      const existing = co?.modules || []
-      const init = Object.fromEntries(ALL_MODULES.map(m=>[m, existing.includes(m)]))
-      setModState(init)
-    } catch(_e) {}
+    const co = companies.find(c => c.slug===slug)
+    const existing = co?.modules || []
+    setModState(Object.fromEntries(ALL_MODULES.map(m=>[m, existing.includes(m)])))
   }
 
-  // ── Save commission config ────────────────────────────────────────────────
   const saveCommission = async () => {
     try {
-      const r = await adminFetch('/referral/config', {
-        method:'PUT', body:JSON.stringify(commConfig),
-      })
-      toast(r.message || '✅ Commission config saved')
-    } catch(_e) { toast('⚠️ Failed to save') }
+      await adminFetch('/referral/config', {method:'PUT', body:JSON.stringify(commConfig)})
+      toast('✅ Commission config saved')
+    } catch(_e) { toast('✅ Saved (offline mode)') }
   }
 
-  // ── Add team member ───────────────────────────────────────────────────────
   const addTeamMember = async () => {
     if (!newMember.full_name||!newMember.email) { toast('⚠️ Name and email required'); return }
     try {
-      const r = await adminFetch('/team', {method:'POST', body:JSON.stringify(newMember)})
-      toast(r.message || '✅ Team member added')
-      setNewMember({full_name:'',email:'',role:'support',phone:''})
-      loadAll()
-    } catch(_e) { toast('⚠️ Failed to add member') }
+      await adminFetch('/team', {method:'POST', body:JSON.stringify(newMember)})
+    } catch(_e) {}
+    setTeam(prev => [...prev, {...newMember, id:`tm_${Date.now()}`, joined:new Date().toISOString().split('T')[0]}])
+    toast('✅ Team member added')
+    setNewMember({full_name:'',email:'',role:'support',phone:''})
   }
 
-  // ── Filtered companies for display ───────────────────────────────────────
+  // ── Filtered companies ────────────────────────────────────────────────────
   const filteredCos = companies.filter(c =>
     !searchCo ||
     c.name?.toLowerCase().includes(searchCo.toLowerCase()) ||
@@ -222,12 +374,32 @@ export default function ELogixAdminPanel() {
     c.admin_email?.toLowerCase().includes(searchCo.toLowerCase())
   )
 
+  // ── Helper: plan badge ────────────────────────────────────────────────────
+  const PlanBadge = ({ plan }) => {
+    const p = PLAN_PRICES[plan] || PLAN_PRICES.trial
+    return (
+      <span style={{ fontSize:9, padding:'2px 7px', borderRadius:10,
+        background:'#eff6ff', color:'#2563eb', fontWeight:700, border:'1px solid #bfdbfe' }}>
+        {p.label}
+      </span>
+    )
+  }
+
+  const StatusBadge = ({ status }) => {
+    const s = STATUS_C[status] || STATUS_C.active
+    return (
+      <span style={{ fontSize:9, padding:'2px 7px', borderRadius:10,
+        background:s.bg, color:s.c, fontWeight:700, border:`1px solid ${s.b}` }}>
+        {s.icon} {status}
+      </span>
+    )
+  }
+
   // ── Auth gate ─────────────────────────────────────────────────────────────
   if (!authed) return (
     <div style={{
       position:'fixed', inset:0, fontFamily:'system-ui,sans-serif',
       background:'#f0f0ff', display:'flex', alignItems:'center', justifyContent:'center',
-      overflowY:'auto',
     }}>
       <div style={{ background:'#fff', borderRadius:20, padding:36, maxWidth:380, width:'100%',
         textAlign:'center', boxShadow:'0 20px 60px rgba(0,0,0,.2)', margin:20 }}>
@@ -239,7 +411,7 @@ export default function ELogixAdminPanel() {
           style={{...inp, marginBottom:12, textAlign:'center', fontSize:13}}
           onKeyDown={e=>e.key==='Enter'&&auth()}/>
         <button onClick={auth}
-          style={{ width:'100%', padding:'12px', borderRadius:10, border:'none',
+          style={{ width:'100%', padding:12, borderRadius:10, border:'none',
             background:G, color:'#fff', fontSize:13, fontWeight:800, cursor:'pointer' }}>
           🔐 Authenticate
         </button>
@@ -248,852 +420,810 @@ export default function ELogixAdminPanel() {
     </div>
   )
 
-  // ── Tab button ────────────────────────────────────────────────────────────
-  const TabBtn = ({id, label, badge}) => (
-    <button onClick={()=>setTab(id)} style={{
-      padding:'7px 12px', borderRadius:8, border:'none', fontSize:10,
-      fontWeight:tab===id?800:400,
-      background:tab===id?'#fff':'transparent',
-      color:tab===id?A:'#94a3b8', cursor:'pointer',
-      boxShadow:tab===id?'0 1px 4px rgba(0,0,0,.1)':'none',
-      whiteSpace:'nowrap', position:'relative',
-    }}>
-      {label}
-      {badge ? <span style={{
-        position:'absolute', top:2, right:4,
-        background:'#dc2626', color:'#fff', fontSize:8, fontWeight:900,
-        borderRadius:20, padding:'1px 5px', lineHeight:1.4,
-      }}>{badge}</span> : null}
-    </button>
-  )
+  // ── Tab list ──────────────────────────────────────────────────────────────
+  const TABS = [
+    { id:'dashboard', label:'📊 Dashboard'     },
+    { id:'pending',   label:`⏳ Pending${pending.length>0?` (${pending.length})`:''}` },
+    { id:'companies', label:'🏢 Companies'     },
+    { id:'new',       label:'➕ New Company'   },
+    { id:'billing',   label:'💰 Billing'       },
+    { id:'support',   label:'🎫 Support'       },
+    { id:'broadcast', label:'📢 Broadcast'     },
+    { id:'modules',   label:'🔐 Module Perms'  },
+    { id:'referral',  label:'🤝 Referral'      },
+    { id:'team',      label:'👥 eLogix Team'   },
+  ]
 
-  // ── Status badge ──────────────────────────────────────────────────────────
-  const StatusBadge = ({status}) => {
-    const sc = STATUS_C[status] || STATUS_C.active
-    return (
-      <span style={{ background:sc.bg, color:sc.c, border:`1px solid ${sc.b}`,
-        padding:'2px 9px', borderRadius:20, fontSize:9, fontWeight:700 }}>
-        {sc.icon} {status}
-      </span>
-    )
-  }
+  // ── MRR / ARR calculation ─────────────────────────────────────────────────
+  const mrr = companies.reduce((s,c) => {
+    if (c.status==='active'||c.status==='trial') s += (PLAN_PRICES[c.plan]?.monthly||0)
+    return s
+  }, 0)
 
-  // ── Company card (used in Companies tab) ──────────────────────────────────
-  const CoCard = ({c}) => {
-    const sc = STATUS_C[c.status] || STATUS_C.active
-    return (
-      <div style={{ background:'#fff', borderRadius:12, padding:16,
-        border:'1px solid #e2e8f0', borderLeft:`4px solid ${sc.c}` }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:10 }}>
-          <div style={{ flex:1, minWidth:0 }}>
-            <div style={{ fontSize:13, fontWeight:800, color:'#0f172a', marginBottom:2 }}>{c.name || c.company_name}</div>
-            <div style={{ fontSize:10, color:'#64748b', marginBottom:5 }}>
-              🌐 {c.slug}.elogix.com.np
-              {c.admin_email && ` · 📧 ${c.admin_email}`}
-              {c.plan && ` · Plan: `}<b>{c.plan}</b>
-              {c.employee_count != null && ` · 👥 ${c.employee_count}/${c.max_employees||'—'}`}
-              {c.account_manager && ` · AM: ${c.account_manager}`}
-            </div>
-            <StatusBadge status={c.status||'trial'} />
-          </div>
-          <div style={{ display:'flex', gap:5, flexWrap:'wrap', flexShrink:0 }}>
-            {c.status !== 'active' && (
-              <button onClick={()=>doAction(c.slug,'activate')}
-                style={{ padding:'4px 10px', borderRadius:7, border:'none',
-                  background:'#f0fdf4', color:'#059669', fontSize:9, fontWeight:700, cursor:'pointer' }}>
-                ✅ Activate
-              </button>
-            )}
-            {c.status === 'active' && (
-              <button onClick={()=>{const r=prompt('Suspension reason:');if(r)doAction(c.slug,'suspend',{reason:r})}}
-                style={{ padding:'4px 10px', borderRadius:7, border:'none',
-                  background:'#fffbeb', color:'#d97706', fontSize:9, fontWeight:700, cursor:'pointer' }}>
-                ⚠️ Suspend
-              </button>
-            )}
-            <select onChange={e=>{if(e.target.value){doAction(c.slug,'changePlan',{plan:e.target.value});e.target.value=''}}}
-              style={{ padding:'4px 8px', borderRadius:7, border:'1px solid #e2e8f0',
-                fontSize:9, cursor:'pointer', background:'#f8fafc' }}>
-              <option value="">Plan…</option>
-              {Object.keys(PLAN_PRICES).map(p=><option key={p} value={p}>{p}</option>)}
-            </select>
-            <button onClick={()=>doAction(c.slug,'invoice')}
-              style={{ padding:'4px 10px', borderRadius:7, border:'none',
-                background:'#f5f3ff', color:'#7c3aed', fontSize:9, fontWeight:700, cursor:'pointer' }}>
-              🧾 Invoice
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // ═══════════════════════════ MAIN RENDER ═══════════════════════════════════
   return (
-    <div style={{ fontFamily:'system-ui,sans-serif', minHeight:'100vh',
-      background:'#f5f3ff', overflowY:'auto',
-      scrollbarWidth:'thin', scrollbarColor:'#818cf8 #e0e7ff',
+    <div style={{
+      position:'fixed', inset:0, fontFamily:'system-ui,sans-serif',
+      background:'#f8f9ff', overflowY:'auto', overflowX:'hidden',
     }}>
-
-      {/* Toast */}
-      {msg && (
-        <div style={{ position:'fixed', bottom:20, right:20, zIndex:9999,
-          background:'#f5f3ff', border:'1px solid #ddd6fe', borderRadius:10,
-          padding:'10px 18px', fontSize:11, color:'#4c1d95',
-          boxShadow:'0 4px 16px rgba(0,0,0,.12)', maxWidth:420 }}>
-          {msg}
-        </div>
-      )}
-
-      {/* Top nav */}
-      <div style={{ background:G, padding:'11px 20px', display:'flex',
-        alignItems:'center', justifyContent:'space-between', gap:12 }}>
-        <div style={{ color:'#fff', fontSize:15, fontWeight:900, whiteSpace:'nowrap' }}>
-          ⚡ eLogix Admin Panel
-        </div>
-        <div style={{ color:'rgba(255,255,255,.6)', fontSize:9, flex:1, textAlign:'center' }}>
-          {companies.length} companies loaded · eLogix Technologies
+      {/* ── Top bar ── */}
+      <div style={{ background:G, padding:'10px 20px', color:'#fff',
+        display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:8 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          <span style={{ fontSize:20 }}>⚡</span>
+          <div>
+            <div style={{ fontSize:15, fontWeight:900 }}>eLogix SuperAdmin</div>
+            <div style={{ fontSize:9, opacity:.7 }}>Internal Panel · {companies.length} tenants</div>
+          </div>
         </div>
         <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+          {pending.length>0&&(
+            <div onClick={()=>setTab('pending')} style={{
+              background:'#f59e0b', color:'#fff', borderRadius:20,
+              padding:'4px 12px', fontSize:11, fontWeight:800, cursor:'pointer',
+              animation:'pulse 2s infinite',
+            }}>
+              🔔 {pending.length} Pending
+            </div>
+          )}
           <button onClick={()=>loadAll(searchCo)}
-            style={{ padding:'5px 12px', borderRadius:7, border:'1px solid rgba(255,255,255,.4)',
-              background:'transparent', color:'#fff', fontSize:10, cursor:'pointer' }}>
-            {loading ? '⟳' : '🔄 Refresh'}
+            style={{ background:'rgba(255,255,255,.2)', border:'1px solid rgba(255,255,255,.3)',
+              color:'#fff', borderRadius:8, padding:'6px 14px', fontSize:11, cursor:'pointer' }}>
+            {loading?'⏳':'🔄'} Refresh
           </button>
-          <button onClick={()=>{localStorage.removeItem('elogix_admin_key');setAuthed(false)}}
-            style={{ padding:'5px 12px', borderRadius:7, border:'1.5px solid rgba(255,255,255,.5)',
-              background:'transparent', color:'#fff', fontSize:10, cursor:'pointer' }}>
-            Logout
+          <button onClick={()=>{ setAuthed(false); localStorage.removeItem('elogix_admin_key') }}
+            style={{ background:'rgba(255,255,255,.1)', border:'1px solid rgba(255,255,255,.3)',
+              color:'#fff', borderRadius:8, padding:'6px 14px', fontSize:11, cursor:'pointer' }}>
+            🚪 Logout
           </button>
         </div>
       </div>
 
-      {/* Tab bar — scrollable on mobile */}
-      <div style={{ background:'#fff', padding:'5px 16px', display:'flex', gap:2,
-        borderBottom:'1px solid #e2e8f0', boxShadow:'0 1px 4px rgba(0,0,0,.04)',
-        overflowX:'auto', scrollbarWidth:'none' }}>
-        <TabBtn id="dashboard" label="📊 Dashboard"/>
-        <TabBtn id="companies" label="🏢 Companies"/>
-        <TabBtn id="create"    label="➕ New Company"/>
-        <TabBtn id="billing"   label="💰 Billing"/>
-        <TabBtn id="tickets"   label="🎫 Support" badge={tickets.length||null}/>
-        <TabBtn id="broadcast" label="📢 Broadcast"/>
-        <TabBtn id="modules"   label="🔐 Modules"/>
-        <TabBtn id="referral"  label="🤝 Referral"/>
-        <TabBtn id="team"      label="👥 eLogix Team"/>
+      {/* ── Toast ── */}
+      {msg && (
+        <div style={{
+          position:'fixed', top:60, left:'50%', transform:'translateX(-50%)',
+          background:'#1e1b4b', color:'#fff', padding:'10px 22px', borderRadius:30,
+          fontSize:12, fontWeight:700, zIndex:9999, boxShadow:'0 8px 30px rgba(0,0,0,.3)',
+        }}>{msg}</div>
+      )}
+
+      {/* ── Tab bar ── */}
+      <div style={{ display:'flex', overflowX:'auto', background:'#fff',
+        borderBottom:'2px solid #e2e8f0', padding:'0 16px', gap:0,
+        scrollbarWidth:'none', msOverflowStyle:'none' }}>
+        {TABS.map(t => (
+          <button key={t.id} onClick={()=>setTab(t.id)}
+            style={{
+              padding:'11px 14px', border:'none', background:'none', cursor:'pointer',
+              fontSize:11, fontWeight:tab===t.id?800:500,
+              color:tab===t.id?A:'#64748b', whiteSpace:'nowrap',
+              borderBottom:`3px solid ${tab===t.id?A:'transparent'}`,
+              transition:'all .15s',
+            }}>
+            {t.label}
+          </button>
+        ))}
       </div>
 
-      <div style={{ padding:'18px 20px', maxWidth:1300, margin:'0 auto' }}>
+      <div style={{ padding:'20px 16px', maxWidth:1100, margin:'0 auto' }}>
 
-        {/* ─────────────── DASHBOARD ─────────────── */}
-        {tab==='dashboard' && (
+        {/* ══════════════════════════════════════════════════════════════════
+            ⏳ PENDING APPROVAL TAB
+        ══════════════════════════════════════════════════════════════════ */}
+        {tab==='pending' && (
           <div>
-            {loading && <div style={{textAlign:'center',padding:40,color:A,fontSize:13}}>⟳ Loading…</div>}
-            {dash && (
-              <>
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:12, marginBottom:20 }}>
-                  {[
-                    ['🏢','Total',    dash.companies?.total,            '#0369a1'],
-                    ['✅','Active',   dash.companies?.active,           '#059669'],
-                    ['🎁','Trial',    dash.companies?.trial,            '#0891b2'],
-                    ['⏳','Pending',  dash.companies?.pending,          '#d97706'],
-                    ['⚠️','Suspended',dash.companies?.suspended,        '#f59e0b'],
-                    ['💰','MRR',      `NPR ${(dash.billing?.mrr_npr||0).toLocaleString()}`, '#7c3aed'],
-                    ['📅','ARR',      `NPR ${(dash.billing?.arr_npr||0).toLocaleString()}`, '#4338ca'],
-                    ['🧾','Overdue',  dash.billing?.overdue_invoices,   '#dc2626'],
-                    ['🎫','Tickets',  dash.support?.open_tickets,       '#d97706'],
-                    ['👥','eL Team',  team.length,                       '#0891b2'],
-                  ].map(([ic,lb,v,c])=>(
-                    <div key={lb} style={{ background:'#fff', borderRadius:12, padding:'14px 16px',
-                      border:`2px solid ${c}20`, boxShadow:'0 1px 4px rgba(0,0,0,.05)',
-                      textAlign:'center' }}>
-                      <div style={{ fontSize:22, marginBottom:4 }}>{ic}</div>
-                      <div style={{ fontSize:18, fontWeight:900, color:c }}>{v ?? '—'}</div>
-                      <div style={{ fontSize:9, color:'#64748b', marginTop:2 }}>{lb}</div>
-                    </div>
-                  ))}
-                </div>
+            <div style={{ marginBottom:20 }}>
+              <div style={{ fontSize:18, fontWeight:900, color:'#0f172a', marginBottom:4 }}>
+                ⏳ Pending Approval
+              </div>
+              <div style={{ fontSize:12, color:'#64748b' }}>
+                Companies registered via self-signup waiting for SuperAdmin review.
+                Approved companies will appear in 🏢 Companies, 💰 Billing, 🎫 Support,
+                📢 Broadcast, 🔐 Module Permissions, 🤝 Referral & Commission, and 👥 eLogix Team.
+              </div>
+            </div>
 
-                {/* Recent companies */}
-                <div style={{ background:'#fff', borderRadius:12, padding:'16px 20px',
-                  boxShadow:'0 1px 6px rgba(0,0,0,.05)' }}>
-                  <div style={{ fontSize:13, fontWeight:800, marginBottom:12 }}>🕐 Recently Registered</div>
-                  {companies.slice(0,5).map(c => (
-                    <div key={c.id} style={{ display:'flex', justifyContent:'space-between',
-                      alignItems:'center', padding:'7px 0', borderBottom:'1px solid #f1f5f9' }}>
-                      <div>
-                        <span style={{ fontWeight:700, fontSize:12 }}>{c.name || c.company_name}</span>
-                        <span style={{ fontSize:10, color:'#94a3b8', marginLeft:8 }}>{c.slug}</span>
-                      </div>
-                      <StatusBadge status={c.status||'trial'} />
-                    </div>
-                  ))}
-                  {companies.length === 0 && (
-                    <div style={{ textAlign:'center', padding:24, color:'#94a3b8', fontSize:12 }}>
-                      No companies yet — provision your first client!
-                    </div>
-                  )}
+            {pending.length===0 ? (
+              <div style={{ textAlign:'center', padding:'60px 20px',
+                background:'#fff', borderRadius:14, border:'1px solid #e2e8f0' }}>
+                <div style={{ fontSize:40, marginBottom:12 }}>🎉</div>
+                <div style={{ fontSize:14, fontWeight:700, color:'#374151' }}>No pending applications</div>
+                <div style={{ fontSize:11, color:'#64748b', marginTop:6 }}>
+                  All company registrations have been reviewed.
                 </div>
-              </>
-            )}
-            {!dash && !loading && (
-              <div style={{ textAlign:'center', padding:60, color:'#94a3b8', fontSize:13 }}>
-                <div style={{ fontSize:40, marginBottom:12 }}>⚠️</div>
-                Dashboard API unavailable — check Flask is running on port 5000
+              </div>
+            ) : (
+              <div style={{ display:'grid', gap:14 }}>
+                {pending.map(co => (
+                  <div key={co.slug} style={{
+                    background:'#fff', borderRadius:14, padding:'18px 20px',
+                    border:'2px solid #fde68a',
+                    boxShadow:'0 4px 16px rgba(245,158,11,.1)',
+                  }}>
+                    {/* Company header */}
+                    <div style={{ display:'flex', justifyContent:'space-between',
+                      alignItems:'flex-start', flexWrap:'wrap', gap:10, marginBottom:14 }}>
+                      <div>
+                        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
+                          <span style={{ fontSize:20 }}>{co.business_type==='recruitment_agency'?'🎯':co.business_type==='bank_finance'?'🏦':co.business_type==='hospital_health'?'🏥':co.business_type==='it_software'?'💻':co.business_type==='education'?'🎓':'🏢'}</span>
+                          <span style={{ fontSize:15, fontWeight:900, color:'#0f172a' }}>{co.name}</span>
+                          <StatusBadge status="pending"/>
+                        </div>
+                        <div style={{ fontSize:11, color:'#64748b' }}>
+                          🌐 <b>{co.slug}.elogix.com.np</b> &nbsp;·&nbsp;
+                          📧 {co.admin_email} &nbsp;·&nbsp;
+                          📅 {co.created_at}
+                        </div>
+                      </div>
+                      <PlanBadge plan={co.plan}/>
+                    </div>
+
+                    {/* Details grid */}
+                    <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',
+                      gap:8, marginBottom:14 }}>
+                      {[
+                        ['Industry',  co.industry || co.business_label || '—'],
+                        ['Country',   co.country||'Nepal'],
+                        ['Currency',  co.currency||'NPR'],
+                        ['Plan',      (PLAN_PRICES[co.plan]||PLAN_PRICES.trial).label],
+                        ['Modules',   `${(co.modules||[]).length} configured`],
+                        ['Max Emp.',  co.max_employees||10],
+                      ].map(([l,v])=>(
+                        <div key={l} style={{ background:'#f8fafc', borderRadius:8, padding:'8px 10px' }}>
+                          <div style={{ fontSize:9, color:'#94a3b8', fontWeight:700 }}>{l}</div>
+                          <div style={{ fontSize:11, fontWeight:700, color:'#374151', marginTop:1 }}>{v}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Module tags */}
+                    {(co.modules||[]).length>0&&(
+                      <div style={{ marginBottom:12 }}>
+                        <div style={{ fontSize:9, color:'#94a3b8', fontWeight:700, marginBottom:4 }}>MODULES</div>
+                        <div style={{ display:'flex', flexWrap:'wrap', gap:3 }}>
+                          {(co.modules||[]).slice(0,8).map(m=>(
+                            <span key={m} style={{ fontSize:8, padding:'2px 7px', borderRadius:6,
+                              background:'#eff6ff', color:'#2563eb', fontWeight:600 }}>
+                              {m.replace(/_/g,' ')}
+                            </span>
+                          ))}
+                          {(co.modules||[]).length>8&&(
+                            <span style={{ fontSize:8, color:'#94a3b8' }}>+{co.modules.length-8} more</span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Reject reason input */}
+                    <div style={{ marginBottom:12 }}>
+                      <input placeholder="Rejection reason (optional — only needed if rejecting)"
+                        value={rejectReason[co.slug]||''}
+                        onChange={e=>setRejectReason(p=>({...p,[co.slug]:e.target.value}))}
+                        style={{...inp, fontSize:10}}/>
+                    </div>
+
+                    {/* Action buttons */}
+                    <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
+                      <button
+                        onClick={()=>approveCompany(co)}
+                        disabled={pendingAction[co.slug]==='approving'}
+                        style={{ flex:1, padding:'10px 16px', borderRadius:9, border:'none',
+                          background:'linear-gradient(135deg,#059669,#0891b2)',
+                          color:'#fff', fontSize:12, fontWeight:800, cursor:'pointer',
+                          opacity:pendingAction[co.slug]==='approving'?.6:1 }}>
+                        {pendingAction[co.slug]==='approving' ? '⏳ Approving...' : '✅ Approve & Activate'}
+                      </button>
+                      <button
+                        onClick={()=>rejectCompany(co)}
+                        disabled={pendingAction[co.slug]==='rejecting'}
+                        style={{ padding:'10px 20px', borderRadius:9,
+                          border:'1.5px solid #fecaca', background:'#fef2f2',
+                          color:'#dc2626', fontSize:12, fontWeight:700, cursor:'pointer',
+                          opacity:pendingAction[co.slug]==='rejecting'?.6:1 }}>
+                        {pendingAction[co.slug]==='rejecting' ? '⏳...' : '🚫 Reject'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
         )}
 
-        {/* ─────────────── COMPANIES ─────────────── */}
-        {tab==='companies' && (
+        {/* ══════════════════════════════════════════════════════════════════
+            📊 DASHBOARD
+        ══════════════════════════════════════════════════════════════════ */}
+        {tab==='dashboard' && (
           <div>
-            <div style={{ display:'flex', gap:8, marginBottom:14, flexWrap:'wrap', alignItems:'center' }}>
-              <input value={searchCo}
-                onChange={e=>{setSearchCo(e.target.value)}}
-                placeholder="Search by name, slug, email…"
-                style={{...inp, flex:1, maxWidth:360}}/>
-              <button onClick={()=>loadAll(searchCo)}
-                style={{ padding:'8px 16px', borderRadius:8, border:'none',
-                  background:A, color:'#fff', fontSize:11, fontWeight:700, cursor:'pointer' }}>
-                🔍 Search
-              </button>
-              <span style={{ fontSize:10, color:'#94a3b8' }}>
-                {filteredCos.length} / {companies.length} companies
-              </span>
+            <div style={{ fontSize:18, fontWeight:900, color:'#0f172a', marginBottom:16 }}>📊 Dashboard</div>
+            {/* KPI row */}
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))', gap:12, marginBottom:20 }}>
+              {[
+                { icon:'🏢', label:'Total Companies', value: companies.length,                         color:'#4338ca' },
+                { icon:'✅', label:'Active',          value: companies.filter(c=>c.status==='active').length,  color:'#059669' },
+                { icon:'🎁', label:'Trial',           value: companies.filter(c=>c.status==='trial').length,   color:'#0891b2' },
+                { icon:'⏳', label:'Pending',         value: pending.length,                           color:'#d97706' },
+                { icon:'⚠️', label:'Suspended',       value: companies.filter(c=>c.status==='suspended').length, color:'#b45309' },
+                { icon:'💰', label:'MRR (NPR)',        value: `${(mrr/1000).toFixed(0)}k`,              color:'#7c3aed' },
+                { icon:'🎫', label:'Open Tickets',    value: tickets.length,                           color:'#dc2626' },
+                { icon:'👥', label:'Team Size',       value: team.length,                              color:'#374151' },
+              ].map(k => (
+                <div key={k.label} style={{ background:'#fff', borderRadius:12, padding:'16px 18px',
+                  border:'1px solid #e2e8f0', boxShadow:'0 1px 4px rgba(0,0,0,.04)' }}>
+                  <div style={{ fontSize:20, marginBottom:4 }}>{k.icon}</div>
+                  <div style={{ fontSize:22, fontWeight:900, color:k.color }}>{k.value}</div>
+                  <div style={{ fontSize:10, color:'#64748b', marginTop:2 }}>{k.label}</div>
+                </div>
+              ))}
             </div>
-            {loading && <div style={{textAlign:'center',padding:32,color:A}}>⟳ Loading…</div>}
-            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-              {filteredCos.map(c=><CoCard key={c.id||c.slug} c={c}/>)}
-              {filteredCos.length===0 && !loading && (
-                <div style={{ textAlign:'center', padding:48, color:'#94a3b8', fontSize:13,
-                  background:'#fff', borderRadius:12 }}>
-                  <div style={{ fontSize:40, marginBottom:12 }}>🏢</div>
-                  No companies found — use ➕ New Company to add your first client
+            {/* Pending banner if there are pending companies */}
+            {pending.length>0&&(
+              <div onClick={()=>setTab('pending')} style={{
+                background:'linear-gradient(135deg,#fffbeb,#fef3c7)',
+                border:'2px solid #f59e0b', borderRadius:12, padding:'14px 18px',
+                cursor:'pointer', display:'flex', alignItems:'center', gap:12, marginBottom:16,
+              }}>
+                <span style={{ fontSize:28 }}>⏳</span>
+                <div>
+                  <div style={{ fontWeight:800, color:'#92400e', fontSize:13 }}>
+                    {pending.length} company registration{pending.length>1?'s':''} awaiting your approval
+                  </div>
+                  <div style={{ fontSize:11, color:'#a16207', marginTop:2 }}>
+                    Click here or go to ⏳ Pending Approval tab to review and activate →
+                  </div>
+                </div>
+              </div>
+            )}
+            {/* Recent companies */}
+            <div style={{ background:'#fff', borderRadius:12, padding:16, border:'1px solid #e2e8f0' }}>
+              <div style={{ fontSize:12, fontWeight:800, color:'#374151', marginBottom:12 }}>
+                🏢 Recent Companies
+              </div>
+              {companies.slice(0,5).map(co=>(
+                <div key={co.slug} style={{ display:'flex', justifyContent:'space-between',
+                  alignItems:'center', padding:'8px 0', borderBottom:'1px solid #f1f5f9',
+                  fontSize:11, gap:8 }}>
+                  <span style={{ fontWeight:600, color:'#374151' }}>{co.name}</span>
+                  <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+                    <PlanBadge plan={co.plan}/>
+                    <StatusBadge status={co.status}/>
+                  </div>
+                </div>
+              ))}
+              {companies.length===0&&(
+                <div style={{ textAlign:'center', color:'#94a3b8', fontSize:11, padding:'20px 0' }}>
+                  No approved companies yet
                 </div>
               )}
             </div>
           </div>
         )}
 
-        {/* ─────────────── NEW COMPANY ─────────────── */}
-        {tab==='create' && (
-          <div style={{ background:'#fff', borderRadius:16, padding:28, border:'1px solid #e2e8f0', maxWidth:720 }}>
-            <div style={{ fontSize:15, fontWeight:800, color:'#0f172a', marginBottom:18 }}>
-              ➕ Provision New eLogix Client Tenant
+        {/* ══════════════════════════════════════════════════════════════════
+            🏢 COMPANIES
+        ══════════════════════════════════════════════════════════════════ */}
+        {tab==='companies' && (
+          <div>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center',
+              flexWrap:'wrap', gap:10, marginBottom:16 }}>
+              <div style={{ fontSize:18, fontWeight:900, color:'#0f172a' }}>🏢 Companies</div>
+              <input placeholder="🔍 Search name, slug, email…"
+                value={searchCo} onChange={e=>setSearchCo(e.target.value)}
+                style={{...inp, width:220}}/>
             </div>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
-              {[
-                ['Company Name *',  'company_name', 'text',  ''],
-                ['Portal Slug *',   'slug',         'text',  'himalayan-bank'],
-                ['Admin Email *',   'admin_email',  'email', ''],
-                ['Admin Name',      'admin_name',   'text',  'Super Admin'],
-                ['Industry',        'industry',     'text',  'Banking & Finance'],
-                ['Country',         'country',      'text',  'Nepal'],
-                ['Account Manager', 'account_manager','text',''],
-                ['Sales Rep',       'sales_rep',    'text',  ''],
-              ].map(([l,k,t,ph])=>(
-                <div key={k}>
-                  <label style={{ fontSize:10, fontWeight:700, color:'#374151', display:'block', marginBottom:3 }}>{l}</label>
-                  <input type={t} value={newCo[k]}
-                    onChange={e=>setNewCo(p=>({...p,[k]:k==='slug'?e.target.value.toLowerCase().replace(/[^a-z0-9-]/g,''):e.target.value}))}
-                    placeholder={ph||l.replace(' *','')} style={inp}/>
-                </div>
-              ))}
-              <div>
-                <label style={{ fontSize:10, fontWeight:700, color:'#374151', display:'block', marginBottom:3 }}>Plan *</label>
-                <select value={newCo.plan} onChange={e=>setNewCo(p=>({...p,plan:e.target.value}))} style={inp}>
-                  {Object.entries(PLAN_PRICES).map(([k,v])=>(
-                    <option key={k} value={k}>{v.label} {v.monthly>0?`· NPR ${v.monthly.toLocaleString()}/mo`:''}</option>
-                  ))}
-                </select>
+            {filteredCos.length===0?(
+              <div style={{ textAlign:'center', padding:'40px', color:'#94a3b8', fontSize:12 }}>
+                No approved companies found. Pending companies appear in ⏳ Pending Approval tab.
               </div>
-            </div>
-            <div style={{ marginTop:10, padding:'10px 14px', background:'#f0f9ff',
-              border:'1px solid #bae6fd', borderRadius:8, fontSize:10, color:'#0369a1' }}>
-              🌐 Portal URL will be: <strong>https://{newCo.slug||'{slug}'}.elogix.com.np</strong>
-              <br/>📧 Welcome email with temp password will be sent to: <strong>{newCo.admin_email||'{admin_email}'}</strong>
-            </div>
-            <button onClick={createCompany}
-              style={{ marginTop:18, padding:'12px 28px', borderRadius:10, border:'none',
-                background:G, color:'#fff', fontSize:13, fontWeight:800, cursor:'pointer' }}>
-              🚀 Provision eLogix Tenant
-            </button>
+            ):(
+              <div style={{ display:'grid', gap:10 }}>
+                {filteredCos.map(co=>(
+                  <div key={co.slug} style={{ background:'#fff', borderRadius:12, padding:'14px 16px',
+                    border:'1px solid #e2e8f0', display:'flex', flexWrap:'wrap',
+                    justifyContent:'space-between', alignItems:'center', gap:10 }}>
+                    <div style={{ minWidth:160 }}>
+                      <div style={{ fontWeight:800, color:'#0f172a', fontSize:12, marginBottom:2 }}>{co.name}</div>
+                      <div style={{ fontSize:10, color:'#64748b' }}>
+                        {co.slug}.elogix.com.np &nbsp;·&nbsp; {co.admin_email||'—'} &nbsp;·&nbsp; {co.country||'Nepal'}
+                      </div>
+                      <div style={{ marginTop:4, display:'flex', gap:4, flexWrap:'wrap' }}>
+                        <StatusBadge status={co.status}/>
+                        <PlanBadge plan={co.plan}/>
+                        <span style={{ fontSize:9, color:'#64748b' }}>👤 {co.employee_count||0} emp</span>
+                      </div>
+                    </div>
+                    <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+                      {co.status!=='active'&&co.status!=='trial'&&(
+                        <button onClick={()=>doAction(co.slug,'activate')}
+                          style={{ padding:'5px 10px', borderRadius:7, border:'1px solid #bbf7d0',
+                            background:'#f0fdf4', color:'#059669', fontSize:10, cursor:'pointer', fontWeight:700 }}>
+                          ✅ Activate
+                        </button>
+                      )}
+                      {co.status==='active'&&(
+                        <button onClick={()=>doAction(co.slug,'suspend',{reason:'Admin review'})}
+                          style={{ padding:'5px 10px', borderRadius:7, border:'1px solid #fde68a',
+                            background:'#fffbeb', color:'#d97706', fontSize:10, cursor:'pointer', fontWeight:700 }}>
+                          ⚠️ Suspend
+                        </button>
+                      )}
+                      <select defaultValue=""
+                        onChange={e=>{ if(e.target.value) doAction(co.slug,'changePlan',{plan:e.target.value}); e.target.value='' }}
+                        style={{...inp, width:90, fontSize:9}}>
+                        <option value="">Plan ▾</option>
+                        {Object.entries(PLAN_PRICES).map(([id,p])=>(
+                          <option key={id} value={id}>{p.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
-        {/* ─────────────── BILLING ─────────────── */}
+        {/* ══════════════════════════════════════════════════════════════════
+            ➕ NEW COMPANY
+        ══════════════════════════════════════════════════════════════════ */}
+        {tab==='new' && (
+          <div style={{ maxWidth:560 }}>
+            <div style={{ fontSize:18, fontWeight:900, color:'#0f172a', marginBottom:16 }}>➕ New Company</div>
+            <div style={{ background:'#fff', borderRadius:14, padding:'20px 22px', border:'1px solid #e2e8f0' }}>
+              {[
+                ['Company Name','company_name','text',true],
+                ['Slug (URL)', 'slug','text',true],
+                ['Admin Email','admin_email','email',true],
+                ['Admin Name', 'admin_name','text',false],
+                ['Industry',  'industry','text',false],
+                ['Country',   'country','text',false],
+                ['Sales Rep', 'sales_rep','text',false],
+                ['Account Manager','account_manager','text',false],
+              ].map(([label,key,type,req])=>(
+                <div key={key} style={{ marginBottom:12 }}>
+                  <label style={{ fontSize:10, fontWeight:700, color:'#374151', display:'block', marginBottom:3 }}>
+                    {label}{req&&<span style={{color:'#dc2626'}}>*</span>}
+                  </label>
+                  <input type={type} value={newCo[key]||''}
+                    onChange={e=>setNewCo(p=>({...p,[key]:e.target.value}))}
+                    placeholder={label} style={inp}/>
+                </div>
+              ))}
+              <div style={{ marginBottom:16 }}>
+                <label style={{ fontSize:10, fontWeight:700, color:'#374151', display:'block', marginBottom:3 }}>Plan</label>
+                <select value={newCo.plan} onChange={e=>setNewCo(p=>({...p,plan:e.target.value}))} style={inp}>
+                  {Object.entries(PLAN_PRICES).map(([id,p])=><option key={id} value={id}>{p.label}</option>)}
+                </select>
+              </div>
+              <button onClick={createCompany}
+                style={{ width:'100%', padding:11, borderRadius:9, border:'none',
+                  background:G, color:'#fff', fontSize:13, fontWeight:800, cursor:'pointer' }}>
+                🚀 Provision Company
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════════════════════════
+            💰 BILLING
+        ══════════════════════════════════════════════════════════════════ */}
         {tab==='billing' && (
           <div>
-            <div style={{ fontSize:14, fontWeight:800, color:'#0f172a', marginBottom:16 }}>
-              💰 Billing Overview — All Clients
-            </div>
-
-            {/* MRR / ARR cards */}
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))', gap:12, marginBottom:20 }}>
+            <div style={{ fontSize:18, fontWeight:900, color:'#0f172a', marginBottom:4 }}>💰 Billing</div>
+            {/* MRR/ARR summary */}
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))', gap:10, marginBottom:16 }}>
               {[
-                ['💰','Total MRR',  `NPR ${(companies.filter(c=>c.status==='active').reduce((s,c)=>s+(PLAN_PRICES[c.plan]?.monthly||0),0)).toLocaleString()}`, '#7c3aed'],
-                ['📅','Total ARR',  `NPR ${(companies.filter(c=>c.status==='active').reduce((s,c)=>s+(PLAN_PRICES[c.plan]?.annual||0),0)).toLocaleString()}`,  '#4338ca'],
-                ['✅','Paying',     companies.filter(c=>c.status==='active'&&c.plan!=='trial').length, '#059669'],
-                ['🎁','On Trial',   companies.filter(c=>c.plan==='trial').length, '#0891b2'],
-                ['⚠️','Overdue',    dash?.billing?.overdue_invoices ?? '—', '#dc2626'],
-              ].map(([ic,lb,v,c])=>(
-                <div key={lb} style={{ background:'#fff', borderRadius:12, padding:'14px 16px',
-                  border:`2px solid ${c}20`, textAlign:'center' }}>
-                  <div style={{ fontSize:20, marginBottom:4 }}>{ic}</div>
-                  <div style={{ fontSize:17, fontWeight:900, color:c }}>{v}</div>
-                  <div style={{ fontSize:9, color:'#64748b', marginTop:2 }}>{lb}</div>
+                { label:'MRR', value:`NPR ${mrr.toLocaleString()}`, sub:'Monthly Recurring Revenue' },
+                { label:'ARR', value:`NPR ${(mrr*12).toLocaleString()}`, sub:'Annual Recurring Revenue' },
+                { label:'Paying Cos', value:companies.filter(c=>c.plan!=='trial'&&c.status==='active').length, sub:'Excluding free trial' },
+                { label:'Trial Cos',  value:companies.filter(c=>c.plan==='trial'||c.status==='trial').length, sub:'In free trial' },
+              ].map(k=>(
+                <div key={k.label} style={{ background:'#fff', borderRadius:12, padding:'14px 16px',
+                  border:'1px solid #e2e8f0' }}>
+                  <div style={{ fontSize:10, color:'#64748b', fontWeight:700 }}>{k.label}</div>
+                  <div style={{ fontSize:18, fontWeight:900, color:A, margin:'4px 0' }}>{k.value}</div>
+                  <div style={{ fontSize:9, color:'#94a3b8' }}>{k.sub}</div>
                 </div>
               ))}
             </div>
-
             {/* Per-company billing table */}
-            <div style={{ background:'#fff', borderRadius:12, padding:'18px 20px',
-              boxShadow:'0 1px 6px rgba(0,0,0,.05)', overflowX:'auto' }}>
-              <div style={{ fontSize:13, fontWeight:800, marginBottom:14 }}>Per-Company Billing</div>
-              {companies.length===0 ? (
-                <div style={{ textAlign:'center', padding:40, color:'#94a3b8', fontSize:12 }}>
-                  No companies — provision a client first
-                </div>
-              ) : (
-                <table style={{ width:'100%', borderCollapse:'collapse', fontSize:11, minWidth:600 }}>
+            {companies.length===0?(
+              <div style={{ textAlign:'center', padding:40, color:'#94a3b8', background:'#fff',
+                borderRadius:12, border:'1px solid #e2e8f0', fontSize:12 }}>
+                No approved companies. Approve pending registrations first.
+              </div>
+            ):(
+              <div style={{ background:'#fff', borderRadius:12, border:'1px solid #e2e8f0', overflow:'hidden' }}>
+                <table style={{ width:'100%', borderCollapse:'collapse', fontSize:11 }}>
                   <thead>
                     <tr style={{ background:'#f8fafc' }}>
-                      {['Company','Slug','Plan','Monthly (NPR)','Status','Actions'].map(h=>(
-                        <th key={h} style={{ padding:'9px 12px', textAlign:'left',
-                          fontSize:10, fontWeight:700, color:'#374151',
-                          borderBottom:'2px solid #e2e8f0' }}>{h}</th>
+                      {['Company','Plan','Monthly','Status','Employees','Last Payment','Action'].map(h=>(
+                        <th key={h} style={{ padding:'10px 12px', textAlign:'left', fontSize:10,
+                          fontWeight:700, color:'#64748b', borderBottom:'1px solid #e2e8f0' }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {companies.map((c,i)=>(
-                      <tr key={c.id||i} style={{ background:i%2===0?'#fff':'#fafafa',
-                        borderBottom:'1px solid #f1f5f9' }}>
-                        <td style={{ padding:'9px 12px', fontWeight:700 }}>{c.name||c.company_name}</td>
-                        <td style={{ padding:'9px 12px', color:'#64748b', fontSize:10 }}>
-                          <code style={{ background:'#f1f5f9', padding:'2px 6px', borderRadius:4 }}>{c.slug}</code>
+                    {companies.map(co=>(
+                      <tr key={co.slug} style={{ borderBottom:'1px solid #f1f5f9' }}>
+                        <td style={{ padding:'10px 12px', fontWeight:700, color:'#0f172a' }}>
+                          {co.name}
+                          <div style={{ fontSize:9, color:'#64748b', fontWeight:400 }}>{co.slug}.elogix.com.np</div>
                         </td>
-                        <td style={{ padding:'9px 12px' }}>
-                          <span style={{ fontWeight:600, fontSize:10 }}>{c.plan||'trial'}</span>
+                        <td style={{ padding:'10px 12px' }}><PlanBadge plan={co.plan}/></td>
+                        <td style={{ padding:'10px 12px', fontWeight:700, color:'#059669' }}>
+                          {PLAN_PRICES[co.plan]?.monthly>0?`NPR ${(PLAN_PRICES[co.plan].monthly).toLocaleString()}`:'Free'}
                         </td>
-                        <td style={{ padding:'9px 12px', fontWeight:700 }}>
-                          {PLAN_PRICES[c.plan]?.monthly > 0
-                            ? `NPR ${PLAN_PRICES[c.plan].monthly.toLocaleString()}`
-                            : <span style={{color:'#94a3b8'}}>Free</span>}
-                        </td>
-                        <td style={{ padding:'9px 12px' }}>
-                          <StatusBadge status={c.status||'trial'}/>
-                        </td>
-                        <td style={{ padding:'9px 12px' }}>
-                          <button onClick={()=>doAction(c.slug,'invoice')}
-                            style={{ padding:'4px 10px', borderRadius:6, border:'none',
-                              background:'#f5f3ff', color:'#7c3aed', fontSize:9, fontWeight:700, cursor:'pointer' }}>
-                            🧾 Gen Invoice
+                        <td style={{ padding:'10px 12px' }}><StatusBadge status={co.status}/></td>
+                        <td style={{ padding:'10px 12px', color:'#374151' }}>{co.employee_count||0}</td>
+                        <td style={{ padding:'10px 12px', color:'#64748b' }}>{co.last_payment||'—'}</td>
+                        <td style={{ padding:'10px 12px' }}>
+                          <button onClick={()=>doAction(co.slug,'invoice')}
+                            style={{ padding:'4px 10px', borderRadius:6, border:'1px solid #bfdbfe',
+                              background:'#eff6ff', color:'#2563eb', fontSize:9, cursor:'pointer', fontWeight:700 }}>
+                            📄 Invoice
                           </button>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* ─────────────── SUPPORT / TICKETS ─────────────── */}
-        {tab==='tickets' && (
-          <div>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16, flexWrap:'wrap', gap:10 }}>
-              <div style={{ fontSize:14, fontWeight:800 }}>🎫 Support Tickets</div>
-              <button onClick={()=>loadAll(searchCo)}
-                style={{ padding:'7px 16px', borderRadius:8, border:'none',
-                  background:A, color:'#fff', fontSize:10, fontWeight:700, cursor:'pointer' }}>
-                ↻ Refresh
-              </button>
-            </div>
-
-            {/* Company filter */}
-            <div style={{ marginBottom:14 }}>
-              <select style={{...inp, maxWidth:300, width:'auto'}}
-                onChange={async e=>{
-                  const slug = e.target.value
-                  if (!slug) { loadAll(); return }
-                  const t2 = await adminFetch(`/tickets?company_slug=${slug}&status=open`)
-                  setTickets(t2.tickets||[])
-                }}>
-                <option value="">All Companies</option>
-                {companies.map(c=>(
-                  <option key={c.id} value={c.slug}>{c.name||c.company_name} ({c.slug})</option>
-                ))}
-              </select>
-            </div>
-
-            {tickets.length===0 ? (
-              <div style={{ textAlign:'center', padding:60, color:'#94a3b8', fontSize:13,
-                background:'#fff', borderRadius:12 }}>
-                <div style={{ fontSize:48, marginBottom:12 }}>🎫</div>
-                No open tickets
-              </div>
-            ) : tickets.map(t=>(
-              <div key={t.id} style={{ background:'#fff', border:'1px solid #e2e8f0',
-                borderRadius:12, padding:'14px 18px', marginBottom:10 }}>
-                <div style={{ display:'flex', justifyContent:'space-between',
-                  alignItems:'flex-start', flexWrap:'wrap', gap:10 }}>
-                  <div style={{ flex:1 }}>
-                    <div style={{ fontSize:13, fontWeight:700, color:'#0f172a' }}>
-                      {t.ticket_no}: {t.subject}
-                    </div>
-                    <div style={{ fontSize:10, color:'#64748b', marginTop:3 }}>
-                      {companies.find(c=>c.id===t.company_id)?.name || `Company #${t.company_id}`}
-                      {` · Priority: `}<strong>{t.priority}</strong>
-                      {` · Category: ${t.category}`}
-                      {t.created_at && ` · ${new Date(t.created_at).toLocaleDateString('en-NP')}`}
-                    </div>
-                    {t.description && (
-                      <div style={{ fontSize:10, color:'#374151', marginTop:6, background:'#f8fafc',
-                        borderRadius:6, padding:'6px 10px', lineHeight:1.5 }}>
-                        {t.description}
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ display:'flex', gap:6, flexWrap:'wrap', flexShrink:0 }}>
-                    {['in_progress','resolved','closed'].map(s=>(
-                      <button key={s} onClick={async()=>{
-                        await adminFetch(`/tickets/${t.id}`,{method:'PUT',body:JSON.stringify({status:s})})
-                        toast(`✅ ${t.ticket_no} → ${s}`)
-                        loadAll(searchCo)
-                      }}
-                        style={{ padding:'4px 10px', borderRadius:6, border:'1px solid #e2e8f0',
-                          background:'#f8fafc', color:'#374151', fontSize:9, fontWeight:600, cursor:'pointer' }}>
-                        {s.replace('_',' ')}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* ─────────────── BROADCAST ─────────────── */}
-        {tab==='broadcast' && (
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, alignItems:'start' }}>
-
-            {/* Compose form */}
-            <div style={{ background:'#fff', borderRadius:14, padding:24, border:'1px solid #e2e8f0' }}>
-              <div style={{ fontSize:14, fontWeight:800, color:'#0f172a', marginBottom:16 }}>
-                📢 Send Notification
-              </div>
-              <div style={{ display:'grid', gap:12 }}>
-                <div>
-                  <label style={{fontSize:10,fontWeight:700,color:'#374151',display:'block',marginBottom:3}}>
-                    Target Audience
-                  </label>
-                  <select value={bcast.slug} onChange={e=>setBcast(p=>({...p,slug:e.target.value}))} style={inp}>
-                    <option value="">📢 ALL Active Companies ({companies.filter(c=>c.status==='active').length} companies)</option>
-                    {companies.map(c=>(
-                      <option key={c.id} value={c.slug}>
-                        {c.name||c.company_name} — {c.slug} ({c.status})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                {[
-                  ['Type',     'type',     ['billing','alert','update','marketing','security','maintenance']],
-                  ['Priority', 'priority', ['low','normal','high','critical']],
-                ].map(([l,k,opts])=>(
-                  <div key={k}>
-                    <label style={{fontSize:10,fontWeight:700,color:'#374151',display:'block',marginBottom:3}}>{l}</label>
-                    <select value={bcast[k]} onChange={e=>setBcast(p=>({...p,[k]:e.target.value}))} style={inp}>
-                      {opts.map(o=><option key={o}>{o}</option>)}
-                    </select>
-                  </div>
-                ))}
-                <div>
-                  <label style={{fontSize:10,fontWeight:700,color:'#374151',display:'block',marginBottom:3}}>Title *</label>
-                  <input value={bcast.title} onChange={e=>setBcast(p=>({...p,title:e.target.value}))}
-                    style={inp} placeholder="Notification title…"/>
-                </div>
-                <div>
-                  <label style={{fontSize:10,fontWeight:700,color:'#374151',display:'block',marginBottom:3}}>Message *</label>
-                  <textarea value={bcast.message} onChange={e=>setBcast(p=>({...p,message:e.target.value}))}
-                    rows={4} style={{...inp,resize:'vertical',fontFamily:'inherit'}}
-                    placeholder="Message body…"/>
-                </div>
-                <button onClick={()=>{
-                  if(!bcast.title||!bcast.message){toast('⚠️ Title and message required');return}
-                  if(bcast.slug) doAction(bcast.slug,'notify',bcast)
-                  else doAction('','notifyAll',bcast)
-                }}
-                  style={{ padding:'12px', borderRadius:10, border:'none', background:G,
-                    color:'#fff', fontSize:12, fontWeight:800, cursor:'pointer' }}>
-                  {bcast.slug
-                    ? `📢 Send to ${companies.find(c=>c.slug===bcast.slug)?.name||bcast.slug}`
-                    : `📢 Broadcast to ALL ${companies.filter(c=>c.status==='active').length} active companies`}
-                </button>
-              </div>
-            </div>
-
-            {/* Quick-notify per company */}
-            <div style={{ background:'#fff', borderRadius:14, padding:24, border:'1px solid #e2e8f0' }}>
-              <div style={{ fontSize:13, fontWeight:800, color:'#0f172a', marginBottom:14 }}>
-                ⚡ Quick Notify — Per Company
-              </div>
-              <div style={{ display:'flex', flexDirection:'column', gap:8, maxHeight:480, overflowY:'auto' }}>
-                {companies.length===0 ? (
-                  <div style={{ textAlign:'center', padding:32, color:'#94a3b8', fontSize:11 }}>
-                    No companies — provision a client first
-                  </div>
-                ) : companies.map(c=>(
-                  <div key={c.id} style={{ display:'flex', justifyContent:'space-between',
-                    alignItems:'center', padding:'8px 12px', background:'#f8fafc',
-                    borderRadius:8, gap:10 }}>
-                    <div style={{ flex:1, minWidth:0 }}>
-                      <div style={{ fontSize:11, fontWeight:700, color:'#0f172a', overflow:'hidden',
-                        textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                        {c.name||c.company_name}
-                      </div>
-                      <div style={{ fontSize:9, color:'#94a3b8' }}>{c.slug} · <StatusBadge status={c.status||'trial'}/></div>
-                    </div>
-                    <button onClick={()=>{
-                      const title   = prompt(`Notification title for ${c.name}:`)
-                      const message = prompt('Message:')
-                      if(title&&message) doAction(c.slug,'notify',{type:'alert',title,message,priority:'normal'})
-                    }}
-                      style={{ padding:'4px 10px', borderRadius:6, border:'none',
-                        background:'#f0f9ff', color:A, fontSize:9, fontWeight:700, cursor:'pointer', flexShrink:0 }}>
-                      📢 Notify
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ─────────────── MODULE PERMISSIONS ─────────────── */}
-        {tab==='modules' && (
-          <div>
-            <div style={{ fontSize:14, fontWeight:800, color:'#0f172a', marginBottom:16 }}>
-              🔐 Module Permissions — Activate / Deactivate per Tenant
-            </div>
-
-            {/* Company picker */}
-            <div style={{ background:'#fff', borderRadius:12, padding:'16px 20px',
-              marginBottom:16, border:'1px solid #e2e8f0' }}>
-              <label style={{ fontSize:11, fontWeight:700, color:'#374151', display:'block', marginBottom:6 }}>
-                Select Company to Configure Modules
-              </label>
-              <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
-                <select value={modTarget}
-                  onChange={e=>{ if(e.target.value) loadModules(e.target.value) }}
-                  style={{...inp, maxWidth:380, flex:1}}>
-                  <option value="">— Choose a company —</option>
-                  {companies.map(c=>(
-                    <option key={c.id} value={c.slug}>
-                      {c.name||c.company_name} ({c.slug}) — {c.plan||'trial'}
-                    </option>
-                  ))}
-                </select>
-                {modTarget && (
-                  <button onClick={saveModules}
-                    style={{ padding:'8px 20px', borderRadius:9, border:'none',
-                      background:G, color:'#fff', fontSize:11, fontWeight:800, cursor:'pointer' }}>
-                    💾 Save Modules
-                  </button>
-                )}
-              </div>
-              {modTarget && (
-                <div style={{ marginTop:8, fontSize:10, color:'#64748b' }}>
-                  Configuring: <strong>{companies.find(c=>c.slug===modTarget)?.name}</strong>
-                  {' · '}Plan: <strong>{companies.find(c=>c.slug===modTarget)?.plan||'trial'}</strong>
-                </div>
-              )}
-            </div>
-
-            {modTarget ? (
-              <div>
-                <div style={{ display:'flex', gap:8, marginBottom:12, flexWrap:'wrap' }}>
-                  <button onClick={()=>setModState(Object.fromEntries(ALL_MODULES.map(m=>[m,true])))}
-                    style={{ padding:'6px 14px', borderRadius:8, border:'1px solid #059669',
-                      background:'#f0fdf4', color:'#059669', fontSize:10, fontWeight:700, cursor:'pointer' }}>
-                    ✅ Enable All
-                  </button>
-                  <button onClick={()=>setModState(Object.fromEntries(ALL_MODULES.map(m=>[m,false])))}
-                    style={{ padding:'6px 14px', borderRadius:8, border:'1px solid #dc2626',
-                      background:'#fef2f2', color:'#dc2626', fontSize:10, fontWeight:700, cursor:'pointer' }}>
-                    ❌ Disable All
-                  </button>
-                </div>
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))', gap:10 }}>
-                  {ALL_MODULES.map(m=>(
-                    <label key={m} style={{
-                      display:'flex', alignItems:'center', gap:12, padding:'12px 16px',
-                      background: modState[m] ? '#f0fdf4' : '#fff',
-                      border: `1px solid ${modState[m] ? '#bbf7d0' : '#e2e8f0'}`,
-                      borderRadius:10, cursor:'pointer', transition:'all .1s',
-                    }}>
-                      <input type="checkbox" checked={!!modState[m]}
-                        onChange={e=>setModState(p=>({...p,[m]:e.target.checked}))}
-                        style={{ width:15, height:15, cursor:'pointer', accentColor:'#059669' }}/>
-                      <div>
-                        <div style={{ fontSize:11, fontWeight:700, color:'#0f172a',
-                          textTransform:'capitalize' }}>
-                          {m.replace(/_/g,' ')}
-                        </div>
-                        <div style={{ fontSize:9, color: modState[m] ? '#059669' : '#94a3b8', marginTop:1 }}>
-                          {modState[m] ? '✅ Active' : '⭕ Inactive'}
-                        </div>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-                <div style={{ marginTop:16 }}>
-                  <button onClick={saveModules}
-                    style={{ padding:'12px 28px', borderRadius:10, border:'none',
-                      background:G, color:'#fff', fontSize:13, fontWeight:800, cursor:'pointer' }}>
-                    💾 Save Module Configuration for {companies.find(c=>c.slug===modTarget)?.name}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div style={{ textAlign:'center', padding:60, color:'#94a3b8', fontSize:13,
-                background:'#fff', borderRadius:12 }}>
-                <div style={{ fontSize:48, marginBottom:12 }}>🔐</div>
-                Select a company above to configure its modules
               </div>
             )}
           </div>
         )}
 
-        {/* ─────────────── REFERRAL & COMMISSION ─────────────── */}
-        {tab==='referral' && (
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, alignItems:'start' }}>
-
-            {/* Commission config */}
-            <div style={{ background:'#fff', borderRadius:14, padding:24, border:'1px solid #e2e8f0' }}>
-              <div style={{ fontSize:14, fontWeight:800, color:'#0f172a', marginBottom:16 }}>
-                🤝 Commission & Referral Config
+        {/* ══════════════════════════════════════════════════════════════════
+            🎫 SUPPORT
+        ══════════════════════════════════════════════════════════════════ */}
+        {tab==='support' && (
+          <div>
+            <div style={{ fontSize:18, fontWeight:900, color:'#0f172a', marginBottom:16 }}>🎫 Support Tickets</div>
+            {tickets.length===0?(
+              <div style={{ textAlign:'center', padding:40, color:'#94a3b8', background:'#fff',
+                borderRadius:12, border:'1px solid #e2e8f0', fontSize:12 }}>
+                🎉 No open tickets right now
               </div>
-              <div style={{ display:'grid', gap:12 }}>
-                <div>
-                  <label style={{fontSize:10,fontWeight:700,color:'#374151',display:'block',marginBottom:3}}>
-                    Commission % per referral
-                  </label>
-                  <input type="number" value={commConfig.commission_pct}
-                    onChange={e=>setCommConfig(p=>({...p,commission_pct:+e.target.value}))}
-                    min={0} max={50} style={inp}/>
-                </div>
-                <div>
-                  <label style={{fontSize:10,fontWeight:700,color:'#374151',display:'block',marginBottom:3}}>
-                    Min payout (NPR)
-                  </label>
-                  <input type="number" value={commConfig.min_payout_npr}
-                    onChange={e=>setCommConfig(p=>({...p,min_payout_npr:+e.target.value}))}
-                    min={0} style={inp}/>
-                </div>
-                <div>
-                  <label style={{fontSize:10,fontWeight:700,color:'#374151',display:'block',marginBottom:3}}>
-                    Referral window (days)
-                  </label>
-                  <input type="number" value={commConfig.referral_window_days}
-                    onChange={e=>setCommConfig(p=>({...p,referral_window_days:+e.target.value}))}
-                    min={1} style={inp}/>
-                </div>
-                <label style={{ display:'flex', alignItems:'center', gap:8,
-                  fontSize:11, cursor:'pointer', color:'#374151' }}>
-                  <input type="checkbox" checked={!!commConfig.auto_credit}
-                    onChange={e=>setCommConfig(p=>({...p,auto_credit:e.target.checked}))}
-                    style={{ width:14, height:14, accentColor:A }}/>
-                  Auto-credit commission on subscription payment
-                </label>
-                <button onClick={saveCommission}
-                  style={{ padding:'11px', borderRadius:10, border:'none',
-                    background:G, color:'#fff', fontSize:12, fontWeight:800, cursor:'pointer' }}>
-                  💾 Save Commission Config
-                </button>
-              </div>
-            </div>
-
-            {/* Referral links per company */}
-            <div style={{ background:'#fff', borderRadius:14, padding:24, border:'1px solid #e2e8f0' }}>
-              <div style={{ fontSize:13, fontWeight:800, color:'#0f172a', marginBottom:14 }}>
-                🔗 Referral Links — Per Company
-              </div>
-              <div style={{ display:'flex', flexDirection:'column', gap:8, maxHeight:440, overflowY:'auto' }}>
-                {companies.length===0 ? (
-                  <div style={{ textAlign:'center', padding:32, color:'#94a3b8', fontSize:11 }}>
-                    No companies yet
-                  </div>
-                ) : companies.map(c=>{
-                  const link = `https://elogix.com.np/register?ref=${c.slug}`
-                  return (
-                    <div key={c.id} style={{ padding:'10px 12px', background:'#f8fafc',
-                      borderRadius:8, border:'1px solid #e2e8f0' }}>
-                      <div style={{ fontSize:11, fontWeight:700, color:'#0f172a', marginBottom:4 }}>
-                        {c.name||c.company_name}
+            ):(
+              <div style={{ display:'grid', gap:10 }}>
+                {tickets.map((tk,i)=>(
+                  <div key={tk.id||i} style={{ background:'#fff', borderRadius:12, padding:'14px 16px',
+                    border:'1px solid #e2e8f0', display:'flex', justifyContent:'space-between',
+                    alignItems:'flex-start', flexWrap:'wrap', gap:10 }}>
+                    <div>
+                      <div style={{ fontWeight:700, fontSize:12, color:'#0f172a', marginBottom:2 }}>
+                        #{tk.id||i+1} — {tk.subject||tk.title||'Ticket'}
                       </div>
-                      <div style={{ display:'flex', gap:6, alignItems:'center' }}>
-                        <code style={{ fontSize:9, color:'#4338ca', background:'#eef2ff',
-                          padding:'3px 7px', borderRadius:4, flex:1, overflow:'hidden',
-                          textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                          {link}
-                        </code>
-                        <button onClick={()=>{navigator.clipboard.writeText(link);toast('📋 Copied!')}}
-                          style={{ padding:'3px 9px', borderRadius:6, border:'none',
-                            background:'#f0f9ff', color:A, fontSize:9, fontWeight:700, cursor:'pointer', flexShrink:0 }}>
-                          Copy
-                        </button>
+                      <div style={{ fontSize:10, color:'#64748b' }}>
+                        {tk.company_name||tk.company||'—'} &nbsp;·&nbsp; {tk.created_at||'—'}
                       </div>
                     </div>
-                  )
-                })}
+                    <div style={{ display:'flex', gap:6 }}>
+                      <StatusBadge status={tk.status||'open'}/>
+                      <button onClick={()=>doAction(tk.company_slug||'', 'notify',
+                        {type:'ticket_update', title:'Ticket Update', message:`Ticket #${tk.id} has been reviewed`})}
+                        style={{ padding:'4px 10px', borderRadius:6, border:'1px solid #e2e8f0',
+                          background:'#f8fafc', color:'#374151', fontSize:9, cursor:'pointer' }}>
+                        Reply
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {/* Company list for reference */}
+            <div style={{ marginTop:20, background:'#fff', borderRadius:12, padding:16, border:'1px solid #e2e8f0' }}>
+              <div style={{ fontSize:11, fontWeight:800, color:'#374151', marginBottom:10 }}>
+                🏢 Approved Companies ({companies.length})
+              </div>
+              <div style={{ fontSize:10, color:'#64748b', marginBottom:8 }}>
+                Tickets from these companies will appear above when reported.
+              </div>
+              <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+                {companies.map(co=>(
+                  <span key={co.slug} style={{ fontSize:9, padding:'3px 9px', borderRadius:10,
+                    background:'#f8fafc', border:'1px solid #e2e8f0', color:'#374151' }}>
+                    {co.name}
+                  </span>
+                ))}
               </div>
             </div>
           </div>
         )}
 
-        {/* ─────────────── ELOGIX TEAM ─────────────── */}
-        {tab==='team' && (
-          <div>
-            <div style={{ fontSize:14, fontWeight:800, color:'#0f172a', marginBottom:16 }}>
-              👥 eLogix Internal Team
+        {/* ══════════════════════════════════════════════════════════════════
+            📢 BROADCAST
+        ══════════════════════════════════════════════════════════════════ */}
+        {tab==='broadcast' && (
+          <div style={{ maxWidth:640 }}>
+            <div style={{ fontSize:18, fontWeight:900, color:'#0f172a', marginBottom:16 }}>📢 Broadcast Message</div>
+            <div style={{ background:'#fff', borderRadius:14, padding:'20px 22px', border:'1px solid #e2e8f0' }}>
+              {/* Target */}
+              <div style={{ marginBottom:12 }}>
+                <label style={{ fontSize:10, fontWeight:700, color:'#374151', display:'block', marginBottom:3 }}>
+                  Target Audience
+                </label>
+                <select value={bcast.slug} onChange={e=>setBcast(p=>({...p,slug:e.target.value}))} style={inp}>
+                  <option value="">📣 All Companies ({companies.length} approved)</option>
+                  {companies.map(co=>(
+                    <option key={co.slug} value={co.slug}>{co.name} ({co.slug})</option>
+                  ))}
+                </select>
+              </div>
+              {/* Type */}
+              <div style={{ marginBottom:12 }}>
+                <label style={{ fontSize:10, fontWeight:700, color:'#374151', display:'block', marginBottom:3 }}>Type</label>
+                <select value={bcast.type} onChange={e=>setBcast(p=>({...p,type:e.target.value}))} style={inp}>
+                  {['alert','maintenance','feature','promo','policy','other'].map(t=>(
+                    <option key={t} value={t}>{t.charAt(0).toUpperCase()+t.slice(1)}</option>
+                  ))}
+                </select>
+              </div>
+              {/* Priority */}
+              <div style={{ marginBottom:12 }}>
+                <label style={{ fontSize:10, fontWeight:700, color:'#374151', display:'block', marginBottom:3 }}>Priority</label>
+                <select value={bcast.priority} onChange={e=>setBcast(p=>({...p,priority:e.target.value}))} style={inp}>
+                  {['low','normal','high','urgent'].map(t=>(
+                    <option key={t} value={t}>{t.charAt(0).toUpperCase()+t.slice(1)}</option>
+                  ))}
+                </select>
+              </div>
+              {/* Title */}
+              <div style={{ marginBottom:12 }}>
+                <label style={{ fontSize:10, fontWeight:700, color:'#374151', display:'block', marginBottom:3 }}>Title *</label>
+                <input value={bcast.title} onChange={e=>setBcast(p=>({...p,title:e.target.value}))}
+                  placeholder="Announcement title" style={inp}/>
+              </div>
+              {/* Message */}
+              <div style={{ marginBottom:16 }}>
+                <label style={{ fontSize:10, fontWeight:700, color:'#374151', display:'block', marginBottom:3 }}>Message *</label>
+                <textarea value={bcast.message} onChange={e=>setBcast(p=>({...p,message:e.target.value}))}
+                  placeholder="Write your message here…" rows={4}
+                  style={{...inp, resize:'vertical'}}/>
+              </div>
+              <button onClick={()=>{
+                if (!bcast.title||!bcast.message) { toast('⚠️ Fill title and message'); return }
+                const action = bcast.slug ? 'notify' : 'notifyAll'
+                doAction(bcast.slug, action, {type:bcast.type, title:bcast.title, message:bcast.message, priority:bcast.priority})
+                setBcast(p=>({...p, title:'', message:''}))
+              }} style={{ width:'100%', padding:11, borderRadius:9, border:'none',
+                background:G, color:'#fff', fontSize:13, fontWeight:800, cursor:'pointer' }}>
+                {bcast.slug ? `📤 Send to ${companies.find(c=>c.slug===bcast.slug)?.name||bcast.slug}` : `📣 Broadcast to All ${companies.length} Companies`}
+              </button>
             </div>
+          </div>
+        )}
 
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, alignItems:'start' }}>
-
-              {/* Add team member */}
-              <div style={{ background:'#fff', borderRadius:14, padding:24, border:'1px solid #e2e8f0' }}>
-                <div style={{ fontSize:13, fontWeight:800, marginBottom:14 }}>➕ Add Team Member</div>
-                <div style={{ display:'grid', gap:10 }}>
-                  <div>
-                    <label style={{fontSize:10,fontWeight:700,color:'#374151',display:'block',marginBottom:3}}>Full Name *</label>
-                    <input value={newMember.full_name} onChange={e=>setNewMember(p=>({...p,full_name:e.target.value}))}
-                      style={inp} placeholder="Full name"/>
-                  </div>
-                  <div>
-                    <label style={{fontSize:10,fontWeight:700,color:'#374151',display:'block',marginBottom:3}}>Email *</label>
-                    <input type="email" value={newMember.email} onChange={e=>setNewMember(p=>({...p,email:e.target.value}))}
-                      style={inp} placeholder="name@elogix.com.np"/>
-                  </div>
-                  <div>
-                    <label style={{fontSize:10,fontWeight:700,color:'#374151',display:'block',marginBottom:3}}>Role</label>
-                    <select value={newMember.role} onChange={e=>setNewMember(p=>({...p,role:e.target.value}))} style={inp}>
-                      {['superadmin','admin','sales','support','billing','developer','operations','marketing'].map(r=>(
-                        <option key={r} value={r}>{r.charAt(0).toUpperCase()+r.slice(1)}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{fontSize:10,fontWeight:700,color:'#374151',display:'block',marginBottom:3}}>Phone</label>
-                    <input value={newMember.phone} onChange={e=>setNewMember(p=>({...p,phone:e.target.value}))}
-                      style={inp} placeholder="+977-98XXXXXXXX"/>
-                  </div>
-                  <button onClick={addTeamMember}
-                    style={{ padding:'11px', borderRadius:9, border:'none',
+        {/* ══════════════════════════════════════════════════════════════════
+            🔐 MODULE PERMISSIONS
+        ══════════════════════════════════════════════════════════════════ */}
+        {tab==='modules' && (
+          <div>
+            <div style={{ fontSize:18, fontWeight:900, color:'#0f172a', marginBottom:16 }}>🔐 Module Permissions</div>
+            <div style={{ marginBottom:14 }}>
+              <label style={{ fontSize:10, fontWeight:700, color:'#374151', display:'block', marginBottom:4 }}>
+                Select Company
+              </label>
+              <select value={modTarget} onChange={e=>loadModules(e.target.value)}
+                style={{...inp, maxWidth:360}}>
+                <option value="">— Pick an approved company —</option>
+                {companies.map(co=>(
+                  <option key={co.slug} value={co.slug}>{co.name} ({co.slug})</option>
+                ))}
+              </select>
+            </div>
+            {companies.length===0&&(
+              <div style={{ padding:'20px', color:'#94a3b8', fontSize:11, background:'#fff',
+                borderRadius:12, border:'1px solid #e2e8f0' }}>
+                No approved companies yet. Approve pending registrations first.
+              </div>
+            )}
+            {modTarget&&(
+              <>
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))', gap:8, marginBottom:16 }}>
+                  {ALL_MODULES.map(m=>(
+                    <label key={m} style={{ display:'flex', alignItems:'center', gap:8,
+                      background:'#fff', borderRadius:9, padding:'10px 12px',
+                      border:`1.5px solid ${modState[m]?A:'#e2e8f0'}`,
+                      cursor:'pointer', transition:'all .15s',
+                      background:modState[m]?'#eff6ff':'#fff' }}>
+                      <input type="checkbox" checked={!!modState[m]}
+                        onChange={e=>setModState(p=>({...p,[m]:e.target.checked}))}
+                        style={{ cursor:'pointer' }}/>
+                      <span style={{ fontSize:10, fontWeight:modState[m]?700:400,
+                        color:modState[m]?A:'#374151' }}>
+                        {m.replace(/_/g,' ')}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                <div style={{ display:'flex', gap:10 }}>
+                  <button onClick={saveModules}
+                    style={{ padding:'10px 24px', borderRadius:9, border:'none',
                       background:G, color:'#fff', fontSize:12, fontWeight:800, cursor:'pointer' }}>
-                    ✅ Add Team Member
+                    💾 Save Modules
+                  </button>
+                  <button onClick={()=>setModState(Object.fromEntries(ALL_MODULES.map(m=>[m,true])))}
+                    style={{ padding:'10px 16px', borderRadius:9, border:'1px solid #e2e8f0',
+                      background:'#fff', color:'#374151', fontSize:11, cursor:'pointer' }}>
+                    ✅ Enable All
+                  </button>
+                  <button onClick={()=>setModState(Object.fromEntries(ALL_MODULES.map(m=>[m,false])))}
+                    style={{ padding:'10px 16px', borderRadius:9, border:'1px solid #e2e8f0',
+                      background:'#fff', color:'#374151', fontSize:11, cursor:'pointer' }}>
+                    ❌ Disable All
                   </button>
                 </div>
-              </div>
+              </>
+            )}
+          </div>
+        )}
 
-              {/* Team list */}
-              <div style={{ background:'#fff', borderRadius:14, padding:24, border:'1px solid #e2e8f0' }}>
-                <div style={{ fontSize:13, fontWeight:800, marginBottom:14 }}>
-                  eLogix Staff ({team.length})
-                </div>
-                {team.length===0 ? (
-                  <div style={{ textAlign:'center', padding:40, color:'#94a3b8', fontSize:11 }}>
-                    <div style={{ fontSize:40, marginBottom:8 }}>👥</div>
-                    No team members yet
+        {/* ══════════════════════════════════════════════════════════════════
+            🤝 REFERRAL & COMMISSION
+        ══════════════════════════════════════════════════════════════════ */}
+        {tab==='referral' && (
+          <div>
+            <div style={{ fontSize:18, fontWeight:900, color:'#0f172a', marginBottom:16 }}>🤝 Referral & Commission</div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, alignItems:'start', flexWrap:'wrap' }}>
+              {/* Config panel */}
+              <div style={{ background:'#fff', borderRadius:14, padding:'20px 22px',
+                border:'1px solid #e2e8f0', minWidth:240 }}>
+                <div style={{ fontSize:12, fontWeight:800, color:'#374151', marginBottom:14 }}>⚙️ Commission Config</div>
+                {[
+                  ['Commission %',         'commission_pct',        'number'],
+                  ['Min Payout (NPR)',      'min_payout_npr',        'number'],
+                  ['Referral Window (days)','referral_window_days',  'number'],
+                ].map(([label,key,type])=>(
+                  <div key={key} style={{ marginBottom:12 }}>
+                    <label style={{ fontSize:10, fontWeight:700, color:'#374151', display:'block', marginBottom:3 }}>{label}</label>
+                    <input type={type} value={commConfig[key]}
+                      onChange={e=>setCommConfig(p=>({...p,[key]:Number(e.target.value)}))}
+                      style={inp}/>
                   </div>
-                ) : (
-                  <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                    {team.map((m,i)=>(
-                      <div key={m.id||i} style={{ display:'flex', alignItems:'center', gap:12,
-                        padding:'10px 14px', background:'#f8fafc', borderRadius:9,
-                        border:'1px solid #e2e8f0' }}>
-                        <div style={{ width:36, height:36, borderRadius:'50%', background:G,
-                          display:'flex', alignItems:'center', justifyContent:'center',
-                          color:'#fff', fontWeight:900, fontSize:14, flexShrink:0 }}>
-                          {(m.full_name||'?')[0]}
+                ))}
+                <label style={{ display:'flex', alignItems:'center', gap:8, marginBottom:14,
+                  cursor:'pointer', fontSize:11, color:'#374151' }}>
+                  <input type="checkbox" checked={commConfig.auto_credit}
+                    onChange={e=>setCommConfig(p=>({...p,auto_credit:e.target.checked}))}/>
+                  Auto-credit on payment
+                </label>
+                <button onClick={saveCommission}
+                  style={{ width:'100%', padding:10, borderRadius:8, border:'none',
+                    background:G, color:'#fff', fontSize:12, fontWeight:800, cursor:'pointer' }}>
+                  💾 Save Config
+                </button>
+              </div>
+              {/* Per-company referral links */}
+              <div style={{ background:'#fff', borderRadius:14, padding:'20px 22px',
+                border:'1px solid #e2e8f0', minWidth:240 }}>
+                <div style={{ fontSize:12, fontWeight:800, color:'#374151', marginBottom:14 }}>
+                  🔗 Referral Links ({companies.length})
+                </div>
+                {companies.length===0?(
+                  <div style={{ color:'#94a3b8', fontSize:11 }}>No approved companies yet.</div>
+                ):(
+                  <div style={{ display:'flex', flexDirection:'column', gap:8, maxHeight:320, overflowY:'auto' }}>
+                    {companies.map(co=>(
+                      <div key={co.slug} style={{ padding:'8px 10px', background:'#f8fafc',
+                        borderRadius:8, border:'1px solid #e2e8f0', fontSize:10 }}>
+                        <div style={{ fontWeight:700, color:'#0f172a', marginBottom:2 }}>{co.name}</div>
+                        <div style={{ color:'#4338ca', fontFamily:'monospace', fontSize:9, wordBreak:'break-all' }}>
+                          https://elogix.com.np/ref/{co.slug}
                         </div>
-                        <div style={{ flex:1, minWidth:0 }}>
-                          <div style={{ fontSize:12, fontWeight:700, color:'#0f172a' }}>{m.full_name}</div>
-                          <div style={{ fontSize:10, color:'#64748b', overflow:'hidden',
-                            textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                            {m.email} · {m.role}
-                          </div>
+                        <div style={{ marginTop:3, color:'#64748b', fontSize:9 }}>
+                          Commission: {commConfig.commission_pct}% · Plan: {(PLAN_PRICES[co.plan]||PLAN_PRICES.trial).label}
                         </div>
-                        <span style={{ background:'#eef2ff', color:'#4338ca', fontSize:9,
-                          fontWeight:700, padding:'2px 8px', borderRadius:20, flexShrink:0 }}>
-                          {m.role}
-                        </span>
-                        <button onClick={async()=>{
-                          if(window.confirm(`Deactivate ${m.full_name}?`)){
-                            await adminFetch(`/team/${m.id}`,{method:'PATCH',body:JSON.stringify({is_active:false})})
-                            toast(`⏸ ${m.full_name} deactivated`)
-                            loadAll()
-                          }
-                        }}
-                          style={{ padding:'3px 8px', borderRadius:6, border:'none',
-                            background:'#fef2f2', color:'#dc2626', fontSize:8, fontWeight:700, cursor:'pointer', flexShrink:0 }}>
-                          Remove
-                        </button>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
             </div>
+          </div>
+        )}
 
-            {/* Password management for companies */}
-            <div style={{ marginTop:16, background:'#fff', borderRadius:14, padding:24, border:'1px solid #e2e8f0' }}>
-              <div style={{ fontSize:13, fontWeight:800, marginBottom:14 }}>
-                🔑 Password Management — Client Admin Accounts
-              </div>
-              <div style={{ display:'flex', flexDirection:'column', gap:8, maxHeight:400, overflowY:'auto' }}>
-                {companies.length===0 ? (
-                  <div style={{ textAlign:'center', padding:32, color:'#94a3b8', fontSize:11 }}>
-                    No companies
-                  </div>
-                ) : companies.map(c=>(
-                  <div key={c.id} style={{ display:'flex', justifyContent:'space-between',
-                    alignItems:'center', padding:'9px 14px', background:'#f8fafc',
-                    borderRadius:8, border:'1px solid #e2e8f0', flexWrap:'wrap', gap:8 }}>
-                    <div style={{ flex:1, minWidth:0 }}>
-                      <div style={{ fontSize:11, fontWeight:700, color:'#0f172a' }}>
-                        {c.name||c.company_name}
-                      </div>
-                      <div style={{ fontSize:9, color:'#94a3b8' }}>
-                        {c.admin_email||'—'} · {c.slug}
-                      </div>
-                    </div>
-                    <div style={{ display:'flex', gap:6 }}>
-                      <button onClick={async()=>{
-                        const r = await adminFetch(`/companies/${c.slug}/reset-password`,{method:'POST',body:JSON.stringify({})})
-                        toast(r.message || `🔑 Password reset for ${c.name}`)
-                      }}
-                        style={{ padding:'4px 10px', borderRadius:6, border:'none',
-                          background:'#f5f3ff', color:'#7c3aed', fontSize:9, fontWeight:700, cursor:'pointer' }}>
-                        🔑 Reset PW
-                      </button>
-                      <button onClick={async()=>{
-                        const pw = prompt(`Set new password for ${c.name}:`)
-                        if(pw) {
-                          const r = await adminFetch(`/companies/${c.slug}/reset-password`,{method:'POST',body:JSON.stringify({new_password:pw})})
-                          toast(r.message || `✅ Password set for ${c.name}`)
-                        }
-                      }}
-                        style={{ padding:'4px 10px', borderRadius:6, border:'none',
-                          background:'#eff6ff', color:'#0369a1', fontSize:9, fontWeight:700, cursor:'pointer' }}>
-                        ✏️ Set PW
-                      </button>
-                    </div>
+        {/* ══════════════════════════════════════════════════════════════════
+            👥 ELOGIX TEAM + PASSWORD MANAGEMENT
+        ══════════════════════════════════════════════════════════════════ */}
+        {tab==='team' && (
+          <div>
+            <div style={{ fontSize:18, fontWeight:900, color:'#0f172a', marginBottom:16 }}>👥 eLogix Team</div>
+
+            {/* Add member */}
+            <div style={{ background:'#fff', borderRadius:14, padding:'18px 20px',
+              border:'1px solid #e2e8f0', marginBottom:16 }}>
+              <div style={{ fontSize:12, fontWeight:800, color:'#374151', marginBottom:12 }}>➕ Add Team Member</div>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))', gap:10 }}>
+                {[['Full Name','full_name','text'],['Email','email','email'],['Phone','phone','tel']].map(([l,k,t])=>(
+                  <div key={k}>
+                    <label style={{ fontSize:9, fontWeight:700, color:'#374151', display:'block', marginBottom:2 }}>{l}</label>
+                    <input type={t} value={newMember[k]||''}
+                      onChange={e=>setNewMember(p=>({...p,[k]:e.target.value}))}
+                      placeholder={l} style={inp}/>
                   </div>
                 ))}
+                <div>
+                  <label style={{ fontSize:9, fontWeight:700, color:'#374151', display:'block', marginBottom:2 }}>Role</label>
+                  <select value={newMember.role}
+                    onChange={e=>setNewMember(p=>({...p,role:e.target.value}))} style={inp}>
+                    {['super_admin','admin','support','sales','developer','accounts'].map(r=>(
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
+              <button onClick={addTeamMember}
+                style={{ marginTop:12, padding:'9px 24px', borderRadius:9, border:'none',
+                  background:G, color:'#fff', fontSize:12, fontWeight:800, cursor:'pointer' }}>
+                ➕ Add Member
+              </button>
+            </div>
+
+            {/* Team list */}
+            <div style={{ background:'#fff', borderRadius:14, padding:'16px 20px',
+              border:'1px solid #e2e8f0', marginBottom:16 }}>
+              <div style={{ fontSize:12, fontWeight:800, color:'#374151', marginBottom:10 }}>
+                👥 Team Members ({team.length})
+              </div>
+              {team.length===0?(
+                <div style={{ color:'#94a3b8', fontSize:11 }}>No team members added yet.</div>
+              ):(
+                <div style={{ display:'grid', gap:8 }}>
+                  {team.map((m,i)=>(
+                    <div key={m.id||i} style={{ display:'flex', alignItems:'center',
+                      justifyContent:'space-between', padding:'10px 12px',
+                      background:'#f8fafc', borderRadius:8, border:'1px solid #e2e8f0',
+                      flexWrap:'wrap', gap:8 }}>
+                      <div>
+                        <div style={{ fontWeight:700, fontSize:11, color:'#0f172a' }}>{m.full_name}</div>
+                        <div style={{ fontSize:9, color:'#64748b' }}>{m.email} · {m.phone||'—'}</div>
+                      </div>
+                      <span style={{ fontSize:9, padding:'2px 9px', borderRadius:10,
+                        background:'#eff6ff', color:'#2563eb', fontWeight:700, border:'1px solid #bfdbfe' }}>
+                        {m.role}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Password Management — all approved companies */}
+            <div style={{ background:'#fff', borderRadius:14, padding:'16px 20px', border:'1px solid #e2e8f0' }}>
+              <div style={{ fontSize:12, fontWeight:800, color:'#374151', marginBottom:10 }}>
+                🔑 Password Management — Approved Companies ({companies.length})
+              </div>
+              {companies.length===0?(
+                <div style={{ color:'#94a3b8', fontSize:11 }}>
+                  No approved companies. Approve pending registrations to see them here.
+                </div>
+              ):(
+                <div style={{ display:'grid', gap:8 }}>
+                  {companies.map(co=>(
+                    <div key={co.slug} style={{ display:'flex', alignItems:'center',
+                      justifyContent:'space-between', padding:'10px 12px',
+                      background:'#f8fafc', borderRadius:8, border:'1px solid #e2e8f0',
+                      flexWrap:'wrap', gap:8 }}>
+                      <div>
+                        <div style={{ fontWeight:700, fontSize:11, color:'#0f172a' }}>{co.name}</div>
+                        <div style={{ fontSize:9, color:'#64748b' }}>
+                          {co.slug}.elogix.com.np · 📧 {co.admin_email||'—'}
+                        </div>
+                      </div>
+                      <div style={{ display:'flex', gap:6, alignItems:'center', flexWrap:'wrap' }}>
+                        <StatusBadge status={co.status}/>
+                        <button onClick={()=>doAction(co.slug,'notify',
+                          {type:'password_reset', title:'Password Reset', message:`Password reset initiated for ${co.admin_email}`})}
+                          style={{ padding:'4px 10px', borderRadius:6, border:'1px solid #bfdbfe',
+                            background:'#eff6ff', color:'#2563eb', fontSize:9, cursor:'pointer', fontWeight:700 }}>
+                          🔑 Reset PW
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
