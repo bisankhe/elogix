@@ -4,7 +4,7 @@
  * Usage: const { format, symbol } = useCurrency()
  */
 import { useContext } from 'react'
-import { AppContext } from '../App.jsx'
+import { AppContext } from '../context/AppContext.jsx'
 
 export function useCurrency() {
   const ctx = useContext(AppContext)

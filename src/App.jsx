@@ -3,7 +3,8 @@
 // All 80 routes registered, no duplicate imports
 // ============================================================
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { AppContext } from './context/AppContext.jsx'
 import { PERSONAS }   from './data/personas.js'
 import { ROLE_TO_PERSONA, ROLE_TO_DEFAULT_PAGE, getTenantContext } from './data/rolePersonaMap.js'
 import { CURRENCIES } from './data/currencies.js'
@@ -697,12 +698,8 @@ import NoLogInReportPage from './components/dashboard/snapshots/NoLogInReportPag
 import LateReportingPage from './components/dashboard/snapshots/LateReportingPage.jsx'
 import EarlyDeparturePage from './components/dashboard/snapshots/EarlyDeparturePage.jsx'
 
-export const AppContext = createContext(null)
-export const useApp = () => {
-  const ctx = useContext(AppContext)
-  if (!ctx) throw new Error('useApp must be used inside <App />')
-  return ctx
-}
+// AppContext and useApp are defined in ./context/AppContext.jsx
+// and imported above — do NOT re-declare them here.
 
 // ── Route Map ─────────────────────────────────────────────────
 const ROUTES = {
@@ -1514,22 +1511,6 @@ export default function App({ initialPage, onLogout }) {
 
   const navTo          = useCallback((id) => setSub(id), [])
 
-  // ── Global navigation event listener ─────────────────────────────
-  // QuickDock, Sidebar, HRCopilot dispatch 'elogix:nav' instead of calling navTo directly
-  useEffect(() => {
-    const onNav   = (e) => { if (e.detail?.page) setSub(e.detail.page) }
-    const onNotif = ()  => setShowNotif(v => !v)
-    const onAI    = ()  => setShowAI(v => !v)
-    window.addEventListener('elogix:nav',          onNav)
-    window.addEventListener('elogix:notif-toggle', onNotif)
-    window.addEventListener('elogix:ai-toggle',    onAI)
-    return () => {
-      window.removeEventListener('elogix:nav',          onNav)
-      window.removeEventListener('elogix:notif-toggle', onNotif)
-      window.removeEventListener('elogix:ai-toggle',    onAI)
-    }
-  }, [])
-
   // Profile & Settings panel state
   const [showProfile,  setShowProfile]  = useState(false)
   const [showSettings, setShowSettings] = useState(false)
@@ -1610,8 +1591,6 @@ export default function App({ initialPage, onLogout }) {
             onLogout={handleLogout}
             onProfile={() => setShowProfile(true)}
             onSettings={() => setShowSettings(true)}
-            navTo={navTo}
-            sub={sub}
           />
 
           {/* Breadcrumb */}

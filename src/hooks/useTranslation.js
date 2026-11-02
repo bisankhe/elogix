@@ -4,7 +4,7 @@
  * Usage: const { t, lang } = useTranslation()
  */
 import { useContext } from 'react'
-import { AppContext } from '../App.jsx'
+import { AppContext } from '../context/AppContext.jsx'
 import en from '../i18n/locales/en.json'
 import ne from '../i18n/locales/ne.json'
 import hi from '../i18n/locales/hi.json'
