@@ -1,5 +1,5 @@
 // FILE: src/pages/admin/ELogixAdminPanel.jsx
-// eLogix Technologies — Internal SuperAdmin Panel v4
+// eLogix Technologies — Internal SuperAdmin Panel v5
 // ─────────────────────────────────────────────────────────────────────
 // BUG FIXES vs v3:
 //   FIX 1 — loadAll() no longer re-adds already-approved companies to
@@ -192,6 +192,48 @@ function rejectInLocalStorage(slug) {
 }
 
 // ─────────────────────────────────────────────────────────────────────
+// All localStorage keys owned by eLogix — cleared on cache reset
+// ─────────────────────────────────────────────────────────────────────
+const ELOGIX_LS_KEYS = [
+  'elogix_global_pending',
+  'elogix_pending_tenants',
+  'elogix_registered_companies',
+  'elogix_registered_tenants',
+  'elogix_approved_slugs',
+  'elogix_rejected_slugs',
+]
+
+/** Wipe all eLogix localStorage data (not the admin key/token) */
+function clearElogixCache() {
+  for (const k of ELOGIX_LS_KEYS) {
+    try { localStorage.removeItem(k) } catch(_e) {}
+  }
+}
+
+/**
+ * Detect stale/mock data: returns true if localStorage contains
+ * companies that look like demo entries (created before this session)
+ * or if the data was written by an older code version that didn't
+ * stamp a session_version key.
+ */
+function detectStaleCache() {
+  try {
+    const map = JSON.parse(localStorage.getItem('elogix_registered_companies') || '{}')
+    const entries = Object.values(map)
+    if (entries.length === 0) return false
+    // Flag as stale if any entry is missing created_at (old format)
+    // or if it has a mock/demo indicator
+    return entries.some(co =>
+      !co.created_at ||
+      co._demo === true ||
+      co._stale === true ||
+      co.id === 'demo' ||
+      (co.name && /^(test|demo|sample|example)/i.test(co.name))
+    )
+  } catch(_e) { return false }
+}
+
+// ─────────────────────────────────────────────────────────────────────
 // API helper
 // ─────────────────────────────────────────────────────────────────────
 async function adminFetch(path, opts={}) {
@@ -245,6 +287,28 @@ export default function ELogixAdminPanel() {
   const [newMember,     setNewMember]     = useState({ full_name:'', email:'', role:'support', phone:'' })
   const [pendingAction, setPendingAction] = useState({})
   const [rejectReason,  setRejectReason]  = useState({})
+  const [staleCache,    setStaleCache]    = useState(false)   // banner flag
+  const [clearing,      setClearing]      = useState(false)
+
+  // ── Detect stale cache on mount ───────────────────────────────────
+  useEffect(() => {
+    if (authed) setStaleCache(detectStaleCache())
+  }, [authed])
+
+  // ── Clear all eLogix localStorage and reload from API ────────────
+  const clearAndReload = async () => {
+    setClearing(true)
+    clearElogixCache()
+    setCompanies([])
+    setPending([])
+    setTickets([])
+    setTeam([])
+    setDash(null)
+    setStaleCache(false)
+    toast('🗑️ Cache cleared — loading fresh data from API…')
+    await loadAll('')
+    setClearing(false)
+  }
 
   // ─────────────────────────────────────────────────────────────────
   // loadAll — the fixed version
@@ -569,6 +633,13 @@ export default function ELogixAdminPanel() {
               padding:'4px 12px', fontSize:11, fontWeight:800, cursor:'pointer',
             }}>🔔 {pending.length} Pending</div>
           )}
+          <button onClick={clearAndReload} disabled={clearing}
+            title="Clear localStorage cache and reload fresh data from the API"
+            style={{ background:'rgba(239,68,68,.25)', border:'1px solid rgba(255,255,255,.3)',
+              color:'#fff', borderRadius:8, padding:'6px 14px', fontSize:11, cursor:'pointer',
+              opacity:clearing?.6:1 }}>
+            {clearing?'⏳':'🗑️'} Clear Cache
+          </button>
           <button onClick={()=>loadAll(searchCo)}
             style={{ background:'rgba(255,255,255,.2)', border:'1px solid rgba(255,255,255,.3)',
               color:'#fff', borderRadius:8, padding:'6px 14px', fontSize:11, cursor:'pointer' }}>
@@ -605,6 +676,45 @@ export default function ELogixAdminPanel() {
           </button>
         ))}
       </div>
+
+      {/* ── Stale cache banner ── */}
+      {staleCache && (
+        <div style={{
+          background:'linear-gradient(90deg,#fffbeb,#fef3c7)',
+          borderBottom:'2px solid #f59e0b',
+          padding:'10px 20px',
+          display:'flex', alignItems:'center', justifyContent:'space-between',
+          flexWrap:'wrap', gap:10,
+        }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            <span style={{ fontSize:18 }}>⚠️</span>
+            <div>
+              <div style={{ fontSize:12, fontWeight:800, color:'#92400e' }}>
+                Stale demo/mock data detected in browser cache
+              </div>
+              <div style={{ fontSize:11, color:'#a16207' }}>
+                This list contains stale cached data from a previous session — not real registered companies.
+                Click 🗑️ Clear &amp; Reload to remove cached data and load fresh data from the API.
+              </div>
+            </div>
+          </div>
+          <div style={{ display:'flex', gap:8 }}>
+            <button onClick={clearAndReload} disabled={clearing}
+              style={{ padding:'8px 18px', borderRadius:8, border:'none',
+                background:'#d97706', color:'#fff', fontSize:12, fontWeight:800,
+                cursor:clearing?'not-allowed':'pointer',
+                opacity:clearing?.6:1 }}>
+              {clearing ? '⏳ Clearing…' : '🗑️ Clear & Reload'}
+            </button>
+            <button onClick={()=>setStaleCache(false)}
+              style={{ padding:'8px 14px', borderRadius:8,
+                border:'1px solid #fde68a', background:'#fff',
+                color:'#92400e', fontSize:11, cursor:'pointer' }}>
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
 
       <div style={{ padding:'20px 16px', maxWidth:1100, margin:'0 auto' }}>
 
