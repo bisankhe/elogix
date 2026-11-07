@@ -192,44 +192,42 @@ function rejectInLocalStorage(slug) {
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// All localStorage keys owned by eLogix — cleared on cache reset
+// localStorage helpers
 // ─────────────────────────────────────────────────────────────────────
-const ELOGIX_LS_KEYS = [
-  'elogix_global_pending',
-  'elogix_pending_tenants',
-  'elogix_registered_companies',
-  'elogix_registered_tenants',
-  'elogix_approved_slugs',
-  'elogix_rejected_slugs',
-]
 
-/** Wipe all eLogix localStorage data (not the admin key/token) */
+/**
+ * Wipe ALL keys that start with "elogix_" from localStorage.
+ * This catches every key any version of the app has ever written,
+ * including keys from older dev sessions we can't enumerate statically.
+ * Does NOT remove elogix_admin_key or elogix_admin_token.
+ */
 function clearElogixCache() {
-  for (const k of ELOGIX_LS_KEYS) {
-    try { localStorage.removeItem(k) } catch(_e) {}
-  }
+  try {
+    const keep = new Set(['elogix_admin_key', 'elogix_admin_token'])
+    const toRemove = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i)
+      if (k && k.startsWith('elogix_') && !keep.has(k)) toRemove.push(k)
+    }
+    for (const k of toRemove) localStorage.removeItem(k)
+  } catch(_e) {}
 }
 
 /**
- * Detect stale/mock data: returns true if localStorage contains
- * companies that look like demo entries (created before this session)
- * or if the data was written by an older code version that didn't
- * stamp a session_version key.
+ * Detect stale/mock data.
+ * Returns true when localStorage has ANY elogix_ company/tenant data at all —
+ * because on the real production site the source of truth is the API,
+ * not localStorage. Any localStorage company data is from dev/testing.
  */
 function detectStaleCache() {
   try {
+    // If registered_companies has any entries → stale dev data
     const map = JSON.parse(localStorage.getItem('elogix_registered_companies') || '{}')
-    const entries = Object.values(map)
-    if (entries.length === 0) return false
-    // Flag as stale if any entry is missing created_at (old format)
-    // or if it has a mock/demo indicator
-    return entries.some(co =>
-      !co.created_at ||
-      co._demo === true ||
-      co._stale === true ||
-      co.id === 'demo' ||
-      (co.name && /^(test|demo|sample|example)/i.test(co.name))
-    )
+    if (Object.keys(map).length > 0) return true
+    // If global_pending has entries → stale dev data
+    const pending = JSON.parse(localStorage.getItem('elogix_global_pending') || '[]')
+    if (pending.length > 0) return true
+    return false
   } catch(_e) { return false }
 }
 
@@ -311,14 +309,13 @@ export default function ELogixAdminPanel() {
   }
 
   // ─────────────────────────────────────────────────────────────────
-  // loadAll — the fixed version
-  // KEY: filters localPending through approved/rejected sets FIRST
+  // loadAll — API is the ONLY source of truth
+  // localStorage is NEVER used to populate companies or pending lists.
+  // localStorage is only used for the approval/rejection sets so the
+  // panel doesn't flicker while the API call is in flight.
   // ─────────────────────────────────────────────────────────────────
   const loadAll = useCallback(async (search='') => {
     setLoading(true)
-
-    // Always filter through the approval/rejection sets BEFORE merging
-    const localPending = readLocalPending()   // already excludes approved+rejected
 
     const [d, c, t, tm, p] = await Promise.allSettled([
       adminFetch('/dashboard'),
@@ -330,43 +327,33 @@ export default function ELogixAdminPanel() {
 
     if (d.status==='fulfilled' && d.value?.summary) setDash(d.value.summary)
 
-    // ── Approved companies ──────────────────────────────────────────
-    if (c.status==='fulfilled' && Array.isArray(c.value?.companies)) {
-      // Backend is live — use its data, filter out pending/rejected
-      setCompanies(c.value.companies.filter(co =>
-        co.status !== 'pending' && co.status !== 'rejected'
-      ))
-    } else {
-      // Offline fallback: read localStorage, filter approved only
-      try {
-        const approved = getApprovedSlugs()
-        const map = JSON.parse(localStorage.getItem('elogix_registered_companies') || '{}')
-        // Show if: status is active/trial/suspended/cancelled OR slug is in approved set
-        const list = Object.values(map).filter(co =>
-          approved.has(co.slug) ||
-          (co.status !== 'pending' && co.status !== 'rejected')
-        )
-        setCompanies(list)
-      } catch(_e) { setCompanies([]) }
+    // ── Approved companies — API only, never localStorage ──────────
+    if (c.status==='fulfilled') {
+      const list = c.value?.companies || c.value?.data || []
+      setCompanies(
+        Array.isArray(list)
+          ? list.filter(co => co.status !== 'pending' && co.status !== 'rejected')
+          : []
+      )
     }
+    // If API fails, keep whatever is currently in state (don't overwrite with localStorage)
 
     if (t.status==='fulfilled')  setTickets(t.value?.tickets || [])
     if (tm.status==='fulfilled') setTeam(tm.value?.team || [])
 
-    // ── Pending companies ───────────────────────────────────────────
-    // API pending filtered against approved/rejected sets
+    // ── Pending companies — API only ───────────────────────────────
+    // Filter out slugs we've already approved/rejected in this session
     const approved = getApprovedSlugs()
     const rejected = getRejectedSlugs()
-    const apiPending = (p.status==='fulfilled' && Array.isArray(p.value?.companies))
-      ? p.value.companies.filter(co => !approved.has(co.slug) && !rejected.has(co.slug))
-      : []
-
-    // Merge with local pending (deduplicate by slug)
-    const merged = [...apiPending]
-    for (const lp of localPending) {
-      if (!merged.find(x => x.slug === lp.slug)) merged.push(lp)
+    if (p.status==='fulfilled') {
+      const list = p.value?.companies || p.value?.data || []
+      setPending(
+        Array.isArray(list)
+          ? list.filter(co => !approved.has(co.slug) && !rejected.has(co.slug))
+          : []
+      )
     }
-    setPending(merged)
+    // If API fails, keep current pending state
 
     setLoading(false)
   }, [])
@@ -405,41 +392,64 @@ export default function ELogixAdminPanel() {
   }, [authed])
 
   // ─────────────────────────────────────────────────────────────────
-  // ✅ APPROVE — the fixed version
-  // Writes to ALL localStorage keys and the approved-slugs set
-  // so the company never re-appears as pending AND the tenant can login
+  // ✅ APPROVE
+  // 1. Call API to set status → active
+  // 2. Mark slug in approved set (stops it re-appearing as pending)
+  // 3. Remove from pending state immediately (optimistic)
+  // 4. Re-fetch companies from API so the list reflects server truth
   // ─────────────────────────────────────────────────────────────────
   const approveCompany = async (co) => {
     setPendingAction(p => ({ ...p, [co.slug]: 'approving' }))
 
-    // 1. Write to all localStorage records first (works offline too)
-    approveInLocalStorage(co.slug, co.admin_email)
-
-    // 2. Try backend (non-blocking)
+    let apiOk = false
     try {
       await adminFetch(`/companies/${co.slug}/status`, {
         method: 'PUT',
         body: JSON.stringify({ status: 'active', approved_by: 'SuperAdmin' }),
       })
-    } catch(_e) { /* offline — localStorage already updated */ }
-
-    // 3. Update React state: remove from pending, add to companies
-    const activatedCo = {
-      ...co,
-      status: co.plan === 'trial' ? 'trial' : 'active',
-      approved_at: new Date().toISOString().split('T')[0],
-      employee_count: co.employee_count || 0,
-      pending_invoice: 0,
-      last_payment: null,
-      account_manager: co.account_manager || 'Unassigned',
-      support_tier: co.support_tier || 'standard',
+      apiOk = true
+    } catch(_e) {
+      toast(`⚠️ API error approving ${co.name} — check server`)
+      setPendingAction(p => ({ ...p, [co.slug]: '' }))
+      return
     }
-    setCompanies(prev =>
-      prev.find(c => c.slug === co.slug) ? prev : [activatedCo, ...prev]
-    )
+
+    // Mark approved in localStorage so it doesn't re-appear as pending
+    // on the next loadAll call before the API response arrives
+    addApprovedSlug(co.slug)
+    // Also update tenant login status so the tenant can log in now
+    approveInLocalStorage(co.slug, co.admin_email)
+
+    // Remove from pending immediately (optimistic)
     setPending(prev => prev.filter(c => c.slug !== co.slug))
     setPendingAction(p => ({ ...p, [co.slug]: '' }))
-    toast(`✅ ${co.name} approved! Tenant can now log in.`)
+    toast(`✅ ${co.name} approved! Reloading company list…`)
+
+    // Re-fetch companies from API — this is what actually populates the list
+    try {
+      const r = await adminFetch(`/companies?limit=200`)
+      const list = r?.companies || r?.data || []
+      setCompanies(
+        Array.isArray(list)
+          ? list.filter(x => x.status !== 'pending' && x.status !== 'rejected')
+          : []
+      )
+    } catch(_e) {
+      // API failed on re-fetch — add to React state manually as fallback
+      const activatedCo = {
+        ...co,
+        status: co.plan === 'trial' ? 'trial' : 'active',
+        approved_at: new Date().toISOString().split('T')[0],
+        employee_count: co.employee_count || 0,
+        pending_invoice: 0, last_payment: null,
+        account_manager: co.account_manager || 'Unassigned',
+        support_tier: co.support_tier || 'standard',
+      }
+      setCompanies(prev =>
+        prev.find(c => c.slug === co.slug) ? prev : [activatedCo, ...prev]
+      )
+    }
+    toast(`✅ ${co.name} is now live! Tenant can log in.`)
   }
 
   // ─────────────────────────────────────────────────────────────────
