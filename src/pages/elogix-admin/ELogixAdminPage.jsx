@@ -8,55 +8,6 @@ import { useState, useEffect } from 'react'
 import TenantModulePermissionPage from '../../components/dashboard/snapshots/TenantModulePermissionPage.jsx'
 import ReferralCommissionPage     from '../../components/dashboard/snapshots/ReferralCommissionPage.jsx'
 
-// ── PERMANENT ONE-TIME PURGE of stale mock company data ─────────────────────
-// Runs synchronously at module load — before any useState or render.
-// Removes old MOCK_COMPANIES (Abasar Nepal, Subisu, Mainawati Steels, HR Hub)
-// that were written to localStorage by previous versions of this app.
-;(function _purgeStaleCompanyData() {
-  const DEMO_SLUGS = new Set(['abasar','abasarnepal','subisu','mainawatisteels',
-    'hrhub','himalayan','solidfuture','demo','testcompany','elogixdemo'])
-  const STALE_KEYS = ['elogix_active_companies','elogix_approved_tenants',
-    'elogix_registered_companies','elogix_companies']
-  for (const key of STALE_KEYS) {
-    try {
-      const raw = localStorage.getItem(key)
-      if (!raw) continue
-      const parsed = JSON.parse(raw)
-      // Array form (elogix_active_companies)
-      if (Array.isArray(parsed)) {
-        const clean = parsed.filter(c => c?.slug && !DEMO_SLUGS.has(c.slug.toLowerCase()))
-        if (clean.length !== parsed.length) {
-          clean.length > 0
-            ? localStorage.setItem(key, JSON.stringify(clean))
-            : localStorage.removeItem(key)
-        }
-      }
-      // Object/map form (elogix_approved_tenants, elogix_registered_companies)
-      else if (parsed && typeof parsed === 'object') {
-        let changed = false
-        for (const slug of Object.keys(parsed)) {
-          if (DEMO_SLUGS.has(slug.toLowerCase())) { delete parsed[slug]; changed = true }
-        }
-        if (changed) {
-          Object.keys(parsed).length > 0
-            ? localStorage.setItem(key, JSON.stringify(parsed))
-            : localStorage.removeItem(key)
-        }
-      }
-    } catch(_e) {}
-  }
-  // Also purge elogix_pending_tenants of demo entries
-  try {
-    const pend = JSON.parse(localStorage.getItem('elogix_pending_tenants') || '[]')
-    const clean = pend.filter(t => t?.slug && !DEMO_SLUGS.has(t.slug.toLowerCase()))
-    if (clean.length !== pend.length)
-      localStorage.setItem('elogix_pending_tenants', JSON.stringify(clean))
-  } catch(_e) {}
-}())
-// ─────────────────────────────────────────────────────────────────────────────
-
-
-
 const G  = 'linear-gradient(135deg,#1e1b4b 0%,#312e81 55%,#6366f1 100%)'
 const A  = '#4338ca'
 const inp = {
@@ -76,11 +27,10 @@ const STATUS_COLORS = {
   cancelled:{ bg:'#fef2f2', c:'#dc2626', b:'#fecaca', icon:'❌' },
 }
 
-// Real tenant companies — sourced from eLogix CRM
-// Updated: 2026-08-21  (Subisu approved 2026-08-21 morning)
-// NOTE: In production this comes from /api/elogix-admin/v1/companies
-
-
+const MAX_EMPLOYEES_BY_PLAN = {
+  trial: 10, starter: 50, growth: 250,
+  business: 500, enterprise: 1000, unlimited: 999999
+}
 
 // ── Export helper ─────────────────────────────────────────────
 function downloadCSV(data, filename) {
@@ -101,135 +51,129 @@ function downloadCSV(data, filename) {
   URL.revokeObjectURL(url)
 }
 
+// ── Admin auth headers ────────────────────────────────────────
+function adminHeaders() {
+  const adminKey = localStorage.getItem('elogix_admin_key') || ''
+  const token    = localStorage.getItem('elogix_admin_token') || ''
+  return {
+    'Content-Type': 'application/json',
+    'X-eLogix-Admin-Key': adminKey,
+    'Authorization': token ? `Bearer ${token}` : '',
+  }
+}
+
 export default function ELogixAdminPage({ onLogout }) {
   const [tab, setTab] = useState('dashboard')
   const [companies,       setCompanies]       = useState([])
   const [tickets,         setTickets]         = useState([])
   const [invoices,        setInvoices]        = useState([])
+  const [team,            setTeam]            = useState([])
 
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [selected, setSelected] = useState(null)
   const [showCreateModal,   setShowCreateModal]   = useState(false)
+
   // ── Password Reset Modal ──────────────────────────────────────────────
   const [showPwModal,       setShowPwModal]       = useState(false)
   const [pwTarget,          setPwTarget]          = useState(null)
-  const [pwForm,            setPwForm]            = useState({ admin_name:'', admin_email:'', phone:'', new_password:'', confirm_password:'', reason:'' })
+  const [pwForm,            setPwForm]            = useState({
+    admin_name:'', admin_email:'', phone:'',
+    new_password:'', confirm_password:'', reason:''
+  })
   const [pwLoading,         setPwLoading]         = useState(false)
   const [pwMsg,             setPwMsg]             = useState('')
   const [showPwText,        setShowPwText]        = useState(false)
+
   const [showNotifyModal, setShowNotifyModal] = useState(null)
   const [msg, setMsg] = useState('')
   const [createForm, setCreateForm] = useState({
     company_name:'', slug:'', admin_email:'', admin_name:'',
-    plan:'starter', industry:'', country:'Nepal', phone:'', account_manager:'', sales_rep:''
+    plan:'starter', industry:'', country:'Nepal', phone:'',
+    account_manager:'', sales_rep:''
   })
 
-  // activeTenants = approved companies from API (companies state)
+  // activeTenants = approved companies from API
   const activeTenants = companies
 
   const notify = m => { setMsg(m); setTimeout(()=>setMsg(''), 4000) }
 
-  // ══════════════════════════════════════════════════════════
-  // Load companies on mount — API first, localStorage fallback
-  // This is THE fix for "clients registered but not showing":
-  // RegisterPage calls /api/elogix-admin/v1/companies (if backend up)
-  // AND writes to localStorage (client's own browser)
-  // The admin MUST read from the API to see ALL registrations
-  // ══════════════════════════════════════════════════════════
   // Pending self-registered tenants waiting for SuperAdmin approval
   const [pendingTenants, setPendingTenants] = useState([])
   const [apiLoading, setApiLoading] = useState(false)
   const [apiError,   setApiError]   = useState(null)
 
+  // ── Normalize a raw company object from the API ───────────────────────
+  function normalizeCompany(co) {
+    return {
+      id             : co.id || `api_${co.slug}`,
+      slug           : co.slug || '',
+      name           : co.name || co.slug || 'Unknown',
+      plan           : co.plan || 'trial',
+      status         : co.status || 'active',
+      business_type  : co.business_type || 'custom',
+      industry       : co.industry || co.business_type || '',
+      admin_email    : co.admin_email || '',
+      admin_name     : co.admin_name  || '',
+      phone          : co.phone || '',
+      country        : co.country || 'Nepal',
+      currency       : co.currency || 'NPR',
+      employee_count : co.employee_count || 0,
+      max_employees  : co.max_employees || MAX_EMPLOYEES_BY_PLAN[co.plan] || 50,
+      account_manager: co.account_manager || '',
+      support_tier   : co.support_tier || 'standard',
+      pending_invoice: co.pending_invoice || 0,
+      last_payment   : co.last_payment || null,
+      created_at     : co.created_at || new Date().toISOString().split('T')[0],
+      approved_at    : co.approved_at || co.created_at || '',
+    }
+  }
+
+  // ── Load all data from API ────────────────────────────────────────────
   const loadFromAPI = async () => {
     setApiLoading(true)
     try {
-      const adminKey = localStorage.getItem('elogix_admin_key') || 'elogix-admin-2026'
-      const token    = localStorage.getItem('elogix_admin_token') || ''
+      const headers = adminHeaders()
 
-      // Load active companies from backend DB
-      const res = await fetch('/api/elogix-admin/v1/companies', {
-        headers: {
-          'X-eLogix-Admin-Key': adminKey,
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        }
-      })
+      // Active companies
+      const res = await fetch('/api/elogix-admin/v1/companies', { headers })
       if (res.ok) {
         const data = await res.json()
         const raw = data.companies || data.data || []
-        // Normalize: fill in defaults for fields the API may not return
-        const apiCompanies = raw.map(co => ({
-          id             : co.id || `api_${co.slug}`,
-          slug           : co.slug || '',
-          name           : co.name || co.slug || 'Unknown',
-          plan           : co.plan || 'trial',
-          status         : co.status || 'active',
-          business_type  : co.business_type || 'custom',
-          industry       : co.industry || co.business_type || '',
-          admin_email    : co.admin_email || '',
-          phone          : co.phone || '',
-          country        : co.country || 'Nepal',
-          currency       : co.currency || 'NPR',
-          employee_count : co.employee_count || 0,
-          max_employees  : co.max_employees ||
-            {trial:10,starter:50,growth:250,business:500,enterprise:1000}[co.plan] || 50,
-          account_manager: co.account_manager || 'eLogix Team',
-          support_tier   : co.support_tier || 'standard',
-          pending_invoice: co.pending_invoice || 0,
-          last_payment   : co.last_payment || null,
-          created_at     : co.created_at || new Date().toISOString().split('T')[0],
-          approved_at    : co.approved_at || co.created_at || '',
-        }))
-        // API data loaded — not caching to localStorage (wiped on mount)
-        // Stale keys already wiped on mount
-        setCompanies(apiCompanies)
+        setCompanies(raw.map(normalizeCompany))
         setApiError(null)
+      } else {
+        setApiError(`Companies API returned ${res.status}`)
       }
 
-      // Load pending registrations from backend
-      const pendRes = await fetch('/api/elogix-admin/v1/pending-companies', {
-        headers: {
-          'X-eLogix-Admin-Key': adminKey,
-          'Authorization': `Bearer ${token}`,
-        }
-      })
+      // Pending registrations
+      const pendRes = await fetch('/api/elogix-admin/v1/pending-companies', { headers })
       if (pendRes.ok) {
         const pendData = await pendRes.json()
         const raw2 = pendData.companies || pendData.data || []
-        // Normalize pending companies the same way
         const apiPending = raw2.map(co => ({
-          id             : co.id || `pend_${co.slug}`,
-          slug           : co.slug || '',
-          name           : co.name || co.slug || 'Unknown',
-          plan           : co.plan || 'trial',
-          status         : co.status || 'pending',
-          business_type  : co.business_type || 'custom',
-          industry       : co.industry || co.business_type || '',
-          admin_email    : co.admin_email || '',
-          phone          : co.phone || '',
-          country        : co.country || 'Nepal',
-          currency       : co.currency || 'NPR',
-          employee_count : co.employee_count || 0,
-          max_employees  : co.max_employees ||
-            {trial:10,starter:50,growth:250,business:500,enterprise:1000}[co.plan] || 10,
-          account_manager: co.account_manager || 'New Signup',
-          support_tier   : co.support_tier || 'standard',
-          pending_invoice: co.pending_invoice || 0,
-          last_payment   : co.last_payment || null,
-          created_at     : co.created_at || new Date().toISOString().split('T')[0],
-          registered_at  : co.registered_at || co.created_at || new Date().toISOString(),
+          ...normalizeCompany(co),
+          status       : co.status || 'pending',
+          max_employees: co.max_employees || MAX_EMPLOYEES_BY_PLAN[co.plan] || 10,
+          registered_at: co.registered_at || co.created_at || new Date().toISOString(),
         }))
-        if (apiPending.length > 0) {
-          setPendingTenants(prev => {
-            const slugs = new Set(apiPending.map(t => t.slug))
-            const localOnly = prev.filter(t => !slugs.has(t.slug))
-            return [...apiPending, ...localOnly]
-          })
-          localStorage.setItem('elogix_pending_tenants', JSON.stringify(apiPending))
-        }
+        setPendingTenants(apiPending)
       }
+
+      // Support tickets
+      const tRes = await fetch('/api/elogix-admin/v1/tickets?status=open&limit=100', { headers })
+      if (tRes.ok) {
+        const tData = await tRes.json()
+        setTickets(tData.tickets || tData.data || [])
+      }
+
+      // Internal team
+      const tmRes = await fetch('/api/elogix-admin/v1/team', { headers })
+      if (tmRes.ok) {
+        const tmData = await tmRes.json()
+        setTeam(tmData.team || tmData.data || [])
+      }
+
     } catch(apiErr) {
       console.error('[eLogix Admin] API load failed:', apiErr)
       setApiError('API unavailable — ' + apiErr.message)
@@ -238,21 +182,7 @@ export default function ELogixAdminPage({ onLogout }) {
     }
   }
 
-  // mergeFromLocalStorage removed — companies come from API only
-
   useEffect(() => {
-    // ── WIPE ALL STALE / MOCK COMPANY DATA from localStorage ─────────────
-    // These keys may contain old MOCK_COMPANIES data (Abasar Nepal, Subisu,
-    // Mainawati Steels, HR Hub etc.) written by previous app versions.
-    // Companies MUST come from the API only — localStorage is not a source of truth.
-    const STALE_KEYS = [
-      'elogix_active_companies',
-      'elogix_approved_tenants',
-      'elogix_registered_companies',
-      'elogix_companies',
-    ]
-    STALE_KEYS.forEach(k => { try { localStorage.removeItem(k) } catch(_e) {} })
-    // ─────────────────────────────────────────────────────────────────────
     loadFromAPI()
     const interval = setInterval(() => loadFromAPI(), 30_000)
     return () => clearInterval(interval)
@@ -278,127 +208,121 @@ export default function ELogixAdminPage({ onLogout }) {
     return true
   })
 
-  const handleAction = (slug, action) => {
-    setCompanies(p=>p.map(c=>c.slug===slug?{...c,status:action==='reactivate'?'active':action==='suspend'?'suspended':'cancelled'}:c))
-    notify(action==='suspend'?`⏸ ${slug} suspended — all users logged out`
-          :action==='reactivate'?`✅ ${slug} reactivated`
-          :`❌ ${slug} cancelled`)
+  // ── Status / plan actions ─────────────────────────────────────────────
+  const handleAction = async (slug, action) => {
+    const newStatus = action==='reactivate' ? 'active' : action==='suspend' ? 'suspended' : 'cancelled'
+    setCompanies(p => p.map(c => c.slug===slug ? {...c, status:newStatus} : c))
+    notify(action==='suspend' ? `⏸ ${slug} suspended`
+          :action==='reactivate' ? `✅ ${slug} reactivated`
+          : `❌ ${slug} cancelled`)
     setSelected(null)
+    try {
+      await fetch(`/api/elogix-admin/v1/companies/${slug}/status`, {
+        method: 'PUT',
+        headers: adminHeaders(),
+        body: JSON.stringify({ status: newStatus }),
+      })
+    } catch(_e) {}
   }
 
-  const handleCreate = () => {
+  // ── Onboard client manually ───────────────────────────────────────────
+  const handleCreate = async () => {
     if (!createForm.company_name||!createForm.slug||!createForm.admin_email) {
       notify('⚠️ Fill in company name, URL and admin email'); return
     }
-    const newC = {
-      ...createForm, id:`c${Date.now()}`, status:'active', employee_count:0,
-      max_employees:{trial:10,starter:50,growth:250,business:500,enterprise:1000}[createForm.plan]||50,
-      created_at:new Date().toISOString().split('T')[0],
-      pending_invoice:0, last_payment:null,
-      support_tier:'standard', currency:'NPR',
-    }
-    setCompanies(p=>[...p, newC])
-    // Also save to localStorage so it persists and LoginPage can use it
     try {
-      const pending = JSON.parse(localStorage.getItem('elogix_pending_tenants') || '[]')
-      pending.push({...newC, business_type:'custom', modules:[], landing:'employee-dashboard'})
-      localStorage.setItem('elogix_pending_tenants', JSON.stringify(pending))
-      const regCos = JSON.parse(localStorage.getItem('elogix_registered_companies') || '{}')
-      regCos[createForm.slug] = { id:newC.id, name:newC.company_name||newC.name,
-        plan:newC.plan, status:newC.status, business_type:'custom', modules:[], country:newC.country||'Nepal',
-        currency:newC.currency||'NPR', created_at:newC.created_at }
-      localStorage.setItem('elogix_registered_companies', JSON.stringify(regCos))
-      if (createForm.admin_email) {
-        const regUsers = JSON.parse(localStorage.getItem('elogix_registered_tenants') || '{}')
-        const slugKey = createForm.slug.toUpperCase().slice(0,4)
-        regUsers[createForm.admin_email] = { id:`ELX-${slugKey}-0001`, name:createForm.admin_name||'Admin',
-          role:'super_admin', level:1, company:createForm.slug, pw:'Admin@2083', business_type:'custom' }
-        localStorage.setItem('elogix_registered_tenants', JSON.stringify(regUsers))
+      const res = await fetch('/api/elogix-admin/v1/companies', {
+        method: 'POST',
+        headers: adminHeaders(),
+        body: JSON.stringify(createForm),
+      })
+      if (res.ok) {
+        notify(`✅ ${createForm.company_name} provisioned → ${createForm.slug}.elogix.com.np`)
+        setShowCreateModal(false)
+        setCreateForm({
+          company_name:'', slug:'', admin_email:'', admin_name:'',
+          plan:'starter', industry:'', country:'Nepal', phone:'',
+          account_manager:'', sales_rep:''
+        })
+        await loadFromAPI()
+      } else {
+        const err = await res.json().catch(()=>({}))
+        notify(`⚠️ ${err.message || 'Failed to create company'}`)
       }
-    } catch(e) { console.warn('localStorage error:', e) }
-    notify(`✅ ${createForm.company_name} provisioned → ${createForm.slug}.elogix.com.np`)
-    setShowCreateModal(false)
-    setCreateForm({company_name:'',slug:'',admin_email:'',admin_name:'',plan:'starter',industry:'',country:'Nepal',phone:'',account_manager:'',sales_rep:''})
+    } catch(e) {
+      notify(`⚠️ Network error: ${e.message}`)
+    }
   }
 
   const refreshTenants = async () => {
     notify('🔄 Refreshing from server...')
     await loadFromAPI()
-    notify('✅ Refreshed — latest registrations loaded from server')
+    notify('✅ Refreshed — latest data loaded from server')
   }
 
-  const approveTenant = async (tenant, withPassword=false) => {
-    const approvedTenant = {
-      ...tenant,
-      status:      tenant.plan === 'trial' ? 'trial' : 'active',
-      approved_at: new Date().toISOString(),
-      approved_by: 'eLogix SuperAdmin',
-    }
+  // ── Approve tenant ────────────────────────────────────────────────────
+  const approveTenant = async (tenant) => {
+    // Optimistic: remove from pending immediately
+    setPendingTenants(prev => prev.filter(t => t.slug !== tenant.slug))
 
-    // 1. Add to active companies list (persisted in localStorage)
-    setCompanies(prev => {
-      const without = prev.filter(c => c.slug !== tenant.slug)
-      const next = [...without, approvedTenant]
-      // ✅ KEY FIX: persist active companies so they survive page refresh
-      // Not caching in localStorage — companies come from API only
-      return next
-    })
-
-    // 2. Remove from pending
-    const updatedPending = pendingTenants.filter(t => t.slug !== tenant.slug)
-    setPendingTenants(updatedPending)
-    localStorage.setItem('elogix_pending_tenants', JSON.stringify(updatedPending))
-
-    // 3. Approval recorded via API (step 5 below) — no localStorage write
-
-    // 4. Auto-provision module permissions based on plan + business type
-    (async(slug,plan)=>{})(
-      tenant.slug,
-      tenant.plan          || 'trial',
-      tenant.business_type || 'custom',
-      'elogix_superadmin'
-    )
-
-    const modCount = ({}[tenant.plan||'trial']||[]).length
-    notify(`✅ ${tenant.name} approved! ${modCount}+ modules activated. Login: ${tenant.admin_email}`)
-
-    // 5. Also persist approval to backend so it survives browser refresh
-    //    and is visible from ANY computer (not just this browser's localStorage)
     try {
-      const adminKey = localStorage.getItem('elogix_admin_key') || 'elogix-admin-2026'
-      const token    = localStorage.getItem('elogix_admin_token') || ''
-      await fetch(`/api/elogix-admin/v1/companies/${tenant.slug}/approve`, {
+      const res = await fetch(`/api/elogix-admin/v1/companies/${tenant.slug}/approve`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-eLogix-Admin-Key': adminKey,
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: adminHeaders(),
         body: JSON.stringify({
-          plan: tenant.plan || 'trial',
+          plan         : tenant.plan || 'trial',
           business_type: tenant.business_type || 'custom',
-          admin_email: tenant.admin_email,
-          approved_by: 'eLogix SuperAdmin',
+          admin_email  : tenant.admin_email,
+          approved_by  : 'eLogix SuperAdmin',
         })
       })
+      if (res.ok) {
+        notify(`✅ ${tenant.name} approved! Tenant can now log in.`)
+        // Also update localStorage so tenant can log in in same browser
+        try {
+          const ru = JSON.parse(localStorage.getItem('elogix_registered_tenants') || '{}')
+          const emailKey = tenant.admin_email?.toLowerCase()
+          if (ru[emailKey]) {
+            ru[emailKey].company_status = 'active'
+            localStorage.setItem('elogix_registered_tenants', JSON.stringify(ru))
+          }
+        } catch(_e) {}
+        // Re-fetch companies to reflect the new active company
+        await loadFromAPI()
+      } else {
+        // Revert optimistic update on failure
+        setPendingTenants(prev => [...prev, tenant])
+        const err = await res.json().catch(()=>({}))
+        notify(`⚠️ Approval failed: ${err.message || res.status}`)
+      }
     } catch(_e) {
-      // API unavailable — localStorage approval still works for same-browser access
+      // Revert optimistic update
+      setPendingTenants(prev => [...prev, tenant])
+      notify(`⚠️ Network error — could not approve ${tenant.name}`)
     }
   }
 
-  const rejectTenant = (tenant) => {
-    const updated = pendingTenants.filter(t => t.slug !== tenant.slug)
-    setPendingTenants(updated)
-    localStorage.setItem('elogix_pending_tenants', JSON.stringify(updated))
-    const regUsers = JSON.parse(localStorage.getItem('elogix_registered_tenants') || '{}')
-    delete regUsers[tenant.admin_email]
-    localStorage.setItem('elogix_registered_tenants', JSON.stringify(regUsers))
+  // ── Reject tenant ─────────────────────────────────────────────────────
+  const rejectTenant = async (tenant) => {
+    setPendingTenants(prev => prev.filter(t => t.slug !== tenant.slug))
+    try {
+      await fetch(`/api/elogix-admin/v1/companies/${tenant.slug}/reject`, {
+        method: 'POST',
+        headers: adminHeaders(),
+        body: JSON.stringify({ reason: 'Rejected by SuperAdmin' }),
+      })
+    } catch(_e) {}
+    // Also remove from localStorage registered_tenants
+    try {
+      const ru = JSON.parse(localStorage.getItem('elogix_registered_tenants') || '{}')
+      delete ru[tenant.admin_email?.toLowerCase()]
+      localStorage.setItem('elogix_registered_tenants', JSON.stringify(ru))
+    } catch(_e) {}
     notify(`❌ ${tenant.name} rejected and removed.`)
   }
 
   const Tab = ({id,label,icon}) => (
-    <button onClick={()=>
-      setTab(id)}
+    <button onClick={()=>setTab(id)}
       style={{padding:'9px 18px',borderRadius:20,border:`1.5px solid ${tab===id?A:'#e2e8f0'}`,
         background:tab===id?A+'15':'#fff',color:tab===id?A:'#64748b',
         fontSize:11,fontWeight:tab===id?800:400,cursor:'pointer',transition:'all .12s',whiteSpace:'nowrap'}}>
@@ -432,28 +356,20 @@ export default function ELogixAdminPage({ onLogout }) {
     }
     setPwLoading(true); setPwMsg('')
     try {
-      // Update localStorage store
+      // Update localStorage so the tenant can log in immediately in this browser
       const ru  = JSON.parse(localStorage.getItem('elogix_registered_tenants') || '{}')
       const key = pwForm.admin_email?.toLowerCase()
       if (ru[key]) {
-        ru[key].pw = pwForm.new_password
+        ru[key].pw         = pwForm.new_password
         ru[key].admin_name = pwForm.admin_name || ru[key].admin_name
-        ru[key].phone = pwForm.phone || ru[key].phone
+        ru[key].phone      = pwForm.phone      || ru[key].phone
         localStorage.setItem('elogix_registered_tenants', JSON.stringify(ru))
       }
-      // Update companies store
-      const companies = JSON.parse(localStorage.getItem('elogix_companies') || '{}')
-      if (pwTarget?.slug && companies[pwTarget.slug]) {
-        companies[pwTarget.slug].admin_name  = pwForm.admin_name  || companies[pwTarget.slug].admin_name
-        companies[pwTarget.slug].admin_email = pwForm.admin_email || companies[pwTarget.slug].admin_email
-        companies[pwTarget.slug].phone       = pwForm.phone       || companies[pwTarget.slug].phone
-        localStorage.setItem('elogix_companies', JSON.stringify(companies))
-      }
+
       // Call backend
-      const adminKey = localStorage.getItem('elogix_admin_key') || 'elogix-admin-2026'
       const res = await fetch(`/api/elogix-admin/v1/companies/${pwTarget?.slug}/reset-password`, {
         method: 'POST',
-        headers: { 'Content-Type':'application/json', 'X-eLogix-Admin-Key': adminKey },
+        headers: adminHeaders(),
         body: JSON.stringify({
           admin_email  : pwForm.admin_email,
           admin_name   : pwForm.admin_name,
@@ -462,10 +378,11 @@ export default function ELogixAdminPage({ onLogout }) {
           reason       : pwForm.reason,
         }),
       }).catch(() => null)
+
       setPwMsg(res?.ok
         ? `✅ Password reset for ${pwForm.admin_email}. They can log in immediately.`
-        : `✅ Password updated locally. Will sync to server on next deploy.`)
-      setTimeout(() => { setShowPwModal(false); fetchTenants?.() }, 2200)
+        : `✅ Password updated locally. Will sync to server on next connection.`)
+      setTimeout(() => { setShowPwModal(false) }, 2200)
     } catch (err) {
       setPwMsg(`❌ ${err.message}`)
     } finally { setPwLoading(false) }
@@ -515,13 +432,9 @@ export default function ELogixAdminPage({ onLogout }) {
               + Onboard Client
             </button>
             <button onClick={()=>{
-                if(!window.confirm('This will wipe cached company data and reload fresh from API. Continue?')) return
-                ;['elogix_active_companies','elogix_approved_tenants',
-                  'elogix_registered_companies','elogix_pending_tenants'].forEach(k=>localStorage.removeItem(k))
-                setCompanies([])
-                setPendingTenants([])
+                if(!window.confirm('Reload fresh data from API?')) return
                 loadFromAPI()
-                notify('🔄 Cache cleared — loading fresh data from API...')
+                notify('🔄 Loading fresh data from API...')
               }}
               style={{padding:'8px 14px',borderRadius:9,border:'1.5px solid rgba(255,255,255,.4)',
                 background:'rgba(255,255,255,.12)',color:'#fff',fontSize:11,cursor:'pointer',
@@ -535,12 +448,12 @@ export default function ELogixAdminPage({ onLogout }) {
                   'Slug':         c.slug,
                   'Plan':         c.plan,
                   'Status':       c.status,
-                  'Employees':    c.employees,
-                  'MRR (NPR)':    c.mrr,
-                  'Joined':       c.joined,
+                  'Employees':    c.employee_count,
                   'Admin Email':  c.admin_email||'',
                   'Industry':     c.industry||'',
                   'Phone':        c.phone||'',
+                  'Country':      c.country||'',
+                  'Created':      c.created_at||'',
                 }))
                 downloadCSV(exportData, `eLogix_Companies_${new Date().toISOString().slice(0,10)}.csv`)
                 notify('✅ Company list exported as CSV')
@@ -551,7 +464,6 @@ export default function ELogixAdminPage({ onLogout }) {
             </button>
             <button onClick={()=>{
                 if(!window.confirm('Are you sure you want to log out of eLogix Admin?')) return
-                // 1. Clear ALL auth storage — belt-and-suspenders approach
                 const keys = [
                   'elogix_session','elogix_admin_session',
                   'access_token','elogix_admin_token',
@@ -562,9 +474,7 @@ export default function ELogixAdminPage({ onLogout }) {
                   try { localStorage.removeItem(k) }   catch(_e) {}
                   try { sessionStorage.removeItem(k) } catch(_e) {}
                 })
-                // 2. Call parent handler (AppRouter → AuthContext logout)
                 try { onLogout?.() } catch(_e) {}
-                // 3. Hard redirect to login as final fallback
                 try {
                   window.location.hash = ''
                   window.location.href = window.location.pathname + '?logged_out=1'
@@ -601,20 +511,18 @@ export default function ELogixAdminPage({ onLogout }) {
         </div>
       </div>
 
-      {/* API status banner */}
-
       {/* Tabs */}
       <div style={{background:'#fff',padding:'10px 20px',borderBottom:'1px solid #f1f5f9',
         display:'flex',gap:8,overflowX:'auto'}}>
-        <Tab id="pending"      label={`Pending Approval ${pendingTenants.length>0?`(${pendingTenants.length})`:''}` } icon="⏳"/>
-        <Tab id="dashboard"    label="Companies"           icon="🏢"/>
-        <Tab id="billing"      label="Billing"             icon="💰"/>
-        <Tab id="tickets"      label="Support"             icon="🎫"/>
-        <Tab id="notify"       label="Broadcast"           icon="📢"/>
-        <Tab id="modules"      label="Module Permissions"  icon="🔐"/>
+        <Tab id="pending"      label={`Pending Approval${pendingTenants.length>0?` (${pendingTenants.length})`:''}`} icon="⏳"/>
+        <Tab id="dashboard"    label="Companies"             icon="🏢"/>
+        <Tab id="billing"      label="Billing"               icon="💰"/>
+        <Tab id="tickets"      label="Support"               icon="🎫"/>
+        <Tab id="notify"       label="Broadcast"             icon="📢"/>
+        <Tab id="modules"      label="Module Permissions"    icon="🔐"/>
         <Tab id="referral"     label="Referral & Commission" icon="🤝"/>
-        <Tab id="admins"       label="eLogix Team"         icon="👥"/>
-        <Tab id="pw-mgmt"      label="Password Management" icon="🔑"/>
+        <Tab id="admins"       label="eLogix Team"           icon="👥"/>
+        <Tab id="pw-mgmt"      label="Password Management"   icon="🔑"/>
       </div>
 
       <div style={{padding:'14px 14px'}}>
@@ -677,7 +585,13 @@ export default function ELogixAdminPage({ onLogout }) {
                         </button>
                         <button onClick={()=>{
                             const pw=window.prompt(`Set password for ${t.admin_email}\n(Cancel = keep registered password):`)
-                            if(pw?.trim()){try{const ru=JSON.parse(localStorage.getItem('elogix_registered_tenants')||'{}');if(ru[t.admin_email?.toLowerCase()]){ru[t.admin_email.toLowerCase()].pw=pw.trim();localStorage.setItem('elogix_registered_tenants',JSON.stringify(ru))}} catch(_e) {}}
+                            if(pw?.trim()){
+                              try {
+                                const ru=JSON.parse(localStorage.getItem('elogix_registered_tenants')||'{}')
+                                const k = t.admin_email?.toLowerCase()
+                                if(ru[k]){ ru[k].pw=pw.trim(); localStorage.setItem('elogix_registered_tenants',JSON.stringify(ru)) }
+                              } catch(_e) {}
+                            }
                             approveTenant(t)
                           }}
                           style={{padding:'9px 20px',borderRadius:9,border:'1.5px solid #0369a1',background:'#eff6ff',color:'#0369a1',fontSize:11,fontWeight:700,cursor:'pointer'}}>
@@ -708,7 +622,7 @@ export default function ELogixAdminPage({ onLogout }) {
             <input value={search} onChange={e=>setSearch(e.target.value)}
               placeholder="Search company name or URL..."
               style={{...inp,maxWidth:280}}/>
-            <select defaultValue={selected?.plan} value={statusFilter} onChange={e=>setStatusFilter(e.target.value)} style={{...inp,width:'auto'}}>
+            <select value={statusFilter} onChange={e=>setStatusFilter(e.target.value)} style={{...inp,width:'auto'}}>
               <option value="all">All Status</option>
               <option value="active">Active</option>
               <option value="trial">Trial</option>
@@ -720,35 +634,15 @@ export default function ELogixAdminPage({ onLogout }) {
             </span>
           </div>
 
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(360px,1fr))',gap:14}}>
-        {/* Stale mock-data warning — shown when only old demo slugs are loaded */}
-        {companies.length > 0 &&
-         companies.every(co => ['abasar','subisu','mainawatisteels','hrhub','himalayan','solidfuture'].includes(co.slug)) && (
-          <div style={{background:'#fffbeb',border:'2px solid #f59e0b',borderRadius:12,
-            padding:'14px 18px',marginBottom:16,display:'flex',gap:12,alignItems:'flex-start',flexWrap:'wrap'}}>
-            <span style={{fontSize:22,flexShrink:0}}>⚠️</span>
-            <div style={{flex:1,minWidth:200}}>
-              <div style={{fontSize:13,fontWeight:800,color:'#92400e',marginBottom:4}}>
-                Stale demo/mock data detected in browser cache
-              </div>
-              <div style={{fontSize:11,color:'#a16207',lineHeight:1.6}}>
-                This list contains <strong>stale cached data</strong> from a previous session — not real registered companies.
-                Click <strong>🗑️ Clear &amp; Reload</strong> to remove cached data and load fresh data from the API.
-              </div>
+          {companies.length===0 && !apiLoading && (
+            <div style={{textAlign:'center',padding:48,color:'#94a3b8'}}>
+              <div style={{fontSize:36,marginBottom:8}}>🏢</div>
+              <div style={{fontSize:14,fontWeight:700}}>No companies yet</div>
+              <div style={{fontSize:11,marginTop:4}}>Approved registrations will appear here</div>
             </div>
-            <button onClick={()=>{
-              ;['elogix_active_companies','elogix_approved_tenants',
-                'elogix_registered_companies','elogix_pending_tenants'].forEach(k=>localStorage.removeItem(k))
-              setCompanies([])
-              setPendingTenants([])
-              loadFromAPI()
-            }} style={{padding:'10px 18px',borderRadius:9,border:'none',background:'#d97706',
-              color:'#fff',fontSize:11,fontWeight:800,cursor:'pointer',fontFamily:'inherit',flexShrink:0}}>
-              🗑️ Clear &amp; Reload
-            </button>
-          </div>
-        )}
+          )}
 
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(360px,1fr))',gap:14}}>
             {filtered.map(c=>{
               const sc = STATUS_COLORS[c.status]||STATUS_COLORS.active
               const utilPct = c.max_employees ? Math.round((c.employee_count||0)/c.max_employees*100) : 0
@@ -804,7 +698,7 @@ export default function ELogixAdminPage({ onLogout }) {
                     </div>
 
                     <div style={{fontSize:9,color:'#94a3b8',marginBottom:12}}>
-                      👤 AM: {c.account_manager} · 🎫 {c.support_tier} support
+                      👤 AM: {c.account_manager||'—'} · 🎫 {c.support_tier} support
                       {c.suspended_reason&&<span style={{color:'#d97706'}}> · ⚠️ {c.suspended_reason}</span>}
                     </div>
 
@@ -897,7 +791,9 @@ export default function ELogixAdminPage({ onLogout }) {
                 </tr>
               </thead>
               <tbody>
-                {invoices.map((inv,i)=>{
+                {invoices.length === 0 ? (
+                  <tr><td colSpan={7} style={{padding:32,textAlign:'center',color:'#94a3b8',fontSize:12}}>No invoices yet</td></tr>
+                ) : invoices.map((inv,i)=>{
                   const sc = {pending:{bg:'#fffbeb',c:'#d97706'},paid:{bg:'#f0fdf4',c:'#059669'},
                     overdue:{bg:'#fef2f2',c:'#dc2626'}}[inv.status]||{}
                   return (
@@ -906,7 +802,7 @@ export default function ELogixAdminPage({ onLogout }) {
                       <td style={{padding:'9px 14px',fontWeight:700}}>{inv.company}</td>
                       <td style={{padding:'9px 14px',color:'#64748b'}}>{inv.period_month}</td>
                       <td style={{padding:'9px 14px',fontWeight:700,color:'#059669'}}>
-                        NPR {inv.total_npr.toLocaleString()}
+                        NPR {inv.total_npr?.toLocaleString()}
                       </td>
                       <td style={{padding:'9px 14px'}}>
                         <span style={{background:sc.bg,color:sc.c,fontSize:9,fontWeight:700,
@@ -927,7 +823,7 @@ export default function ELogixAdminPage({ onLogout }) {
                 })}
               </tbody>
             </table>
-            </div>{/* end invoice scroll */}
+            </div>
           </div>
         </div>
       )}
@@ -949,7 +845,9 @@ export default function ELogixAdminPage({ onLogout }) {
               </tr>
             </thead>
             <tbody>
-              {tickets.map((t,i)=>{
+              {tickets.length === 0 ? (
+                <tr><td colSpan={8} style={{padding:32,textAlign:'center',color:'#94a3b8',fontSize:12}}>No open tickets</td></tr>
+              ) : tickets.map((t,i)=>{
                 const pc = {high:{bg:'#fef2f2',c:'#dc2626'},normal:{bg:'#fffbeb',c:'#d97706'},low:{bg:'#f0fdf4',c:'#059669'}}[t.priority]||{}
                 const sc = {open:{bg:'#eff6ff',c:'#0369a1'},in_progress:{bg:'#f5f3ff',c:'#7c3aed'},resolved:{bg:'#f0fdf4',c:'#059669'}}[t.status]||{}
                 return (
@@ -979,7 +877,7 @@ export default function ELogixAdminPage({ onLogout }) {
               })}
             </tbody>
           </table>
-          </div>{/* end ticket scroll */}
+          </div>
         </div>
       )}
 
@@ -991,7 +889,7 @@ export default function ELogixAdminPage({ onLogout }) {
             {[
               ['Notification Type','select',['alert','billing','update','maintenance','marketing']],
               ['Priority','select',['normal','high','critical']],
-            ].map(([lb,type,opts])=>(
+            ].map(([lb,,opts])=>(
               <div key={lb} style={{marginBottom:14}}>
                 <label style={{fontSize:10,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>{lb}</label>
                 <select style={inp}>{opts.map(o=><option key={o}>{o}</option>)}</select>
@@ -999,12 +897,12 @@ export default function ELogixAdminPage({ onLogout }) {
             ))}
             <div style={{marginBottom:14}}>
               <label style={{fontSize:10,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>Title *</label>
-              <input style={inp} placeholder="eLogix System Maintenance — Aug 10"/>
+              <input style={inp} placeholder="Notification title"/>
             </div>
             <div style={{marginBottom:14}}>
               <label style={{fontSize:10,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>Message *</label>
               <textarea rows={4} style={{...inp,resize:'vertical',fontFamily:'inherit'}}
-                placeholder="eLogix HRMS will undergo scheduled maintenance on Aug 10, 2026 from 11PM–2AM. All services will be restored by 2AM. We apologize for any inconvenience."/>
+                placeholder="Your message to all companies..."/>
             </div>
             <div style={{marginBottom:16}}>
               <label style={{fontSize:10,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>Target</label>
@@ -1021,7 +919,7 @@ export default function ELogixAdminPage({ onLogout }) {
                   color:'#fff',fontSize:12,fontWeight:800,cursor:'pointer'}}>
                 📢 Send Broadcast
               </button>
-              <button onClick={()=>notify('📧 Email preview sent to support@elogix.com.np')}
+              <button onClick={()=>notify('📧 Preview sent')}
                 style={{padding:'11px 16px',borderRadius:9,border:'1px solid #e2e8f0',
                   background:'#fff',fontSize:11,cursor:'pointer'}}>
                 Preview
@@ -1031,16 +929,15 @@ export default function ELogixAdminPage({ onLogout }) {
         </div>
       )}
 
-      {/* ── ADMINS TAB ── */}
+      {/* ── eLogix TEAM TAB ── */}
       {tab==='admins'&&(
         <div style={{background:'#fff',borderRadius:12,padding:'20px',boxShadow:'0 1px 6px rgba(0,0,0,.06)'}}>
           <div style={{fontWeight:800,fontSize:13,marginBottom:16}}>👥 eLogix Internal Team</div>
-          {[
-            {name:'Bikash Adhikari', email:'bikash@elogix.com.np', role:'elogix_superadmin', status:'active'},
-            {name:'Priya Thapa',    email:'priya@elogix.com.np',  role:'sales',             status:'active'},
-            {name:'Ramesh Joshi',   email:'ramesh@elogix.com.np', role:'support',           status:'active'},
-            {name:'Sita Karki',     email:'sita@elogix.com.np',   role:'billing',           status:'active'},
-          ].map((a,i)=>(
+          {team.length === 0 ? (
+            <div style={{textAlign:'center',padding:32,color:'#94a3b8',fontSize:12}}>
+              No team members loaded — check API
+            </div>
+          ) : team.map((a,i)=>(
             <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',
               padding:'12px 0',borderBottom:'1px solid #f1f5f9'}}>
               <div>
@@ -1064,12 +961,16 @@ export default function ELogixAdminPage({ onLogout }) {
         </div>
       )}
 
-      {/* ── MODULE PERMISSIONS TAB (SuperAdmin only) ── */}
+      {/* ── MODULE PERMISSIONS TAB ── */}
       {tab==='modules'&&(
         <TenantModulePermissionPage />
       )}
 
-      {/* ── REFERRAL & COMMISSION TAB (SuperAdmin only) ── */}
+      {/* ── REFERRAL & COMMISSION TAB ── */}
+      {tab==='referral'&&(
+        <ReferralCommissionPage />
+      )}
+
       {/* ── PASSWORD MANAGEMENT TAB ── */}
       {tab==='pw-mgmt'&&(
         <div>
@@ -1080,12 +981,10 @@ export default function ELogixAdminPage({ onLogout }) {
             </div>
           </div>
 
-          {/* Search bar */}
           <input value={search} onChange={e=>setSearch(e.target.value)}
             placeholder="Search company or admin email..."
             style={{...inp,maxWidth:340,marginBottom:16}}/>
 
-          {/* Company list with reset buttons */}
           <div style={{display:'flex',flexDirection:'column',gap:10}}>
             {[...activeTenants,...pendingTenants]
               .filter(t=>!search||t.name?.toLowerCase().includes(search.toLowerCase())||t.admin_email?.toLowerCase().includes(search.toLowerCase()))
@@ -1093,16 +992,12 @@ export default function ELogixAdminPage({ onLogout }) {
               <div key={i} style={{background:'#fff',borderRadius:12,padding:'14px 18px',
                 border:'1.5px solid #e2e8f0',boxShadow:'0 1px 4px rgba(0,0,0,.06)',
                 display:'flex',alignItems:'center',gap:14,flexWrap:'wrap'}}>
-
-                {/* Company avatar */}
                 <div style={{width:42,height:42,borderRadius:10,flexShrink:0,
                   background:'linear-gradient(135deg,#7c3aed,#4f46e5)',
                   display:'flex',alignItems:'center',justifyContent:'center',
                   color:'#fff',fontSize:14,fontWeight:900}}>
                   {(t.name||'?').charAt(0).toUpperCase()}
                 </div>
-
-                {/* Company info */}
                 <div style={{flex:1,minWidth:200}}>
                   <div style={{fontWeight:800,fontSize:13,color:'#0f172a'}}>{t.name}</div>
                   <div style={{fontSize:11,color:'#64748b',marginTop:2}}>
@@ -1110,8 +1005,6 @@ export default function ELogixAdminPage({ onLogout }) {
                   </div>
                   {t.admin_name&&<div style={{fontSize:10,color:'#94a3b8',marginTop:1}}>Admin: {t.admin_name} · 📱 {t.phone||'No phone'}</div>}
                 </div>
-
-                {/* Status badge */}
                 <div style={{display:'flex',alignItems:'center',gap:8}}>
                   <span style={{padding:'2px 10px',borderRadius:20,fontSize:9,fontWeight:700,
                     background:t.status==='active'?'#f0fdf4':t.status==='suspended'?'#fffbeb':'#f8fafc',
@@ -1119,8 +1012,6 @@ export default function ELogixAdminPage({ onLogout }) {
                     border:`1px solid ${t.status==='active'?'#bbf7d0':t.status==='suspended'?'#fde68a':'#e2e8f0'}`}}>
                     {t.status==='active'?'✅ Active':t.status==='suspended'?'⏸ Suspended':'⏳ Pending'}
                   </span>
-
-                  {/* Reset button */}
                   <button onClick={()=>openPasswordReset(t)}
                     style={{padding:'8px 18px',borderRadius:9,border:'none',
                       background:'linear-gradient(135deg,#7c3aed,#4f46e5)',
@@ -1142,10 +1033,6 @@ export default function ELogixAdminPage({ onLogout }) {
         </div>
       )}
 
-      {tab==='referral'&&(
-        <ReferralCommissionPage />
-      )}
-
       </div>{/* end content */}
 
       {/* ── Company Detail Modal ── */}
@@ -1159,12 +1046,11 @@ export default function ELogixAdminPage({ onLogout }) {
               <div style={{fontSize:10,opacity:.8}}>{selected.slug}.elogix.com.np · {selected.industry}</div>
             </div>
             <div style={{padding:'20px 22px'}}>
-              {/* Info grid */}
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:16}}>
                 {[
-                  ['Plan',selected.plan.toUpperCase()],['Status',selected.status.toUpperCase()],
+                  ['Plan',selected.plan?.toUpperCase()],['Status',selected.status?.toUpperCase()],
                   ['Employees',`${selected.employee_count}/${selected.max_employees}`],['Country',selected.country],
-                  ['Account Manager',selected.account_manager],['Support Tier',selected.support_tier],
+                  ['Account Manager',selected.account_manager||'—'],['Support Tier',selected.support_tier],
                   ['Created',selected.created_at],['Pending Invoice',selected.pending_invoice?`NPR ${selected.pending_invoice.toLocaleString()}`:'None'],
                 ].map(([lb,v])=>(
                   <div key={lb} style={{background:'#f8fafc',borderRadius:9,padding:'10px 12px'}}>
@@ -1174,7 +1060,6 @@ export default function ELogixAdminPage({ onLogout }) {
                 ))}
               </div>
 
-              {/* Change plan */}
               <div style={{marginBottom:16}}>
                 <label style={{fontSize:10,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>Change Plan</label>
                 <div style={{display:'flex',gap:8}}>
@@ -1193,7 +1078,6 @@ export default function ELogixAdminPage({ onLogout }) {
                 </div>
               </div>
 
-              {/* Actions */}
               <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:8}}>
                 {[
                   ['💰 Generate Invoice','#059669',()=>notify(`📄 Invoice generated for ${selected.name}`)],
@@ -1202,7 +1086,7 @@ export default function ELogixAdminPage({ onLogout }) {
                   selected.status==='active'
                     ?['⏸ Suspend','#d97706',()=>handleAction(selected.slug,'suspend')]
                     :['✅ Reactivate','#059669',()=>handleAction(selected.slug,'reactivate')],
-                  ['🗑 Cancel Account','#dc2626',()=>{if(confirm(`Cancel ${selected.name}?`))handleAction(selected.slug,'cancelled')}],
+                  ['🗑 Cancel Account','#dc2626',()=>{if(window.confirm(`Cancel ${selected.name}?`))handleAction(selected.slug,'cancelled')}],
                   ['📊 Usage Report','#374151',()=>notify('📊 Usage report downloading...')],
                 ].map(([lb,color,fn],i)=>(
                   <button key={i} onClick={fn}
@@ -1240,7 +1124,7 @@ export default function ELogixAdminPage({ onLogout }) {
                   <div key={k}>
                     <label style={{fontSize:9,fontWeight:700,color:'#374151',display:'block',marginBottom:3}}>{lb}</label>
                     <input type={t} value={createForm[k]} onChange={e=>scf(k,e.target.value)} style={inp}
-                      placeholder={k==='slug'?'e.g. himalayan':''}/>
+                      placeholder={k==='slug'?'e.g. yourcompany':''}/>
                   </div>
                 ))}
                 <div>
@@ -1258,7 +1142,7 @@ export default function ELogixAdminPage({ onLogout }) {
               </div>
               <div style={{background:'#fffbeb',border:'1px solid #fde68a',borderRadius:9,padding:'10px 14px',
                 marginBottom:16,fontSize:10,color:'#92400e'}}>
-                ⚡ This will auto-provision: PostgreSQL schema · 14 default roles · Permission matrix · Admin user · MinIO storage · Welcome email
+                ⚡ This will auto-provision: PostgreSQL schema · Default roles · Permission matrix · Admin user · MinIO storage · Welcome email
               </div>
               <div style={{display:'flex',gap:10}}>
                 <button onClick={handleCreate}
@@ -1286,7 +1170,7 @@ export default function ELogixAdminPage({ onLogout }) {
             <div style={{padding:'14px 14px'}}>
               <div style={{marginBottom:12}}>
                 <label style={{fontSize:10,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>Title</label>
-                <input style={inp} placeholder="e.g. eLogix Invoice Ready"/>
+                <input style={inp} placeholder="Notification title"/>
               </div>
               <div style={{marginBottom:12}}>
                 <label style={{fontSize:10,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>Message</label>
@@ -1319,16 +1203,13 @@ export default function ELogixAdminPage({ onLogout }) {
         </div>
       )}
 
-      {/* ══════════════════════════════════════════════════════════════ */}
-      {/* PASSWORD RESET MODAL                                          */}
-      {/* ══════════════════════════════════════════════════════════════ */}
+      {/* ── Password Reset Modal ── */}
       {showPwModal && pwTarget && (
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.6)',zIndex:9999,
           display:'flex',alignItems:'center',justifyContent:'center',padding:16}}>
           <div style={{background:'#fff',borderRadius:20,width:'100%',maxWidth:500,
             boxShadow:'0 24px 80px rgba(0,0,0,.3)',overflow:'hidden'}}>
 
-            {/* Header */}
             <div style={{background:'linear-gradient(135deg,#1e1b4b,#7c3aed)',padding:'18px 22px',
               display:'flex',justifyContent:'space-between',alignItems:'center'}}>
               <div>
@@ -1343,10 +1224,7 @@ export default function ELogixAdminPage({ onLogout }) {
                   display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
             </div>
 
-            {/* Body */}
             <div style={{padding:'22px 24px',display:'flex',flexDirection:'column',gap:14}}>
-
-              {/* Admin Name */}
               <div>
                 <label style={{fontSize:12,fontWeight:700,color:'#374151',display:'block',marginBottom:5}}>
                   👤 Super Admin Full Name
@@ -1358,7 +1236,6 @@ export default function ELogixAdminPage({ onLogout }) {
                     borderRadius:8,border:'1.5px solid #e2e8f0',fontSize:13,outline:'none'}}/>
               </div>
 
-              {/* Admin Email */}
               <div>
                 <label style={{fontSize:12,fontWeight:700,color:'#374151',display:'block',marginBottom:5}}>
                   📧 Admin Email Address <span style={{color:'#dc2626'}}>*</span>
@@ -1370,7 +1247,6 @@ export default function ELogixAdminPage({ onLogout }) {
                     borderRadius:8,border:'1.5px solid #e2e8f0',fontSize:13,outline:'none'}}/>
               </div>
 
-              {/* Mobile */}
               <div>
                 <label style={{fontSize:12,fontWeight:700,color:'#374151',display:'block',marginBottom:5}}>
                   📱 Mobile Number
@@ -1382,7 +1258,6 @@ export default function ELogixAdminPage({ onLogout }) {
                     borderRadius:8,border:'1.5px solid #e2e8f0',fontSize:13,outline:'none'}}/>
               </div>
 
-              {/* New Password */}
               <div>
                 <label style={{fontSize:12,fontWeight:700,color:'#374151',display:'block',marginBottom:5}}>
                   🔒 New Password <span style={{color:'#dc2626'}}>*</span>
@@ -1410,7 +1285,6 @@ export default function ELogixAdminPage({ onLogout }) {
                 )}
               </div>
 
-              {/* Confirm Password */}
               <div>
                 <label style={{fontSize:12,fontWeight:700,color:'#374151',display:'block',marginBottom:5}}>
                   🔒 Confirm Password <span style={{color:'#dc2626'}}>*</span>
@@ -1430,7 +1304,6 @@ export default function ELogixAdminPage({ onLogout }) {
                 )}
               </div>
 
-              {/* Reason */}
               <div>
                 <label style={{fontSize:12,fontWeight:700,color:'#374151',display:'block',marginBottom:5}}>
                   📝 Reason for Reset <span style={{color:'#94a3b8',fontWeight:400}}>(optional)</span>
@@ -1444,7 +1317,6 @@ export default function ELogixAdminPage({ onLogout }) {
                     outline:'none',resize:'vertical',fontFamily:'inherit'}}/>
               </div>
 
-              {/* Message */}
               {pwMsg && (
                 <div style={{padding:'10px 14px',borderRadius:9,fontSize:12,fontWeight:700,
                   background:pwMsg.startsWith('✅')?'#f0fdf4':'#fef2f2',
@@ -1454,7 +1326,6 @@ export default function ELogixAdminPage({ onLogout }) {
                 </div>
               )}
 
-              {/* Action buttons */}
               <div style={{display:'flex',gap:10,justifyContent:'flex-end',marginTop:4}}>
                 <button onClick={()=>setShowPwModal(false)}
                   style={{padding:'10px 20px',borderRadius:9,border:'1.5px solid #e2e8f0',

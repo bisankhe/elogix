@@ -68,7 +68,12 @@ function writeDB(name, data) {
   } catch(e) { console.error('[DB write error]', e.message); return false }
 }
 
-const ADMIN_KEY = process.env.ELOGIX_ADMIN_KEY || 'elogix-admin-2026'
+const ADMIN_KEY = process.env.ELOGIX_ADMIN_KEY
+if (!ADMIN_KEY) {
+  console.error('[eLogix] FATAL: ELOGIX_ADMIN_KEY environment variable is not set')
+  process.exit(1)
+}
+
 const isAdmin = req => {
   const key   = req.headers['x-elogix-admin-key'] || ''
   const token = (req.headers['authorization'] || '').replace('Bearer ','')
@@ -92,7 +97,7 @@ const normalizeCompany = (co, i = 0) => ({
   employee_count : co.employee_count || 0,
   max_employees  : co.max_employees ||
     ({trial:10,starter:50,growth:250,business:500,enterprise:1000}[co.plan] || 10),
-  account_manager: co.account_manager || (co.status === 'pending' ? 'New Signup' : 'eLogix Team'),
+  account_manager: co.account_manager || (co.status === 'pending' ? 'New Signup' : ''),
   support_tier   : co.support_tier || 'standard',
   pending_invoice: co.pending_invoice || 0,
   last_payment   : co.last_payment || null,
@@ -102,14 +107,6 @@ const normalizeCompany = (co, i = 0) => ({
   approved_by    : co.approved_by || null,
   registered_at  : co.registered_at || co.created_at || new Date().toISOString(),
 })
-
-// Mock companies (always shown when no others exist)
-const MOCK_COMPANIES = {
-  abasarnepal    : normalizeCompany({id:'c1',slug:'abasarnepal',    name:'Abasar Nepal',              plan:'starter', status:'active', business_type:'recruitment_agency', industry:'HR / Manpower',       admin_email:'admin@abasarnepal.com',   account_manager:'eLogix Team', approved_at:'2083-05-04T00:00:00Z'}),
-  subisu         : normalizeCompany({id:'c2',slug:'subisu',         name:'Subisu Cablenet Pvt. Ltd.', plan:'growth',  status:'active', business_type:'it_software',         industry:'Telecom / ISP',       admin_email:'hr@subisu.net.np',        account_manager:'eLogix Team', max_employees:250, approved_at:'2083-05-05T00:00:00Z'}),
-  mainawatisteels: normalizeCompany({id:'c3',slug:'mainawatisteels',name:'Mainawati Steels',           plan:'starter', status:'active', business_type:'manufacturing',        industry:'Manufacturing / Steel',admin_email:'admin@mainawati.com',    account_manager:'eLogix Team', approved_at:'2083-05-05T00:00:00Z'}),
-  hrhub          : normalizeCompany({id:'c4',slug:'hrhub',          name:'HR Hub',                    plan:'trial',   status:'trial',  business_type:'custom',               industry:'HR Consulting',       admin_email:'admin@hrhub.com.np',     account_manager:'eLogix Team', max_employees:10,  approved_at:'2083-05-05T00:00:00Z'}),
-}
 
 // ── Health check ────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
@@ -175,15 +172,10 @@ app.get('/api/elogix-admin/v1/companies', (req, res) => {
     if (!isAdmin(req)) return res.status(401).json({ error: 'Admin key required' })
 
     const stored = readDB('companies')
-    const all = { ...MOCK_COMPANIES }
-
-    // Merge stored companies (override mocks if slug matches)
-    for (const [slug, co] of Object.entries(stored)) {
-      all[slug] = normalizeCompany(co)
-    }
 
     const statusFilter = req.query.status || ''
-    let result = Object.values(all)
+    let result = Object.values(stored)
+      .map(co => normalizeCompany(co))
       .filter(c => c.status !== 'pending' && c.status !== 'rejected')
 
     if (statusFilter) result = result.filter(c => c.status === statusFilter)
@@ -241,13 +233,12 @@ app.post('/api/elogix-admin/v1/companies/:slug/approve', (req, res) => {
       })
     }
 
-    companies[slug].status      = plan === 'trial' ? 'trial' : 'active'
-    companies[slug].plan        = plan
+    companies[slug].status        = plan === 'trial' ? 'trial' : 'active'
+    companies[slug].plan          = plan
     companies[slug].business_type = business_type || companies[slug].business_type || 'custom'
-    companies[slug].approved_at = now
-    companies[slug].approved_by = approved_by
-    companies[slug].updated_at  = now
-    companies[slug].account_manager = 'eLogix Team'
+    companies[slug].approved_at   = now
+    companies[slug].approved_by   = approved_by
+    companies[slug].updated_at    = now
     companies[slug].max_employees = {trial:10,starter:50,growth:250,business:500,enterprise:1000}[plan] || 10
 
     writeDB('companies', companies)
@@ -281,7 +272,35 @@ app.post('/api/elogix-admin/v1/companies/:slug/approve', (req, res) => {
   }
 })
 
-// REJECT / SUSPEND
+// ══════════════════════════════════════════════════════════════════════
+// PUT /api/elogix-admin/v1/companies/:slug/status
+// Suspend / reactivate / cancel a company
+// ══════════════════════════════════════════════════════════════════════
+app.put('/api/elogix-admin/v1/companies/:slug/status', (req, res) => {
+  try {
+    if (!isAdmin(req)) return res.status(401).json({ error: 'Admin key required' })
+    const { slug } = req.params
+    const { status } = req.body
+    const allowed = ['active','suspended','cancelled','trial']
+    if (!allowed.includes(status))
+      return res.status(400).json({ error: `status must be one of: ${allowed.join(', ')}` })
+
+    const companies = readDB('companies')
+    if (!companies[slug])
+      return res.status(404).json({ error: `Company "${slug}" not found` })
+
+    companies[slug].status     = status
+    companies[slug].updated_at = new Date().toISOString()
+    writeDB('companies', companies)
+    console.log(`[eLogix] Status change: ${slug} → ${status}`)
+    res.json({ success: true, slug, status })
+  } catch(err) {
+    console.error('[status]', err)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// REJECT
 app.post('/api/elogix-admin/v1/companies/:slug/reject', (req, res) => {
   try {
     if (!isAdmin(req)) return res.status(401).json({ error: 'Admin key required' })
@@ -295,17 +314,92 @@ app.post('/api/elogix-admin/v1/companies/:slug/reject', (req, res) => {
   } catch(err) { res.status(500).json({ error: err.message }) }
 })
 
-app.post('/api/elogix-admin/v1/companies/:slug/suspend', (req, res) => {
+// ══════════════════════════════════════════════════════════════════════
+// POST /api/elogix-admin/v1/companies/:slug/reset-password
+// Set / reset the admin password for a tenant
+// ══════════════════════════════════════════════════════════════════════
+app.post('/api/elogix-admin/v1/companies/:slug/reset-password', (req, res) => {
   try {
     if (!isAdmin(req)) return res.status(401).json({ error: 'Admin key required' })
+    const { slug } = req.params
+    const { admin_email, admin_name, phone, new_password, reason } = req.body
+
+    if (!admin_email || !new_password)
+      return res.status(400).json({ error: 'admin_email and new_password required' })
+    if (new_password.length < 8)
+      return res.status(400).json({ error: 'Password must be at least 8 characters' })
+
+    // Forward to Flask auth service
+    fetch('http://127.0.0.1:5000/api/internal/reset-password', {
+      method : 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Internal-Key': ADMIN_KEY },
+      body   : JSON.stringify({ slug, admin_email, admin_name, phone, new_password, reason }),
+    }).then(r => r.ok && console.log(`[eLogix] Password reset forwarded: ${slug}`))
+      .catch(() => console.log(`[eLogix] Flask not running — password reset not persisted for ${slug}`))
+
+    console.log(`[eLogix] Password reset: ${slug} / ${admin_email}`)
+    res.json({ success: true, message: `Password reset for ${admin_email}` })
+  } catch(err) {
+    console.error('[reset-password]', err)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ══════════════════════════════════════════════════════════════════════
+// POST /api/elogix-admin/v1/companies
+// Manually onboard a new client (admin creates directly)
+// ══════════════════════════════════════════════════════════════════════
+app.post('/api/elogix-admin/v1/companies', (req, res) => {
+  try {
+    if (!isAdmin(req)) return res.status(401).json({ error: 'Admin key required' })
+
+    const { company_name, slug, admin_email, admin_name='', plan='starter',
+            industry='', country='Nepal', phone='', account_manager='', sales_rep='' } = req.body
+
+    if (!company_name || !slug || !admin_email)
+      return res.status(400).json({ error: 'company_name, slug, admin_email required' })
+
     const companies = readDB('companies')
-    if (companies[req.params.slug]) {
-      companies[req.params.slug].status = 'suspended'
-      companies[req.params.slug].updated_at = new Date().toISOString()
-      writeDB('companies', companies)
-    }
-    res.json({ success: true })
-  } catch(err) { res.status(500).json({ error: err.message }) }
+    if (companies[slug])
+      return res.status(409).json({ error: `Slug "${slug}" is already taken` })
+
+    const now = new Date().toISOString()
+    companies[slug] = normalizeCompany({
+      slug, name: company_name, plan,
+      admin_email, admin_name, phone, country, industry,
+      account_manager, sales_rep,
+      status: plan === 'trial' ? 'trial' : 'active',
+      approved_at: now,
+      approved_by: 'eLogix Admin (manual)',
+      created_at: now,
+    })
+    writeDB('companies', companies)
+    console.log(`[eLogix] Manual onboard: ${slug} (${company_name})`)
+
+    res.json({
+      success: true,
+      message: `${company_name} provisioned successfully`,
+      slug, status: companies[slug].status, plan,
+    })
+  } catch(err) {
+    console.error('[manual-onboard]', err)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ══════════════════════════════════════════════════════════════════════
+// GET /api/elogix-admin/v1/team
+// Returns eLogix internal staff list
+// ══════════════════════════════════════════════════════════════════════
+app.get('/api/elogix-admin/v1/team', (req, res) => {
+  try {
+    if (!isAdmin(req)) return res.status(401).json({ error: 'Admin key required' })
+    const team = readDB('team')
+    res.json({ success: true, team: Object.values(team) })
+  } catch(err) {
+    console.error('[team]', err)
+    res.status(500).json({ error: err.message })
+  }
 })
 
 // ── Serve React SPA ────────────────────────────────────────────────────

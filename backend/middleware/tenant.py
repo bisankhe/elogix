@@ -10,10 +10,13 @@ import logging
 from functools import wraps
 from flask import request, g, jsonify
 import jwt
+from sqlalchemy import text
 
 logger = logging.getLogger('elogix.tenant')
 
-SECRET_KEY = os.getenv('SECRET_KEY', 'elogix-dev-secret')
+SECRET_KEY = os.getenv('SECRET_KEY')
+if not SECRET_KEY:
+    raise RuntimeError('SECRET_KEY environment variable is not set')
 
 # Routes that don't require tenant context
 PUBLIC_ROUTES = {
@@ -84,11 +87,12 @@ class TenantMiddleware:
             return jsonify({'error': 'Tenant context missing from token'}), 401
 
         # Set PostgreSQL session variable for RLS
-        # This makes the RLS policies in saas_schema.sql activate
+        # Uses parameterised query to prevent SQL injection
         try:
             from backend.extensions import db
             db.session.execute(
-                f"SET LOCAL app.current_company_id = '{int(g.company_id)}'"
+                text("SELECT set_config('app.current_company_id', :cid, true)"),
+                {'cid': str(int(g.company_id))}
             )
         except Exception as e:
             logger.error(f'Failed to set tenant context in DB: {e}')
@@ -123,7 +127,7 @@ def require_permission(module_key):
             try:
                 from backend.extensions import db
                 result = db.session.execute(
-                    "SELECT modules FROM tenant_module_permissions WHERE company_id = :cid",
+                    text("SELECT modules FROM tenant_module_permissions WHERE company_id = :cid"),
                     {'cid': company_id}
                 ).fetchone()
 
@@ -176,12 +180,6 @@ def require_role(*allowed_roles):
     return decorator
 
 
-# ══════════════════════════════════════════════════════════════
-# RESTORED: apply_tenant_scope and resolve_tenant
-# These were in commit ee266be and are imported by route files.
-# Removed accidentally — restored here.
-# ══════════════════════════════════════════════════════════════
-
 def resolve_tenant(slug: str = None):
     """
     Resolve a tenant by slug or from the current request context.
@@ -189,11 +187,11 @@ def resolve_tenant(slug: str = None):
 
     Usage:
         tenant = resolve_tenant()            # from JWT context
-        tenant = resolve_tenant('subisu')    # by slug
+        tenant = resolve_tenant('mycompany') # by slug
     """
     # From request context (already decoded by TenantMiddleware)
     if slug is None:
-        company_id = getattr(g, 'company_id', None)
+        company_id  = getattr(g, 'company_id', None)
         tenant_slug = getattr(g, 'tenant_slug', None)
         if company_id:
             return {'company_id': str(company_id), 'slug': tenant_slug}
@@ -205,7 +203,6 @@ def resolve_tenant(slug: str = None):
     # Lookup by slug
     try:
         from backend.extensions import db
-        from sqlalchemy import text
         row = db.session.execute(
             text("SELECT id, slug FROM tenant_companies WHERE slug = :slug AND status IN ('active','trial')"),
             {'slug': slug}
@@ -235,4 +232,3 @@ def apply_tenant_scope(query, model, company_id: str = None):
         )
         raise PermissionError('Tenant scope required')
     return query.filter(model.company_id == cid)
-

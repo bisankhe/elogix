@@ -28,15 +28,14 @@
 <div class="box">
   <div style="font-size:40px;margin-bottom:12px">🗑️</div>
   <h2>Wipe eLogix Stale Data</h2>
-  <p>This will permanently remove all old mock companies<br>
-     (Abasar Nepal, Subisu, Mainawati Steels, HR Hub)<br>
-     from your browser's localStorage right now.</p>
+  <p>This will remove all eLogix-related data<br>
+     from your browser's localStorage and sessionStorage.</p>
 
   <button class="btn red" onclick="nukeAll()">
     💣 WIPE ALL — Remove Everything Now
   </button>
-  <button class="btn blue" onclick="nukeDemo()">
-    🎯 Remove Only Demo Companies
+  <button class="btn blue" onclick="nukeElogix()">
+    🎯 Remove Only eLogix Keys
   </button>
   <button class="btn gray" onclick="showKeys()">
     🔍 Inspect Current localStorage
@@ -47,9 +46,24 @@
 </div>
 
 <script>
-const DEMO_SLUGS = ['abasar','abasarnepal','subisu','subisulimited',
-  'mainawati','mainawatisteels','hrhub','hr-hub','himalayan',
-  'solidfuture','demo','testco','elogixdemo','trial']
+// Dynamically detect all elogix_ prefixed keys — no hardcoded list
+function getElogixKeys() {
+  const keys = []
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i)
+    if (k && k.toLowerCase().startsWith('elogix_')) keys.push(k)
+  }
+  return keys
+}
+
+function getElogixSessionKeys() {
+  const keys = []
+  for (let i = 0; i < sessionStorage.length; i++) {
+    const k = sessionStorage.key(i)
+    if (k && k.toLowerCase().startsWith('elogix_')) keys.push(k)
+  }
+  return keys
+}
 
 function log(msg, color) {
   const el = document.getElementById('log')
@@ -68,88 +82,29 @@ function nukeAll() {
   showDone()
 }
 
-function nukeDemo() {
+function nukeElogix() {
   let wiped = 0
-  const allKeys = []
-  for (let i = 0; i < localStorage.length; i++) allKeys.push(localStorage.key(i))
 
-  allKeys.forEach(key => {
-    try {
-      const raw = localStorage.getItem(key)
-      if (!raw) return
-      const val = JSON.parse(raw)
-
-      // Array: filter out demo entries
-      if (Array.isArray(val)) {
-        const before = val.length
-        const clean  = val.filter(item => {
-          const s = (item?.slug || item?.company || '').toLowerCase()
-          const n = (item?.name || '').toLowerCase()
-          return !DEMO_SLUGS.some(d => s.includes(d) || n.includes(d))
-        })
-        if (clean.length !== before) {
-          clean.length > 0
-            ? localStorage.setItem(key, JSON.stringify(clean))
-            : localStorage.removeItem(key)
-          log(`🗑 ${key}: removed ${before - clean.length} demo entries (${clean.length} remain)`)
-          wiped += (before - clean.length)
-        }
-      }
-      // Object: delete demo slug keys
-      else if (val && typeof val === 'object') {
-        let changed = false
-        Object.keys(val).forEach(slug => {
-          const sLow = slug.toLowerCase()
-          if (DEMO_SLUGS.some(d => sLow.includes(d))) {
-            log(`🗑 ${key}["${slug}"] deleted`)
-            delete val[slug]; changed = true; wiped++
-          }
-        })
-        if (changed) {
-          Object.keys(val).length > 0
-            ? localStorage.setItem(key, JSON.stringify(val))
-            : localStorage.removeItem(key)
-        }
-      }
-      // String containing demo names
-      else if (typeof val === 'string') {
-        if (DEMO_SLUGS.some(d => val.toLowerCase().includes(d))) {
-          localStorage.removeItem(key)
-          log(`🗑 ${key} (string) deleted — contained demo slug`, '#fbbf24')
-          wiped++
-        }
-      }
-    } catch(_e) {
-      // Not JSON — check raw string
-      const raw = localStorage.getItem(key) || ''
-      if (DEMO_SLUGS.some(d => raw.toLowerCase().includes(d))) {
-        localStorage.removeItem(key)
-        log(`🗑 ${key} (raw) deleted`, '#fbbf24')
-        wiped++
-      }
-    }
+  // Remove all elogix_ prefixed localStorage keys
+  const lsKeys = getElogixKeys()
+  lsKeys.forEach(k => {
+    localStorage.removeItem(k)
+    log(`🗑 localStorage["${k}"] removed`)
+    wiped++
   })
 
-  // Also wipe specific known stale keys entirely
-  const ALWAYS_WIPE = [
-    'elogix_active_companies',
-    'elogix_approved_tenants',
-    'elogix_registered_companies',
-    'elogix_companies',
-    'elogix_registered_tenants',
-  ]
-  ALWAYS_WIPE.forEach(k => {
-    if (localStorage.getItem(k) !== null) {
-      localStorage.removeItem(k)
-      log(`🗑 ${k} wiped entirely (company cache key)`)
-      wiped++
-    }
+  // Remove all elogix_ prefixed sessionStorage keys
+  const ssKeys = getElogixSessionKeys()
+  ssKeys.forEach(k => {
+    sessionStorage.removeItem(k)
+    log(`🗑 sessionStorage["${k}"] removed`)
+    wiped++
   })
 
   if (wiped === 0) {
-    log('✅ No demo data found — localStorage is already clean!', '#4ade80')
+    log('✅ No eLogix data found — storage is already clean!', '#4ade80')
   } else {
-    log(`✅ Removed ${wiped} stale entries total`, '#4ade80')
+    log(`✅ Removed ${wiped} eLogix keys total`, '#4ade80')
   }
   showDone()
 }
@@ -166,16 +121,16 @@ function showKeys() {
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i)
     const v = localStorage.getItem(k) || ''
-    const preview = v.length > 80 ? v.slice(0, 80) + '…' : v
-    const isDemo  = DEMO_SLUGS.some(d => v.toLowerCase().includes(d))
-    log(`${isDemo ? '🔴' : '⚪'} ${k}: ${preview}`, isDemo ? '#f87171' : '#94a3b8')
+    const preview    = v.length > 80 ? v.slice(0, 80) + '…' : v
+    const isElogix   = k.toLowerCase().startsWith('elogix_')
+    log(`${isElogix ? '🔵' : '⚪'} ${k}: ${preview}`, isElogix ? '#7dd3fc' : '#94a3b8')
   }
 }
 
 function showDone() {
   document.getElementById('done').style.display = 'block'
   setTimeout(() => {
-    window.location.href = 'http://localhost:5173'
+    window.location.href = window.location.origin
   }, 2000)
 }
 </script>

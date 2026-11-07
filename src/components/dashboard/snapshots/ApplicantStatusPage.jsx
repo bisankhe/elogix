@@ -113,37 +113,30 @@ function fmtDate(val) {
   return String(val)
 }
 
-// ── INITIAL DATA from Excel ────────────────────────────────────
-const INITIAL_DATA = [
-  { sn:1, candidateCode:'AL-830001', pooledBy:'Sandesh Ulak', candidateName:'Resham Khatri', contact:'9841806111', email:'abcd1@gmail.com', position:'Accountant Intern', currentAddress:'New Baneshwor', permanentAddress:'Khotang', preferredLocation:'Baluwatar', dobEng:'23-11-1990', dobNep:'2078-05-05', qualification:'Bachelor Completed', skills:'Leadership, Communication, MS Excel', experience:'Digital Marketing Officer, SUBISU, 1yr 6mo; Project Manager, Prixa, 1yr; Digital Marketing Executive, Bisava Technology, 5mo', workingStatus:'Resigned', reasonLeaving:'', salaryExpectation:'35-40k', vehicle:'Yes', drivingLicense:'Yes', citizenship:'Yes', abroadPlanning:'No', status:'Not Interested', leadsEntryDate:'2026-08-13', followUpDate:'2026-08-14', callDescription:'Called him multiple times but not received', interviewDate:'', doj:'', client:'Black Box Record', location:'Kamaladi', post:'Packaging Staff', vacancyCode:'AV25020001', followupCount:'', cvLink:'https://drive.google.com/file/d/18h5YPvc0fkfemsYu0u8LkSEXArkVYfXS/view?usp=sharing', month:'', source:'Facebook', remarks:'' },
-  { sn:2, candidateCode:'AL-830002', pooledBy:'Sandesh Ulak', candidateName:'Sagar Bhandari', contact:'9841806111', email:'', position:'Marketing Officer', currentAddress:'Sundhara', permanentAddress:'Illam', preferredLocation:'Baluwatar', dobEng:fmtDate(35495), dobNep:fmtDate(35495), qualification:'BBA Completed', skills:'', experience:'Prixa- Project Manager, 1yr; Codavatar-Affiliate Marketing, 10mo; Bisava Technology-Internship, 5mo', workingStatus:'', reasonLeaving:'', salaryExpectation:'', vehicle:'', drivingLicense:'Yes', citizenship:'Yes', abroadPlanning:'No', status:'WIP', leadsEntryDate:'2026-08-10', followUpDate:'2026-08-14', callDescription:'Looking for RSM, has whole team members, can work for beauty products.', interviewDate:'', doj:'', client:'Black Box Record', location:'Kamaladi', post:'Packaging Staff', vacancyCode:'', followupCount:'', cvLink:'https://drive.google.com/file/d/1IwSVrOyZ3wdsKeclUw95vNchUvFU0Dly/view?usp=sharing', month:'', source:'LinkedIn', remarks:'' },
-  { sn:3, candidateCode:'AL-830003', pooledBy:'Sujita Sapkota', candidateName:'Susmita Tolange', contact:'9841806111', email:'', position:'Content Lead', currentAddress:'Nakhu', permanentAddress:'Dhang', preferredLocation:'Baluwatar', dobEng:fmtDate(34075), dobNep:fmtDate(34075), qualification:'MBA Graduate', skills:'', experience:'Marketing & PR Officer; Brand Manager; Back-End Developer; Digital Marketing Intern; Regional Representative', workingStatus:'', reasonLeaving:'', salaryExpectation:'', vehicle:'Yes', drivingLicense:'Yes', citizenship:'No', abroadPlanning:'', status:'Not Selected', leadsEntryDate:'2026-08-10', followUpDate:'2026-07-25', callDescription:'Has prior experience in wild stone, personal hygiene, talcum, soap.', interviewDate:'', doj:'', client:'Abasar Nepal', location:'Koteshwor', post:'Account Assistant', vacancyCode:'', followupCount:'', cvLink:'https://drive.google.com/file/d/1didK2kdgtaZcxmbP4wyFAKpeM6HIZaf9/view?usp=sharing', month:'', source:'Website', remarks:'' },
-  { sn:4, candidateCode:'AL-830004', pooledBy:'Bibisha Katwal', candidateName:'Aayusha Chapagain', contact:'9841806111', email:'', position:'Account Assistant', currentAddress:'Buddha', permanentAddress:'Buddha', preferredLocation:'Baneshwor', dobEng:fmtDate(38608), dobNep:fmtDate(38608), qualification:'BBA Running', skills:'', experience:'Fresher', workingStatus:'', reasonLeaving:'', salaryExpectation:'', vehicle:'Yes', drivingLicense:'Yes', citizenship:'No', abroadPlanning:'', status:'Candidate decision Pending', leadsEntryDate:'2026-08-10', followUpDate:'2026-07-25', callDescription:'Monthly target 2cr, 4 people under, make new dealers.', interviewDate:'', doj:'', client:'Abasar Nepal', location:'Koteshwor', post:'Account Assistant', vacancyCode:'', followupCount:'', cvLink:'https://docs.google.com/document/d/16msjiKqIDc7bpwwv6gT_tKEuTGqqHIFL/edit', month:'', source:'Vocal Panda', remarks:'' },
-  { sn:5, candidateCode:'AL-830005', pooledBy:'Sabina Rai', candidateName:'Ayusha Bhandari', contact:'9841806111', email:'', position:'Sales Executive', currentAddress:'Kathmandu', permanentAddress:'Basbari', preferredLocation:'Baluwatar', dobEng:fmtDate(38866), dobNep:fmtDate(38866), qualification:'BSW Completed', skills:'', experience:'TechLine International-Data Analyst-1yr; ING Skill Academy-Digital Marketing-2yr', workingStatus:'', reasonLeaving:'', salaryExpectation:'90K', vehicle:'', drivingLicense:'Yes', citizenship:'Yes', abroadPlanning:'No', status:'Working in Another Job', leadsEntryDate:'2026-08-10', followUpDate:'2026-08-14', callDescription:'Has looked after whole Nepal as sales manager, FMCG, herbal.', interviewDate:'', doj:'', client:'Abasar Nepal', location:'Koteshwor', post:'Account Assistant', vacancyCode:'', followupCount:'', cvLink:'https://drive.google.com/file/d/1sBLCFF4ij2RXjfRu0emYKaDKTMp1mL8U/view?usp=sharing', month:'', source:'Job Jee', remarks:'' },
-  { sn:6, candidateCode:'AL-830006', pooledBy:'Sabina Rai', candidateName:'Deepali Singh', contact:'9841806111', email:'', position:'D2D Sales', currentAddress:'Kalanki', permanentAddress:'Kalanki', preferredLocation:'Baluwatar', dobEng:fmtDate(38760), dobNep:fmtDate(38760), qualification:'BBA Completed', skills:'', experience:'Technology Spot-SEO-8mo; Codewing Solutions-Digital Marketer-8mo; SoftNEP-Digital Marketing-1yr; Foodmandu-Digital Marketing-Running', workingStatus:'', reasonLeaving:'', salaryExpectation:'85K', vehicle:'', drivingLicense:'Yes', citizenship:'Yes', abroadPlanning:'No', status:'Interview Not Attended', leadsEntryDate:'2026-08-10', followUpDate:'2026-07-25', callDescription:'Interested for this position, will come for interview today.', interviewDate:'', doj:'', client:'Abasar Nepal', location:'Koteshwor', post:'Account Assistant', vacancyCode:'', followupCount:'', cvLink:'https://drive.google.com/file/d/1Uvsix791JCzYn35bR3Hz8z6cHp7qaddX/view?usp=sharing', month:'', source:'Shram Bank', remarks:'' },
-  { sn:7, candidateCode:'AL-830007', pooledBy:'Sabina Rai', candidateName:'Sashank Bikram Karki', contact:'9841806111', email:'', position:'Store Executive', currentAddress:'Suryabinak', permanentAddress:'Lalihadi', preferredLocation:'Baluwatar', dobEng:'', dobNep:'', qualification:'Bachelors', skills:'', experience:'Advance Group-Digital Marketing-2yr; Front Desk Executive-1yr', workingStatus:'', reasonLeaving:'', salaryExpectation:'25k', vehicle:'No', drivingLicense:'Yes', citizenship:'No', abroadPlanning:'', status:'Criteria not matched', leadsEntryDate:'2026-08-11', followUpDate:'2026-08-08', callDescription:'Has already given interview at Siddhi Binayak. Currently working.', interviewDate:'', doj:'', client:'Abasar Nepal', location:'Koteshwor', post:'Account Assistant', vacancyCode:'', followupCount:'', cvLink:'https://drive.google.com/file/d/1ZoUvmvCZzr9NAjyIRRo95y9FJp1a5NxP/view?usp=sharing', month:'', source:'Google Form', remarks:'' },
-  { sn:8, candidateCode:'AL-830008', pooledBy:'Sujita Sapkota', candidateName:'Sashank Bikram Karki', contact:'9841806111', email:'', position:'D2D Sales', currentAddress:'Raniban', permanentAddress:'Raniban', preferredLocation:'Baluwatar', dobEng:fmtDate(37954), dobNep:fmtDate(37954), qualification:'Bachelors in Management', skills:'', experience:'Fresher', workingStatus:'', reasonLeaving:'', salaryExpectation:'20K', vehicle:'No', drivingLicense:'Yes', citizenship:'No', abroadPlanning:'', status:'Criteria not matched', leadsEntryDate:'2026-08-11', followUpDate:'2026-08-14', callDescription:'Not interested in Aesthetic clinic, has joined Metro City Hospital.', interviewDate:'', doj:'', client:'Abasar Nepal', location:'Koteshwor', post:'Account Assistant', vacancyCode:'', followupCount:'', cvLink:'', month:'', source:'Reference', remarks:'' },
-  { sn:9, candidateCode:'AL-830009', pooledBy:'Bibisha Katwal', candidateName:'Keshab Bohora', contact:'9841806111', email:'', position:'Telecaller', currentAddress:'Manamaiju', permanentAddress:'Manamaiju', preferredLocation:'Baluwatar', dobEng:fmtDate(37740), dobNep:fmtDate(37740), qualification:'Bachelors in Management', skills:'', experience:'Sumeri Hospital-Nurse-6mo; Om Hospital-Nurse-2mo', workingStatus:'', reasonLeaving:'', salaryExpectation:'23k', vehicle:'', drivingLicense:'', citizenship:'', abroadPlanning:'', status:'On-board', leadsEntryDate:'2026-08-11', followUpDate:'2026-08-08', callDescription:'Plastic surgery ward, post-operative ward, counseling, vital medication, daily dressing.', interviewDate:'', doj:'', client:'Folliderm-Hair Care Experts', location:'Baluwatar', post:'Staff Nurse', vacancyCode:'', followupCount:'', cvLink:'https://drive.google.com/file/d/1uYh5ClfWoDFRD0Unyf6VNuqrNK9Fdmky/view?usp=sharing', month:'', source:'Old List', remarks:'' },
-  { sn:10, candidateCode:'AL-830010', pooledBy:'Sabina Rai', candidateName:'Chhabilal Giri', contact:'9841806111', email:'', position:'Store Supervisor', currentAddress:'Pulchok', permanentAddress:'Lalitpur', preferredLocation:'Lalitpur', dobEng:fmtDate(37585), dobNep:fmtDate(37585), qualification:'MBA Completed', skills:'', experience:'LG International Trading Company-Sales Manager-6mo', workingStatus:'', reasonLeaving:'', salaryExpectation:'150k', vehicle:'', drivingLicense:'', citizenship:'', abroadPlanning:'', status:'Candidate decision Pending', leadsEntryDate:'2026-08-11', followUpDate:'2026-08-13', callDescription:'Called 2 times.', interviewDate:'', doj:'', client:'Abasar Nepal', location:'Koteshwor', post:'Front Desk Officer', vacancyCode:'', followupCount:'', cvLink:'https://drive.google.com/file/d/10DopfuyYRRRWB7NfVrsuwtciRWAHZqwv/view?usp=sharing', month:'', source:'Mail', remarks:'' },
-  { sn:11, candidateCode:'AL-830011', pooledBy:'Bibisha Katwal', candidateName:'Raj Kapur Mahato', contact:'9841806111', email:'', position:'Data Entry Executive', currentAddress:'Swoyambu', permanentAddress:'Bake', preferredLocation:'Baluwatar', dobEng:fmtDate(36816), dobNep:fmtDate(36816), qualification:'Plus 2 Completed', skills:'', experience:'Hotel Seema-Receptionist & Cashier-2yr', workingStatus:'', reasonLeaving:'', salaryExpectation:'20K', vehicle:'No', drivingLicense:'Yes', citizenship:'No', abroadPlanning:'', status:'Client Side Interview', leadsEntryDate:'2026-08-11', followUpDate:'2026-08-13', callDescription:'Called 2 times.', interviewDate:'', doj:'', client:'Abasar Nepal', location:'Koteshwor', post:'Accountant', vacancyCode:'', followupCount:'', cvLink:'https://drive.google.com/file/d/1lVWaHc0zJqSD8FhyfWdGDG5CW3b98qe6/view?usp=sharing', month:'', source:'Office Visit', remarks:'' },
-  { sn:12, candidateCode:'AL-830012', pooledBy:'Sujita Sapkota', candidateName:'Dhiraj Kumar Singh', contact:'9841806111', email:'', position:'Front Desk Officer', currentAddress:'Janakpur', permanentAddress:'Janakpur', preferredLocation:'Baluwatar', dobEng:fmtDate(37500), dobNep:fmtDate(37500), qualification:'Bachelors 4th Year', skills:'', experience:'Narayani Hospital-HA-6mo', workingStatus:'', reasonLeaving:'', salaryExpectation:'', vehicle:'No', drivingLicense:'Yes', citizenship:'No', abroadPlanning:'', status:'Criteria not matched', leadsEntryDate:'2026-08-11', followUpDate:'2026-07-25', callDescription:'Currently working and not interested, asked for reference.', interviewDate:'', doj:'', client:'Vianet', location:'Butwal', post:'Area Sales Representative', vacancyCode:'', followupCount:'', cvLink:'', month:'', source:'Phone Call', remarks:'' },
-  { sn:13, candidateCode:'AL-830013', pooledBy:'Bibisha Katwal', candidateName:'Ammaraj Aidi', contact:'9841806111', email:'', position:'Front Desk Officer', currentAddress:'Silutar', permanentAddress:'Silutar', preferredLocation:'Baluwatar', dobEng:fmtDate(36900), dobNep:fmtDate(36900), qualification:'BBS Completed', skills:'', experience:'A+ Engineering Company-Account Assistant', workingStatus:'', reasonLeaving:'', salaryExpectation:'', vehicle:'No', drivingLicense:'Yes', citizenship:'No', abroadPlanning:'', status:'Criteria not matched', leadsEntryDate:'2026-08-14', followUpDate:'2026-07-25', callDescription:'Planning for abroad, asked for reference.', interviewDate:'', doj:'', client:'', location:'', post:'', vacancyCode:'', followupCount:'', cvLink:'', month:'', source:'WhatsApp', remarks:'' },
-  { sn:14, candidateCode:'AL-830014', pooledBy:'Sujita Sapkota', candidateName:'Prakash Singh', contact:'9841806111', email:'', position:'Store Executive', currentAddress:'Samakushi', permanentAddress:'Samakushi', preferredLocation:'Baluwatar', dobEng:fmtDate(34479), dobNep:fmtDate(34479), qualification:'MBA Running', skills:'', experience:'Fresher', workingStatus:'', reasonLeaving:'', salaryExpectation:'', vehicle:'No', drivingLicense:'Yes', citizenship:'No', abroadPlanning:'', status:'Criteria not matched', leadsEntryDate:'2026-08-14', followUpDate:'2026-07-25', callDescription:'Lives in Panauti so criteria not matched.', interviewDate:'', doj:'', client:'Oriflame Swedish Cosmetics', location:'Kathmandu', post:'RSM', vacancyCode:'', followupCount:'', cvLink:'https://drive.google.com/file/d/1THgLIroov_6mW28L11JQAgxCDP1yd1Op/view?usp=sharing', month:'', source:'Facebook Group', remarks:'' },
-  { sn:15, candidateCode:'AL-830015', pooledBy:'Sabina Rai', candidateName:'Rubina Maharjan', contact:'9841806111', email:'', position:'Corporate Sales', currentAddress:'Futung', permanentAddress:'Futung', preferredLocation:'Jamal', dobEng:fmtDate(37648), dobNep:fmtDate(37648), qualification:'BBA Running', skills:'', experience:'Community Volunteer', workingStatus:'', reasonLeaving:'', salaryExpectation:'', vehicle:'No', drivingLicense:'Yes', citizenship:'No', abroadPlanning:'', status:'First Round Interview', leadsEntryDate:'2026-08-15', followUpDate:'2026-07-25', callDescription:'Currently working in hospital, medication, vital signs, patient care.', interviewDate:'', doj:'', client:'Subisu', location:'Baluwatar', post:'Sales Head', vacancyCode:'', followupCount:'', cvLink:'', month:'', source:'Job Fair', remarks:'' },
-  { sn:16, candidateCode:'AL-830016', pooledBy:'Bibisha Katwal', candidateName:'Nisha Mahara', contact:'9841806111', email:'', position:'Account Intern', currentAddress:'Kapan', permanentAddress:'Kapan', preferredLocation:'Baluwatar', dobEng:fmtDate(36121), dobNep:fmtDate(36121), qualification:'MBS Running', skills:'', experience:'Professional IT Solutions-IT Intern', workingStatus:'', reasonLeaving:'', salaryExpectation:'', vehicle:'No', drivingLicense:'Yes', citizenship:'No', abroadPlanning:'', status:'First Round Interview', leadsEntryDate:'2026-08-15', followUpDate:'2026-08-08', callDescription:'Currently in Chitwan, salary expectation 35k, not interested.', interviewDate:'', doj:'', client:'Subisu', location:'Baluwatar', post:'Sales Manager', vacancyCode:'', followupCount:'', cvLink:'', month:'', source:'Mero Tuiter', remarks:'' },
-  { sn:17, candidateCode:'AL-830017', pooledBy:'Sujita Sapkota', candidateName:'Nagendra Kumar Das', contact:'9841806111', email:'', position:'Area Sales Representative', currentAddress:'Samakhusi', permanentAddress:'Samakhusi', preferredLocation:'Baluwatar', dobEng:fmtDate(36222), dobNep:fmtDate(36222), qualification:'BBS Completed', skills:'', experience:'Siddhartha Bank-CSD Intern-3mo', workingStatus:'', reasonLeaving:'', salaryExpectation:'', vehicle:'No', drivingLicense:'Yes', citizenship:'No', abroadPlanning:'', status:'Location not preffered', leadsEntryDate:'2026-08-15', followUpDate:'2026-08-14', callDescription:'Due to location has to change 2 buses, not interested.', interviewDate:'', doj:'', client:'Bagmati Commercial', location:'Naikap', post:'Content Creator', vacancyCode:'', followupCount:'', cvLink:'https://drive.google.com/file/d/1_oxTIrkQLAUGGfQY4G-ppkKhalbVUAMi/view?usp=sharing', month:'', source:'LinkedIn', remarks:'' },
-  { sn:18, candidateCode:'AL-830018', pooledBy:'Sujita Sapkota', candidateName:'Prayash Aryal', contact:'9841806111', email:'', position:'Event Management', currentAddress:'Maharajgunj', permanentAddress:'Maharajgunj', preferredLocation:'Baluwatar', dobEng:fmtDate(35847), dobNep:fmtDate(35847), qualification:'BBA Completed', skills:'', experience:'Gaurav Transport-Account Assistant-1yr', workingStatus:'', reasonLeaving:'', salaryExpectation:'', vehicle:'No', drivingLicense:'Yes', citizenship:'No', abroadPlanning:'', status:'Client Side Interview', leadsEntryDate:'2026-08-15', followUpDate:'2026-08-13', callDescription:'Currently working in Lalitpur clinic, not interested, asked for reference.', interviewDate:'', doj:'', client:'Bagmati Commercial', location:'Naikap', post:'Content Creator', vacancyCode:'', followupCount:'', cvLink:'', month:'', source:'Mail', remarks:'' },
-  { sn:19, candidateCode:'AL-830019', pooledBy:'Sandesh Ulak', candidateName:'Chhabilal Giri', contact:'9841806111', email:'', position:'HR Intern', currentAddress:'Chabahil', permanentAddress:'Chabahil', preferredLocation:'Baliwatar', dobEng:fmtDate(36722), dobNep:fmtDate(36722), qualification:'Master Running', skills:'', experience:'School-Teacher-12yr', workingStatus:'', reasonLeaving:'', salaryExpectation:'', vehicle:'', drivingLicense:'', citizenship:'', abroadPlanning:'', status:'Client Side Interview', leadsEntryDate:'2026-08-15', followUpDate:'2026-08-14', callDescription:'Interview scheduled multiple times but not attended.', interviewDate:'', doj:'', client:'Bagmati Commercial', location:'Naikap', post:'Content Creator', vacancyCode:'', followupCount:'', cvLink:'', month:'', source:'Mail', remarks:'' },
-  { sn:20, candidateCode:'AL-830020', pooledBy:'Sandesh Ulak', candidateName:'Hari Dhami', contact:'9841806111', email:'', position:'Backend Developer', currentAddress:'Toka', permanentAddress:'Dang', preferredLocation:'Baluwatar', dobEng:fmtDate(38972), dobNep:fmtDate(38972), qualification:'Master Running', skills:'', experience:'Headphone-Social Media Post', workingStatus:'', reasonLeaving:'', salaryExpectation:'20K', vehicle:'', drivingLicense:'', citizenship:'', abroadPlanning:'', status:'Hold', leadsEntryDate:'2026-08-15', followUpDate:'2026-07-25', callDescription:'Call switched off.', interviewDate:'', doj:'', client:'Oriflame Swedish Cosmetics', location:'Kathmandu', post:'RSM', vacancyCode:'', followupCount:'', cvLink:'', month:'', source:'LinkedIn', remarks:'' },
-]
-
 const STORAGE_KEY = 'elogix_applicant_status'
 
-function loadData() {
+// ── Load data: API-first, localStorage cache fallback, never hardcoded ──
+async function fetchApplicants(companySlug, token) {
+  if (!companySlug || !token) return null
+  try {
+    const res = await fetch(`/api/v1/recruitment/applicants`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      }
+    })
+    if (!res.ok) return null
+    return await res.json()
+  } catch(_e) {
+    return null
+  }
+}
+
+function loadCachedData() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
-    return saved ? JSON.parse(saved) : INITIAL_DATA
-  } catch(_e) { return INITIAL_DATA }
+    return saved ? JSON.parse(saved) : []
+  } catch(_e) { return [] }
 }
 
 // ── Cell component — inline editable ──────────────────────────
@@ -292,7 +285,8 @@ export default function ApplicantStatusPage() {
   const company = sess.company || {}
   const user    = sess.user    || {}
 
-  const [rows,    setRows]    = useState(loadData)
+  const [rows,    setRows]    = useState([])
+  const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(null)   // {rowIdx, colKey}
   const [ctx,     setCtx]     = useState(null)   // context menu
   const [search,  setSearch]  = useState('')
@@ -303,10 +297,30 @@ export default function ApplicantStatusPage() {
   const [clipboard, setClipboard] = useState(null)
   const tableRef = useRef(null)
 
-  const notify = (msg, ok=true) => {
+  const notify = (msg) => {
     setToast(msg)
     setTimeout(() => setToast(''), 3500)
   }
+
+  // Load data on mount: API-first, localStorage cache fallback, never hardcoded
+  useEffect(() => {
+    async function load() {
+      setLoading(true)
+      const token = sess.access_token || localStorage.getItem('access_token')
+      const slug  = company.slug
+
+      const apiData = await fetchApplicants(slug, token)
+      if (apiData && Array.isArray(apiData)) {
+        setRows(apiData)
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(apiData)) } catch(_e) {}
+      } else {
+        // Fall back to localStorage cache (no data if cache also empty)
+        setRows(loadCachedData())
+      }
+      setLoading(false)
+    }
+    load()
+  }, [])
 
   // Auto-save to localStorage whenever rows change
   const save = useCallback((data=rows) => {
@@ -315,7 +329,7 @@ export default function ApplicantStatusPage() {
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
       notify('✅ Saved successfully')
-    } catch(_e) { notify('❌ Save failed', false) }
+    } catch(_e) { notify('❌ Save failed') }
   }, [rows])
 
   // Cell update
@@ -358,7 +372,7 @@ export default function ApplicantStatusPage() {
     const headers = COLS.map(c => `"${c.label}"`).join(',')
     const body    = rows.map(r => COLS.map(c => `"${(r[c.key]||'').toString().replace(/"/g,'""')}"`).join(','))
     const csv     = [headers, ...body].join('\n')
-    const blob    = new Blob(['\uFEFF'+csv], { type:'text/csv;charset=utf-8' })
+    const blob    = new Blob(['﻿'+csv], { type:'text/csv;charset=utf-8' })
     const url     = URL.createObjectURL(blob)
     const a       = document.createElement('a'); a.href=url
     a.download    = `Applicant_Status_${new Date().toISOString().split('T')[0]}.csv`
@@ -396,7 +410,7 @@ export default function ApplicantStatusPage() {
             setRows(prev => [...prev, ...newRows])
             notify(`✅ Imported ${newRows.length} rows`)
           }
-        } catch(_e) { notify('❌ Import failed — check file format', false) }
+        } catch(_e) { notify('❌ Import failed — check file format') }
       }
       reader.readAsText(file, 'UTF-8')
     }
@@ -422,6 +436,18 @@ export default function ApplicantStatusPage() {
     const matchSource = !filterSource || r.source===filterSource
     return matchSearch && matchStatus && matchSource
   })
+
+  if (loading) {
+    return (
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'center',
+        height:'100vh', fontFamily:"'Segoe UI',system-ui,sans-serif", color:'#64748b', fontSize:14 }}>
+        <div style={{ textAlign:'center' }}>
+          <div style={{ fontSize:36, marginBottom:12 }}>⏳</div>
+          <div>Loading applicants...</div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div style={{
@@ -624,7 +650,11 @@ export default function ApplicantStatusPage() {
                 <td colSpan={COLS.length+1} style={{ textAlign:'center', padding:48, color:'#94a3b8' }}>
                   <div style={{ fontSize:36 }}>🔍</div>
                   <div style={{ fontSize:14, fontWeight:600, marginTop:8 }}>No applicants found</div>
-                  <div style={{ fontSize:12, marginTop:4 }}>Try adjusting your search or filters</div>
+                  <div style={{ fontSize:12, marginTop:4 }}>
+                    {rows.length === 0
+                      ? 'No data loaded from API. Add applicants or import a CSV.'
+                      : 'Try adjusting your search or filters'}
+                  </div>
                 </td>
               </tr>
             )}

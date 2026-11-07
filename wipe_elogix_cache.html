@@ -1,5 +1,9 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>eLogix Cache Wiper</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <style>
   :root {
     --bg: #f0f9ff; --card: #ffffff; --fg: #0f172a; --sub: #64748b;
@@ -43,6 +47,7 @@
   .keys {
     background: var(--bg); border: 1px solid var(--border);
     border-radius: 10px; padding: 12px 14px; margin-bottom: 20px;
+    max-height: 260px; overflow-y: auto;
   }
   .keys h3 { font-size: 11px; font-weight: 700; color: var(--sub); text-transform: uppercase;
     letter-spacing: .06em; margin-bottom: 8px; }
@@ -72,6 +77,7 @@
   .result {
     margin-top: 16px; padding: 14px; border-radius: 10px;
     font-size: 13px; font-weight: 600; display: none; line-height: 1.6;
+    white-space: pre-wrap; word-break: break-all;
   }
   .result.success { background: #f0fdf4; color: var(--success); border: 1px solid #bbf7d0; }
   .result.info    { background: #eff6ff; color: var(--accent); border: 1px solid #bfdbfe; }
@@ -84,20 +90,21 @@
   .redirect-bar {
     margin-top: 14px; font-size: 12px; color: var(--sub); text-align: center; display: none;
   }
-  .count { font-size: 28px; font-weight: 900; color: var(--danger); }
 </style>
+</head>
+<body>
 
 <div class="card">
   <div class="logo">⚡</div>
   <h1>eLogix Cache Wiper</h1>
-  <p class="sub">Clears stale demo/mock company data from your browser's localStorage so the admin panel loads fresh data from the API.</p>
+  <p class="sub">Clears all eLogix browser storage so the admin panel loads fresh data from the API. Scans every <code>elogix_</code> key dynamically — no hardcoded list.</p>
 
   <div class="warn" id="warnBanner">
     ⚠️ Checking cache… please wait.
   </div>
 
   <div class="keys" id="keyList">
-    <h3>localStorage Keys</h3>
+    <h3>elogix_ localStorage Keys</h3>
     <div id="keyRows">Scanning…</div>
   </div>
 
@@ -113,26 +120,20 @@
 </div>
 
 <script>
-  const KEYS = [
-    'elogix_active_companies',
-    'elogix_approved_tenants',
-    'elogix_registered_companies',
-    'elogix_companies',
-    'elogix_registered_tenants',
-    'elogix_pending_tenants',
-    'elogix_app_version',
-    'elogix_session',
-    'elogix_admin_session',
-    'elogix_user',
-    'access_token',
-  ]
+  // ── Dynamically collect every key that starts with "elogix_" ──────────
+  function getElogixKeys() {
+    const keys = []
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i)
+        if (k && k.startsWith('elogix_')) keys.push(k)
+      }
+    } catch(_e) {}
+    return keys.sort()
+  }
 
-  const DEMO_SLUGS = new Set([
-    'abasar','abasarnepal','subisu','subisulimited',
-    'mainawatisteels','mainawati','hrhub','himalayan',
-    'solidfuture','demo','testcompany','elogixdemo',
-    'test','sample','mock',
-  ])
+  // Also wipe these auth keys that don't use the elogix_ prefix
+  const AUTH_KEYS = ['access_token', 'access_token_expiry', 'refresh_token']
 
   function readKey(k) {
     try { return { raw: localStorage.getItem(k), err: null } }
@@ -140,31 +141,26 @@
   }
 
   function scanAll() {
-    return KEYS.map(k => {
+    const elogixKeys = getElogixKeys()
+    return elogixKeys.map(k => {
       const { raw, err } = readKey(k)
-      if (err) return { k, status: 'error', detail: err }
+      if (err)      return { k, status: 'error',   detail: err }
       if (raw === null) return { k, status: 'empty' }
-      // Check for demo slugs in JSON arrays/objects
-      let hasDemoData = false
-      try {
-        const p = JSON.parse(raw)
-        if (Array.isArray(p)) {
-          hasDemoData = p.some(c => c?.slug && DEMO_SLUGS.has(c.slug.toLowerCase()))
-        } else if (p && typeof p === 'object') {
-          hasDemoData = Object.keys(p).some(slug => DEMO_SLUGS.has(slug.toLowerCase()))
-        }
-      } catch(_) {}
-      return { k, status: hasDemoData ? 'demo' : 'present', size: raw.length }
+      return { k, status: 'present', size: raw.length }
     })
   }
 
   function renderKeys(scan) {
+    if (scan.length === 0) {
+      document.getElementById('keyRows').innerHTML =
+        '<div style="color:var(--success);font-size:12px;padding:4px 0">✓ No elogix_ keys found — cache is clean</div>'
+      return
+    }
     const rows = scan.map(s => {
       let badge, label
       if (s.status === 'empty')   { badge = 'clean'; label = '✓ empty' }
-      else if (s.status === 'demo')    { badge = 'found'; label = `⚠️ DEMO DATA (${(s.size/1024).toFixed(1)}KB)` }
-      else if (s.status === 'present') { badge = 'found'; label = `● present (${(s.size/1024).toFixed(1)}KB)` }
-      else                             { badge = 'found'; label = `✗ error` }
+      else if (s.status === 'present') { badge = 'found'; label = `● present (${(s.size/1024).toFixed(1)} KB)` }
+      else                             { badge = 'found'; label = '✗ error' }
       return `<div class="key-item">
         <span class="key-name">${s.k}</span>
         <span class="key-status ${badge}">${label}</span>
@@ -174,14 +170,14 @@
   }
 
   function updateBanner(scan) {
-    const bad = scan.filter(s => s.status === 'demo' || (s.status === 'present' && ['elogix_active_companies','elogix_approved_tenants','elogix_registered_companies','elogix_companies','elogix_registered_tenants','elogix_pending_tenants'].includes(s.k)))
-    const banner = document.getElementById('warnBanner')
-    if (bad.length === 0) {
+    const present = scan.filter(s => s.status === 'present')
+    const banner  = document.getElementById('warnBanner')
+    if (present.length === 0) {
       banner.style.background = '#f0fdf4'
       banner.style.color = '#166534'
       banner.textContent = '✅ No stale cache detected. Your browser is clean.'
     } else {
-      banner.textContent = `⚠️ Found ${bad.length} stale key(s) with demo/company data. Click Wipe to clear them.`
+      banner.textContent = `⚠️ Found ${present.length} elogix_ key(s) with data. Click Wipe to clear them.`
     }
   }
 
@@ -197,18 +193,30 @@
     btn.textContent = '⟳ Wiping…'
 
     let wiped = 0, errors = []
-    for (const k of KEYS) {
+
+    // Wipe all elogix_ keys
+    const elogixKeys = getElogixKeys()
+    for (const k of elogixKeys) {
+      try { localStorage.removeItem(k); wiped++ }
+      catch(e) { errors.push(k) }
+    }
+
+    // Wipe auth keys
+    for (const k of AUTH_KEYS) {
       try {
-        if (localStorage.getItem(k) !== null) {
-          localStorage.removeItem(k)
-          wiped++
-        }
+        if (localStorage.getItem(k) !== null) { localStorage.removeItem(k); wiped++ }
       } catch(e) { errors.push(k) }
     }
-    // Also wipe sessionStorage
-    for (const k of ['elogix_session','elogix_admin_session','elogix_user']) {
-      try { sessionStorage.removeItem(k) } catch(_) {}
-    }
+
+    // Wipe sessionStorage elogix_ keys
+    try {
+      const ssKeys = []
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const k = sessionStorage.key(i)
+        if (k && k.startsWith('elogix_')) ssKeys.push(k)
+      }
+      ssKeys.forEach(k => { try { sessionStorage.removeItem(k) } catch(_) {} })
+    } catch(_) {}
 
     const res = document.getElementById('result')
     res.style.display = 'block'
@@ -229,7 +237,6 @@
       redir.textContent = countdown > 0 ? `Redirecting in ${countdown}s…` : 'Redirecting…'
       if (countdown <= 0) {
         clearInterval(t)
-        // Try to redirect to the HRMS app (same origin or localhost)
         const target = location.hostname === 'localhost' || location.hostname === '127.0.0.1'
           ? 'http://localhost:5173'
           : location.origin
@@ -244,22 +251,26 @@
     const res = document.getElementById('result')
     res.style.display = 'block'
     res.className = 'result info'
-    let lines = ['🔍 Full localStorage scan:\n']
-    for (const k of KEYS) {
+    const elogixKeys = getElogixKeys()
+    let lines = [`🔍 Full localStorage scan (${elogixKeys.length} elogix_ keys):\n`]
+    for (const k of elogixKeys) {
       const v = localStorage.getItem(k)
       if (v === null) { lines.push(`${k}: (empty)`); continue }
       try {
         const p = JSON.parse(v)
-        if (Array.isArray(p)) lines.push(`${k}: Array[${p.length}]`)
-        else if (typeof p === 'object') lines.push(`${k}: Object{${Object.keys(p).slice(0,3).join(',')}}`)
-        else lines.push(`${k}: ${String(v).slice(0,60)}`)
+        if (Array.isArray(p))        lines.push(`${k}: Array[${p.length}]`)
+        else if (typeof p === 'object') lines.push(`${k}: Object{${Object.keys(p).slice(0,4).join(', ')}}`)
+        else                            lines.push(`${k}: "${String(v).slice(0,80)}"`)
       } catch(_) {
-        lines.push(`${k}: "${String(v).slice(0,60)}"`)
+        lines.push(`${k}: "${String(v).slice(0,80)}"`)
       }
     }
+    if (elogixKeys.length === 0) lines.push('(no elogix_ keys found — cache is clean)')
     res.textContent = lines.join('\n')
   }
 
   // Run on load
   init()
 </script>
+</body>
+</html>
