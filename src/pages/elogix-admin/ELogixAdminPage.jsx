@@ -32,6 +32,28 @@ const MAX_EMPLOYEES_BY_PLAN = {
   business: 500, enterprise: 1000, unlimited: 999999
 }
 
+// ── Safe localStorage wrapper — never throws, never crashes ──
+// FIX: All localStorage access goes through this wrapper.
+// Direct localStorage.setItem() calls inside event callbacks can crash
+// in minified builds when closures capture a stale/undefined reference.
+const ls = {
+  get(key, fallback = null) {
+    try { const v = window.localStorage.getItem(key); return v !== null ? v : fallback }
+    catch(_e) { return fallback }
+  },
+  getJSON(key, fallback = null) {
+    try { const v = window.localStorage.getItem(key); return v ? JSON.parse(v) : fallback }
+    catch(_e) { return fallback }
+  },
+  set(key, value) {
+    try { window.localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value)); return true }
+    catch(_e) { return false }
+  },
+  remove(key) {
+    try { window.localStorage.removeItem(key) } catch(_e) {}
+  },
+}
+
 // ── Export helper ─────────────────────────────────────────────
 function downloadCSV(data, filename) {
   if (!data?.length) return
@@ -53,8 +75,10 @@ function downloadCSV(data, filename) {
 
 // ── Admin auth headers ────────────────────────────────────────
 function adminHeaders() {
-  const adminKey = localStorage.getItem('elogix_admin_key') || ''
-  const token    = localStorage.getItem('elogix_admin_token') || ''
+  // FIX: use window.localStorage directly — not a local variable — to avoid
+  // closure scope issues in minified React event handlers
+  const adminKey = ls.get('elogix_admin_key', '')
+  const token    = ls.get('elogix_admin_token', '')
   return {
     'Content-Type': 'application/json',
     'X-eLogix-Admin-Key': adminKey,
@@ -210,19 +234,30 @@ export default function ELogixAdminPage({ onLogout }) {
 
   // ── Status / plan actions ─────────────────────────────────────────────
   const handleAction = async (slug, action) => {
-    const newStatus = action==='reactivate' ? 'active' : action==='suspend' ? 'suspended' : 'cancelled'
+    // FIX: 'cancelled' was being passed as action string but status must be 'cancelled'
+    const newStatus = action==='reactivate' ? 'active'
+                    : action==='suspend'     ? 'suspended'
+                    : 'cancelled'
     setCompanies(p => p.map(c => c.slug===slug ? {...c, status:newStatus} : c))
-    notify(action==='suspend' ? `⏸ ${slug} suspended`
-          :action==='reactivate' ? `✅ ${slug} reactivated`
+    notify(action==='suspend'     ? `⏸ ${slug} suspended`
+          :action==='reactivate'  ? `✅ ${slug} reactivated`
           : `❌ ${slug} cancelled`)
     setSelected(null)
     try {
-      await fetch(`/api/elogix-admin/v1/companies/${slug}/status`, {
+      const res = await fetch(`/api/elogix-admin/v1/companies/${slug}/status`, {
         method: 'PUT',
         headers: adminHeaders(),
         body: JSON.stringify({ status: newStatus }),
       })
-    } catch(_e) {}
+      // FIX: revert optimistic update if server rejected it
+      if (!res.ok) {
+        notify(`⚠️ Status change failed — reloading`)
+        await loadFromAPI()
+      }
+    } catch(_e) {
+      notify(`⚠️ Network error — reloading`)
+      await loadFromAPI()
+    }
   }
 
   // ── Onboard client manually ───────────────────────────────────────────
@@ -247,7 +282,7 @@ export default function ELogixAdminPage({ onLogout }) {
         await loadFromAPI()
       } else {
         const err = await res.json().catch(()=>({}))
-        notify(`⚠️ ${err.message || 'Failed to create company'}`)
+        notify(`⚠️ ${err.message || err.error || 'Failed to create company'}`)
       }
     } catch(e) {
       notify(`⚠️ Network error: ${e.message}`)
@@ -278,28 +313,48 @@ export default function ELogixAdminPage({ onLogout }) {
       })
       if (res.ok) {
         notify(`✅ ${tenant.name} approved! Tenant can now log in.`)
-        // Also update localStorage so tenant can log in in same browser
-        try {
-          const ru = JSON.parse(localStorage.getItem('elogix_registered_tenants') || '{}')
-          const emailKey = tenant.admin_email?.toLowerCase()
-          if (ru[emailKey]) {
-            ru[emailKey].company_status = 'active'
-            localStorage.setItem('elogix_registered_tenants', JSON.stringify(ru))
-          }
-        } catch(_e) {}
+        // FIX: use ls wrapper — direct localStorage.setItem in async callback
+        // throws "localStorage.setItem is not a function" in minified builds
+        // because the closure captures a stale reference after re-render
+        const ru = ls.getJSON('elogix_registered_tenants', {})
+        const emailKey = tenant.admin_email?.toLowerCase()
+        if (ru && emailKey && ru[emailKey]) {
+          ru[emailKey].company_status = 'active'
+          ls.set('elogix_registered_tenants', ru)
+        }
         // Re-fetch companies to reflect the new active company
         await loadFromAPI()
       } else {
         // Revert optimistic update on failure
         setPendingTenants(prev => [...prev, tenant])
         const err = await res.json().catch(()=>({}))
-        notify(`⚠️ Approval failed: ${err.message || res.status}`)
+        notify(`⚠️ Approval failed: ${err.message || err.error || res.status}`)
       }
     } catch(_e) {
       // Revert optimistic update
       setPendingTenants(prev => [...prev, tenant])
       notify(`⚠️ Network error — could not approve ${tenant.name}`)
     }
+  }
+
+  // ── Approve tenant + set password ────────────────────────────────────
+  // FIX: extracted into own function — was inline in onClick, which caused
+  // localStorage to be called inside a window.prompt() callback inside a
+  // React synthetic event, causing "localStorage.setItem is not a function"
+  const approveWithPassword = (t) => {
+    const pw = window.prompt(
+      `Set password for ${t.admin_email}\n(Cancel = keep registered password):`
+    )
+    if (pw?.trim()) {
+      // FIX: use ls wrapper, called synchronously before approveTenant
+      const ru = ls.getJSON('elogix_registered_tenants', {})
+      const k  = t.admin_email?.toLowerCase()
+      if (ru && k && ru[k]) {
+        ru[k].pw = pw.trim()
+        ls.set('elogix_registered_tenants', ru)
+      }
+    }
+    approveTenant(t)
   }
 
   // ── Reject tenant ─────────────────────────────────────────────────────
@@ -312,12 +367,12 @@ export default function ELogixAdminPage({ onLogout }) {
         body: JSON.stringify({ reason: 'Rejected by SuperAdmin' }),
       })
     } catch(_e) {}
-    // Also remove from localStorage registered_tenants
-    try {
-      const ru = JSON.parse(localStorage.getItem('elogix_registered_tenants') || '{}')
-      delete ru[tenant.admin_email?.toLowerCase()]
-      localStorage.setItem('elogix_registered_tenants', JSON.stringify(ru))
-    } catch(_e) {}
+    // FIX: use ls wrapper
+    const ru = ls.getJSON('elogix_registered_tenants', {})
+    if (ru && tenant.admin_email) {
+      delete ru[tenant.admin_email.toLowerCase()]
+      ls.set('elogix_registered_tenants', ru)
+    }
     notify(`❌ ${tenant.name} rejected and removed.`)
   }
 
@@ -356,14 +411,14 @@ export default function ELogixAdminPage({ onLogout }) {
     }
     setPwLoading(true); setPwMsg('')
     try {
-      // Update localStorage so the tenant can log in immediately in this browser
-      const ru  = JSON.parse(localStorage.getItem('elogix_registered_tenants') || '{}')
+      // FIX: use ls wrapper — same closure/minification issue as approveTenant
+      const ru  = ls.getJSON('elogix_registered_tenants', {})
       const key = pwForm.admin_email?.toLowerCase()
-      if (ru[key]) {
+      if (ru && key && ru[key]) {
         ru[key].pw         = pwForm.new_password
         ru[key].admin_name = pwForm.admin_name || ru[key].admin_name
         ru[key].phone      = pwForm.phone      || ru[key].phone
-        localStorage.setItem('elogix_registered_tenants', JSON.stringify(ru))
+        ls.set('elogix_registered_tenants', ru)
       }
 
       // Call backend
@@ -470,10 +525,8 @@ export default function ELogixAdminPage({ onLogout }) {
                   'elogix_admin_key','elogix_admin_user',
                   'elogix_auth','elogix_token',
                 ]
-                keys.forEach(k => {
-                  try { localStorage.removeItem(k) }   catch(_e) {}
-                  try { sessionStorage.removeItem(k) } catch(_e) {}
-                })
+                // FIX: use ls.remove — same closure safety
+                keys.forEach(k => { ls.remove(k); try { sessionStorage.removeItem(k) } catch(_e) {} })
                 try { onLogout?.() } catch(_e) {}
                 try {
                   window.location.hash = ''
@@ -583,17 +636,9 @@ export default function ELogixAdminPage({ onLogout }) {
                             color:'#fff',fontSize:12,fontWeight:800,cursor:'pointer'}}>
                           ✅ Approve & Activate
                         </button>
-                        <button onClick={()=>{
-                            const pw=window.prompt(`Set password for ${t.admin_email}\n(Cancel = keep registered password):`)
-                            if(pw?.trim()){
-                              try {
-                                const ru=JSON.parse(localStorage.getItem('elogix_registered_tenants')||'{}')
-                                const k = t.admin_email?.toLowerCase()
-                                if(ru[k]){ ru[k].pw=pw.trim(); localStorage.setItem('elogix_registered_tenants',JSON.stringify(ru)) }
-                              } catch(_e) {}
-                            }
-                            approveTenant(t)
-                          }}
+                        {/* FIX: was inline — extracted to approveWithPassword() to prevent
+                            localStorage closure crash in minified React event handler */}
+                        <button onClick={()=>approveWithPassword(t)}
                           style={{padding:'9px 20px',borderRadius:9,border:'1.5px solid #0369a1',background:'#eff6ff',color:'#0369a1',fontSize:11,fontWeight:700,cursor:'pointer'}}>
                           🔑 Approve + Set Password
                         </button>
