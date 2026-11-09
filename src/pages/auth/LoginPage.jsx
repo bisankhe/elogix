@@ -2,7 +2,7 @@
 // eLogix HRMS — World-Class Login Page
 // ─────────────────────────────────────────────────────────────────────────
 // FEATURES:
-//   ✅ Two-panel layout (brand left + form right) — same as original
+//   ✅ Two-panel layout (brand left + form right)
 //   ✅ Auto-detect login type: email / ELX-UID / phone → auto admin mode
 //   ✅ Slug field with autocomplete (tenant login)
 //   ✅ Remember me checkbox
@@ -11,23 +11,22 @@
 //   ✅ Approval flow info panel on left
 //   ✅ Forgot password modal (sends request to SuperAdmin)
 //   ✅ Admin key field (eLogix staff)
-//   ✅ Offline dev fallback (works without backend for UI testing)
 //   ✅ FIXED API paths: POST /api/v1/auth/login, POST /api/elogix-admin/v1/login
 //   ✅ FIXED slug autocomplete: GET /api/v1/auth/slugs
 //   ✅ Zero missing imports — fully self-contained
-//   ✅ Beautiful polish: gradient text, hover effects, focus rings, animations
+//   ✅ REMOVED: DEV_ADMINS hardcoded credential fallback (security fix)
+//       → Network errors now show a proper "server not reachable" message
+//       → Never bypass authentication even when backend is down
 //
 // eLogix Technologies · www.elogix.com.np
 // ─────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useRef } from 'react'
 
-// ── Brand colors ──────────────────────────────────────────────────────────
 const G  = 'linear-gradient(135deg,#0c4a6e 0%,#0369a1 60%,#0ea5e9 100%)'
 const GA = 'linear-gradient(135deg,#1e1b4b 0%,#312e81 60%,#4338ca 100%)'
 const A  = '#0369a1'
 
-// ── Base input style ──────────────────────────────────────────────────────
 const baseInp = {
   width:'100%', padding:'12px 14px 12px 44px', borderRadius:10,
   border:'1.5px solid #e2e8f0', fontSize:13, outline:'none',
@@ -35,7 +34,6 @@ const baseInp = {
   color:'#0f172a', transition:'border-color .15s, box-shadow .15s',
 }
 
-// ── Session helpers ───────────────────────────────────────────────────────
 function _getSession() {
   try {
     const s = JSON.parse(
@@ -75,7 +73,6 @@ function _getLandingRoute(role) {
   return map[role] || 'company-dashboard'
 }
 
-// ── Login ID type detection ───────────────────────────────────────────────
 function detectLoginType(id) {
   if (!id) return 'unknown'
   if (id.endsWith('@elogix.com.np') || id.endsWith('@elogix.com')) return 'elogix_admin'
@@ -85,7 +82,7 @@ function detectLoginType(id) {
   return 'unknown'
 }
 
-// ── InputField — defined OUTSIDE component to prevent focus-loss re-render ─
+// Defined OUTSIDE component to prevent focus-loss re-render on keystroke
 function InputField({
   label, fieldKey, type, placeholder, icon,
   value, onChange, onFocus, onBlur,
@@ -135,14 +132,13 @@ export default function LoginPage({ onLoginSuccess, onRegister }) {
   const [form,        setForm]        = useState({
     slug:'', loginId:'', password:'', adminKey:'', remember:false,
   })
-  const [loading,     setLoading]     = useState(false)
-  const [error,       setError]       = useState('')
-  const [showPw,      setShowPw]      = useState(false)
-  const [showKey,     setShowKey]     = useState(false)
-  const [loginHint,   setLoginHint]   = useState('')
-  const [slugSugs,    setSlugSugs]    = useState([])
+  const [loading,   setLoading]   = useState(false)
+  const [error,     setError]     = useState('')
+  const [showPw,    setShowPw]    = useState(false)
+  const [showKey,   setShowKey]   = useState(false)
+  const [loginHint, setLoginHint] = useState('')
+  const [slugSugs,  setSlugSugs]  = useState([])
 
-  // Forgot password modal state
   const [forgotMode,  setForgotMode]  = useState(false)
   const [forgotEmail, setForgotEmail] = useState('')
   const [forgotSent,  setForgotSent]  = useState(false)
@@ -152,7 +148,7 @@ export default function LoginPage({ onLoginSuccess, onRegister }) {
   const loginIdRef  = useRef(null)
   const passwordRef = useRef(null)
 
-  // ── Auto-redirect if already logged in ─────────────────────────────────
+  // Auto-redirect if already logged in
   useEffect(() => {
     const sess = _getSession()
     if (sess?.user?.role) {
@@ -171,7 +167,7 @@ export default function LoginPage({ onLoginSuccess, onRegister }) {
     setTimeout(() => loginIdRef.current?.focus(), 80)
   }, [isAdminMode])
 
-  // ── Load slug autocomplete — GET /api/v1/auth/slugs ────────────────────
+  // Load slug autocomplete — GET /api/v1/auth/slugs
   useEffect(() => {
     if (isAdminMode) return
     fetch('/api/v1/auth/slugs')
@@ -180,7 +176,6 @@ export default function LoginPage({ onLoginSuccess, onRegister }) {
       .catch(() => {})
   }, [isAdminMode])
 
-  // ── Field change + login type auto-detection ────────────────────────────
   const sf = (k, v) => {
     setForm(p => ({ ...p, [k]: v }))
     if (k === 'loginId') {
@@ -198,7 +193,6 @@ export default function LoginPage({ onLoginSuccess, onRegister }) {
     }
   }
 
-  // ── Focus ring helper ───────────────────────────────────────────────────
   const fInp = fieldKey => ({
     value   : form[fieldKey],
     onChange: e => sf(fieldKey, e.target.value),
@@ -212,12 +206,11 @@ export default function LoginPage({ onLoginSuccess, onRegister }) {
     },
   })
 
-  // ── Login submit — FIXED API paths ─────────────────────────────────────
+  // ── Login submit ────────────────────────────────────────────────────────
   const handleLogin = async e => {
     e.preventDefault()
     const id = form.loginId.trim()
 
-    // Validation
     if (!id)            { setError('Please enter your Login ID');           loginIdRef.current?.focus();  return }
     if (!form.password) { setError('Please enter your password');           passwordRef.current?.focus(); return }
     if (!isAdminMode && !form.slug.trim()) {
@@ -229,66 +222,47 @@ export default function LoginPage({ onLoginSuccess, onRegister }) {
     try {
       if (isAdminMode) {
         // ── eLogix staff login ──────────────────────────────────────────
-        // POST /api/elogix-admin/v1/login  (requires X-eLogix-Admin-Key header)
+        // POST /api/elogix-admin/v1/login
+        // Requires X-eLogix-Admin-Key header (from env ELOGIX_ADMIN_KEY)
         const adminKey = form.adminKey.trim() ||
-                         localStorage.getItem('elogix_admin_key') ||
-                         'elogix-admin-2026'
+                         (typeof window !== 'undefined' ? window.localStorage.getItem('elogix_admin_key') : null) ||
+                         ''
 
-        let adminOk = false, adminUser = null, adminToken = null
+        // Network errors are NOT silently swallowed — if the server is down
+        // the user must fix the server, not log in with a hardcoded backdoor.
+        const res  = await fetch('/api/elogix-admin/v1/login', {
+          method : 'POST',
+          headers: {
+            'Content-Type'      : 'application/json',
+            'X-eLogix-Admin-Key': adminKey,
+          },
+          body: JSON.stringify({ email: id.toLowerCase(), password: form.password }),
+        })
 
-        try {
-          const res  = await fetch('/api/elogix-admin/v1/login', {
-            method : 'POST',
-            headers: {
-              'Content-Type'      : 'application/json',
-              'X-eLogix-Admin-Key': adminKey,
-            },
-            body: JSON.stringify({ email: id.toLowerCase(), password: form.password }),
-          })
-          const data = await res.json()
+        const data = await res.json().catch(() => ({}))
 
-          if (res.ok && data.success) {
-            adminOk    = true
-            adminUser  = data.user
-            adminToken = data.token || data.access_token
-            if (adminToken) {
-              localStorage.setItem('elogix_admin_token', adminToken)
-              localStorage.setItem('access_token', adminToken)
-            }
-          } else {
-            setError(data.error || data.message || 'Invalid credentials')
-            setLoading(false); return
-          }
-        } catch (_netErr) {
-          // Backend not running — offline dev fallback (remove before production)
-          const DEV_ADMINS = {
-            'admin@elogix.com.np'     : 'eLogix@Admin#2083',
-            'superadmin@elogix.com.np': 'eLogix@Admin#2083',
-            'dev@elogix.com.np'       : 'eLogix@Dev#2083',
-            'info@elogix.com.np'      : 'eLogix@Admin#2083',
-          }
-          if (DEV_ADMINS[id.toLowerCase()] === form.password) {
-            adminOk    = true
-            adminUser  = { email: id, role: 'elogix_superadmin', name: 'eLogix Admin' }
-            adminToken = 'dev-token-' + Date.now()
-          } else {
-            setError('Backend server not running. Start Flask on port 5000, or use a dev admin email + password.')
-            setLoading(false); return
-          }
+        if (!res.ok || !data.success) {
+          setError(data.error || data.message || 'Invalid credentials — check email, password and admin key')
+          setLoading(false)
+          return
         }
 
-        if (adminOk) {
-          const sess = {
-            token   : adminToken,
-            admin   : { ...(adminUser || {}), role: adminUser?.role || 'elogix_superadmin' },
-            user    : { ...(adminUser || {}), role: adminUser?.role || 'elogix_superadmin' },
-            company : { name: 'eLogix Technologies', slug: 'elogix' },
-            is_admin: true,
-          }
-          sessionStorage.setItem('elogix_session', JSON.stringify(sess))
-          if (onLoginSuccess) onLoginSuccess({ goto: 'elogix-admin', admin: adminUser })
-          else window.location.hash = '#elogix-admin'
+        const adminToken = data.token || data.access_token
+        if (adminToken) {
+          try { window.localStorage.setItem('elogix_admin_token', adminToken) } catch (_) {}
+          try { window.localStorage.setItem('access_token', adminToken)       } catch (_) {}
         }
+
+        const sess = {
+          token   : adminToken,
+          admin   : { ...(data.user || {}), role: data.user?.role || 'elogix_superadmin' },
+          user    : { ...(data.user || {}), role: data.user?.role || 'elogix_superadmin' },
+          company : { name: 'eLogix Technologies', slug: 'elogix' },
+          is_admin: true,
+        }
+        try { sessionStorage.setItem('elogix_session', JSON.stringify(sess)) } catch (_) {}
+        if (onLoginSuccess) onLoginSuccess({ goto: 'elogix-admin', admin: data.user })
+        else window.location.hash = '#elogix-admin'
 
       } else {
         // ── Tenant company login ────────────────────────────────────────
@@ -302,18 +276,19 @@ export default function LoginPage({ onLoginSuccess, onRegister }) {
             'X-Tenant-Slug': tenantSlug,
           },
           body: JSON.stringify({
-            email        : id.includes('@') ? id.toLowerCase() : undefined,
-            identifier   : id,
-            password     : form.password,
-            company_slug : tenantSlug,
-            slug         : tenantSlug,
+            email       : id.includes('@') ? id.toLowerCase() : undefined,
+            identifier  : id,
+            password    : form.password,
+            company_slug: tenantSlug,
+            slug        : tenantSlug,
           }),
         })
-        const data = await res.json()
+        const data = await res.json().catch(() => ({}))
 
         if (!res.ok || data.error) {
           setError(data.error || data.message || 'Invalid credentials — check your email and password')
-          setLoading(false); return
+          setLoading(false)
+          return
         }
 
         const sess = {
@@ -322,21 +297,47 @@ export default function LoginPage({ onLoginSuccess, onRegister }) {
           company: data.company || { slug: tenantSlug },
           landing: _getLandingRoute(data.user?.role),
         }
-        if (form.remember) {
-          localStorage.setItem('elogix_session', JSON.stringify(sess))
-        } else {
-          sessionStorage.setItem('elogix_session', JSON.stringify(sess))
-        }
-        localStorage.setItem('access_token', sess.token || '')
+        try {
+          if (form.remember) {
+            window.localStorage.setItem('elogix_session', JSON.stringify(sess))
+          } else {
+            sessionStorage.setItem('elogix_session', JSON.stringify(sess))
+          }
+          window.localStorage.setItem('access_token', sess.token || '')
+        } catch (_) {}
 
         const route = _getLandingRoute(data.user?.role)
         if (onLoginSuccess) onLoginSuccess({ ...data, goto: route })
         else window.location.hash = `#${route}`
       }
-    } catch (_e) {
-      setError('Connection error — make sure the backend is running on port 5000.')
+    } catch (netErr) {
+      // Network-level error (fetch failed — server down or network offline)
+      // No hardcoded credential fallback — authentication MUST go through the server.
+      setError(
+        `Cannot reach the server — make sure the backend is running. ` +
+        `(${netErr.message || 'Network error'})`
+      )
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
+  }
+
+  // ── Forgot password ─────────────────────────────────────────────────────
+  const handleForgot = async () => {
+    if (!forgotEmail.trim()) { setForgotErr('Please enter your email'); return }
+    setForgotLoad(true); setForgotErr('')
+    try {
+      await fetch('/api/v1/auth/forgot-password', {
+        method : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body   : JSON.stringify({ email: forgotEmail.trim() }),
+      })
+      setForgotSent(true)
+    } catch (_) {
+      setForgotErr('Could not send reset request — please email support@elogix.com.np directly.')
+    } finally {
+      setForgotLoad(false)
+    }
   }
 
   const gradient = isAdminMode ? GA : G
@@ -372,12 +373,10 @@ export default function LoginPage({ onLoginSuccess, onRegister }) {
         alignItems:'center', justifyContent:'center',
         padding:'52px 44px', position:'relative', overflow:'hidden',
       }}>
-        {/* Decorative circles */}
         <div style={{ position:'absolute', top:-90,  right:-90, width:260, height:260, background:'rgba(255,255,255,.06)', borderRadius:'50%', pointerEvents:'none' }}/>
         <div style={{ position:'absolute', bottom:-70, left:-70, width:200, height:200, background:'rgba(255,255,255,.04)', borderRadius:'50%', pointerEvents:'none' }}/>
         <div style={{ position:'absolute', top:'40%', right:-40, width:120, height:120, background:'rgba(255,255,255,.03)', borderRadius:'50%', pointerEvents:'none' }}/>
 
-        {/* Logo */}
         <div style={{
           width:110, height:110, borderRadius:24,
           background:'rgba(255,255,255,.13)', border:'1.5px solid rgba(255,255,255,.24)',
@@ -394,7 +393,6 @@ export default function LoginPage({ onLoginSuccess, onRegister }) {
           eLogix Technologies · www.elogix.com.np
         </div>
 
-        {/* Feature list */}
         <div style={{ width:'100%', maxWidth:300, position:'relative', zIndex:1 }}>
           {(isAdminMode ? [
             ['🏢','Manage all client companies & tenants'],
@@ -421,7 +419,6 @@ export default function LoginPage({ onLoginSuccess, onRegister }) {
           ))}
         </div>
 
-        {/* Approval flow info */}
         {!isAdminMode && (
           <div style={{
             marginTop:30, width:'100%', maxWidth:300, position:'relative', zIndex:1,
@@ -450,7 +447,6 @@ export default function LoginPage({ onLoginSuccess, onRegister }) {
       }}>
         <div className="elogix-form-wrap" style={{ width:'100%', maxWidth:430, paddingBottom:40 }}>
 
-          {/* Logo + title */}
           <div style={{ textAlign:'center', marginBottom:30 }}>
             <div style={{
               width:68, height:68, borderRadius:18, background:'#fff',
@@ -556,7 +552,7 @@ export default function LoginPage({ onLoginSuccess, onRegister }) {
               </span>
             </div>
 
-            {/* Submit button */}
+            {/* Submit */}
             <button type="submit" disabled={loading} className="elogix-btn-main" style={{
               width:'100%', padding:'14px', borderRadius:11, border:'none',
               background: loading ? '#94a3b8' : gradient,
@@ -618,113 +614,55 @@ export default function LoginPage({ onLoginSuccess, onRegister }) {
             </div>
           )}
 
-          {/* Footer */}
-          <div style={{
-            textAlign:'center', marginTop:28, paddingTop:18,
-            borderTop:'1px solid #e2e8f0', fontSize:10, color:'#94a3b8', lineHeight:2,
-          }}>
-            <div style={{ fontWeight:600 }}>eLogix Technologies · www.elogix.com.np</div>
-            <div style={{ fontSize:9 }}>support@elogix.com.np · Nepal Labour Act 2074 Compliant</div>
+          <div style={{ textAlign:'center', marginTop:20, fontSize:10, color:'#cbd5e1' }}>
+            eLogix Technologies · www.elogix.com.np<br/>
+            Need help? <a href="mailto:support@elogix.com.np" style={{ color:A }}>support@elogix.com.np</a>
           </div>
         </div>
       </div>
 
-      {/* ══════════ FORGOT PASSWORD MODAL ══════════ */}
+      {/* ══════════ Forgot Password Modal ══════════ */}
       {forgotMode && (
-        <div style={{
-          position:'fixed', inset:0, background:'rgba(0,0,0,.55)', zIndex:9999,
-          display:'flex', alignItems:'center', justifyContent:'center', padding:16,
-        }} onClick={() => { setForgotMode(false); setForgotSent(false); setForgotErr('') }}>
-          <div style={{
-            background:'#fff', borderRadius:18, width:430, maxWidth:'96vw',
-            boxShadow:'0 24px 80px rgba(0,0,0,.22)', overflow:'hidden',
-            animation:'fadeUp .25s ease both',
-          }} onClick={e => e.stopPropagation()}>
-
-            {/* Modal header */}
-            <div style={{ background: G, padding:'20px 24px', color:'#fff' }}>
-              <div style={{ fontSize:17, fontWeight:900, marginBottom:3 }}>🔑 Reset Password</div>
-              <div style={{ fontSize:11, opacity:.8 }}>
-                Your request goes to eLogix SuperAdmin — new credentials sent via email / WhatsApp / Viber
-              </div>
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.55)', zIndex:9999,
+          display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+          <div style={{ background:'#fff', borderRadius:18, width:'100%', maxWidth:400,
+            boxShadow:'0 20px 60px rgba(0,0,0,.25)', overflow:'hidden' }}>
+            <div style={{ background:gradient, padding:'18px 22px',
+              display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+              <div style={{ fontSize:15, fontWeight:900, color:'#fff' }}>🔑 Forgot Password</div>
+              <button onClick={() => { setForgotMode(false); setForgotSent(false); setForgotErr('') }}
+                style={{ background:'rgba(255,255,255,.15)', border:'none', color:'#fff',
+                  width:28, height:28, borderRadius:7, cursor:'pointer', fontSize:16 }}>✕</button>
             </div>
-
-            <div style={{ padding:'22px 24px' }}>
+            <div style={{ padding:'20px 24px' }}>
               {forgotSent ? (
-                <div style={{ textAlign:'center', padding:'16px 0' }}>
-                  <div style={{ fontSize:48, marginBottom:12 }}>📧</div>
-                  <div style={{ fontSize:15, fontWeight:800, color:'#16a34a', marginBottom:8 }}>Request Sent!</div>
-                  <div style={{ fontSize:12, color:'#64748b', lineHeight:1.7, marginBottom:20 }}>
-                    Your password reset request has been forwarded to eLogix SuperAdmin.<br/>
-                    New credentials will be delivered via email, WhatsApp, or Viber.
+                <div style={{ textAlign:'center' }}>
+                  <div style={{ fontSize:36, marginBottom:12 }}>📧</div>
+                  <div style={{ fontSize:14, fontWeight:700, color:'#374151', marginBottom:8 }}>Request Sent!</div>
+                  <div style={{ fontSize:11, color:'#64748b', lineHeight:1.6 }}>
+                    If <b>{forgotEmail}</b> is registered, the eLogix SuperAdmin will
+                    contact you with reset instructions within 1 business day.
                   </div>
-                  <button onClick={() => { setForgotMode(false); setForgotSent(false) }}
-                    style={{ padding:'10px 28px', borderRadius:10, border:'none',
-                      background: G, color:'#fff', fontSize:12, fontWeight:700, cursor:'pointer' }}>
-                    ← Back to Login
-                  </button>
                 </div>
               ) : (
                 <>
+                  <div style={{ fontSize:11, color:'#64748b', marginBottom:16, lineHeight:1.6 }}>
+                    Enter your registered email address. The eLogix SuperAdmin will manually
+                    reset your password and notify you via email, WhatsApp or Viber.
+                  </div>
+                  <input type="email" value={forgotEmail}
+                    onChange={e => { setForgotEmail(e.target.value); setForgotErr('') }}
+                    placeholder="your.email@company.com"
+                    style={{ ...baseInp, paddingLeft:14, marginBottom:12 }}/>
                   {forgotErr && (
-                    <div style={{ padding:'8px 12px', background:'#fef2f2', border:'1px solid #fecaca',
-                      borderRadius:8, fontSize:11, color:'#dc2626', marginBottom:14 }}>
-                      ⚠️ {forgotErr}
-                    </div>
+                    <div style={{ fontSize:11, color:'#dc2626', marginBottom:10 }}>⚠️ {forgotErr}</div>
                   )}
-                  <div style={{ marginBottom:14 }}>
-                    <label style={{ fontSize:11, fontWeight:700, color:'#374151', display:'block', marginBottom:6 }}>
-                      Work Email or Employee ID
-                    </label>
-                    <input
-                      type="text" value={forgotEmail}
-                      onChange={e => { setForgotEmail(e.target.value); setForgotErr('') }}
-                      placeholder="your.email@company.com  or  ELX-COMP-0042"
-                      autoFocus
-                      style={{ ...baseInp, paddingLeft:14 }}
-                      onFocus={e => { e.target.style.borderColor = A; e.target.style.boxShadow = `0 0 0 3px ${A}22` }}
-                      onBlur={e  => { e.target.style.borderColor = '#e2e8f0'; e.target.style.boxShadow = 'none' }}
-                    />
-                  </div>
-                  <div style={{ background:'#eff6ff', border:'1px solid #bfdbfe', borderRadius:9,
-                    padding:'10px 14px', fontSize:10, color:'#1d4ed8', lineHeight:1.7, marginBottom:18 }}>
-                    ℹ️ A password reset request will be submitted to eLogix SuperAdmin. Your new credentials will be delivered via your registered email, WhatsApp, or Viber.
-                  </div>
-                  <div style={{ display:'flex', gap:10 }}>
-                    <button disabled={forgotLoad}
-                      onClick={async () => {
-                        const em = forgotEmail.trim()
-                        if (!em) { setForgotErr('Please enter your email or employee ID'); return }
-                        setForgotLoad(true)
-                        try {
-                          const res = await fetch('/api/v1/auth/forgot-password', {
-                            method : 'POST',
-                            headers: { 'Content-Type':'application/json' },
-                            body   : JSON.stringify({ identifier: em, slug: form.slug }),
-                          })
-                          if (res.ok) {
-                            setForgotSent(true)
-                          } else {
-                            const d = await res.json().catch(() => ({}))
-                            setForgotErr(d.error || 'Request failed — contact support@elogix.com.np')
-                          }
-                        } catch (_e) {
-                          // If API not running, show success anyway — admin handles manually
-                          setForgotSent(true)
-                        } finally { setForgotLoad(false) }
-                      }}
-                      style={{ flex:1, padding:'11px', borderRadius:10, border:'none',
-                        background: forgotLoad ? '#94a3b8' : G,
-                        color:'#fff', fontSize:12, fontWeight:700,
-                        cursor: forgotLoad ? 'not-allowed' : 'pointer' }}>
-                      {forgotLoad ? '⟳ Sending…' : '📨 Send Reset Request'}
-                    </button>
-                    <button onClick={() => { setForgotMode(false); setForgotErr('') }}
-                      style={{ padding:'11px 18px', borderRadius:10, border:'1px solid #e2e8f0',
-                        background:'#fff', fontSize:11, cursor:'pointer', fontFamily:'inherit', fontWeight:600 }}>
-                      Cancel
-                    </button>
-                  </div>
+                  <button onClick={handleForgot} disabled={forgotLoad}
+                    style={{ width:'100%', padding:11, borderRadius:9, border:'none',
+                      background: forgotLoad ? '#94a3b8' : gradient,
+                      color:'#fff', fontSize:12, fontWeight:800, cursor: forgotLoad ? 'not-allowed' : 'pointer' }}>
+                    {forgotLoad ? '⏳ Sending…' : '📤 Send Reset Request'}
+                  </button>
                 </>
               )}
             </div>
