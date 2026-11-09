@@ -20,7 +20,7 @@ app.use(express.urlencoded({ extended: true }))
 app.use((req, res, next) => {
   const allowed = [
     'https://elogix.com.np','https://www.elogix.com.np',
-    'https://elogix.ktm.yetiappcloud.com','http://localhost:5173','http://localhost:3000',
+    'https://elogix.ktm.yetiappcloud.com','http://localhost:5173','http://localhost:3000','http://10.151.124.112:5173',
   ]
   const origin = req.headers.origin
   if (!origin || allowed.includes(origin)) {
@@ -758,24 +758,26 @@ app.put('/api/elogix-admin/v1/referral/config', requireAdmin, (req, res) => {
 
 // ══════════════════════════════════════════════════════════════════════
 // POST /api/elogix-admin/v1/login
-// eLogix staff login — validates against admin key + team records
+// eLogix staff login — email + password authentication.
+// Admin key header is OPTIONAL (extra security layer when provided).
 // ══════════════════════════════════════════════════════════════════════
 app.post('/api/elogix-admin/v1/login', (req, res) => {
   try {
-    const key = req.headers['x-elogix-admin-key'] || ''
-    if (!key || key !== ADMIN_KEY)
-      return res.status(401).json({ error: 'Invalid admin key' })
-
     const { email, password } = req.body
     if (!email || !password)
       return res.status(400).json({ error: 'email and password required' })
+
+    // If admin key is supplied it MUST match — but it is not required.
+    const providedKey = req.headers['x-elogix-admin-key'] || ''
+    if (providedKey && providedKey !== ADMIN_KEY)
+      return res.status(401).json({ error: 'Invalid admin key' })
 
     // Check against team records
     const team      = readDB('team')
     const staffList = Object.values(team)
     const member    = staffList.find(m => m.email?.toLowerCase() === email.toLowerCase())
 
-    // If team is empty (first run), allow login with any password — admin creates team members next
+    // If team is empty (first run), allow login with any @elogix.com.np email
     const isFirstRun = staffList.length === 0
 
     if (!isFirstRun && !member)
@@ -784,9 +786,14 @@ app.post('/api/elogix-admin/v1/login', (req, res) => {
     if (!isFirstRun && member.password && member.password !== password)
       return res.status(401).json({ error: 'Invalid password' })
 
+    // Extra guard: on first run, require an elogix.com.np email
+    if (isFirstRun && !email.toLowerCase().endsWith('@elogix.com.np'))
+      return res.status(401).json({ error: 'Admin account not found' })
+
     const token = `elogix_admin_${Date.now()}_${Math.random().toString(36).slice(2)}`
     const user  = member || { email, role: 'elogix_superadmin', name: 'eLogix Admin' }
 
+    console.log(`[eLogix] Admin login: ${email} (${user.role || 'elogix_superadmin'})`)
     res.json({
       success    : true,
       token,
