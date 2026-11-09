@@ -214,6 +214,28 @@ export default function ELogixAdminPage({ onLogout }) {
 
   const scf = (k,v) => setCreateForm(p=>({...p,[k]:v}))
 
+  // ── Notify/Broadcast controlled state ────────────────────────────────
+  const [bcastForm, setBcastForm] = useState({ type:'alert', priority:'normal', title:'', message:'', target:'all' })
+  const [notifyForm, setNotifyForm] = useState({ title:'', message:'' })
+
+  // ── API-wired helpers ─────────────────────────────────────────────────
+  const apiPost = async (path, body) => {
+    const res = await fetch(`/api/elogix-admin/v1${path}`, {
+      method: 'POST', headers: adminHeaders(), body: JSON.stringify(body),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error(data.error || data.message || `HTTP ${res.status}`)
+    return data
+  }
+  const apiPut = async (path, body) => {
+    const res = await fetch(`/api/elogix-admin/v1${path}`, {
+      method: 'PUT', headers: adminHeaders(), body: JSON.stringify(body),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error(data.error || data.message || `HTTP ${res.status}`)
+    return data
+  }
+
   // Stats
   const total     = companies.length
   const active    = companies.filter(c=>c.status==='active').length
@@ -543,23 +565,27 @@ export default function ELogixAdminPage({ onLogout }) {
           </div>
         </div>
 
-        {/* Dashboard stats */}
+        {/* Dashboard stats — FIX: clickable buttons that navigate to the relevant tab */}
         <div style={{display:'flex',gap:12,marginTop:14,flexWrap:'wrap'}}>
           {[
-            ['🏢','Total Clients',total],
-            ['✅','Active',active],
-            ['🆓','Trial',trial],
-            ['⏸','Suspended',suspended],
-            ['💰','MRR','NPR '+mrr.toLocaleString()],
-            ['📈','ARR','NPR '+(mrr*12).toLocaleString()],
-            ['📋','Open Tickets',tickets.filter(t=>t.status==='open').length],
-            ['⚠️','Overdue Invoices',invoices.filter(i=>i.status==='overdue').length],
-          ].map(([ic,lb,v])=>(
-            <div key={lb} style={{background:'rgba(255,255,255,.12)',borderRadius:9,
-              padding:'8px 14px',textAlign:'center',minWidth:80}}>
-              <div style={{fontSize:14,fontWeight:900}}>{v}</div>
-              <div style={{fontSize:8,opacity:.75}}>{ic} {lb}</div>
-            </div>
+            ['🏢','Total Clients',total,       'dashboard'],
+            ['✅','Active',      active,        'dashboard'],
+            ['🆓','Trial',       trial,         'dashboard'],
+            ['⏸','Suspended',   suspended,     'dashboard'],
+            ['💰','MRR',         'NPR '+mrr.toLocaleString(),         'billing'],
+            ['📈','ARR',         'NPR '+(mrr*12).toLocaleString(),    'billing'],
+            ['📋','Open Tickets',tickets.filter(t=>t.status==='open').length, 'tickets'],
+            ['⚠️','Overdue Invoices',invoices.filter(i=>i.status==='overdue').length, 'billing'],
+          ].map(([ic,lb,v,targetTab])=>(
+            <button key={lb} onClick={()=>setTab(targetTab)}
+              style={{background:'rgba(255,255,255,.18)',borderRadius:9,
+                padding:'8px 14px',textAlign:'center',minWidth:80,cursor:'pointer',
+                border:'1.5px solid rgba(255,255,255,.25)',transition:'background .15s'}}
+              onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.28)'}
+              onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,.18)'}>
+              <div style={{fontSize:14,fontWeight:900,color:'#fff'}}>{v}</div>
+              <div style={{fontSize:8,opacity:.8,color:'#fff'}}>{ic} {lb}</div>
+            </button>
           ))}
         </div>
       </div>
@@ -754,8 +780,10 @@ export default function ELogixAdminPage({ onLogout }) {
                           background:'#eff6ff',color:'#1d4ed8',fontSize:9,fontWeight:700,cursor:'pointer'}}>
                         👁 View
                       </button>
-                      <button onClick={()=>notify(`📄 Invoice generated for ${c.name}`)}
-                        style={{padding:'5px 10px',borderRadius:7,border:'none',
+                      {/* FIX: calls POST /companies/:slug/invoices — not just toast */}
+                      <button onClick={()=>
+                        apiPost(`/companies/${c.slug}/invoices`, {}).then(r=>notify(r.message||`📄 Invoice generated for ${c.name}`)).catch(e=>notify(`⚠️ ${e.message}`))
+                      } style={{padding:'5px 10px',borderRadius:7,border:'none',
                           background:'#f0fdf4',color:'#059669',fontSize:9,fontWeight:700,cursor:'pointer'}}>
                         💰 Invoice
                       </button>
@@ -926,50 +954,51 @@ export default function ELogixAdminPage({ onLogout }) {
         </div>
       )}
 
-      {/* ── BROADCAST TAB ── */}
+      {/* ── BROADCAST TAB — FIX: controlled state + API call ── */}
       {tab==='notify'&&(
         <div style={{maxWidth:600,width:'100%'}}>
           <div style={{background:'#fff',borderRadius:12,padding:'20px',boxShadow:'0 1px 6px rgba(0,0,0,.06)'}}>
             <div style={{fontWeight:800,fontSize:13,marginBottom:16}}>📢 Broadcast to All / Selected Companies</div>
-            {[
-              ['Notification Type','select',['alert','billing','update','maintenance','marketing']],
-              ['Priority','select',['normal','high','critical']],
-            ].map(([lb,,opts])=>(
-              <div key={lb} style={{marginBottom:14}}>
-                <label style={{fontSize:10,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>{lb}</label>
-                <select style={inp}>{opts.map(o=><option key={o}>{o}</option>)}</select>
-              </div>
-            ))}
+            <div style={{marginBottom:14}}>
+              <label style={{fontSize:10,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>Notification Type</label>
+              <select value={bcastForm.type} onChange={e=>setBcastForm(p=>({...p,type:e.target.value}))} style={inp}>
+                {['alert','billing','update','maintenance','marketing'].map(o=><option key={o}>{o}</option>)}
+              </select>
+            </div>
+            <div style={{marginBottom:14}}>
+              <label style={{fontSize:10,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>Priority</label>
+              <select value={bcastForm.priority} onChange={e=>setBcastForm(p=>({...p,priority:e.target.value}))} style={inp}>
+                {['normal','high','critical'].map(o=><option key={o}>{o}</option>)}
+              </select>
+            </div>
             <div style={{marginBottom:14}}>
               <label style={{fontSize:10,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>Title *</label>
-              <input style={inp} placeholder="Notification title"/>
+              <input value={bcastForm.title} onChange={e=>setBcastForm(p=>({...p,title:e.target.value}))}
+                style={inp} placeholder="Notification title"/>
             </div>
             <div style={{marginBottom:14}}>
               <label style={{fontSize:10,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>Message *</label>
-              <textarea rows={4} style={{...inp,resize:'vertical',fontFamily:'inherit'}}
+              <textarea value={bcastForm.message} onChange={e=>setBcastForm(p=>({...p,message:e.target.value}))}
+                rows={4} style={{...inp,resize:'vertical',fontFamily:'inherit'}}
                 placeholder="Your message to all companies..."/>
             </div>
             <div style={{marginBottom:16}}>
               <label style={{fontSize:10,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>Target</label>
-              <select style={inp}>
-                <option>All Active Companies</option>
-                <option>All Trial Companies</option>
-                <option>Specific Company</option>
-                <option>Overdue Companies</option>
+              <select value={bcastForm.target} onChange={e=>setBcastForm(p=>({...p,target:e.target.value}))} style={inp}>
+                <option value="all">All Active Companies</option>
+                <option value="trial">All Trial Companies</option>
+                <option value="overdue">Overdue Companies</option>
               </select>
             </div>
-            <div style={{display:'flex',gap:10}}>
-              <button onClick={()=>notify(`📢 Broadcast sent to ${active+trial} companies`)}
-                style={{flex:1,padding:'11px',borderRadius:9,border:'none',background:G,
-                  color:'#fff',fontSize:12,fontWeight:800,cursor:'pointer'}}>
-                📢 Send Broadcast
-              </button>
-              <button onClick={()=>notify('📧 Preview sent')}
-                style={{padding:'11px 16px',borderRadius:9,border:'1px solid #e2e8f0',
-                  background:'#fff',fontSize:11,cursor:'pointer'}}>
-                Preview
-              </button>
-            </div>
+            <button onClick={()=>{
+              if (!bcastForm.title || !bcastForm.message) { notify('⚠️ Fill title and message'); return }
+              apiPost('/notify-all', bcastForm)
+                .then(r=>{ notify(r.message||`📢 Broadcast sent to ${active+trial} companies`); setBcastForm(p=>({...p,title:'',message:''})) })
+                .catch(e=>notify(`⚠️ ${e.message}`))
+            }} style={{width:'100%',padding:'11px',borderRadius:9,border:'none',background:G,
+                color:'#fff',fontSize:12,fontWeight:800,cursor:'pointer'}}>
+              📢 Send Broadcast
+            </button>
           </div>
         </div>
       )}
@@ -1105,19 +1134,23 @@ export default function ELogixAdminPage({ onLogout }) {
                 ))}
               </div>
 
+              {/* FIX: controlled state + calls PUT /companies/:slug/plan API */}
               <div style={{marginBottom:16}}>
                 <label style={{fontSize:10,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>Change Plan</label>
                 <div style={{display:'flex',gap:8}}>
-                  <select id="newPlan" style={{...inp,flex:1}}>
+                  <select value={selected.plan} onChange={e=>setSelected(p=>({...p,plan:e.target.value}))}
+                    style={{...inp,flex:1}}>
                     {['trial','starter','growth','business','enterprise','unlimited'].map(p=>(
                       <option key={p} value={p}>{p}</option>
                     ))}
                   </select>
                   <button onClick={()=>{
-                    const newPlan=document.getElementById('newPlan').value
-                    setCompanies(p=>p.map(c=>c.id===selected.id?{...c,plan:newPlan}:c))
-                    setSelected(p=>({...p,plan:newPlan}))
-                    notify(`✅ ${selected.name} plan changed to ${newPlan}`)
+                    apiPut(`/companies/${selected.slug}/plan`, { plan: selected.plan })
+                      .then(r=>{
+                        setCompanies(p=>p.map(c=>c.id===selected.id?{...c,plan:selected.plan}:c))
+                        notify(r.message||`✅ ${selected.name} plan changed to ${selected.plan}`)
+                      })
+                      .catch(e=>notify(`⚠️ ${e.message}`))
                   }} style={{padding:'9px 16px',borderRadius:8,border:'none',background:A,
                     color:'#fff',fontSize:10,fontWeight:700,cursor:'pointer'}}>Update Plan</button>
                 </div>
@@ -1125,7 +1158,7 @@ export default function ELogixAdminPage({ onLogout }) {
 
               <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:8}}>
                 {[
-                  ['💰 Generate Invoice','#059669',()=>notify(`📄 Invoice generated for ${selected.name}`)],
+                  ['💰 Generate Invoice','#059669',()=>apiPost(`/companies/${selected.slug}/invoices`,{}).then(r=>notify(r.message||`📄 Invoice generated for ${selected.name}`)).catch(e=>notify(`⚠️ ${e.message}`))],
                   ['📢 Send Notice','#7c3aed',()=>{setShowNotifyModal(selected);setSelected(null)}],
                   ['🔗 Open Portal','#0369a1',()=>window.open(`https://${selected.slug}.elogix.com.np`,'_blank')],
                   selected.status==='active'
@@ -1204,41 +1237,38 @@ export default function ELogixAdminPage({ onLogout }) {
         </div>
       )}
 
-      {/* ── Notify Modal ── */}
+      {/* ── Notify Modal — FIX: controlled state + API call ── */}
       {showNotifyModal&&(
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.6)',zIndex:1000,
-          display:'flex',alignItems:'center',justifyContent:'center',padding:16}} onClick={()=>setShowNotifyModal(null)}>
+          display:'flex',alignItems:'center',justifyContent:'center',padding:16}}
+          onClick={()=>{setShowNotifyModal(null);setNotifyForm({title:'',message:''})}}>
           <div style={{background:'#fff',borderRadius:16,width:480,maxWidth:'96vw'}} onClick={e=>e.stopPropagation()}>
             <div style={{background:G,padding:'13px 20px',borderRadius:'16px 16px 0 0',color:'#fff'}}>
               <div style={{fontSize:14,fontWeight:900}}>📢 Notify: {showNotifyModal.name}</div>
             </div>
             <div style={{padding:'14px 14px'}}>
               <div style={{marginBottom:12}}>
-                <label style={{fontSize:10,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>Title</label>
-                <input style={inp} placeholder="Notification title"/>
+                <label style={{fontSize:10,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>Title *</label>
+                <input value={notifyForm.title} onChange={e=>setNotifyForm(p=>({...p,title:e.target.value}))}
+                  style={inp} placeholder="Notification title"/>
               </div>
               <div style={{marginBottom:12}}>
-                <label style={{fontSize:10,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>Message</label>
-                <textarea rows={3} style={{...inp,resize:'vertical',fontFamily:'inherit'}}
+                <label style={{fontSize:10,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>Message *</label>
+                <textarea value={notifyForm.message} onChange={e=>setNotifyForm(p=>({...p,message:e.target.value}))}
+                  rows={3} style={{...inp,resize:'vertical',fontFamily:'inherit'}}
                   placeholder="Your message to this company..."/>
               </div>
-              <div style={{marginBottom:14}}>
-                <label style={{fontSize:10,fontWeight:700,color:'#374151',display:'block',marginBottom:4}}>Channels</label>
-                <div style={{display:'flex',gap:10}}>
-                  {['In-App','Email','WhatsApp'].map(ch=>(
-                    <label key={ch} style={{display:'flex',alignItems:'center',gap:5,fontSize:11,cursor:'pointer'}}>
-                      <input type="checkbox" defaultChecked={ch==='In-App'||ch==='Email'}/>{ch}
-                    </label>
-                  ))}
-                </div>
-              </div>
               <div style={{display:'flex',gap:8}}>
-                <button onClick={()=>{notify(`📢 Notification sent to ${showNotifyModal.name}`);setShowNotifyModal(null)}}
-                  style={{flex:1,padding:'10px',borderRadius:9,border:'none',background:G,
+                <button onClick={()=>{
+                  if (!notifyForm.title||!notifyForm.message){notify('⚠️ Fill title and message');return}
+                  apiPost(`/companies/${showNotifyModal.slug}/notify`,{type:'alert',priority:'normal',...notifyForm})
+                    .then(r=>{notify(r.message||`📢 Notification sent to ${showNotifyModal.name}`);setShowNotifyModal(null);setNotifyForm({title:'',message:''})})
+                    .catch(e=>notify(`⚠️ ${e.message}`))
+                }} style={{flex:1,padding:'10px',borderRadius:9,border:'none',background:G,
                     color:'#fff',fontSize:12,fontWeight:800,cursor:'pointer'}}>
                   Send Notification
                 </button>
-                <button onClick={()=>setShowNotifyModal(null)}
+                <button onClick={()=>{setShowNotifyModal(null);setNotifyForm({title:'',message:''})}}
                   style={{padding:'10px 16px',borderRadius:9,border:'1px solid #e2e8f0',background:'#fff',fontSize:11,cursor:'pointer'}}>
                   Cancel
                 </button>
