@@ -102,7 +102,21 @@ function nukeStaleCacheKeys() {
 // ─────────────────────────────────────────────────────────────────────
 function adminHeaders() {
   const adminKey = ls.get('elogix_admin_key', '')
-  const token    = ls.get('elogix_admin_token', '')
+
+  // Token can be stored in multiple places depending on login flow:
+  // 1. localStorage elogix_admin_token  (set by LoginPage on login)
+  // 2. localStorage access_token        (set by LoginPage as fallback)
+  // 3. sessionStorage elogix_session    (the full session object)
+  let token = ls.get('elogix_admin_token', '') || ls.get('access_token', '')
+  if (!token) {
+    try {
+      const sess = JSON.parse(sessionStorage.getItem('elogix_session') || 'null')
+      token = sess?.token || sess?.access_token || ''
+      // Persist it to localStorage so future calls find it
+      if (token) window.localStorage.setItem('elogix_admin_token', token)
+    } catch(_e) {}
+  }
+
   return {
     'Content-Type'      : 'application/json',
     'X-eLogix-Admin-Key': adminKey,

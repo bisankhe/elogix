@@ -1,8 +1,8 @@
 // FILE: vite.config.js
 // eLogix HRMS — Vite Configuration
 // Proxy split:
-//   /api/elogix-admin/*  →  Node.js server.js  (port 8080)
-//   /uploads             →  Node.js server.js  (port 8080)
+//   /api/elogix-admin/*  →  Node.js server.js  (port 3001)
+//   /uploads             →  Node.js server.js  (port 3001)
 //   /api/*               →  Flask app.py        (port 5000)
 // IPv4 (127.0.0.1) + IPv6 (::1) both supported
 // eLogix Technologies · www.elogix.com.np
@@ -30,16 +30,16 @@ export default defineConfig({
     host      : '0.0.0.0',   // IPv4 + IPv6
     strictPort: false,
     proxy: {
-      // ── Admin API → Node.js on 8080 ──────────────────────────────────
+      // ── Admin API → Node.js on 3001 ──────────────────────────────────
       // IMPORTANT: more-specific rules MUST come before the generic '/api'
       '/api/elogix-admin': {
-        target      : 'http://127.0.0.1:8080',
+        target      : 'http://127.0.0.1:3001',
         changeOrigin: true,
         secure      : false,
         configure   : (proxy) => {
           proxy.on('error', (err) => {
             if (err.code === 'ECONNREFUSED') {
-              console.error('\n[eLogix] ❌ server.js is NOT running on port 8080!')
+              console.error('\n[eLogix] ❌ server.js is NOT running on port 3001!')
               console.error('[eLogix] Start it: node server.js')
               console.error('[eLogix] Or:       npm run dev\n')
             }
@@ -47,9 +47,9 @@ export default defineConfig({
         },
       },
 
-      // ── Static uploads → Node.js on 8080 ─────────────────────────────
+      // ── Static uploads → Node.js on 3001 ─────────────────────────────
       '/uploads': {
-        target      : 'http://127.0.0.1:8080',
+        target      : 'http://127.0.0.1:3001',
         changeOrigin: true,
       },
 

@@ -14,7 +14,7 @@ route:
 receivers:
   - name: 'team-email'
     email_configs:
-      - to: 'admin@elogix.com'
+      - to: 'admin@elogix.com.np'
         subject: '[eLogix HRMS] ALERT: {{ .GroupLabels.alertname }}'
         body: |
           {{ range .Alerts }}

@@ -10,7 +10,7 @@ const fs      = require('fs')
 const path    = require('path')
 
 const app  = express()
-const PORT = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080
+const PORT = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 3001
 
 // ── Middleware ─────────────────────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }))
@@ -81,14 +81,24 @@ if (!ADMIN_KEY) {
   process.exit(1)
 }
 
+// In-memory session token store — tokens issued by /login are stored here.
+// Accepts: the raw ADMIN_KEY itself, OR any token we issued.
+const activeSessions = new Set()
+
 const isAdmin = req => {
   const key   = req.headers['x-elogix-admin-key'] || ''
-  const token = (req.headers['authorization'] || '').replace('Bearer ', '')
-  return key === ADMIN_KEY || token === ADMIN_KEY
+  const token = (req.headers['authorization'] || '').replace('Bearer ', '').trim()
+  // Accept the master key directly
+  if (key === ADMIN_KEY) return true
+  // Accept a token issued by our /login endpoint
+  if (token && activeSessions.has(token)) return true
+  // Also accept the raw ADMIN_KEY sent as a Bearer token (legacy clients)
+  if (token === ADMIN_KEY) return true
+  return false
 }
 
 function requireAdmin(req, res, next) {
-  if (!isAdmin(req)) return res.status(401).json({ error: 'Admin key required' })
+  if (!isAdmin(req)) return res.status(401).json({ error: 'Unauthorized — please log in again' })
   next()
 }
 
@@ -792,6 +802,9 @@ app.post('/api/elogix-admin/v1/login', (req, res) => {
 
     const token = `elogix_admin_${Date.now()}_${Math.random().toString(36).slice(2)}`
     const user  = member || { email, role: 'elogix_superadmin', name: 'eLogix Admin' }
+
+    // Register this token so requireAdmin accepts it on subsequent requests
+    activeSessions.add(token)
 
     console.log(`[eLogix] Admin login: ${email} (${user.role || 'elogix_superadmin'})`)
     res.json({
